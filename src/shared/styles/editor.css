@@ -1,0 +1,155 @@
+/* editor.css — 편집 스튜디오 — 워크스페이스 · 채팅 · 미리보기 캔버스 · 버전.
+   newvent-design.html 의 <style> 에서 원본 순서를 보존해 분리했다. */
+
+.studio-layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:22px;align-items:start}
+.studio-side{min-width:0}
+.chat{display:flex;flex-direction:column;gap:10px;max-height:230px;overflow:auto;margin-bottom:14px}
+.bubble{font-size:11px;line-height:1.8;background:#f6f5f9;padding:11px 13px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.bubble.me{margin-left:20px;background:var(--tint);color:#7d315d}
+.bubble small{font-size:9px;display:block;opacity:.7;margin-bottom:4px}
+.preview-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;border-bottom:1px solid var(--line);font-size:11px}
+.device-controls{display:flex;gap:5px}
+.device-controls button.active{background:var(--tint);color:var(--pink)}
+.canvas{background:#efedf3;padding:18px;max-height:810px;overflow:auto}
+.canvas-frame{width:100%;max-width:720px;margin:auto;background:#fff;box-shadow:0 10px 25px #31213f12;transition:max-width .2s}
+.canvas-frame.mobile{max-width:390px}
+.canvas-frame iframe{border:0;width:100%;min-height:900px;display:block}
+.change-card{margin-top:17px}
+.change-list{display:flex;flex-direction:column;gap:12px}
+.change-item{font-size:11px;line-height:1.7;padding-top:12px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+.change-item:first-child{padding-top:0;border:0}
+.change-item strong{font-size:11px;display:block;margin-bottom:7px}
+.change-item del{display:block;background:#fff1f2;color:#ae5361;padding:7px 10px;border-radius:6px;text-decoration-color:#ba7b84}
+.change-item ins{display:block;background:#edf9f2;color:#247751;padding:7px 10px;border-radius:6px;margin-top:5px;text-decoration:none}
+.version-row{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px}
+.version-row:last-child{border:0}
+.version-number{height:40px;width:40px;border-radius:11px;background:var(--tint);color:var(--pink);font-weight:800;font-size:13px;display:grid;place-items:center;flex:none}
+.version-row h3{font-size:13px;margin-bottom:6px}
+.version-row p{font-size:11px;color:var(--muted)}
+.version-row .btn{margin-left:auto}
+.review-note{padding:14px 17px;background:#f5f3fa;border-radius:10px;font-size:11px;line-height:1.8;color:#6c6377;margin-top:18px}
+/* Chat-first editing and visible request states. */
+.studio-layout.chat-first{grid-template-columns:minmax(360px, .85fr) minmax(0,1.5fr);gap:22px}
+.studio-preview-column{min-width:0}
+.chat-panel .panel-head>.row{gap:8px}
+.chat-panel .panel-head svg{width:18px;height:18px;color:var(--pink)}
+.chat-panel .panel-body{padding:18px}
+.chat-panel .chat{height:30vh;min-height:220px;max-height:330px;margin-bottom:16px;padding-right:4px;scrollbar-width:thin}
+.chat-panel .bubble{font-size:12px;padding:13px 14px}
+.chat-panel .bubble small{font-size:10px}
+.chat-panel textarea{min-height:90px;font-size:12px;line-height:1.8}
+.chat-panel .chips{gap:6px}
+.chat-panel .chip{font-size:11px}
+.chat-panel .field{font-size:12px}
+.direct-edit summary{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px;cursor:pointer;list-style:none}
+.direct-edit summary::-webkit-details-marker{display:none}
+.direct-edit summary strong{display:block;font-size:12px;font-weight:700}
+.direct-edit summary small{display:block;font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6}
+.direct-edit summary>svg{width:16px;height:16px;color:var(--muted);transform:rotate(90deg)}
+.direct-edit[open] summary{border-bottom:1px solid var(--line)}
+.direct-edit[open] summary>svg{transform:rotate(-90deg)}
+.direct-edit .panel-body{padding:18px}
+.manual-fields{padding:0;margin:0;border:0;min-width:0}
+.manual-fields:disabled{opacity:.65}
+.preview-helper{padding:12px 15px 0;font-size:11px;line-height:1.7;color:var(--muted)}
+.request-idle{display:flex;align-items:flex-start;gap:8px;padding:12px;background:#f8f6fb;border-radius:9px;margin-bottom:16px;font-size:11px;line-height:1.7;color:#847888}
+.request-idle svg{width:16px;height:16px;color:var(--pink);margin-top:1px}
+.request-state{padding:14px;border:1px solid #e5e0ec;background:#f8f6fb;border-radius:11px;margin-bottom:16px}
+.request-state-head{display:flex;align-items:center;gap:7px;font-size:12px;color:#65527b;flex-wrap:wrap}
+.request-state-head svg{width:16px;height:16px}
+.request-state p{font-size:11px;line-height:1.85;color:#71667b;margin-top:8px;overflow-wrap:anywhere}
+.request-state.processing{background:#fff6fb;border-color:#f3d9e7}
+.request-state.processing .request-state-head{color:var(--pink)}
+.request-state.success{background:#f0faf5;border-color:#dceee2}
+.request-state.success .request-state-head{color:#247453}
+.request-state.error{background:#fff5f4;border-color:#f4d9d5}
+.request-state.error .request-state-head{color:#a34741}
+.request-state.clarify{background:#fffaf0;border-color:#f1e3c6}
+.request-state.clarify .request-state-head{color:#8d6b30}
+.request-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.request-actions .btn{padding:7px 10px;font-size:10px;min-height:32px}
+.request-spinner{height:14px;width:14px;border:2px solid #f2c4dc;border-top-color:var(--pink);border-radius:50%;animation:request-spin .85s linear infinite;flex:none}
+.scenario-lab{margin-top:15px;border-top:1px solid var(--line);padding-top:13px}
+.scenario-lab summary{cursor:pointer;color:var(--muted);font-size:10px}
+.scenario-lab p{font-size:10px;line-height:1.8;color:var(--muted);margin-top:9px}
+.scenario-buttons{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.scenario-buttons .chip{font-size:10px;padding:6px 8px;background:#fff;border-color:var(--line)}
+.scenario-buttons .chip.selected{background:var(--tint);border-color:#e4a6c8;color:var(--pink)}
+@keyframes request-spin{to{transform:rotate(360deg)}}
+@media(max-width:1000px){.studio-layout.chat-first{grid-template-columns:340px minmax(0,1fr);gap:16px}.chat-first .canvas{padding:10px}.chat-first .preview-controls{flex-wrap:wrap}.chat-first .preview-controls .row{gap:5px}}
+@media(max-width:800px){.studio-layout.chat-first{grid-template-columns:1fr}.chat-panel .chat{min-height:190px;max-height:260px;height:27vh}.chat-first .canvas{max-height:650px}.chat-panel .panel-body{padding:16px}.direct-edit summary{padding:16px}}
+@media(prefers-reduced-motion:reduce){.request-spinner{animation:none}}
+/* Scoped CTA design controls */
+#button-editor[hidden]{display:none}
+#button-fields{border:0;padding:0;margin:16px 0 0;min-width:0}
+#button-fields input[type=color]{width:100%;height:44px;padding:5px;cursor:pointer;border:1px solid var(--line,#e4e4eb);border-radius:10px;background:#fff}
+#button-fields select{width:100%;min-width:0}
+#button-fields:disabled{opacity:.6}
+#content-editor[hidden]{display:none}
+#content-fields{border:0;padding:0;margin:16px 0;min-width:0;max-height:440px;overflow:auto}
+#content-fields textarea:focus{outline:2px solid #d60076;outline-offset:2px}
+#content-fields:disabled{opacity:.6}
+/* Full-height editor: large canvas and a single mode-switching side panel. */
+.editing-workspace main{padding:0;min-height:0}
+.editing-workspace .footer{display:none}
+.workspace.studio-container{max-width:none;padding:14px 20px 48px;height:calc(100dvh - 78px);display:flex;flex-direction:column;gap:14px}
+.workspace-toolbar{display:flex;align-items:center;gap:24px;flex:none;min-height:64px}
+.workspace-title{min-width:120px;flex:1}
+.workspace-title strong{font-size:15px;display:block;max-width:350px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.workspace-title .backlink{margin:0 0 6px}
+#workspace-dates{border:0;padding:0;margin:0;display:flex;gap:12px;min-width:0}
+#workspace-dates .field{font-size:10px;gap:4px}
+#workspace-dates input{padding:7px 10px;font-size:12px;width:150px}
+.workspace-actions{gap:8px;flex-wrap:wrap}
+.workspace .workspace-layout{grid-template-columns:370px minmax(0,1fr);gap:16px;flex:1;min-height:0;align-items:stretch}
+.workspace .studio-preview-column{min-height:0;display:flex}
+.workspace .studio-preview-column>section{width:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.workspace .preview-controls{padding:10px 14px;flex:none}
+.workspace .preview-helper{padding-top:6px}
+.workspace .block-selector{margin-top:6px}
+.workspace .canvas{max-height:none;flex:1;min-height:0;padding:18px;overscroll-behavior:contain}
+.workspace .canvas-frame:not(.mobile){max-width:100%}
+.workspace-side{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.workspace-tabs{display:flex;padding:8px;gap:6px;border-bottom:1px solid var(--line);flex:none}
+.workspace-tabs button{flex:1;padding:12px;border-radius:8px;font-size:13px;font-weight:700;color:var(--muted)}
+.workspace-tabs button.active{background:var(--tint);color:var(--pink)}
+#workspace-chat[hidden],#workspace-direct[hidden]{display:none}
+#workspace-chat{flex:1;min-height:0;display:flex;overflow:auto}
+.workspace #chat-panel-inner{display:flex;flex-direction:column;flex:1;min-height:0;padding:14px;gap:10px;overflow:auto}
+.workspace .chat-panel .chat{flex:1;min-height:80px;height:auto;max-height:none;margin:0;overflow:auto}
+.workspace #chat-form{flex:none}
+.workspace #chat-form textarea{height:74px;min-height:60px}
+.workspace .request-idle,.workspace .request-state{flex:none;margin:0;padding:10px}
+.workspace .scenario-lab{margin:0;padding-top:8px;flex:none}
+.workspace .chat-panel .chips{margin:7px 0}
+#workspace-direct{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+.workspace-tip{padding:14px 16px;font-size:11px;color:var(--muted);line-height:1.7;border-bottom:1px solid var(--line)}
+.workspace #content-fields{max-height:none;overflow:visible}
+.workspace #content-editor .panel-body,.workspace #button-editor .panel-body{padding:16px}
+.workspace #content-editor .panel-head,.workspace #button-editor .panel-head{padding:12px 16px}
+.editing-workspace .demo-dock{bottom:8px;padding:5px 10px;font-size:9px}
+@media(min-width:1600px){.workspace .workspace-layout{grid-template-columns:410px minmax(0,1fr)}}
+@media(max-width:1100px) and (min-width:801px){.workspace .workspace-layout{grid-template-columns:330px minmax(0,1fr)}.workspace-toolbar{gap:12px}.workspace-title strong{max-width:180px}#workspace-dates input{width:130px}.workspace-actions .btn{padding:8px}.workspace .preview-controls{flex-wrap:wrap}}
+@media(max-width:800px){.workspace.studio-container{height:auto;min-height:calc(100dvh - 65px);padding:12px 12px 65px}.workspace-toolbar{flex-wrap:wrap;gap:12px}.workspace-title{flex-basis:100%}.workspace-title strong{max-width:100%}#workspace-dates{flex:1}#workspace-dates .field{flex:1}#workspace-dates input{width:100%;min-width:0}.workspace-actions{width:100%}.workspace .workspace-layout{display:flex;flex-direction:column}.workspace .studio-preview-column{height:52dvh;min-height:340px}.workspace-side{height:65dvh;min-height:460px}.workspace .canvas{padding:8px}.workspace .preview-controls{flex-wrap:wrap}.workspace .preview-helper{font-size:10px}}
+.version-preview-modal.modal{width:min(1000px,96vw);max-width:1000px;max-height:92dvh;display:flex;flex-direction:column;overflow:hidden}
+.version-preview-modal .modal-head,.version-preview-modal .modal-actions{flex:none}
+.version-preview-frame{margin-top:14px;min-height:0;overflow:auto;background:#efedf3;border:1px solid var(--line);border-radius:10px;overscroll-behavior:contain}
+.version-preview-frame iframe{display:block;width:100%;min-height:500px;border:0}
+@media(max-width:800px){.workspace .studio-preview-column{order:0}.workspace .workspace-side{order:1}}
+/* Admin preference: choose which side holds the conversation and direct editor. */
+.workspace.chat-right .workspace-layout{grid-template-columns:minmax(0,1fr) 370px}
+.workspace.chat-right .studio-preview-column{order:0}
+.workspace.chat-right .workspace-side{order:1}
+.chat-position{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:11px;font-weight:700;margin:0 0 3px 1px;flex:none}
+.chat-position>span{margin-right:7px}
+.chat-position button{padding:5px 12px;border:1px solid var(--line);border-radius:7px;font-size:11px;font-weight:700;color:var(--muted);background:#fff}
+.chat-position button.active{background:var(--tint);border-color:#efc0d9;color:var(--pink)}
+/* The action area has fixed columns so every version preview starts at the same position. */
+.version-row{display:grid;grid-template-columns:40px minmax(0,1fr) 112px 148px;gap:16px}
+.version-row .version-text{min-width:0}
+.version-row .btn{width:100%;margin:0;white-space:nowrap}
+@media(min-width:1600px){.workspace.chat-right .workspace-layout{grid-template-columns:minmax(0,1fr) 410px}}
+@media(max-width:1100px) and (min-width:801px){.workspace.chat-right .workspace-layout{grid-template-columns:minmax(0,1fr) 330px}}
+@media(max-width:800px){.workspace.chat-right .workspace-layout{display:flex;flex-direction:column}.workspace.chat-right .studio-preview-column{order:0}.workspace.chat-right .workspace-side{order:1}}
+@media(max-width:620px){.version-row{grid-template-columns:40px minmax(0,1fr);gap:10px 12px}.version-row .version-text{min-width:0}.version-row .btn{grid-column:2;width:100%}}
+.selection-context{display:block;margin:2px 0 0;padding:9px 11px;border:1px solid #f2cfdf;border-radius:8px;background:#fff7fb;color:#9d2565;font-size:11px;font-weight:700;line-height:1.5;overflow-wrap:anywhere}

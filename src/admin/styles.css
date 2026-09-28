@@ -1,0 +1,7 @@
+/* 관리자 앱 스타일. 사용자 전용(user.css)은 싣지 않는다. */
+@import '@shared/styles/base.css';
+@import '@shared/styles/layout.css';
+@import '@shared/styles/components.css';
+@import '@shared/styles/admin.css';
+@import '@shared/styles/editor.css';
+@import '@shared/styles/responsive.css';

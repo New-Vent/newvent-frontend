@@ -1,0 +1,73 @@
+/* admin.css — 관리자 화면 — 목록 표 · 생성 마법사 · 상태 필터 · 게시 점검.
+   newvent-design.html 의 <style> 에서 원본 순서를 보존해 분리했다. */
+
+.table-wrap{overflow:auto}
+.admin-table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+.admin-table th{background:#faf9fc;color:var(--muted);padding:15px 20px;text-align:left;font-size:11px;font-weight:600}
+.admin-table td{padding:20px;border-top:1px solid var(--line)}
+.admin-table td:first-child{white-space:normal;min-width:250px}
+.admin-table h3{font-size:13px;margin-bottom:6px}
+.admin-table small{font-size:10px;color:var(--muted)}
+.admin-table .row{gap:6px}
+/* Event creation: basic information, then a starting method. */
+.create-container{max-width:1180px}
+.create-progress{display:flex;gap:38px;list-style:none;padding:0;margin:0 0 27px}
+.create-progress li{display:flex;align-items:center;gap:9px;color:#98909d;font-size:13px;font-weight:700}
+.create-progress li>span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#eeebf2;font-size:12px}
+.create-progress .current{color:var(--pink)}
+.create-progress .current>span{color:#fff;background:var(--pink)}
+.create-progress .done{color:var(--green)}
+.create-progress .done>span{background:#e5f4ed}
+.create-progress svg{width:15px;height:15px}
+.create-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;align-items:start}
+.create-layout .panel-body{padding:26px}
+.create-layout .field{font-size:12px;gap:9px}
+.create-layout input,.create-layout select,.create-layout textarea{font-size:13px;padding:12px}
+.creation-summary{padding:24px;position:sticky;top:105px;min-width:0}
+.creation-summary h3{font-size:17px;margin-top:13px}
+.creation-summary dd{overflow-wrap:anywhere}
+.creation-summary .facts{margin-top:20px;gap:21px}
+.creation-summary .fact{flex-direction:column;gap:6px}
+.create-actions{display:flex;justify-content:space-between;gap:12px;margin-top:17px;padding-top:22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.create-error{color:#ba2853;font-size:12px;line-height:1.7}
+.create-error:empty{display:none}
+.create-error:not(:empty){padding:12px 0}
+.creation-methods{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.method-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1px solid var(--line);border-radius:13px;padding:19px;gap:12px;background:white;min-width:0}
+.method-card>svg{color:var(--pink);width:23px;height:23px}
+.method-card strong{font-size:14px;line-height:1.7}
+.method-card>span{font-size:11px;color:var(--muted);line-height:1.8}
+.method-card.selected{border-color:var(--pink);background:#fff6fb;box-shadow:inset 0 0 0 1px var(--pink)}
+.creation-section-title{margin:27px 0 17px}
+.creation-section-title h3{font-size:15px;margin-bottom:7px}
+.creation-section-title p{font-size:12px;color:var(--muted)}
+.create-template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.create-template-grid .template-option{position:relative}
+.create-template-grid .template-option.selected{border:2px solid var(--pink)}
+.create-template-grid .template-option .name{padding:12px 13px 6px;display:flex;justify-content:space-between;gap:5px;align-items:center}
+.create-template-detail{display:block;font-size:10px;color:var(--muted);padding:0 13px 13px}
+.template-restriction{display:block;font-size:10px;line-height:1.6;color:#925c28;padding:0 13px 12px}
+.template-option[aria-disabled="true"]{opacity:.65}
+.create-layout textarea{min-height:155px}
+@media(max-width:850px){.create-layout{grid-template-columns:1fr}.creation-summary{position:static}.creation-summary .facts{display:grid;grid-template-columns:1fr 1fr}.create-layout .panel-body{padding:21px}}
+@media(max-width:440px){.creation-methods{grid-template-columns:1fr}.method-card{gap:7px;padding:16px}.create-template-grid{grid-template-columns:1fr}.create-actions .btn{font-size:11px}.create-layout .field-pair{grid-template-columns:1fr}.creation-summary .facts{grid-template-columns:1fr}.create-progress{gap:25px}.create-actions{gap:10px}.create-actions .btn.primary{flex:1}}
+.admin-list-tabs{display:flex;gap:5px;margin-top:12px}
+.admin-list-tabs button{padding:7px 12px;border-radius:8px;color:var(--muted);font-size:12px;font-weight:700}
+.admin-list-tabs button.active{color:var(--pink);background:var(--tint)}
+.admin-table .btn.danger{color:#b23c56;border-color:#f4d2d9}
+.admin-table .btn.danger:hover{background:#fff1f3}
+.admin-table td:last-child .row{flex-wrap:wrap}
+.admin-status-filters{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px}
+.admin-status-filters button{padding:8px 12px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:11px;color:var(--muted);font-weight:700}
+.admin-status-filters button.active{background:var(--tint);color:var(--pink);border-color:#eec5da}
+.admin-result-count{color:var(--muted);font-size:11px;margin:0 0 9px}
+.publish-checks{padding:13px 16px;border:1px solid var(--line);border-radius:11px;margin:12px 0;background:#fcfbfd}
+.publish-checks h3{font-size:13px;margin-bottom:10px}
+.publish-checks ul{list-style:none;padding:0;margin:0 0 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.publish-checks li{font-size:11px;line-height:1.6;padding:7px 9px;border-radius:7px;background:#eaf7f2;color:#176348}
+.publish-checks li.fail{background:#fff1f0;color:#9a3836}
+.publish-checks dl{display:grid;gap:7px;font-size:11px;margin:0}
+.publish-checks dl>div{display:flex;justify-content:space-between;gap:9px}
+.publish-checks dt{color:var(--muted)}
+.publish-checks dd{text-align:right;font-weight:700;overflow-wrap:anywhere}
+.publish-checks .review-note{margin-top:11px}

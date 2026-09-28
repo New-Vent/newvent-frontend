@@ -1,0 +1,6 @@
+/* 사용자 앱 스타일. 편집 스튜디오·관리자 스타일은 싣지 않는다. */
+@import '@shared/styles/base.css';
+@import '@shared/styles/layout.css';
+@import '@shared/styles/components.css';
+@import '@shared/styles/user.css';
+@import '@shared/styles/responsive.css';
