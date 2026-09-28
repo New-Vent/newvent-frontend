@@ -1,0 +1,11 @@
+/** 로그인. 원본: loginView */
+
+import { esc } from '@shared/dom.js'
+import { icon } from '@shared/icons.js'
+import { button } from '@shared/ui/controls.js'
+
+function loginView(title='NewVent에 오신 것을 환영해요'){
+ return '<div class="container"><section class="login card"><span class="eyebrow">WELCOME TO NEWVENT</span><h1>'+esc(title)+'</h1><p>프로토타입에서 체험할 역할을 선택해주세요.</p>'+button('role',icon('user')+'사용자로 체험하기','data-role="user"','btn primary wide')+button('role',icon('layers')+'관리자로 체험하기','data-role="admin"','btn wide')+'<p class="helper" style="margin:20px 0 0">실제 계정 없이 화면과 동작을 확인할 수 있습니다.</p></section></div>';
+}
+
+export { loginView }
