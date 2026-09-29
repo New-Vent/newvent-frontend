@@ -72,7 +72,7 @@ function finishCreation(){
  if(c.mode==='ai'&&c.prompt.trim().length>2000)return creationError('기획은 2,000자 이내로 입력해주세요.','prompt');
  const cfg=c.mode==='ai'?AI_START:CONFIGS.find(x=>x.templateId===c.templateId);if(!cfg)return;
  if(cfg.templateId==='tpl-3'&&c.audience!=='VIP · FAMILY 회원')return creationError('VIP 감사 템플릿은 VIP · FAMILY 참여 대상에서 사용할 수 있어요.');
- const id='EVT-2026-'+String(Math.max(...db.events.map(e=>Number(e.id.split('-').at(-1))))+1).padStart(3,'0');
+ const id='EVT-2026-'+String(Math.max(...state.db.events.map(e=>Number(e.id.split('-').at(-1))))+1).padStart(3,'0');
  const s=baseSnapshot(cfg);s.title=c.title.trim();s.start=c.start;s.end=c.end;
  const e={...clone(cfg),id,audience:c.audience,start:c.start,end:c.end,creationMethod:c.mode,creationPrompt:c.mode==='ai'?c.prompt.trim():null,publishedVersion:null,versions:[{v:1,source:null,createdAt:new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour12:false}),summary:c.mode==='ai'?'기획을 보관하고 예시 초안으로 시작':'기본 정보를 적용해 템플릿으로 시작',snapshot:s}]};
  state.db.events.push(e);
