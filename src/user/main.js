@@ -2,6 +2,7 @@ import './styles.css'
 
 import { $ } from '@shared/dom.js'
 import { createApi } from '@shared/api.js'
+import { useApi } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -26,6 +27,9 @@ import { showLoginPrompt, showResult } from './actions.js'
  * 함수들을 손대지 않는다. 라우터가 주소를 읽어 ui.route 를 맞춘다.
  */
 export const api = createApi({ authBase: '/api/auth' })
+
+// repo 가 이 클라이언트로 서버를 부른다 (목업 모드면 안 쓰인다).
+useApi(api)
 
 const VIEWS = { home: homeView, event: eventView, my: myView, login: loginView }
 

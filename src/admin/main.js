@@ -8,6 +8,7 @@ import './styles.css'
 
 import { $, esc } from '@shared/dom.js'
 import { createApi } from '@shared/api.js'
+import { useApi } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -35,6 +36,9 @@ import { loginView } from './views/login.js'
  */
 // 사용자 앱과 인증 경로가 다르다 — Refresh 쿠키가 nv_admin_rt (Path=/api/admin/auth).
 export const api = createApi({ authBase: '/api/admin/auth' })
+
+// repo 가 이 클라이언트로 서버를 부른다 (목업 모드면 안 쓰인다).
+useApi(api)
 
 const VIEWS = { admin: adminView, editor: editorView, versions: versionsView, create: creationView, login: loginView }
 
