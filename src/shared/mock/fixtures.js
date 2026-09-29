@@ -9,7 +9,11 @@ import { DEMO_DATE, USER_ID } from '@shared/constants.js'
 function baseSnapshot(c){
  const doc=new DOMParser().parseFromString(TEMPLATE_BODIES[c.templateId],'text/html');
  const text=s=>{const node=doc.querySelector(s);if(!node)return '';const walker=doc.createTreeWalker(node,NodeFilter.SHOW_TEXT),parts=[];while(walker.nextNode())parts.push(walker.currentNode.textContent);return parts.join(' ').replace(/\s+/g,' ').trim();};
- return {templateId:c.templateId,title:text('.hero-title'),intro:text('.hero-desc'),benefitHeading:text('[data-block="benefits"] h2'),cta:text('[data-slot="cta-link"]'),start:c.start,end:c.end};
+ // blocks: LLM 이 생성한 블록 HTML 을 담는 자리.
+ //   { hero: '<section data-block="hero">…</section>', … }
+ //   비어 있으면 아래 필드로 템플릿 슬롯을 채운다(기존 동작).
+ //   notices 는 서버 소유라 여기 들어와도 적용되지 않는다.
+ return {templateId:c.templateId,blocks:{},title:text('.hero-title'),intro:text('.hero-desc'),benefitHeading:text('[data-block="benefits"] h2'),cta:text('[data-slot="cta-link"]'),start:c.start,end:c.end};
 }
 
 function initialDatabase(){

@@ -1,5 +1,9 @@
 /** iframe 연결·재연결. 원본: bindFrame · hydrate */
 
+import { showSelectedTarget } from '@shared/editor-state.js'
+
+import { SERVER_OWNED, takeStagedDocument } from '@shared/preview/document.js'
+
 import { participationAccess } from '@shared/participation.js'
 
 import { BLOCK_LABELS, CONTENT_FIELDS } from '@shared/constants.js'
@@ -18,19 +22,22 @@ function bindFrame(frame){
  resize();const ro=new ResizeObserver(resize);ro.observe(box);state.observers.push(ro);
  if(mode==='editor'){
   doc.querySelectorAll('[data-block]').forEach(b=>{b.style.cursor=b.dataset.block==='notices'?'default':'pointer';b.title=BLOCK_LABELS[b.dataset.block]+' 영역';});
+  // 스크립트를 살렸으므로 템플릿 자체 위임(.ev-container 의 데모 토스트)이
+  // 함께 뜬다. capture 단계에서 먼저 잡고 전파를 끊는다.
   doc.addEventListener('click',ev=>{
    ev.preventDefault();const b=ev.target.closest('[data-block]');if(!b)return;
+   ev.stopPropagation();
    if(b.dataset.block==='notices'){toast('유의사항은 고정된 원본을 유지합니다.');return;}
    ui.block=b.dataset.block;
    let key=ev.target.closest('[data-nv-text]')?.dataset.nvText;
    Object.entries(CONTENT_FIELDS).forEach(([k,q])=>{if(ev.target.closest(q))key='field:'+k;});
    showSelectedTarget(e,key,ev.target);applySelection();refreshButtonEditor();refreshContentEditor(key);
-  });
+  },true);
   applySelection();refreshContentEditor();return;
  }
  if(mode==='readonly'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
-  doc.addEventListener('click',ev=>ev.preventDefault(),true);return;
+  doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();},true);return;
  }
  const st=eventStatus(e),p=ui.logged?currentParticipation(e):null;
  if(st!=='live'||participationAccess(e).kind==='grade'){
@@ -41,7 +48,8 @@ function bindFrame(frame){
  }
  doc.querySelectorAll('button[data-vote]').forEach(b=>b.setAttribute('aria-pressed',String(ui.votes[e.id]===b.dataset.vote)));
  doc.addEventListener('click',ev=>{
-  const b=ev.target.closest('button,a');if(!b)return;ev.preventDefault();if(b.disabled)return;
+  const b=ev.target.closest('button,a');if(!b)return;
+  ev.preventDefault();ev.stopPropagation();if(b.disabled)return;
   if(!['ready','login','done'].includes(participationAccess(e).kind))return toast(participationAccess(e).message);
   if(!ui.logged){showLoginPrompt();return;}
   const record=currentParticipation(e);
@@ -65,10 +73,60 @@ function bindFrame(frame){
    const idx=Array.from(doc.querySelectorAll('.hl-pouch-btn')).indexOf(b);
    participate(e,idx);
   }
- });
+ },true);
+}
+
+
+/**
+ * 블록 하나만 갈아끼운다 (AI_EDIT_RULES 2-2).
+ *
+ * 전체 문서를 다시 만들면 iframe 이 리로드되어 깜빡이고 스크롤이 날아간다.
+ * LLM 응답은 `<section data-block="…">` 전체(outerHTML)여야 하며,
+ * 내부 조각만 오면 중첩 section 이 생기므로 거부한다.
+ *
+ * 교체 후 템플릿이 노출하는 window.newVentReinit(key) 를 불러
+ * 타이머(template_4)·참가자 카운터(template_5)를 새 DOM 에 다시 연결한다.
+ *
+ * @returns {boolean} 교체 성공 여부
+ */
+function replaceBlock(frame, key, html) {
+  const doc = frame?.contentDocument
+  if (!doc || !html) return false
+
+  // 유의사항은 서버 소유 — 호스트에서도 한 번 더 막는다.
+  if (SERVER_OWNED.has(key)) {
+    toast('유의사항은 고정된 원본을 유지합니다.')
+    return false
+  }
+
+  const target = doc.querySelector(`[data-block="${key}"]`)
+  if (!target) return false
+
+  const next = new DOMParser()
+    .parseFromString(html, 'text/html')
+    .querySelector(`[data-block="${key}"]`)
+  if (!next) {
+    // 규격 위반. 조용히 넘기면 화면만 안 바뀌어 원인을 못 찾는다.
+    console.warn(`[newvent] ${key} 블록 응답이 section outerHTML 이 아닙니다.`)
+    return false
+  }
+
+  target.replaceWith(doc.importNode(next, true))
+  try {
+    frame.contentWindow?.newVentReinit?.(key)
+  } catch (e) {
+    console.warn('[newvent] newVentReinit 실패', e)
+  }
+  return true
 }
 
 function hydrate(root=document){
+ // 뷰가 찍어둔 자리표시자(data-doc)를 실제 문서로 채운다.
+ root.querySelectorAll('iframe[data-doc]').forEach(frame=>{
+  const html=takeStagedDocument(frame.dataset.doc);
+  delete frame.dataset.doc;
+  if(html!==undefined)frame.srcdoc=html;
+ });
  root.querySelectorAll('.thumb').forEach(el=>{
   if(el.dataset.bound)return;el.dataset.bound='true';
   const frame=el.querySelector('iframe');const scale=()=>{if(el.isConnected)frame.style.transform='scale('+(el.clientWidth/720)+')';};
@@ -77,4 +135,4 @@ function hydrate(root=document){
  root.querySelectorAll('.event-frame').forEach(frame=>{frame.onload=()=>bindFrame(frame);bindFrame(frame);});
 }
 
-export { bindFrame, hydrate }
+export { bindFrame, hydrate, replaceBlock }
