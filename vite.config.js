@@ -1,7 +1,46 @@
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
+import { createReadStream, existsSync, statSync } from 'node:fs'
+import { extname, join, normalize } from 'node:path'
 
 const r = (p) => fileURLToPath(new URL(p, import.meta.url))
+
+const MIME = {
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.woff2': 'font/woff2',
+}
+
+/**
+ * dev 에서 public/assets 를 루트 /assets/ 로도 서빙한다.
+ *
+ * Vite dev 는 public/ 을 base 아래에 서빙하므로 관리자 앱에서는
+ * /admin/assets/event.css 가 된다. 하지만 미리보기 문서(iframe)는
+ * 운영 기준인 절대경로 /assets/event.css 를 링크한다 — nginx 가
+ * 거기서 서빙하기 때문이다. 그 차이를 dev 에서만 메운다.
+ */
+function serveAssetsAtRoot(dir) {
+  return {
+    name: 'newvent-assets-at-root',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const path = (req.url || '').split('?')[0]
+        if (!path.startsWith('/assets/')) return next()
+
+        const file = join(dir, normalize(path.slice('/assets/'.length)))
+        if (!file.startsWith(dir) || !existsSync(file) || !statSync(file).isFile()) return next()
+
+        res.setHeader('Content-Type', MIME[extname(file)] || 'application/octet-stream')
+        createReadStream(file).pipe(res)
+      })
+    },
+  }
+}
 
 /**
  * 앱을 두 벌로 나눠 빌드한다.
@@ -34,16 +73,22 @@ const proxy = {
   '^/e/': { target: API_TARGET, changeOrigin: true },
 }
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   const t = TARGETS[APP]
 
   return {
     root: r(`./src/${APP}`),
     base: t.base,
 
-    // public/ 은 사용자 빌드에서만 복사한다. 양쪽에서 복사하면
+    // public/ 은 사용자 "빌드"에서만 복사한다. 양쪽에서 복사하면
     // /assets/event.css 가 /srv/web 과 /srv/web/admin 에 중복된다.
-    publicDir: APP === 'user' ? r('./public') : false,
+    //
+    // ★ dev 서버에서는 양쪽 다 켠다. 편집 스튜디오의 미리보기가
+    //   /assets/event.css 를 링크하는데, 끄면 관리자 dev 에서 404 가 난다.
+    //   운영에서는 nginx 가 /assets/ 를 서빙하므로 빌드 산출물에 없어도 된다.
+    publicDir: command === 'serve' || APP === 'user' ? r('./public') : false,
+
+    plugins: [serveAssetsAtRoot(r('./public/assets'))],
 
     resolve: {
       alias: { '@shared': r('./src/shared') },
