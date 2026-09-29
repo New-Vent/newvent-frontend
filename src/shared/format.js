@@ -1,9 +1,6 @@
 /** 날짜·상태 표기. 원본: shortDate · eventStatus · statusLabel … */
 
-import { state } from '@shared/state.js'
-
 import { ui } from '@shared/state.js'
-
 import { DEMO_DATE } from './constants.js'
 import { published, currentParticipation, latestParticipation } from './selectors.js'
 

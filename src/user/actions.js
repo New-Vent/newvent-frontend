@@ -1,5 +1,7 @@
 /** 참여 동작. 원본: participate · showResult · showLoginPrompt */
 
+import { participationAccess } from '@shared/participation.js'
+
 import { DEMO_DATE, USER_ID } from '@shared/constants.js'
 import { esc } from '@shared/dom.js'
 import { eventStatus, shortDate } from '@shared/format.js'

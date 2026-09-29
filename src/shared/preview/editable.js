@@ -1,5 +1,7 @@
 /** 미리보기 안 인라인 편집. 원본: markEditableText · applyContentEdits … */
 
+import { requestPending, updateEditor } from '@shared/editor-state.js'
+
 import { BLOCK_LABELS, CONTENT_FIELDS, LABELS } from '@shared/constants.js'
 import { $, esc } from '@shared/dom.js'
 import { currentDraft, rows } from '@shared/selectors.js'
