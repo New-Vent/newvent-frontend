@@ -4,9 +4,7 @@ import { esc } from '@shared/dom.js'
 import { icon } from '@shared/icons.js'
 import { eventById, rows } from '@shared/selectors.js'
 import { ui } from '@shared/state.js'
-import { button } from '@shared/ui/controls.js'
-
-function metric(label,value,sub,ico){return '<div class="card metric"><div class="label">'+label+icon(ico)+'</div><strong>'+value+'</strong><p>'+sub+'</p></div>';}
+import { button, metric } from '@shared/ui/controls.js'
 
 function myView(){
  if(!ui.logged)return loginView('참여 내역을 보려면 로그인해주세요');
