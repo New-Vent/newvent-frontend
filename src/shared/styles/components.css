@@ -1,4 +1,4 @@
-/* components.css — 버튼 · 배지 · 카드 · 패널 · 폼 필드 · 칩 · 모달 · 토스트.
+/* components.css — 버튼 · 배지 · 카드 · 지표 · 검색 · 필터바 · 패널 · 폼 필드 · 모달 · 토스트.
    newvent-design.html 의 <style> 에서 원본 순서를 보존해 분리했다. */
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;min-height:43px;border-radius:10px;font-size:13px;font-weight:700;line-height:1.4;background:#fff;border:1px solid var(--line);transition:background .15s,transform .15s}
@@ -23,6 +23,27 @@
 .wrap{flex-wrap:wrap}
 .stack{display:flex;flex-direction:column;gap:18px}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.search{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 14px;min-width:260px}
+.search svg{color:#9b98a5;width:17px}
+.search input{width:100%;border:0;outline:0!important;font-size:12px;background:none}
+.filterbar{display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid var(--line);padding:19px 0}
+.filters{display:flex;gap:18px;flex-wrap:wrap}
+.filters button{font-size:12px;color:var(--muted);padding:3px 0}
+.filters button.active{color:var(--pink);font-weight:800}
+.filters button.active:before{content:"";display:inline-block;width:5px;height:5px;background:var(--pink);border-radius:50%;margin:0 6px 2px 0}
+.result-count{font-size:11px;color:var(--muted)}
+.empty{text-align:center;padding:55px 20px;background:white;border:1px dashed #e3dce7;border-radius:16px;grid-column:1/-1}
+.empty svg{color:var(--pink);width:30px;height:30px;margin-bottom:14px}
+.empty h3{font-size:17px;margin-bottom:8px}
+.empty p{font-size:13px;color:var(--muted);margin-bottom:18px}
+.page-heading{margin-bottom:27px}
+.page-heading h1{font-size:29px;letter-spacing:-1px;margin:10px 0 8px}
+.page-heading p{font-size:13px;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:17px;margin-bottom:26px}
+.metric{padding:23px}
+.metric .label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.metric strong{display:block;font-size:30px;margin:12px 0 5px;letter-spacing:-1px}
+.metric p{font-size:11px;color:var(--muted)}
 .panel{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden}
 .panel-head{padding:17px 18px;border-bottom:1px solid var(--line);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .panel-body{padding:18px}
