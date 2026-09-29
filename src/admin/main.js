@@ -7,6 +7,7 @@ import { version } from '@shared/selectors.js'
 import './styles.css'
 
 import { $, esc } from '@shared/dom.js'
+import { createApi } from '@shared/api.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -32,6 +33,9 @@ import { loginView } from './views/login.js'
  * 이식한 뷰 함수는 원본 그대로 둔다.
  * BASE 가 '/admin/' 이라 아래 경로는 전부 그 아래 기준이다.
  */
+// 사용자 앱과 인증 경로가 다르다 — Refresh 쿠키가 nv_admin_rt (Path=/api/admin/auth).
+export const api = createApi({ authBase: '/api/admin/auth' })
+
 const VIEWS = { admin: adminView, editor: editorView, versions: versionsView, create: creationView, login: loginView }
 
 const ROUTES = [
@@ -230,7 +234,28 @@ window.addEventListener('beforeunload', (ev) => {
   ev.returnValue = ''
 })
 
-ui.logged = true
 ui.role = 'admin'
 ui.route = 'admin'
-router.start()
+
+/**
+ * 서버 인증 사용 여부.
+ *
+ * 백엔드가 붙기 전까지는 목업 로그인 상태로 돈다. 켜려면
+ *   VITE_API_AUTH=on npm run dev
+ * 또는 .env 에 VITE_API_AUTH=on
+ */
+const AUTH_ENABLED = import.meta.env.VITE_API_AUTH === 'on'
+
+async function start() {
+  if (AUTH_ENABLED) {
+    // 새로고침으로 메모리 토큰이 비었어도 Refresh 쿠키로 되살린다.
+    // 먼저 갱신하고 렌더해야 로그인 화면이 깜빡였다 바뀌지 않는다.
+    // 성공하면 boot() 가 만료 전 갱신 폴링까지 시작한다.
+    ui.logged = await api.boot()
+  } else {
+    ui.logged = true
+  }
+  router.start()
+}
+
+start()
