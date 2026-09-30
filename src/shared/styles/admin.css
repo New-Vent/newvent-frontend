@@ -92,3 +92,51 @@
   margin-top: 16px;
 }
 .admin-pager .btn[disabled] { opacity: 0.4; cursor: default; }
+
+/* ── 목록 3영역 구성 (2026-09-30) ────────────────────────────────── */
+
+/* 지표 카드와 목록 사이 숨 쉴 공간. 붙어 있으면 답답하다. */
+.admin-list-section {
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-list-section .section-title { margin-bottom: 16px; }
+
+/* 탭이 목록의 제목 역할을 한다 — 셋 중 하나가 늘 선택돼 있다. */
+.admin-list-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+.admin-list-tabs button {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+}
+.admin-list-tabs button:hover { color: var(--ink); }
+.admin-list-tabs button.active {
+  background: var(--paper);
+  color: var(--pink);
+  box-shadow: var(--shadow);
+}
+
+/* 표 아래 여백 — 페이저나 화면 끝과 붙지 않게 */
+.admin-list-section .table-wrap { margin-bottom: 8px; }
+.admin-list-section .admin-pager { margin-bottom: 40px; }
+
+/* 관리 열의 버튼이 줄바꿈될 때 간격 유지 */
+.admin-table td .row { flex-wrap: wrap; gap: 6px; }
+
+@media (max-width: 760px) {
+  .admin-list-tabs { width: 100%; }
+  .admin-list-tabs button { flex: 1; padding: 8px 10px; }
+}
