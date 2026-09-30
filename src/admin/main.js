@@ -122,6 +122,35 @@ document.addEventListener('click', (ev) => {
     return
   }
 
+  if(a==='publish-latest'){
+    const e=eventById(b.dataset.id); if(!e||e.deletedAt) return
+    const latest=e.versions.at(-1)
+    if(!validSnapshot(latest.snapshot)) return
+    const was=e.publishedVersion
+    ask(was?'v'+latest.v+'으로 재게시할까요?':'v'+latest.v+'을 게시할까요?',
+      esc(e.name)+' 이벤트가 사용자 화면에 '+(was?'v'+latest.v+' 내용으로 바뀝니다.':'공개됩니다.'),
+      ()=>{ e.publishedVersion=latest.v; e.endedAt=null; persist(); render()
+            toast('v'+latest.v+'을 게시했어요. 사용자 화면에서 확인하세요.') },
+      was?'재게시하기':'게시하기')
+    return
+  }
+  if(a==='end-event'){
+    const e=eventById(b.dataset.id); if(!e||e.deletedAt||e.endedAt) return
+    ask('이벤트를 종료할까요?',
+      esc(e.name)+' 이벤트가 사용자 화면에서 종료 상태가 됩니다. 기간이 남아 있어도 참여를 받지 않아요. 다시 게시하면 되살릴 수 있습니다.',
+      ()=>{ e.endedAt=new Date().toISOString(); persist(); render(); toast('이벤트를 종료했어요.') },
+      '종료하기')
+    return
+  }
+  if(a==='toggle-checkpoint'){
+    const e=currentEvent(), v=version(e,Number(b.dataset.version))
+    if(!v) return
+    v.checkpoint=!v.checkpoint; persist(); render()
+    toast(v.checkpoint?'v'+v.v+'을 저장 지점으로 지정했어요.':'v'+v.v+'의 저장 지점을 해제했어요.')
+    return
+  }
+  if(a==='admin-page'){ui.adminPage=Number(b.dataset.page);render(true);return;}
+  if(a==='clear-period'){ui.adminFrom='';ui.adminTo='';ui.adminPage=1;render();return;}
   if(a==='chat-side'){changeChatSide(b.dataset.side);return;}
   if(a==='admin-list'){ui.adminShowDeleted=b.dataset.view==='deleted';ui.adminStatus='all';render();return;}
   if(a==='admin-status'){ui.adminStatus=b.dataset.status;render();return;}
@@ -171,6 +200,10 @@ document.addEventListener('input',ev=>{
 });
 
 document.addEventListener('change',ev=>{
+ if(ev.target.id==='admin-from'||ev.target.id==='admin-to'){
+  if(ev.target.id==='admin-from')ui.adminFrom=ev.target.value; else ui.adminTo=ev.target.value;
+  ui.adminPage=1;render();return;
+ }
  if(ev.target.matches('[data-demo-grade]')){ui.demoGrade=ev.target.value;render();return;}
  if(ev.target.dataset.select!=='publish-version'||!state.publishSelection)return;
  const e=eventById(state.publishSelection.eventId),selected=e&&version(e,Number(ev.target.value));
