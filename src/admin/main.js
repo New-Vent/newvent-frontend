@@ -18,14 +18,15 @@ import { toast } from '@shared/ui/toast.js'
 import { modal, closeModal, ask } from '@shared/ui/modal.js'
 import { hydrate } from '@shared/preview/frame.js'
 import { createRouter } from '@shared/router.js'
+import { setNavigate } from '@shared/navigate.js'
 import { eventById, currentEvent, currentDraft } from '@shared/selectors.js'
 import { requestFor, requestPending, updateEditor } from '@shared/editor-state.js'
 import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
 import { adminView } from './views/list.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
-import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion } from './views/versions.js'
-import { creationView, startCreation, creationError, validateCreation, finishCreation } from './views/create.js'
+import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
+import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary } from './views/create.js'
 import { loginView } from './views/login.js'
 
 /**
@@ -103,6 +104,9 @@ function navigate(route, id) {
   router.navigate(PATH[route] ? PATH[route](id ?? ui.activeId) : '/')
 }
 
+// 이식한 뷰들이 @shared/navigate.js 를 통해 이걸 부른다.
+setNavigate(navigate)
+
 document.addEventListener('click', (ev) => {
   const link = ev.target.closest('a[data-link]')
   if (link) {
@@ -152,7 +156,42 @@ document.addEventListener('click', (ev) => {
   if(a==='admin-page'){ui.adminPage=Number(b.dataset.page);render(true);return;}
   if(a==='clear-period'){ui.adminFrom='';ui.adminTo='';ui.adminPage=1;render();return;}
   if(a==='chat-side'){changeChatSide(b.dataset.side);return;}
-  if(a==='admin-list'){ui.adminShowDeleted=b.dataset.view==='deleted';ui.adminStatus='all';render();return;}
+  if(a==='admin-tab'){
+    ui.adminTab=b.dataset.tab
+    ui.adminStatus='all'
+    ui.adminPage=1
+    render(true)
+    return
+  }
+  if(a==='unpublish'){
+    const e=eventById(b.dataset.id); if(!e||!e.publishedVersion) return
+    ask('게시를 내릴까요?',
+      esc(e.name)+' 이벤트가 사용자 화면에서 사라집니다. 저장된 버전과 참여 기록은 그대로 남고, 다시 게시할 수 있어요.',
+      ()=>{ e.publishedVersion=null; persist(); render(); toast('게시를 내렸어요.') },
+      '내리기')
+    return
+  }
+  if(a==='restore-publish'){
+    const e=eventById(b.dataset.id); if(!e?.deletedAt) return
+    const latest=e.versions.at(-1)
+    if(!validSnapshot(latest.snapshot)) return
+    ask('휴지통에서 꺼내 게시할까요?',
+      esc(e.name)+' 이벤트를 복구하고 v'+latest.v+'을 바로 게시합니다. 사용자 화면에 다시 나타나요.',
+      ()=>{ delete e.deletedAt; e.endedAt=null; e.publishedVersion=latest.v
+            persist(); render(); toast('복구하고 v'+latest.v+'을 게시했어요.') },
+      '게시하기')
+    return
+  }
+  if(a==='purge-event'){
+    const e=eventById(b.dataset.id); if(!e?.deletedAt) return
+    ask('영구 삭제할까요?',
+      esc(e.name)+' 이벤트와 저장된 버전 '+e.versions.length+'개가 완전히 사라집니다. 되돌릴 수 없어요.',
+      ()=>{ state.db.events=state.db.events.filter(x=>x.id!==e.id)
+            state.db.participations=state.db.participations.filter(p=>p.eventId!==e.id)
+            persist(); render(); toast('영구 삭제했어요.') },
+      '영구 삭제')
+    return
+  }
   if(a==='admin-status'){ui.adminStatus=b.dataset.status;render();return;}
   if(a==='delete-event'){const e=eventById(b.dataset.id);if(!e||e.deletedAt||ui.role!=='admin')return;ask('이벤트를 삭제할까요?',esc(e.name)+' 이벤트가 목록과 사용자 화면에서 숨겨집니다. 버전과 참여 기록은 보관되며 휴지통에서 복구할 수 있어요.',()=>{stopRequest(e.id);e.deletedAt=new Date().toISOString();persist();render();toast('이벤트를 휴지통으로 옮겼어요.');},'삭제하기');return;}
   if(a==='restore-event'){const e=eventById(b.dataset.id);if(!e?.deletedAt||ui.role!=='admin')return;delete e.deletedAt;persist();render();toast('이벤트를 복구했어요.');return;}
@@ -194,8 +233,15 @@ document.addEventListener('input',ev=>{
   if($('#create-error'))$('#create-error').textContent='';
   if($('#creation-summary'))$('#creation-summary').innerHTML=creationSummary();return;
  }
- if(ev.target.id==='event-search'){ui.query=ev.target.value;refreshResults();return;}
- if(ev.target.id==='admin-search'){ui.adminQuery=ev.target.value;$('#admin-results').innerHTML=adminTable(adminFilteredEvents());const count=$('#admin-result-count');if(count)count.textContent=adminFilteredEvents().length+'개 이벤트';return;}
+ if(ev.target.id==='admin-search'){
+  ui.adminQuery=ev.target.value; ui.adminPage=1
+  const pos=ev.target.selectionStart
+  render()
+  // 렌더로 입력창이 새로 그려지므로 포커스와 커서를 되돌려준다.
+  const next=$('#admin-search')
+  if(next){next.focus();try{next.setSelectionRange(pos,pos)}catch{}}
+  return
+ }
  const k=ev.target.dataset.field;if(k&&Object.hasOwn(LABELS,k)&&ui.role==='admin'&&!requestPending()){currentDraft().snapshot[k]=ev.target.value;updateEditor();}
 });
 
