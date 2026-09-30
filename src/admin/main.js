@@ -9,7 +9,7 @@ import './styles.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
-import { useApi } from '@shared/repo.js'
+import { deleteEvent, purgeEvent, restoreEvent, useApi, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -23,7 +23,7 @@ import { eventById, currentEvent, currentDraft } from '@shared/selectors.js'
 import { requestFor, requestPending, updateEditor } from '@shared/editor-state.js'
 import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
-import { adminView } from './views/list.js'
+import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
 import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary } from './views/create.js'
@@ -83,6 +83,8 @@ function render(scroll = false) {
     router.navigate('/login', { replace: true })
     return
   }
+  // 서버 모드 — 목록 화면에 처음 들어올 때 한 번 불러 오고, 다 오면 다시 그린다
+  if (ui.route === 'admin') ensureAdminServer(() => render())
   document.body.classList.toggle('editing-workspace', ui.route === 'editor')
   header()
   $('#app').innerHTML = (VIEWS[ui.route] || adminView)()
@@ -123,6 +125,25 @@ document.addEventListener('click', (ev) => {
   if (a === 'logout') {
     Object.keys(ui.requests).forEach((id) => stopRequest(id, '로그아웃하여 요청을 중단했어요. 기존 내용은 유지됩니다.'))
     logout()
+    return
+  }
+
+  // ── 서버 모드 목록 (VITE_API_AUTH=on) ─────────────────────────
+  //   목업 분기보다 먼저 본다. 게시 · 게시 내리기 · 복구 후 게시는 버튼이 막혀 있어 여기로 안 온다
+  if(USE_SERVER&&['delete-event','restore-event','purge-event','admin-reload'].includes(a)){
+    const reload=()=>loadAdminServer(()=>render())
+    if(a==='admin-reload'){reload();render();return}
+    const e=serverItem(b.dataset.id); if(!e) return
+    const run=(job,ok,fail)=>job().then(()=>toast(ok),err=>toast(err?.message||fail)).finally(reload)
+    if(a==='delete-event'){
+      ask('이벤트를 삭제할까요?',e.name+' 이벤트가 휴지통으로 이동합니다. 휴지통에서 복구할 수 있어요.',
+        ()=>run(()=>deleteEvent(e.id),'이벤트를 휴지통으로 옮겼어요.','삭제하지 못했어요.'),'삭제하기')
+    }
+    if(a==='restore-event')run(()=>restoreEvent(e.id),'이벤트를 복구했어요.','복구하지 못했어요.')
+    if(a==='purge-event'){
+      ask('영구 삭제할까요?',e.name+' 이벤트와 저장된 버전이 완전히 사라집니다. 되돌릴 수 없어요.',
+        ()=>run(()=>purgeEvent(e.id),'영구 삭제했어요.','영구 삭제하지 못했어요.'),'영구 삭제')
+    }
     return
   }
 
@@ -302,6 +323,7 @@ document.addEventListener('input',editButton);
 
 async function logout() {
   if (AUTH_ENABLED) await api.logout()
+  resetAdminServer()
   ui.logged = false
   navigate('login')
   toast('로그아웃했어요.')

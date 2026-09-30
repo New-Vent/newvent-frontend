@@ -13,18 +13,21 @@
 
 import { version } from '@shared/selectors.js'
 
+import { AUTH_ENABLED } from './api.js'
 import { state, ui } from './state.js'
 import { persist } from './persist.js'
 import { DEMO_DATE, USER_ID } from './constants.js'
 import { initialDatabase } from './mock/fixtures.js'
 
 /**
- * 데이터(이벤트 · 참여 · 버전)를 서버에서 읽을지 목업을 쓸지.
+ * 서버를 쓸지 목업을 쓸지 — 인증과 같은 스위치(VITE_API_AUTH) 하나로 정한다.
+ *   on   로그인 · 데이터 모두 실제 서버
+ *   off  전부 목업
  *
- * ★ 인증 스위치(VITE_API_AUTH)와 따로 둔다. 로그인은 실제 서버로, 데이터는 목업으로 돌릴 수 있게.
- *   아직 이 파일의 경로(/api/events 등)가 백엔드 실제 경로와 다르다 — 맞추기 전에는 켜지 않는다.
+ * ★ 화면 단위로 하나씩 붙이는 중이다. 아직 붙이지 않은 화면은 on 이어도 목업(state.db)으로 돈다.
+ *   붙인 화면: 관리자 이벤트 목록(나의 이벤트 · 게시중 · 휴지통) · 삭제 · 복구 · 영구 삭제
  */
-export const USE_SERVER = import.meta.env.VITE_API_DATA === 'on'
+export const USE_SERVER = AUTH_ENABLED
 
 let api = null
 
@@ -47,12 +50,24 @@ export async function loadEvents() {
   return events
 }
 
-export async function loadAdminEvents({ status = 'all', q = '', deleted = false } = {}) {
-  if (!USE_SERVER) return state.db.events
-  const params = new URLSearchParams({ status, q, deleted: String(deleted) })
-  const { events } = await requireApi().get(`/api/admin/events?${params}`)
-  mergeEvents(events)
-  return events
+/**
+ * 관리자 이벤트 목록 · 휴지통 — 서버 페이지를 끝까지 모은다 (50개씩).
+ *
+ * ★ 전부 모으는 이유 — 탭(게시중) · 상태 · 기간 · 개수 · ID 검색을 화면이 계산한다.
+ *   서버는 아직 진행 상태 필터 · ID 검색 · 요약 개수를 주지 않는다. 수백 개를 넘으면 서버 필터로 옮긴다.
+ *
+ * @returns {Promise<Array<{id:number,name:string,status:string,startAt:string|null,endAt:string|null,
+ *                          updatedAt:string,template:string|null,grade:string,closingSoon:boolean}>>}
+ */
+export async function loadAdminEvents({ deleted = false } = {}) {
+  if (!USE_SERVER) return state.db.events.filter((e) => (deleted ? !!e.deletedAt : !e.deletedAt))
+  const path = deleted ? '/api/admin/events/trash' : '/api/admin/events'
+  const out = []
+  for (let page = 0; ; page++) {
+    const d = await requireApi().get(`${path}?page=${page}&size=50`)
+    out.push(...d.content)
+    if (page + 1 >= d.totalPages || d.content.length === 0) return out
+  }
 }
 
 export async function loadParticipations() {
@@ -112,9 +127,8 @@ export async function deleteEvent(eventId) {
     persist()
     return
   }
+  // ★ 서버 모드는 state.db 를 건드리지 않는다 — 목록은 화면이 다시 불러 온다
   await requireApi().del(`/api/admin/events/${eventId}`)
-  const e = findEvent(eventId)
-  if (e) e.deletedAt = new Date().toISOString()
 }
 
 export async function restoreEvent(eventId) {
@@ -124,9 +138,18 @@ export async function restoreEvent(eventId) {
     persist()
     return
   }
-  const event = await requireApi().post(`/api/admin/events/${eventId}/restore`)
-  mergeEvents([event])
-  return event
+  return requireApi().post(`/api/admin/events/${eventId}/restore`)
+}
+
+/** 영구 삭제 — 휴지통에 있는 것만. 서버: DELETE /api/admin/events/{id}/permanent */
+export async function purgeEvent(eventId) {
+  if (!USE_SERVER) {
+    state.db.events = state.db.events.filter((x) => x.id !== eventId)
+    state.db.participations = state.db.participations.filter((p) => p.eventId !== eventId)
+    persist()
+    return
+  }
+  await requireApi().del(`/api/admin/events/${eventId}/permanent`)
 }
 
 export async function participate(eventId, payload) {

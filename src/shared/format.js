@@ -12,6 +12,23 @@ function daysBetween(a,b){return Math.ceil((new Date(b+'T00:00:00Z')-new Date(a+
 // PATCH /api/admin/events/{id}/status {status:"ENDED"} 에 대응한다.
 function eventStatus(e){const s=published(e);return !s?'draft':e.endedAt?'ended':s.start>DEMO_DATE?'upcoming':s.end<DEMO_DATE?'ended':'live';}
 
+/**
+ * 서버 이벤트의 게시 상태 — status 와 기간으로 화면이 계산한다.
+ *   DRAFT → 미게시 / ENDED → 종료 / PUBLISHED → 시작 전 오픈 예정 · 끝난 뒤 종료 · 그 사이 진행 중
+ * ★ 서버 스케줄러가 ENDED 로 바꾸기 전에도 기간이 지났으면 종료로 본다 (스케줄러는 주기적으로만 돈다)
+ */
+function serverStatus(item,now=new Date()){
+ if(item.status==='DRAFT')return 'draft';
+ if(item.status==='ENDED')return 'ended';
+ if(item.startAt&&new Date(item.startAt)>now)return 'upcoming';
+ if(item.endAt&&new Date(item.endAt)<now)return 'ended';
+ return 'live';
+}
+
+const STATUS_LABELS={draft:'미게시',upcoming:'오픈 예정',ended:'종료',live:'진행 중'};
+
+function badgeOf(st){return '<span class="badge '+(st==='live'?'pink':st==='upcoming'?'':'amber')+'">'+STATUS_LABELS[st]+'</span>';}
+
 function statusLabel(e){return ({draft:'미게시',upcoming:'오픈 예정',ended:'종료',live:'진행 중'})[eventStatus(e)];}
 
 function policyLabel(e){return e.policy==='daily'?'하루 1회':'계정당 1회';}
@@ -29,4 +46,4 @@ function personalBadge(e){
  return eventStatus(e)==='live'?'<span class="badge pink">참여 가능</span>':'';
 }
 
-export { shortDate, daysBetween, eventStatus, statusLabel, policyLabel, deadline, actionLabel, statusBadge, personalBadge }
+export { shortDate, daysBetween, eventStatus, statusLabel, policyLabel, deadline, actionLabel, statusBadge, personalBadge, serverStatus, badgeOf }
