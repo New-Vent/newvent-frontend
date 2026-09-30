@@ -9,15 +9,17 @@ import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
 import { button } from '@shared/ui/controls.js'
 import { toast } from '@shared/ui/toast.js'
-import { closeModal } from '@shared/ui/modal.js'
+import { closeModal, ask } from '@shared/ui/modal.js'
 import { hydrate } from '@shared/preview/frame.js'
 import { createRouter } from '@shared/router.js'
-import { initialDatabase } from '@shared/mock/fixtures.js'
+import { initialDatabase, PLANS, gradeOfPlan } from '@shared/mock/fixtures.js'
 
 import { homeView, refreshResults } from './views/home.js'
 import { eventView } from './views/event.js'
 import { myView } from './views/my.js'
 import { loginView } from './views/login.js'
+import { signupView } from './views/signup.js'
+import { accountView } from './views/account.js'
 import { showLoginPrompt, showResult } from './actions.js'
 
 /**
@@ -32,13 +34,15 @@ export const api = createApi({ authBase: '/api/auth' })
 // repo 가 이 클라이언트로 서버를 부른다 (목업 모드면 안 쓰인다).
 useApi(api)
 
-const VIEWS = { home: homeView, event: eventView, my: myView, login: loginView }
+const VIEWS = { home: homeView, event: eventView, my: myView, login: loginView, signup: signupView, account: accountView }
 
 const ROUTES = [
   { path: '/', name: 'home' },
   { path: '/events/:id', name: 'event' },
   { path: '/my', name: 'my' },
   { path: '/login', name: 'login' },
+  { path: '/signup', name: 'signup' },
+  { path: '/account', name: 'account' },
 ]
 
 /** ui.route → URL. navigate() 가 쓴다. */
@@ -47,6 +51,8 @@ const PATH = {
   event: (id) => `/events/${id}`,
   my: () => '/my',
   login: () => '/login',
+  signup: () => '/signup',
+  account: () => '/account',
 }
 
 /** 헤더에 띄울 이름. 서버 인증이면 /api/users/me 의 name, 목업이면 원본 그대로 */
@@ -71,6 +77,7 @@ function header() {
     '<nav class="nav" aria-label="주 메뉴">' +
     button('route', '이벤트', 'data-route="home"', ui.route === 'home' || ui.route === 'event' ? 'active' : '') +
     button('route', '내 혜택', 'data-route="my"', ui.route === 'my' ? 'active' : '') +
+    (ui.logged ? button('route', '내 정보', 'data-route="account"', ui.route === 'account' ? 'active' : '') : '') +
     '</nav><div class="account">' +
     (ui.logged
       ? '<span class="avatar">' + icon('user') + '</span><span class="name">' + esc(displayName()) + '님</span>' +
@@ -118,6 +125,38 @@ document.addEventListener('click', (ev) => {
   if (b.disabled) return
   const a = b.dataset.act
 
+  if (a === 'signup-plan') {
+    ui.signup = { ...(ui.signup ?? {}), plan: b.dataset.plan }
+    render()
+    return
+  }
+  if (a === 'change-plan') {
+    const next = PLANS.find((p) => p.code === b.dataset.plan)
+    if (!next) return
+    ask(
+      next.name + ' 요금제로 바꿀까요?',
+      '멤버십 등급이 ' + state.db.me.grade + ' 에서 ' + next.grade + ' 로 바뀝니다. ' +
+        '등급에 따라 참여할 수 있는 이벤트가 달라져요.',
+      () => {
+        state.db.me.plan = next.code
+        state.db.me.grade = next.grade
+        // 참여 판정이 등급을 보므로 같이 맞춰준다.
+        ui.demoGrade = next.grade === '일반' ? '일반' : 'VIP · FAMILY'
+        persist()
+        render()
+        toast(next.name + ' 요금제로 바꿨어요. 등급은 ' + next.grade + ' 입니다.')
+      },
+      '변경하기',
+    )
+    return
+  }
+  // ask() 가 띄운 확인 모달의 '확인' 버튼. 이게 없으면 ask() 가 통째로 죽는다.
+  if (a === 'confirm-local') {
+    const fn = state.confirmAction
+    closeModal()
+    if (fn) fn()
+    return
+  }
   if (a === 'close') return closeModal()
   if (a === 'route') return navigate(b.dataset.route)
   if (a === 'event') return navigate('event', b.dataset.id)
@@ -192,6 +231,76 @@ document.addEventListener('input', (ev) => {
   if (ev.target.id === 'event-search') {
     ui.query = ev.target.value
     refreshResults()
+  }
+})
+
+/**
+ * 회원가입 · 내 정보 저장.
+ * 목업이라 state.db.me 를 직접 고친다. API 를 붙일 때 이 두 블록만
+ * repo 호출로 바꾸면 화면은 그대로 쓴다.
+ */
+document.addEventListener('submit', (ev) => {
+  const form = ev.target
+
+  if (form.id === 'signup-form') {
+    ev.preventDefault()
+    const get = (k) => form.querySelector(`[data-signup="${k}"]`)
+    const val = (k) => get(k)?.value.trim() ?? ''
+    const fail = (msg, k) => {
+      const box = $('#signup-error')
+      if (box) box.textContent = msg
+      get(k)?.focus()
+    }
+
+    const loginId = val('loginId')
+    if (!/^[A-Za-z0-9]{4,20}$/.test(loginId)) return fail('아이디는 영문·숫자 4~20자로 입력해주세요.', 'loginId')
+    const pw = val('password')
+    if (pw.length < 8 || !/[A-Za-z]/.test(pw) || !/\d/.test(pw))
+      return fail('비밀번호는 8자 이상이고 영문과 숫자를 섞어야 해요.', 'password')
+    if (pw !== val('password2')) return fail('비밀번호가 서로 다릅니다.', 'password2')
+    if (!val('name')) return fail('이름을 입력해주세요.', 'name')
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val('email'))) return fail('이메일 형식을 확인해주세요.', 'email')
+    if (!/^01[016789]\d{7,8}$/.test(val('phone').replace(/\D/g, '')))
+      return fail('휴대폰 번호 형식을 확인해주세요.', 'phone')
+
+    const plan = ui.signup?.plan ?? 'BASIC'
+    state.db.me = {
+      ...state.db.me,
+      loginId,
+      name: val('name'),
+      email: val('email'),
+      phone: val('phone'),
+      plan,
+      grade: gradeOfPlan(plan),
+      marketingOptIn: Boolean(get('agree')?.checked),
+      joinedAt: new Date().toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' }).replace(/\.$/, ''),
+    }
+    ui.signup = null
+    ui.logged = true
+    ui.demoGrade = gradeOfPlan(plan) === '일반' ? '일반' : 'VIP · FAMILY'
+    persist()
+    navigate('home')
+    toast(state.db.me.name + '님, 가입을 환영해요!')
+    return
+  }
+
+  if (form.id === 'account-form') {
+    ev.preventDefault()
+    const val = (k) => form.querySelector(`[data-account="${k}"]`)?.value.trim() ?? ''
+    const box = $('#account-error')
+    if (!val('name')) { if (box) box.textContent = '이름을 입력해주세요.'; return }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val('email'))) { if (box) box.textContent = '이메일 형식을 확인해주세요.'; return }
+    if (!/^01[016789]\d{7,8}$/.test(val('phone').replace(/\D/g, ''))) { if (box) box.textContent = '휴대폰 번호 형식을 확인해주세요.'; return }
+
+    Object.assign(state.db.me, {
+      name: val('name'),
+      email: val('email'),
+      phone: val('phone'),
+      marketingOptIn: Boolean(form.querySelector('[data-account="marketingOptIn"]')?.checked),
+    })
+    persist()
+    render()
+    toast('내 정보를 저장했어요.')
   }
 })
 
