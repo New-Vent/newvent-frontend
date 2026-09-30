@@ -355,6 +355,91 @@ trophy  gift  crown  bolt  rocket  user  layers  clock  search  grid  arrow  bac
 
 ---
 
+## 부록 D — 테마
+
+테마 클래스는 **`<body>` 가 아니라 `.ev-container` 에 붙인다.**
+
+```html
+<div class="ev-container event-page theme-sports">
+```
+
+| | |
+| --- | --- |
+| 값 | `theme-sports` `theme-holiday` `theme-vip` `theme-sale` `theme-launch` |
+| 이유 | 블록 조각만 저장·전송해도 테마가 같이 따라다닌다. `<body>` 에 있으면 조각에 안 실려서 프론트가 어느 테마인지 알 수 없다 |
+| CSS | **바꿀 것 없다.** `event.css` 의 선택자는 처음부터 `.theme-x` 단독이다 (`body.theme-x` 형태 0건) |
+
+테마가 재정의하는 변수는 다섯 테마 모두 같다 —
+`--ev-primary` · `--ev-primary-hover` · `--ev-primary-light` · `--ev-primary-glow` ·
+`--ev-gradient-hero` · `--ev-gradient-cta` · `--ev-accent-tag`.
+전부 `.ev-container` 안에서만 쓰이므로 컨테이너로 옮겨도 안전하다.
+(`body` 는 `--ev-font` · `--ev-bg` · `--ev-text-main` 만 쓰는데 테마가 이 셋을 건드리지 않는다.)
+
+## 부록 E — 백지 생성 시 서버가 심을 class
+
+모델에게 class 를 맡기지 않는다. 오타 하나로 스타일이 통째로 날아가고
+검증·재시도가 복잡해진다. **서버가 뼈대를 고정하고 모델은 텍스트만 채운다.**
+
+```
+컨테이너   <div class="ev-container event-page theme-{…}">
+
+hero       <section class="ev-block block-hero" data-block="hero">
+             <h1 class="hero-title">
+             <p class="hero-desc">
+             <span data-slot="period">
+
+benefits   <section class="ev-block block-benefits" data-block="benefits">
+             <h2 class="title">
+             <div class="benefits-list benefits-list-default">
+               <article class="benefit-card benefit-card-default">
+
+steps      <section class="ev-block block-steps" data-block="steps">
+             <h2 class="title">
+             <div class="steps-list steps-list-default">
+               <article class="step-card step-card-default">
+
+notices    <section class="ev-block block-notices" data-block="notices">   ← 서버 소유
+             <h2 class="title">
+
+cta        <section class="ev-block block-cta" data-block="cta">
+             <button type="button" class="cta-btn" data-slot="cta-link">
+```
+
+### `-default` 를 꼭 붙일 것
+
+`event.css` 는 **식별 클래스와 표현 클래스를 나눠뒀다.**
+
+```css
+/* 공통 식별 클래스: 레이아웃·배경을 강제하지 않음 */
+.benefit-card { box-sizing: border-box; }
+
+/* 기본 표현 클래스 */
+.benefit-card-default,
+:where(.benefit-card:not([class*="sp-"]):not([class*="hl-"])…) { /* 실제 스타일 */ }
+```
+
+`:where(:not(…))` 폴백이 있어서 템플릿 고유 접두사(`sp-` `hl-` `vp-` `fs-` `lc-`)가
+없는 식별 클래스는 대개 기본 스타일을 자동으로 받는다. **그런데 폴백이 비대칭이다.**
+
+| 식별 클래스 | `:where` 폴백 |
+| --- | :-: |
+| `benefit-card` | 있음 |
+| `steps-list` | 있음 |
+| `step-card` | 있음 |
+| **`benefits-list`** | **없음** |
+
+`.benefits-list` 는 `box-sizing` 만 받고 그리드 레이아웃을 못 받는다
+(`display: grid` 는 `.benefits-grid, .benefits-list-default` 에만 걸려 있다).
+그래서 **`-default` 를 명시적으로 붙이는 쪽**이 맞다.
+`:where()` 는 특이도가 0 이라 나중에 다른 규칙에 밀릴 수도 있다.
+
+### 인라인 스타일을 넣지 말 것
+
+`AI_EDIT_RULES.md` 2 항 — 스타일은 `event.css` 가 전담한다.
+서버가 뼈대를 심을 때도 `style="…"` 없이 class 만 붙인다.
+
+---
+
 ## 아직 안 정한 것
 
 | | 정해야 할 것 |

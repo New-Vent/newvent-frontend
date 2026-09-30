@@ -24,7 +24,154 @@ EIP 와 같은 값이 나와야 한다. **여기서 안 맞으면 certbot 이 �
 
 ---
 
-## 1. nginx 설치
+## 1. IAM — 먼저 만든다
+
+### ★ EC2 에는 IAM **사용자**가 아니라 **역할(Role)** 을 붙인다
+
+사용자의 액세스 키를 서버에 심으면 키가 유출 경로가 되고 순환도 수동이다.
+역할을 붙이면 **자격증명이 어디에도 저장되지 않고** 자동으로 순환된다.
+AWS SDK 기본 체인이 알아서 찾으므로 **코드는 한 줄도 안 바뀐다.**
+
+| 용도 | 유형 | 개수 | 자격증명 |
+| --- | --- | :-: | --- |
+| 팀원 개발용 | IAM **User** | 1인 1개 | `aws configure` → `~/.aws/credentials` |
+| EC2 | IAM **Role** + 인스턴스 프로파일 | 1 | 없음 (메타데이터에서 자동) |
+| GitHub Actions | IAM **Role** (OIDC) | 1 | 없음 (임시) |
+
+정책 문서는 `deploy/iam/` 에 있다.
+
+### ★ 정책이 두 종류다 — 붙여넣는 자리가 다르다
+
+| 파일 | 종류 | 콘솔에서 붙여넣는 곳 |
+| --- | --- | --- |
+| `bedrock-invoke-policy.json` | **권한 정책** (identity) | 역할 → **권한** → 인라인 정책 생성 → JSON |
+| `ec2-trust-policy.json` | **신뢰 정책** (trust) | 역할 → **신뢰 관계** 탭 → 신뢰 정책 편집 |
+| `github-oidc-trust-policy.json` | **신뢰 정책** (trust) | 위와 같음 |
+
+- **권한 정책** = "이 역할이 무엇을 할 수 있나" → `Resource` **필수**, `Principal` **금지**
+- **신뢰 정책** = "누가 이 역할을 맡을 수 있나" → `Principal` **필수**, `Resource` 없음
+
+신뢰 정책을 인라인 정책 칸에 넣으면 이렇게 거절된다:
+
+```
+Missing Resource: 정책 설명에 Resource 또는 NotResource 요소를 추가합니다.
+Unsupported Principal: 정책 유형 IDENTITY_POLICY은(는) Principal 요소를 지원하지 않습니다.
+```
+
+> 콘솔로 만들면 **신뢰 정책을 붙여넣을 일이 없다.**
+> 역할 생성에서 *신뢰할 수 있는 엔터티 유형: AWS 서비스 → 사용 사례: EC2* 를 고르면
+> 같은 내용이 자동으로 들어간다. `deploy/iam/*-trust-policy.json` 은 CLI 용이거나
+> 나중에 신뢰 관계를 확인할 때 보는 참고본이다.
+
+### 1-1. 공통 정책 하나 만들기
+
+```bash
+aws iam create-policy \
+  --policy-name NewVentBedrockInvoke \
+  --policy-document file://deploy/iam/bedrock-invoke-policy.json
+```
+
+> `bedrock:ListFoundationModels` 만 `Resource: "*"` 다 —
+> 이 액션은 리소스 단위 권한을 지원하지 않는다. 모델 호출은 gemma 한 개로 묶여 있다.
+> `bedrock:Converse` 라는 IAM 액션은 **없다.** `InvokeModel` 이 Converse 를 인가한다.
+
+### 1-2. 팀원 사용자 (1인 1개)
+
+```bash
+for i in 1 2 3 4 5 6 7; do
+  aws iam create-user --user-name "newvent$i"
+  aws iam attach-user-policy --user-name "newvent$i" \
+    --policy-arn arn:aws:iam::<ACCOUNT_ID>:policy/NewVentBedrockInvoke
+  aws iam attach-user-policy --user-name "newvent$i" \
+    --policy-arn arn:aws:iam::<ACCOUNT_ID>:policy/NewVentSsmSession
+  aws iam create-access-key --user-name "newvent$i"   # 출력된 키를 본인에게만 전달
+done
+```
+
+> 팀원이 각자 로컬에서 할 일은 [`docs/TEAM-SETUP.md`](../docs/TEAM-SETUP.md) 에 따로 있다.
+> 그 문서만 공유하면 된다.
+
+각자 로컬에서:
+
+```bash
+aws configure          # region 은 ap-northeast-2, Bedrock 만 us-east-1 (코드가 분리)
+aws bedrock list-foundation-models --region us-east-1 --query 'modelSummaries[?contains(modelId,`gemma`)].modelId'
+```
+
+> **액세스 키를 Slack·노션·git 에 올리지 말 것.** 올라갔으면 즉시
+> `aws iam delete-access-key` 로 지우고 새로 발급한다.
+
+### 1-3. EC2 역할
+
+```bash
+aws iam create-role --role-name NewVentEc2Role \
+  --assume-role-policy-document file://deploy/iam/ec2-trust-policy.json
+
+aws iam attach-role-policy --role-name NewVentEc2Role \
+  --policy-arn arn:aws:iam::<ACCOUNT_ID>:policy/NewVentBedrockInvoke
+
+# SSM 접속·배포용 (22번 포트를 안 열기 위해)
+aws iam attach-role-policy --role-name NewVentEc2Role \
+  --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+aws iam create-instance-profile --instance-profile-name NewVentEc2Profile
+aws iam add-role-to-instance-profile \
+  --instance-profile-name NewVentEc2Profile --role-name NewVentEc2Role
+```
+
+#### 콘솔로 만들 때 (팀 권장 — 인프라 문서가 Terraform 을 안 쓰기로 했다)
+
+1. IAM → **역할** → 역할 생성
+2. 신뢰할 수 있는 엔터티 유형: **AWS 서비스** / 사용 사례: **EC2** → 다음
+   *(여기서 신뢰 정책이 자동 생성된다. `ec2-trust-policy.json` 을 붙여넣지 않는다.)*
+3. 권한 추가: `NewVentBedrockInvoke` 와 `AmazonSSMManagedInstanceCore` 선택
+4. 역할 이름 `NewVentEc2Role` → 생성
+5. EC2 인스턴스 → 작업 → 보안 → **IAM 역할 수정** 에서 이 역할을 붙인다
+   *(인스턴스 프로파일은 콘솔이 알아서 만든다)*
+
+관리형 정책 대신 **인라인 정책**으로 넣고 싶다면
+역할 상세 → 권한 → 권한 추가 → **인라인 정책 생성** → JSON 탭에
+`deploy/iam/bedrock-invoke-policy.json` 내용을 붙여넣는다.
+
+EC2 를 만들 때 이 인스턴스 프로파일을 지정한다(나중에 붙여도 된다).
+
+서버에서 확인:
+
+```bash
+aws sts get-caller-identity          # Arn 에 assumed-role/NewVentEc2Role 이 보여야 한다
+ls ~/.aws 2>/dev/null                # 아무것도 없어야 정상이다
+```
+
+
+### 1-4. GitHub Actions 역할 (배포 자동화 때)
+
+`deploy/iam/github-oidc-trust-policy.json` 의 `<ACCOUNT_ID>` 와 저장소 경로를 채운 뒤
+역할을 만들고 ECR push · SSM SendCommand 권한을 붙인다.
+**GitHub Secrets 에 AWS 장기 키를 넣지 않는다.**
+
+### 1-5. 팀원에게 SSM 접속 권한 (EC2 에 들어가려면 필요)
+
+`NewVentBedrockInvoke` 는 Bedrock 만 허용한다. 서버에 들어가려면 이게 따로 필요하다.
+
+```bash
+aws iam create-policy \
+  --policy-name NewVentSsmSession \
+  --policy-document file://deploy/iam/ssm-session-policy.json
+
+aws iam attach-user-policy --user-name newvent1 \
+  --policy-arn arn:aws:iam::<ACCOUNT_ID>:policy/NewVentSsmSession
+```
+
+`Resource` 가 `instance/*` 라 이 계정의 EC2 면 다 접속된다. 인스턴스가 한 대라
+지금은 이걸로 충분하고, 늘어나면 인스턴스 ID 를 직접 박아 좁히면 된다.
+
+`ManageOwnSessionsOnly` 는 `${aws:username}` 으로 **자기 세션만** 끊게 한다 —
+남의 작업 세션을 끊지 못한다.
+
+
+---
+
+## 2. nginx 설치
 
 Amazon Linux 2023:
 
@@ -49,7 +196,7 @@ nginx -v
 
 ---
 
-## 2. 디렉터리와 스니펫 배치
+## 3. 디렉터리와 스니펫 배치
 
 ```bash
 sudo mkdir -p /srv/web/admin /srv/web/assets /var/www/html
@@ -71,13 +218,13 @@ sudo chmod -R 755 /srv/web
 
 ---
 
-## 3. 인증서 발급 — 2단계로 나눈다
+## 4. 인증서 발급 — 2단계로 나눈다
 
 `newvent.conf` 는 `ssl_certificate` 를 참조한다. 인증서가 없는 상태로 올리면
 **nginx 가 기동에 실패**하고, nginx 가 안 떠 있으면 certbot 의 HTTP-01 검증도
 실패한다. 그래서 HTTP 전용 설정으로 먼저 띄운다.
 
-### 3-1. 임시 설정으로 80 포트만 띄우기
+### 4-1. 임시 설정으로 80 포트만 띄우기
 
 ```bash
 sudo cp deploy/nginx/bootstrap-http.conf /etc/nginx/conf.d/newvent.conf
@@ -93,7 +240,7 @@ curl -s http://newvent.duckdns.org/
 `newvent bootstrap ok` 가 나와야 다음으로 간다.
 **안 나오면 DNS 나 보안그룹 문제다** — certbot 을 돌려도 똑같이 실패한다.
 
-### 3-2. certbot 설치와 발급
+### 4-2. certbot 설치와 발급
 
 Amazon Linux 2023:
 
@@ -135,7 +282,7 @@ ls /etc/letsencrypt/options-ssl-nginx.conf /etc/letsencrypt/ssl-dhparams.pem \
 
 없다면 `newvent.conf` 의 해당 `include` · `ssl_dhparam` 두 줄을 주석 처리해도 된다.
 
-### 3-3. 본 설정으로 교체
+### 4-3. 본 설정으로 교체
 
 ```bash
 sudo cp deploy/nginx/newvent.conf /etc/nginx/conf.d/newvent.conf
@@ -144,7 +291,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-## 4. 갱신 자동화를 첫날에 확인한다
+## 5. 갱신 자동화를 첫날에 확인한다
 
 Let's Encrypt 인증서는 **90일**짜리다. 발표가 그 안에 있어도,
 갱신이 안 걸려 있으면 다음 학기에 조용히 죽는다.
@@ -181,7 +328,7 @@ sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
 
 ---
 
-## 5. 동작 확인 체크리스트
+## 6. 동작 확인 체크리스트
 
 배포물을 올리기 전에도 아래까지는 확인할 수 있다.
 
@@ -232,12 +379,12 @@ curl -N https://newvent.duckdns.org/api/admin/events/1/generate
 
 ---
 
-## 6. 자주 걸리는 것
+## 7. 자주 걸리는 것
 
 | 증상 | 원인 |
 | --- | --- |
 | certbot 이 검증 실패 | DNS 가 EIP 를 안 가리킴, 또는 보안그룹 80 이 닫힘 |
-| nginx 기동 실패 (`ssl_certificate` 못 찾음) | 3-1 을 건너뛰고 바로 `newvent.conf` 를 올림 |
+| nginx 기동 실패 (`ssl_certificate` 못 찾음) | 4-1 을 건너뛰고 바로 `newvent.conf` 를 올림 |
 | 로그인이 유지 안 됨 | `X-Forwarded-Proto` 누락 → `Secure` 쿠키 미발급 |
 | 생성 진행 표시가 안 움직임 | `proxy_buffering off` 누락 |
 | 60초쯤 지나 504 | `proxy_read_timeout` 기본값(60s) |
@@ -247,7 +394,7 @@ curl -N https://newvent.duckdns.org/api/admin/events/1/generate
 
 ---
 
-## 7. 이 문서가 다루지 않는 것
+## 8. 이 문서가 다루지 않는 것
 
 - **소스 구조·빌드 설정** — Vite 진입점 2개(사용자·관리자), `assetsDir: 'static'`
 - **배포 워크플로** — GitHub Actions OIDC + SSM Run Command (인프라 문서 5장)
