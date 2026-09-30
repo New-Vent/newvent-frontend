@@ -63,6 +63,9 @@ function applyBlocks(doc, blocks) {
   return applied
 }
 
+/** 미리보기 iframe 공통 스타일 — 여백 · 글꼴 · 편집 하이라이트. thumb 면 목록 썸네일 크기로 자른다 */
+const frameCss=(thumb=false)=>'html,body{margin:0!important}body{overflow-x:hidden}body,body *{font-family:"Noto Sans KR Variable","Malgun Gothic",sans-serif!important}.ev-container{margin:0 auto!important}.nv-text-active{background:#fff1a8!important;color:#292330!important;outline:2px solid #d60076!important;outline-offset:3px;border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}.newvent-selected{outline:3px solid #d60076!important;outline-offset:-4px}button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:3px solid #da3990;outline-offset:4px}'+(thumb?'\nhtml,body{width:720px!important;height:440px!important;overflow:hidden!important}.ev-container{width:720px!important;max-width:720px!important;padding:0!important;box-shadow:none!important;border-radius:0!important}[data-block="hero"]{margin:0!important;border-radius:0!important}[data-block="hero"]{min-height:440px!important;max-height:440px;overflow:hidden;padding-top:30px!important}.hero-title{font-size:40px!important;line-height:1.2!important}.hero-desc{font-size:16px!important;line-height:1.6!important}':'');
+
 function templateDocument(snapshot,thumb=false){
  const doc=new DOMParser().parseFromString(TEMPLATE_BODIES[snapshot.templateId],'text/html');
  const llmBlocks=applyBlocks(doc,snapshot.blocks);
@@ -89,7 +92,7 @@ function templateDocument(snapshot,thumb=false){
   const containerClass=container?.className||'ev-container event-page';
   body='<body class="'+esc(doc.body.className)+'"><div class="'+esc(containerClass)+'">'+(hero?hero.outerHTML:'')+'</div></body>';
  }
- const css='html,body{margin:0!important}body{overflow-x:hidden}body,body *{font-family:"Noto Sans KR Variable","Malgun Gothic",sans-serif!important}.ev-container{margin:0 auto!important}.nv-text-active{background:#fff1a8!important;color:#292330!important;outline:2px solid #d60076!important;outline-offset:3px;border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}.newvent-selected{outline:3px solid #d60076!important;outline-offset:-4px}button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:3px solid #da3990;outline-offset:4px}'+(thumb?'\nhtml,body{width:720px!important;height:440px!important;overflow:hidden!important}.ev-container{width:720px!important;max-width:720px!important;box-shadow:none!important;border-radius:0!important}[data-block="hero"]{min-height:440px!important;max-height:440px;overflow:hidden;padding-top:30px!important}.hero-title{font-size:40px!important;line-height:1.2!important}.hero-desc{font-size:16px!important;line-height:1.6!important}':'');
+ const css=frameCss(thumb);
  return '<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+EVENT_STYLE_LINKS+'<style>'+css+'</style>'+doc.querySelector('#nv-button-style').outerHTML+'</head>'+body+'</html>';
 }
 
@@ -128,6 +131,27 @@ function takeStagedDocument(id) {
  */
 const SANDBOX = 'allow-same-origin allow-scripts'
 
+/**
+ * 서버가 준 조각(GET …/preview 의 html)을 미리보기 문서로 감싼다.
+ * ★ 조각에는 래퍼 · 테마 · 유의사항이 있고 스타일시트는 없다 — 여기서 /assets/event.css 를 붙인다
+ * ★ 템플릿의 <script> 는 남긴다 (templateDocument 와 같은 전제 — 서버 정화가 방어선)
+ */
+function serverDocument(html){
+ const doc=new DOMParser().parseFromString('<body>'+(html||'')+'</body>','text/html');
+ doc.querySelectorAll('iframe').forEach(n=>n.remove());
+ doc.querySelectorAll('*').forEach(n=>{Array.from(n.attributes).forEach(a=>{if(a.name.startsWith('on'))n.removeAttribute(a.name);});});
+ return '<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+EVENT_STYLE_LINKS+'<style>'+frameCss()+'</style></head>'+doc.body.outerHTML+'</html>';
+}
+
+/**
+ * 서버 조각을 미리보기 iframe 으로 — 버튼 · 링크는 bindFrame 이 막는다
+ * mode  readonly     보기만
+ *       server-edit  직접 수정 — 누른 글자를 nv-pick 이벤트로 알린다
+ */
+function serverFrame(html,title='서버 미리보기',mode='readonly'){
+ return '<iframe class="event-frame" data-mode="'+mode+'" title="'+esc(title)+'" sandbox="'+SANDBOX+'" data-doc="'+stageDocument(serverDocument(html))+'"></iframe>';
+}
+
 function thumb(e,snap){
  const s=snap||published(e)||e.versions[0].snapshot;
  return '<div class="thumb" aria-hidden="true"><iframe tabindex="-1" loading="lazy" sandbox="'+SANDBOX+'" title="이벤트 상단 디자인" data-doc="'+stageDocument(templateDocument(s,true))+'"></iframe></div>';
@@ -153,4 +177,4 @@ function validSnapshot(s){
  return true;
 }
 
-export { templateDocument, thumb, fullFrame, applySnapshot, validSnapshot, takeStagedDocument, SERVER_OWNED }
+export { templateDocument, thumb, fullFrame, applySnapshot, validSnapshot, takeStagedDocument, SERVER_OWNED, serverFrame }

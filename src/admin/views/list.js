@@ -226,8 +226,18 @@ function serverFiltered() {
 }
 
 const blocked = (why) => `disabled title="${why}"`
-const SOON_EDIT = '편집 화면은 아직 서버와 연동 전이에요'
-const SOON_PUBLISH = '게시 API 가 아직 준비되지 않았어요'
+// 게시 내리기 · 종료는 상태 변경 API(PATCH /status)가 아직 501 이다
+const SOON_STATUS = '게시 내리기 API 가 아직 준비되지 않았어요'
+
+/**
+ * 목록의 게시 — 최신 버전을 게시한다 (다른 버전은 편집 화면 · 버전 이력에서 고른다).
+ * 목록 응답에 버전이 없어 누를 때 미리보기로 최신 버전을 알아낸다 (main.js publish-latest)
+ */
+function publishButton(e) {
+  if (e.status === 'ENDED') return button('publish-latest', '게시하기', `data-id="${e.id}" ${blocked('종료된 이벤트는 게시할 수 없어요')}`, 'btn sm ghost')
+  const again = e.status === 'PUBLISHED'
+  return button('publish-latest', again ? '최신으로 재게시' : '게시하기', `data-id="${e.id}"`, 'btn sm ' + (again ? 'ghost' : 'primary'))
+}
 
 const serverTitleCell = (e) =>
   `<td><h3>${esc(e.name)}</h3><small>ID ${e.id}${e.template ? ' · ' + esc(e.template) : ''}</small></td>`
@@ -239,9 +249,9 @@ function serverMine(es) {
     + '<td>' + badgeOf(serverStatus(e)) + (e.closingSoon ? ' <span class="badge amber">마감 임박</span>' : '')
     + `<br><small>${serverPeriod(e)}</small></td>`
     + '<td><div class="row">'
-    + button('versions', '버전 이력', `data-id="${e.id}" ${blocked(SOON_EDIT)}`, 'btn sm')
-    + button('edit', '편집하기', `data-id="${e.id}" ${blocked(SOON_EDIT)}`, 'btn sm soft')
-    + button('publish-latest', '게시하기', `data-id="${e.id}" ${blocked(SOON_PUBLISH)}`, 'btn sm ghost')
+    + button('versions', '버전 이력', `data-id="${e.id}"`, 'btn sm')
+    + button('edit', '편집하기', `data-id="${e.id}"`, 'btn sm soft')
+    + publishButton(e)
     + button('delete-event', '삭제하기', `data-id="${e.id}"`, 'btn sm danger')
     + '</div></td></tr>')
   return `<table class="admin-table"><thead><tr><th>이벤트</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
@@ -257,7 +267,7 @@ function serverLive(es) {
     + `<td>${serverPeriod(e)}</td>`
     + '<td>' + badgeOf('live') + '</td>'
     + '<td><div class="row">'
-    + button('unpublish', '게시 내리기', `data-id="${e.id}" ${blocked(SOON_PUBLISH)}`, 'btn sm soft')
+    + button('unpublish', '게시 내리기', `data-id="${e.id}" ${blocked(SOON_STATUS)}`, 'btn sm soft')
     + '</div></td></tr>')
   return `<table class="admin-table"><thead><tr><th>이벤트</th><th>기간</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
     + rows.join('')
@@ -267,7 +277,7 @@ function serverLive(es) {
 
 /**
  * 휴지통 — 복구하거나 완전히 지운다.
- * ★ 목업의 "게시하기(복구 후 게시)" 대신 "복구" 다 — 게시 API 가 아직 없다
+ * ★ 목업의 "게시하기(복구 후 게시)" 대신 "복구" 다 — 휴지통 이벤트는 서버가 게시를 막는다 (복구한 뒤 게시)
  * ★ 삭제일 대신 마지막 변경일 — 휴지통 응답에 deletedAt 이 없다
  */
 function serverTrash(es) {
