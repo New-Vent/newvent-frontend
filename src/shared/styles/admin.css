@@ -42,7 +42,7 @@
 .creation-section-title h3{font-size:15px;margin-bottom:7px}
 .creation-section-title p{font-size:12px;color:var(--muted)}
 .create-template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.create-template-grid .template-option{position:relative}
+.create-template-grid .template-option{position:relative;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch}
 .create-template-grid .template-option.selected{border:2px solid var(--pink)}
 .create-template-grid .template-option .name{padding:12px 13px 6px;display:flex;justify-content:space-between;gap:5px;align-items:center}
 .create-template-detail{display:block;font-size:10px;color:var(--muted);padding:0 13px 13px}
@@ -140,3 +140,73 @@
   .admin-list-tabs { width: 100%; }
   .admin-list-tabs button { flex: 1; padding: 8px 10px; }
 }
+
+/* ── 서버 편집 화면 왼쪽 패널 (views/server-editor.js) ──────────────
+   패널 높이는 고정이다(.workspace-side overflow:hidden). 목록은 가운데에서 스크롤하고,
+   입력칸 · 반영 버튼은 아래에 붙여 항목이 늘어도 항상 보이게 한다 */
+.server-side{flex:1;min-height:0;display:flex;flex-direction:column}
+.server-side>#server-progress:not(:empty){flex:none;padding:12px 14px 0}
+.server-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px;scrollbar-width:thin}
+.server-foot{flex:none;padding:12px 14px 14px;border-top:1px solid var(--line);background:#fff}
+.server-side .chat{max-height:none;margin:0;overflow:visible}
+.server-side .chat .bubble{font-size:12px;padding:12px 13px}
+.server-side .chat .bubble small{font-size:10px}
+.server-side .bubble.tone-fail{border:1px solid #f3c5cf;background:#fff6f8}
+.server-side .bubble.tone-ask{border:1px solid #f1dfa8;background:#fffbee}
+.server-foot .field textarea{min-height:0;height:60px;resize:none}
+.server-foot .chips{gap:6px;margin:8px 0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.server-foot .chips::-webkit-scrollbar{display:none}
+.server-foot .chip{font-size:11px;flex:none;white-space:nowrap}
+.server-foot .foot-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.server-foot .foot-row .helper{font-weight:500}
+.server-regen{margin-top:14px}
+.server-regen summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)}
+.server-regen[open] summary{margin-bottom:10px}
+.server-scroll .workspace-tip{padding:0 0 12px;margin-bottom:12px}
+.sedit-group{border:0;padding:0;margin:0 0 16px;min-width:0}
+.sedit-group legend{padding:0;margin-bottom:8px;font-size:11px;font-weight:800;color:var(--pink);letter-spacing:.02em}
+.sedit-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:start}
+.sedit-item+.sedit-item{margin-top:6px}
+.sedit-no{height:34px;display:grid;place-items:center;border-radius:8px;background:#f3f1f6;color:var(--muted);font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.sedit-no.changed{background:var(--pink);color:#fff}
+.sedit-item:focus-within .sedit-no:not(.changed){background:var(--tint);color:var(--pink)}
+.sedit{display:block;width:100%;min-width:0;border:1px solid #e5e2ea;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;font-weight:400;line-height:1.5;color:var(--ink);background:#fff;resize:none;transition:border-color .15s,background .15s}
+.sedit:hover{border-color:#d4cfdc}
+.sedit:focus{outline:none;border-color:var(--pink);box-shadow:0 0 0 3px rgba(214,0,118,.12)}
+.sedit.changed{border-color:var(--pink);background:#fff5fa}
+.sedit:disabled{background:#f7f6f9;color:var(--muted)}
+.sedit-style{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center;font-size:12px}
+.sedit-style label.check{display:flex;align-items:center;gap:6px;font-weight:600}
+.sedit-style input[type=color]{width:44px;height:28px;padding:2px;border:1px solid #e5e2ea;border-radius:6px;background:#fff}
+.sedit-style select{border:1px solid #e5e2ea;border-radius:8px;padding:6px 8px;font-size:12px;background:#fff}
+
+/* ── 새 이벤트 요약 카드 (create.js creationSummary) ─────────────── */
+.creation-summary .sum-head h3{font-size:17px;margin-top:10px}
+.sum-list{margin:18px 0 0;display:flex;flex-direction:column;gap:4px}
+.sum-row{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:12px;background:#faf9fc;border:1px solid transparent;transition:background .15s}
+.sum-row.empty{background:#fff;border:1px dashed #e5e2ea}
+.sum-icon{flex:none;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--tint);color:var(--pink)}
+.sum-icon svg{width:16px;height:16px}
+.sum-row.empty .sum-icon{background:#f3f1f6;color:#b3adbd}
+.sum-text{min-width:0;flex:1}
+.sum-text dt{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.sum-text dd{margin:3px 0 0;font-size:14px;font-weight:700;color:var(--ink);line-height:1.4;overflow-wrap:anywhere}
+.sum-row.empty dd{font-weight:500;color:#a8a1b3;font-size:13px}
+.sum-text small{display:block;margin-top:4px;font-size:11px;color:var(--muted)}
+.sum-arrow{color:var(--pink);font-weight:800;margin:0 2px}
+.sum-chip{display:inline-block;padding:2px 8px;border-radius:999px;background:#fff;border:1px solid #f1d3e3;color:var(--pink);font-weight:700;font-size:10px}
+.sum-grade{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--pink);color:#fff;font-size:12px}
+.sum-ready{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.sum-ready-head{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted)}
+.sum-ready-head strong{color:var(--pink)}
+.sum-bar{height:6px;border-radius:999px;background:#f1eef5;margin:8px 0;overflow:hidden}
+.sum-bar span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#f06bb0,var(--pink));transition:width .3s}
+.sum-ready p{font-size:11px;color:var(--muted)}
+@media(max-width:850px){.sum-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}}
+@media(max-width:440px){.sum-list{grid-template-columns:1fr}}
+
+/* ── 서버 버전 이력 행 — 버튼이 4개라 한 칸에 묶는다 (views/server-versions.js) ── */
+.version-row.server-version-row{grid-template-columns:40px minmax(0,1fr) auto}
+.server-version-row .version-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.server-version-row .version-actions .btn{width:auto}
+@media(max-width:620px){.version-row.server-version-row{grid-template-columns:40px minmax(0,1fr)}.server-version-row .version-actions{grid-column:2;justify-content:flex-start}}

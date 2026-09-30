@@ -46,7 +46,8 @@ function saveVersion(){
  if(JSON.stringify(before.buttonStyle||{})!==JSON.stringify(d.snapshot.buttonStyle||{}))fields.push('buttonStyle');
  const v=Math.max(...e.versions.map(x=>x.v))+1,source=d.base;
  e.versions.push({v,source,createdAt:new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour12:false}),summary:fields.slice(0,2).map(k=>k==='buttonStyle'?'버튼 디자인':k==='contentEdits'?'영역 문구':LABELS[k]).join(' · ')+' 수정'+(fields.length>2?' 외 '+(fields.length-2)+'건':''),snapshot:clone(d.snapshot)});
- d.base=v;persist();render();toast('v'+source+'에서 이어지는 v'+v+'을 저장했어요.');return true;
+ // render 는 main.js 안에 있어 여기서 못 부른다 — 같은 화면으로 navigate 하면 다시 그린다
+ d.base=v;persist();navigate('editor',e.id);toast('v'+source+'에서 이어지는 v'+v+'을 저장했어요.');return true;
 }
 
 function publicationChecks(e,v){

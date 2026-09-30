@@ -77,23 +77,97 @@ export async function loadParticipations() {
   return participations
 }
 
-export async function loadVersions(eventId) {
-  if (!USE_SERVER) return findEvent(eventId)?.versions ?? []
-  const { versions, publishedVersion } = await requireApi().get(
-    `/api/admin/events/${eventId}/versions`,
-  )
-  const e = findEvent(eventId)
-  if (e) Object.assign(e, { versions, publishedVersion })
-  return versions
-}
-
 /* ────────────────────────── 변경 ────────────────────────── */
 
+/**
+ * 이벤트 만들기 — DRAFT 로 생긴다. 페이지는 아직 없다 (startGenerate 로 만든다).
+ *
+ * @param {{name:string,startAt:string,endAt:string,grade:'NORMAL'|'EXCELLENT'|'BEST',templateKey?:string}} draft
+ * ★ 서버 모드는 state.db 에 넣지 않는다 — 목록 · 편집 화면이 서버에서 다시 읽는다
+ */
 export async function createEvent(draft) {
   if (!USE_SERVER) throw new Error('목업 모드에서는 views/create.js 가 직접 만든다')
-  const event = await requireApi().post('/api/admin/events', draft)
-  state.db.events.push(event)
-  return event
+  return requireApi().post('/api/admin/events', draft)
+}
+
+/** 관리자 이벤트 상세 — 이름 · 기간 · 등급 · 템플릿 · 상태 */
+export async function loadAdminEvent(eventId) {
+  return requireApi().get(`/api/admin/events/${eventId}`)
+}
+
+/**
+ * 페이지 생성 시작 → { jobId, phase, percent }. 결과는 generationStatus 로 폴링한다.
+ *   템플릿 이벤트           {}                              — 이벤트의 템플릿으로 (모델을 안 부른다)
+ *   백지                    { requestText }                 — 모델이 만든다 (≤ 500자)
+ *   템플릿 이벤트를 백지로  { templateCode: '', requestText }
+ */
+export async function startGenerate(eventId, body) {
+  return requireApi().post(`/api/admin/events/${eventId}/generate`, body)
+}
+
+/** 생성 · 수정 작업 상태 → { phase, label, percent, done, attempt, message, versionId } */
+export async function generationStatus(eventId, jobId) {
+  return requireApi().get(`/api/admin/events/${eventId}/generate/${jobId}`)
+}
+
+/** 작업 중단 요청 — 즉시 멈추지 않는다. 폴링하면 CANCELLED 로 끝난다 */
+export async function cancelGeneration(eventId, jobId) {
+  return requireApi().del(`/api/admin/events/${eventId}/generate/${jobId}`)
+}
+
+/**
+ * 최신 버전 미리보기 → { html, versionId, versionNo, editableTexts }. 페이지가 아직 없으면 null.
+ * ★ html 은 조각이다 — 래퍼 · 테마 · 유의사항은 있고 <link> 는 없다. 스타일은 화면이 붙인다
+ */
+export async function loadPreview(eventId) {
+  try {
+    return await requireApi().get(`/api/admin/events/${eventId}/preview`)
+  } catch (e) {
+    if (e?.status === 404) return null
+    throw e
+  }
+}
+
+/**
+ * AI 대화 수정 시작 → { jobId, phase, percent }. 결과는 generationStatus 로 폴링한다 (생성과 같은 작업 자리).
+ * ★ 기준은 항상 **최신 버전** 이다 — 다른 버전에서 이어 가려면 restoreVersion 으로 먼저 최신으로 가져온다
+ * ★ 채팅 내역은 서버에 남지 않는다 (ChatMessage 저장 미구현) — 화면이 세션 동안만 들고 있다
+ */
+export async function startEdit(eventId, requestText) {
+  return requireApi().post(`/api/admin/events/${eventId}/edit`, { requestText })
+}
+
+/**
+ * 직접 수정 → { versionId, versionNo } (새 버전)
+ * @param {{sourceVersionId:number, edits?:{index:number,before:string,after:string}[],
+ *          buttonStyle?:{background?:string,color?:string,size?:string,shape?:string}}} body
+ * ★ index · before 는 미리보기의 editableTexts 그대로. before 가 다르면 409 (화면이 최신이 아님)
+ */
+export async function directEdit(eventId, body) {
+  return requireApi().post(`/api/admin/events/${eventId}/versions/direct-edit`, body)
+}
+
+/**
+ * 저장한 버전(체크포인트) 목록 → { eventId, title, versions:[{versionId,versionNo,createdAt,published,sourceVersionNo,requestContent}] }
+ * ★ 생성 · 수정마다 버전 행은 생기지만 "버전 저장" 한 것만 여기 나온다
+ */
+export async function loadVersions(eventId) {
+  return requireApi().get(`/api/admin/events/${eventId}/versions`)
+}
+
+/** 저장한 버전 하나 → { versionId, versionNo, createdAt, htmlContent } (슬롯이 비어 있는 저장본) */
+export async function loadVersion(eventId, versionId) {
+  return requireApi().get(`/api/admin/events/${eventId}/versions/${versionId}`)
+}
+
+/** 버전 저장 — 그 버전을 이력에 남긴다 */
+export async function saveCheckpoint(eventId, versionId) {
+  return requireApi().put(`/api/admin/events/${eventId}/versions/${versionId}/checkpoint`)
+}
+
+/** 버전 저장 해제 — 이력에서 뺀다 (게시 중인 버전은 서버가 막는다) */
+export async function removeCheckpoint(eventId, versionId) {
+  return requireApi().del(`/api/admin/events/${eventId}/versions/${versionId}/checkpoint`)
 }
 
 export async function saveVersion(eventId, { source, summary, snapshot }) {
@@ -107,17 +181,16 @@ export async function saveVersion(eventId, { source, summary, snapshot }) {
   return version
 }
 
-export async function publish(eventId, version) {
-  if (!USE_SERVER) {
-    const e = findEvent(eventId)
-    if (e) e.publishedVersion = version
-    persist()
-    return { publishedVersion: version }
-  }
-  const res = await requireApi().post(`/api/admin/events/${eventId}/publish`, { version })
-  const e = findEvent(eventId)
-  if (e) e.publishedVersion = res.publishedVersion
-  return res
+/**
+ * 게시 · 재게시 → 이벤트 상세 (status 가 PUBLISHED 로 바뀐다).
+ *   DRAFT → PUBLISHED, 이미 게시 중이면 게시 버전만 바꾼다.
+ * ★ 고른 버전이 이력에 없으면(자동 버전) 서버가 게시하면서 버전 저장까지 한다
+ * ★ 종료(ENDED)된 이벤트는 409 (EVENT409-5), 다른 이벤트의 버전은 404
+ * 목업 모드는 main.js 가 state 를 직접 바꾼다 — 여기로 오지 않는다
+ */
+export async function publishEvent(eventId, versionId) {
+  if (!USE_SERVER) throw new Error('목업 모드에서는 main.js 가 직접 게시한다')
+  return requireApi().post(`/api/admin/events/${eventId}/publish`, { versionId })
 }
 
 export async function deleteEvent(eventId) {

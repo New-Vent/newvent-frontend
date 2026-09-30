@@ -9,7 +9,7 @@ import './styles.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
-import { deleteEvent, purgeEvent, restoreEvent, useApi, USE_SERVER } from '@shared/repo.js'
+import { deleteEvent, loadPreview, publishEvent, purgeEvent, restoreEvent, useApi, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -24,6 +24,8 @@ import { requestFor, requestPending, updateEditor } from '@shared/editor-state.j
 import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
 import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
+import { ensureServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick } from './views/server-editor.js'
+import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
 import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary } from './views/create.js'
@@ -85,10 +87,14 @@ function render(scroll = false) {
   }
   // 서버 모드 — 목록 화면에 처음 들어올 때 한 번 불러 오고, 다 오면 다시 그린다
   if (ui.route === 'admin') ensureAdminServer(() => render())
+  // 서버 모드 편집 · 버전 이력 화면은 목업 화면 대신 서버 화면이다 (views/server-editor.js · server-versions.js)
+  const serverView = USE_SERVER && { editor: serverEditorView, versions: serverVersionsView }[ui.route]
+  if (serverView) ensureServerEditor(ui.activeId, () => render())
   document.body.classList.toggle('editing-workspace', ui.route === 'editor')
   header()
-  $('#app').innerHTML = (VIEWS[ui.route] || adminView)()
+  $('#app').innerHTML = (serverView || VIEWS[ui.route] || adminView)()
   hydrate()
+  if (serverView) afterServerRender()
   document.title = (ui.route === 'editor' ? '이벤트 제작 스튜디오' : '이벤트 관리') + ' | NewVent'
   if (scroll) window.scrollTo(0, 0)
 }
@@ -128,9 +134,12 @@ document.addEventListener('click', (ev) => {
     return
   }
 
+  // ── 서버 모드 편집 화면 ─────────────────────────────────────────
+  if(USE_SERVER&&(handleServerClick(a,b,()=>render())||handleVersionsClick(a,b,()=>render())))return;
+
   // ── 서버 모드 목록 (VITE_API_AUTH=on) ─────────────────────────
   //   목업 분기보다 먼저 본다. 게시 · 게시 내리기 · 복구 후 게시는 버튼이 막혀 있어 여기로 안 온다
-  if(USE_SERVER&&['delete-event','restore-event','purge-event','admin-reload'].includes(a)){
+  if(USE_SERVER&&['delete-event','restore-event','purge-event','admin-reload','publish-latest'].includes(a)){
     const reload=()=>loadAdminServer(()=>render())
     if(a==='admin-reload'){reload();render();return}
     const e=serverItem(b.dataset.id); if(!e) return
@@ -143,6 +152,18 @@ document.addEventListener('click', (ev) => {
     if(a==='purge-event'){
       ask('영구 삭제할까요?',e.name+' 이벤트와 저장된 버전이 완전히 사라집니다. 되돌릴 수 없어요.',
         ()=>run(()=>purgeEvent(e.id),'영구 삭제했어요.','영구 삭제하지 못했어요.'),'영구 삭제')
+    }
+    // 최신 버전 게시 — 목록 응답에 버전이 없어 미리보기로 최신 버전을 알아낸다
+    if(a==='publish-latest'){
+      loadPreview(e.id).then(p=>{
+        if(!p){toast('아직 만들어진 페이지가 없어요. 편집 화면에서 먼저 만들어주세요.');return}
+        const again=e.status==='PUBLISHED'
+        ask(again?'최신 버전 v'+p.versionNo+' 재게시':'최신 버전 v'+p.versionNo+' 게시',
+          e.name+' 이벤트가 사용자 화면에 '+(again?'v'+p.versionNo+' 내용으로 바뀝니다.':'공개됩니다.')+' 다른 버전을 게시하려면 편집 화면이나 버전 이력에서 고르세요.',
+          ()=>run(()=>publishEvent(e.id,p.versionId).then(()=>{if(ui.serverEditor?.id===String(e.id))ui.serverEditor.status='idle'}),
+            'v'+p.versionNo+' '+(again?'재게시':'게시')+'를 완료했어요.','게시하지 못했어요.'),
+          again?'재게시하기':'게시하기')
+      },err=>toast(err?.message||'최신 버전을 확인하지 못했어요.'))
     }
     return
   }
@@ -225,7 +246,7 @@ document.addEventListener('click', (ev) => {
   if(a==='cancel-create'){ui.creation=null;navigate('admin');return;}
   if(a==='create-back'){ui.creation.step=1;render(true);return;}
   if(a==='create-mode'){ui.creation.mode=b.dataset.mode;render();document.querySelector('[data-act="create-mode"][data-mode="'+ui.creation.mode+'"]')?.focus({preventScroll:true});return;}
-  if(a==='select-create-template'){   if(b.getAttribute('aria-disabled')==='true'){creationError('먼저 기본 정보에서 참여 대상을 VIP · FAMILY 회원으로 바꿔주세요.');return;}   ui.creation.templateId=b.dataset.template;const y=window.scrollY;render();window.scrollTo(0,y);document.querySelector('[data-act="select-create-template"][data-template="'+ui.creation.templateId+'"]')?.focus({preventScroll:true});return;  }
+  if(a==='select-create-template'){   if(b.getAttribute('aria-disabled')==='true'){creationError('먼저 기본 정보에서 참여 대상을 우수 이상으로 바꿔주세요.');return;}   ui.creation.templateId=b.dataset.template;const y=window.scrollY;render();window.scrollTo(0,y);document.querySelector('[data-act="select-create-template"][data-template="'+ui.creation.templateId+'"]')?.focus({preventScroll:true});return;  }
   if(a==='finish-create'){finishCreation();return;}
   if(a==='device'){ui.mobile=b.dataset.mode==='mobile';render();return;}
   if(a==='block'){   ui.block=b.dataset.block;showSelectedTarget(currentEvent());applySelection();refreshButtonEditor();refreshContentEditor();   const frame=$('.event-frame[data-mode="editor"]'),block=frame?.contentDocument?.querySelector('[data-block="'+ui.block+'"]');   const canvas=$('.canvas');if(block&&canvas)canvas.scrollTo({top:block.offsetTop,behavior:'smooth'});   if(ui.block==='notices')toast('유의사항은 수정 대상에서 제외돼요.');return;  }
@@ -246,11 +267,12 @@ document.addEventListener('click', (ev) => {
 })
 
 document.addEventListener('input',ev=>{
+ if(USE_SERVER&&handleServerInput(ev))return;
  if(ev.target.matches('#chat-form textarea')){ui.chatInputs[currentEvent().id]=ev.target.value;return;}
  if(ev.target.dataset.create&&ui.creation){
   const k=ev.target.dataset.create;
-  if(['title','start','end','audience','prompt'].includes(k))ui.creation[k]=ev.target.value;
-  if(k==='audience'&&ui.creation.audience!=='VIP · FAMILY 회원'&&ui.creation.templateId==='tpl-3')ui.creation.templateId=null;
+  if(['title','start','end','grade','prompt'].includes(k))ui.creation[k]=ev.target.value;
+  if(k==='grade'&&ui.creation.grade==='NORMAL'&&ui.creation.templateId==='tpl-3')ui.creation.templateId=null;
   if($('#create-error'))$('#create-error').textContent='';
   if($('#creation-summary'))$('#creation-summary').innerHTML=creationSummary();return;
  }
@@ -287,6 +309,7 @@ document.addEventListener('submit',ev=>{
   if(validateCreation()){ui.creation.step=2;render(true);}
   return;
  }
+ if(USE_SERVER&&handleServerSubmit(ev,()=>render()))return;
  if(ev.target.id==='chat-form'){ev.preventDefault();const p=ev.target.querySelector('textarea').value.trim();if(p&&!requestPending())handlePrompt(p);}
 });
 
@@ -340,7 +363,10 @@ document.addEventListener('submit', (ev) => {
 
 document.addEventListener('change',editButton);
 
-document.addEventListener('focusin',()=>highlightEditingText(true));
+document.addEventListener('focusin',ev=>{if(USE_SERVER){handleServerFocus(ev);return;}highlightEditingText(true);});
+
+// 서버 편집 화면 — 미리보기에서 누른 글자 (frame.js 의 server-edit 모드가 보낸다)
+document.addEventListener('nv-pick',handleServerPick);
 
 document.addEventListener('focusout',()=>queueMicrotask(()=>highlightEditingText()));
 

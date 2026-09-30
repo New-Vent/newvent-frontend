@@ -101,9 +101,22 @@ export function createApi({ authBase, skewMs = 60_000, pollMs = 30_000 }) {
     })
   }
 
-  /** 동시에 여러 요청이 401 을 받아도 refresh 는 한 번만 돈다. */
+  /**
+   * 동시에 여러 요청이 401 을 받아도 refresh 는 한 번만 돈다.
+   *
+   * ★ 탭 · 페이지 사이에서도 한 번에 하나만 (Web Locks)
+   *   서버는 Refresh 토큰을 쓸 때마다 새 것으로 바꾸고(회전), 이미 쓴 토큰이 다시 오면
+   *   탈취로 보고 그 계정의 세션을 **전부** 끊는다.
+   *   탭 두 개가 동시에 열리거나, 새로고침이 겹치면(개발 중 Vite 자동 새로고침 + F5)
+   *   같은 쿠키로 refresh 가 두 번 나가 둘째가 재사용으로 걸린다 → 로그아웃.
+   *   잠금을 잡은 뒤 보내면 앞 요청이 받은 새 쿠키로 나가므로 겹치지 않는다.
+   *   잠금은 페이지가 닫히면 브라우저가 풀어 준다. Web Locks 가 없는 브라우저는 예전처럼 바로 보낸다.
+   */
+  const REFRESH_LOCK = `newvent-refresh:${authBase}`
+  const serial = (fn) => (globalThis.navigator?.locks?.request ? navigator.locks.request(REFRESH_LOCK, fn) : fn())
+
   function refresh() {
-    refreshing ??= raw(`${authBase}/refresh`, { method: 'POST' })
+    refreshing ??= serial(() => raw(`${authBase}/refresh`, { method: 'POST' }))
       .then(async (res) => {
         if (!res.ok) throw new ApiError('세션이 만료되었습니다', res.status)
         const data = unwrap(await res.json())

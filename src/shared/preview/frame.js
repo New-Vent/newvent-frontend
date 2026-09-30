@@ -35,6 +35,11 @@ function bindFrame(frame){
   },true);
   applySelection();refreshContentEditor();return;
  }
+ // 서버 편집 화면의 직접 수정 — 누른 글자를 편집 화면(server-editor.js)에 알린다. 페이지 동작은 막는다
+ if(mode==='server-edit'){
+  doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
+  doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
+ }
  if(mode==='readonly'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();},true);return;

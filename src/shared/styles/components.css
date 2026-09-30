@@ -137,3 +137,8 @@
 @media (max-width: 620px) {
   .account-summary { grid-template-columns: 1fr; }
 }
+
+/* 이벤트 썸네일 — 720×440 문서를 칸 너비에 맞춰 줄인다 (frame.js hydrate 가 scale 을 넣는다).
+ * 사용자 홈 카드 · 관리자 새 이벤트 템플릿 선택이 같이 쓴다 */
+.thumb{position:relative;overflow:hidden;background:#f3f0f7;aspect-ratio:720/440;isolation:isolate}
+.thumb iframe{position:absolute;left:0;top:0;width:720px!important;height:440px;max-width:none;transform-origin:0 0;border:0;pointer-events:none}
