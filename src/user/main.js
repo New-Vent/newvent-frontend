@@ -12,6 +12,7 @@ import { toast } from '@shared/ui/toast.js'
 import { closeModal, ask } from '@shared/ui/modal.js'
 import { hydrate } from '@shared/preview/frame.js'
 import { createRouter } from '@shared/router.js'
+import { setNavigate } from '@shared/navigate.js'
 import { initialDatabase, PLANS, gradeOfPlan } from '@shared/mock/fixtures.js'
 
 import { homeView, refreshResults } from './views/home.js'
@@ -112,6 +113,9 @@ function navigate(route, id) {
   closeModal()
   router.navigate(PATH[route] ? PATH[route](id ?? ui.activeId) : '/')
 }
+
+// 이식한 뷰들이 @shared/navigate.js 를 통해 이걸 부른다.
+setNavigate(navigate)
 
 document.addEventListener('click', (ev) => {
   const b = ev.target.closest('[data-act], a[data-link]')

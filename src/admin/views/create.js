@@ -5,6 +5,10 @@
  *       validateCreation · startCreation · finishCreation
  */
 
+import { clone } from '@shared/dom.js'
+
+import { navigate } from '@shared/navigate.js'
+
 import { DEMO_DATE } from '@shared/constants.js'
 import { $, esc } from '@shared/dom.js'
 import { policyLabel, shortDate } from '@shared/format.js'
@@ -80,4 +84,4 @@ function finishCreation(){
  ui.creation=null;persist();navigate('editor',id);toast('기본 정보를 적용한 새 작업 공간을 만들었어요.');
 }
 
-export { creationView, startCreation, creationError, validateCreation, finishCreation }
+export { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary }

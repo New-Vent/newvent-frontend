@@ -5,6 +5,8 @@
  * 여기서는 /assets/event.css 를 실제 파일로 링크한다 (nginx 가 서빙).
  */
 
+import { field } from '@shared/ui/controls.js'
+
 import { clone, esc } from '@shared/dom.js'
 import { shortDate } from '@shared/format.js'
 import { TEMPLATE_BODIES } from '@shared/mock/templates.js'

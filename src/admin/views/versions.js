@@ -5,6 +5,8 @@
  *       publicationChecks · publicationCheck · publishSummary · showPublish
  */
 
+import { navigate } from '@shared/navigate.js'
+
 import { stopRequest } from './editor.js'
 
 import { LABELS } from '@shared/constants.js'
@@ -90,4 +92,4 @@ function chooseVersion(num){
  else change();
 }
 
-export { versionsView, previewVersion, saveVersion, showPublish, chooseVersion }
+export { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary }

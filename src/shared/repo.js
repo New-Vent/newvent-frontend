@@ -11,6 +11,8 @@
  * 계약: docs/API.md
  */
 
+import { version } from '@shared/selectors.js'
+
 import { state, ui } from './state.js'
 import { persist } from './persist.js'
 import { DEMO_DATE, USER_ID } from './constants.js'
