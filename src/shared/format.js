@@ -8,7 +8,9 @@ function shortDate(d){return d.replaceAll('-','.');}
 
 function daysBetween(a,b){return Math.ceil((new Date(b+'T00:00:00Z')-new Date(a+'T00:00:00Z'))/86400000);}
 
-function eventStatus(e){const s=published(e);return !s?'draft':s.start>DEMO_DATE?'upcoming':s.end<DEMO_DATE?'ended':'live';}
+// 관리자가 수동으로 끝낸 이벤트(endedAt)는 기간이 남아 있어도 종료로 본다.
+// PATCH /api/admin/events/{id}/status {status:"ENDED"} 에 대응한다.
+function eventStatus(e){const s=published(e);return !s?'draft':e.endedAt?'ended':s.start>DEMO_DATE?'upcoming':s.end<DEMO_DATE?'ended':'live';}
 
 function statusLabel(e){return ({draft:'미게시',upcoming:'오픈 예정',ended:'종료',live:'진행 중'})[eventStatus(e)];}
 
