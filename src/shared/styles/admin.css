@@ -71,3 +71,24 @@
 .publish-checks dt{color:var(--muted)}
 .publish-checks dd{text-align:right;font-weight:700;overflow-wrap:anywhere}
 .publish-checks .review-note{margin-top:11px}
+
+/* ── 기간 필터 · 페이지네이션 (2026-09-30 추가) ──────────────────── */
+
+.admin-period-filter {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0 4px;
+}
+.admin-period-filter .field { margin: 0; font-size: 12px; }
+.admin-period-filter .field input { min-width: 150px; }
+
+.admin-pager {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.admin-pager .btn[disabled] { opacity: 0.4; cursor: default; }
