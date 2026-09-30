@@ -80,7 +80,12 @@ function templateDocument(snapshot,thumb=false){
  let body=doc.body.outerHTML;
  if(thumb){
   const hero=doc.querySelector('[data-block="hero"]');
-  body='<body class="'+esc(doc.body.className)+'"><div class="ev-container event-page">'+(hero?hero.outerHTML:'')+'</div></body>';
+  // 컨테이너를 새로 만들되 원본의 class 를 그대로 옮긴다.
+  // 테마(theme-*)가 .ev-container 에 붙어 있으므로, 하드코딩하면
+  // 목록 썸네일만 테마를 잃는다.
+  const container=doc.querySelector('.ev-container');
+  const containerClass=container?.className||'ev-container event-page';
+  body='<body class="'+esc(doc.body.className)+'"><div class="'+esc(containerClass)+'">'+(hero?hero.outerHTML:'')+'</div></body>';
  }
  const css='html,body{margin:0!important}body{overflow-x:hidden}body,body *{font-family:"Noto Sans KR Variable","Malgun Gothic",sans-serif!important}.ev-container{margin:0 auto!important}.nv-text-active{background:#fff1a8!important;color:#292330!important;outline:2px solid #d60076!important;outline-offset:3px;border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}.newvent-selected{outline:3px solid #d60076!important;outline-offset:-4px}button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:3px solid #da3990;outline-offset:4px}'+(thumb?'\nhtml,body{width:720px!important;height:440px!important;overflow:hidden!important}.ev-container{width:720px!important;max-width:720px!important;box-shadow:none!important;border-radius:0!important}[data-block="hero"]{min-height:440px!important;max-height:440px;overflow:hidden;padding-top:30px!important}.hero-title{font-size:40px!important;line-height:1.2!important}.hero-desc{font-size:16px!important;line-height:1.6!important}':'');
  return '<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+EVENT_STYLE_LINKS+'<style>'+css+'</style>'+doc.querySelector('#nv-button-style').outerHTML+'</head>'+body+'</html>';
