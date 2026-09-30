@@ -1,7 +1,8 @@
 import './styles.css'
 
-import { $ } from '@shared/dom.js'
-import { createApi } from '@shared/api.js'
+import { $, esc } from '@shared/dom.js'
+import { AUTH_ENABLED, createApi } from '@shared/api.js'
+import { handleLoginSubmit } from '@shared/login-form.js'
 import { useApi } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
@@ -48,6 +49,20 @@ const PATH = {
   login: () => '/login',
 }
 
+/** 헤더에 띄울 이름. 서버 인증이면 /api/users/me 의 name, 목업이면 원본 그대로 */
+function displayName() {
+  return AUTH_ENABLED ? ui.userName || '회원' : '헌진'
+}
+
+/** 로그인 · 새로고침 복구 뒤 내 정보를 읽는다. 실패해도 로그인 상태는 유지한다 (이름만 기본값) */
+async function loadMe() {
+  try {
+    ui.userName = (await api.get('/api/users/me')).name
+  } catch {
+    ui.userName = null
+  }
+}
+
 function header() {
   $('#header').innerHTML =
     '<div class="container">' +
@@ -58,7 +73,7 @@ function header() {
     button('route', '내 혜택', 'data-route="my"', ui.route === 'my' ? 'active' : '') +
     '</nav><div class="account">' +
     (ui.logged
-      ? '<span class="avatar">' + icon('user') + '</span><span class="name">헌진님</span>' +
+      ? '<span class="avatar">' + icon('user') + '</span><span class="name">' + esc(displayName()) + '님</span>' +
         button('logout', '로그아웃', '', 'btn ghost sm')
       : button('route', '로그인', 'data-route="login"', 'btn soft sm')) +
     '</div></div>'
@@ -109,9 +124,7 @@ document.addEventListener('click', (ev) => {
   if (a === 'login-prompt') return showLoginPrompt()
   if (a === 'result') return ui.logged ? showResult(b.dataset.id) : showLoginPrompt()
   if (a === 'logout') {
-    ui.logged = false
-    navigate('home')
-    toast('로그아웃했어요.')
+    logout()
     return
   }
   if (a === 'hero-prev') {
@@ -155,6 +168,26 @@ document.addEventListener('click', (ev) => {
   }
 })
 
+async function logout() {
+  if (AUTH_ENABLED) await api.logout()
+  ui.logged = false
+  ui.userName = null
+  navigate('home')
+  toast('로그아웃했어요.')
+}
+
+document.addEventListener('submit', (ev) => {
+  if (ev.target.id !== 'login-form') return
+  handleLoginSubmit(ev, api, async () => {
+    ui.logged = true
+    await loadMe()
+    toast('로그인했어요.')
+    // 로그인 화면에서 왔으면 홈으로, 내 혜택 등 다른 화면 안에서 로그인했으면 그 자리에서 다시 그린다
+    if (ui.route === 'login') navigate('home')
+    else render()
+  })
+})
+
 document.addEventListener('input', (ev) => {
   if (ev.target.id === 'event-search') {
     ui.query = ev.target.value
@@ -168,14 +201,7 @@ $('#overlay').addEventListener('click', (ev) => {
 
 ui.role = 'user'
 
-/**
- * 서버 인증 사용 여부.
- *
- * 백엔드가 붙기 전까지는 목업 로그인 상태로 돈다. 켜려면
- *   VITE_API_AUTH=on npm run dev
- * 또는 .env 에 VITE_API_AUTH=on
- */
-const AUTH_ENABLED = import.meta.env.VITE_API_AUTH === 'on'
+// 서버 인증 사용 여부는 AUTH_ENABLED (@shared/api.js). 꺼져 있으면 목업 로그인 상태로 돈다.
 
 async function start() {
   if (AUTH_ENABLED) {
@@ -183,6 +209,7 @@ async function start() {
     // 먼저 갱신하고 렌더해야 로그인 화면이 깜빡였다 바뀌지 않는다.
     // 성공하면 boot() 가 만료 전 갱신 폴링까지 시작한다.
     ui.logged = await api.boot()
+    if (ui.logged) await loadMe()
   } else {
     ui.logged = true
   }

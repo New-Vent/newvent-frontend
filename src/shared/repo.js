@@ -16,8 +16,13 @@ import { persist } from './persist.js'
 import { DEMO_DATE, USER_ID } from './constants.js'
 import { initialDatabase } from './mock/fixtures.js'
 
-/** 서버를 쓸지 목업을 쓸지. VITE_API_AUTH 와 같은 스위치를 쓴다. */
-export const USE_SERVER = import.meta.env.VITE_API_AUTH === 'on'
+/**
+ * 데이터(이벤트 · 참여 · 버전)를 서버에서 읽을지 목업을 쓸지.
+ *
+ * ★ 인증 스위치(VITE_API_AUTH)와 따로 둔다. 로그인은 실제 서버로, 데이터는 목업으로 돌릴 수 있게.
+ *   아직 이 파일의 경로(/api/events 등)가 백엔드 실제 경로와 다르다 — 맞추기 전에는 켜지 않는다.
+ */
+export const USE_SERVER = import.meta.env.VITE_API_DATA === 'on'
 
 let api = null
 

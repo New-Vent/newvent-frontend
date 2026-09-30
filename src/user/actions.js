@@ -12,8 +12,10 @@ import { persist } from '@shared/persist.js'
 import { button } from '@shared/ui/controls.js'
 import { modal } from '@shared/ui/modal.js'
 import { toast } from '@shared/ui/toast.js'
+import { AUTH_ENABLED } from '@shared/api.js'
 
 function showLoginPrompt(){
+ if(AUTH_ENABLED)return modal('로그인이 필요해요','<p>참여 결과를 내 혜택에 보관하려면 로그인해주세요.</p>',button('close','닫기')+button('route','로그인하기','data-route="login"','btn primary'));
  modal('로그인이 필요해요','<p>참여 결과를 내 혜택에 보관하려면 사용자로 체험해주세요.</p>',button('close','닫기')+button('role','사용자로 체험','data-role="user"','btn primary'));
 }
 

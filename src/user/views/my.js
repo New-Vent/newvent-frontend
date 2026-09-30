@@ -6,6 +6,8 @@ import { eventById, rows } from '@shared/selectors.js'
 import { ui } from '@shared/state.js'
 import { button, metric } from '@shared/ui/controls.js'
 
+import { loginView } from './login.js'
+
 function myView(){
  if(!ui.logged)return loginView('참여 내역을 보려면 로그인해주세요');
  const ps=rows(),shown=ui.myFilter==='rewards'?ps.filter(p=>p.reward):ps;

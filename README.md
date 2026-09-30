@@ -95,6 +95,23 @@ API_PROXY_TARGET=http://192.168.0.10:8080 npm run dev
 npm run build        # 두 벌 모두 → dist/user, dist/admin
 ```
 
+### 서버 인증 켜기 (목업 → 실제 로그인)
+
+`.env.local` 에 `VITE_API_AUTH=on` 을 넣어도 됩니다 (gitignore 대상).
+스위치를 켜지 않으면 기존 목업 그대로 동작합니다.
+
+```bash
+# .env.local
+VITE_API_AUTH=on
+```
+
+한 번만 켜 보려면 명령 앞에 붙여도 됩니다: `VITE_API_AUTH=on npm run dev`
+
+| 스위치 | 켜면 | 끄면 (기본) |
+| --- | --- | --- |
+| `VITE_API_AUTH=on` | 아이디 · 비밀번호 로그인 → `/api/auth` · `/api/admin/auth` | "체험하기" 버튼 목업 로그인 |
+| `VITE_API_DATA=on` | 이벤트 · 참여 데이터를 서버에서 (`shared/repo.js`) | 목업 데이터 (`shared/mock/`) |
+
 ---
 
 ## 디렉터리 역할
