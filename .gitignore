@@ -5,3 +5,7 @@ dist/
 *.local
 .DS_Store
 .claude/
+
+# IAM 정책 JSON — 계정 ID 가 박히므로 올리지 않는다.
+# 내용은 deploy/SETUP.md 1장에 그대로 적혀 있다. 거기서 복사해 쓴다.
+deploy/iam/
