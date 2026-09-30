@@ -9,13 +9,23 @@
  *   휴지통        삭제된 것.  게시하기(=복구 후 게시) · 영구 삭제하기
  *
  * 원본: adminView · adminTable · adminFilteredEvents
+ *
+ * 두 모드 — 탭 · 필터 · 페이지는 같고, 데이터와 표만 다르다
+ *   목업 (VITE_API_AUTH off)  state.db
+ *   서버 (VITE_API_AUTH on)   GET /api/admin/events · /trash → ui.adminServer
+ *
+ * ★ 서버 모드에서 아직 없는 것
+ *   버전 번호 · 게시 전 변경 개수 — 목록 API 가 버전 정보를 안 준다
+ *   게시하기 · 게시 내리기 — 게시 API 가 501 이다. 버튼만 막아 둔다
+ *   편집하기 · 버전 이력 — 그 화면이 아직 목업이다
  */
 
 import { published, rows } from '@shared/selectors.js'
 
 import { esc } from '@shared/dom.js'
-import { eventStatus, shortDate, statusBadge } from '@shared/format.js'
+import { badgeOf, eventStatus, serverStatus, shortDate, statusBadge } from '@shared/format.js'
 import { icon } from '@shared/icons.js'
+import { loadAdminEvents, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { button, metric } from '@shared/ui/controls.js'
 
@@ -148,12 +158,166 @@ function tableTrash(es) {
 
 const TABLES = { mine: tableMine, live: tableLive, trash: tableTrash }
 
+/* ───────────────────────── 서버 모드 ───────────────────────── */
+
+/** 서버 목록 상태. idle → loading → ready | error. 로그아웃하면 idle 로 되돌린다 */
+function server() {
+  return (ui.adminServer ??= { status: 'idle', active: [], trash: [], error: null })
+}
+
+/** 목록 · 휴지통을 한 번에 불러 온다. 끝나면 onDone() — 보통 render */
+async function loadAdminServer(onDone) {
+  const s = server()
+  s.status = 'loading'
+  try {
+    const [active, trash] = await Promise.all([loadAdminEvents(), loadAdminEvents({ deleted: true })])
+    Object.assign(s, { status: 'ready', active, trash, error: null })
+  } catch (e) {
+    Object.assign(s, { status: 'error', error: e?.message || '목록을 불러오지 못했어요.' })
+  }
+  onDone?.()
+}
+
+/** 아직 안 불렀으면 부른다. 렌더마다 불러도 한 번만 돈다 */
+function ensureAdminServer(onDone) {
+  if (USE_SERVER && server().status === 'idle') loadAdminServer(onDone)
+}
+
+function resetAdminServer() {
+  ui.adminServer = { status: 'idle', active: [], trash: [], error: null }
+}
+
+function serverItem(id) {
+  const s = server()
+  return [...s.active, ...s.trash].find((e) => String(e.id) === String(id))
+}
+
+/** 서버 시각 → 'YYYY-MM-DD' (KST). 기간 필터가 date 입력값과 같은 모양으로 비교한다 */
+const ymd = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' })
+const dayOf = (iso) => (iso ? ymd.format(new Date(iso)) : '')
+const dotted = (iso) => dayOf(iso).replaceAll('-', '.')
+const serverPeriod = (e) => (e.startAt && e.endAt ? dotted(e.startAt) + ' ~ ' + dotted(e.endAt) : '기간 미정')
+
+/**
+ * 목업 adminFilteredEvents 와 같은 규칙 — 탭 · 상태 · 기간 · 검색.
+ * ★ 검색에서 "#101" 처럼 # 을 붙이면 ID 만, 정확히 — 안 그러면 "#3" 이 "3GB" 이름까지 잡는다
+ * ★ 기간 필터를 걸면 기간이 비어 있는 이벤트는 빠진다 (서버 쿼리와 같은 뜻)
+ */
+function serverFiltered() {
+  const tab = currentTab()
+  const s = server()
+  const from = ui.adminFrom || ''
+  const to = ui.adminTo || ''
+  const raw = ui.adminQuery.trim().toLowerCase()
+  const byId = /^#\d+$/.test(raw)
+  const q = raw.replace(/^#/, '')
+
+  return (tab === 'trash' ? s.trash : s.active)
+    .filter((e) => tab !== 'live' || serverStatus(e) === 'live')
+    .filter((e) => tab !== 'mine' || ui.adminStatus === 'all' || serverStatus(e) === ui.adminStatus)
+    .filter((e) => {
+      if (!from && !to) return true
+      if (!e.startAt || !e.endAt) return false
+      if (from && dayOf(e.endAt) < from) return false
+      if (to && dayOf(e.startAt) > to) return false
+      return true
+    })
+    .filter((e) => !q || (byId ? String(e.id) === q : (e.name + ' ' + e.id).toLowerCase().includes(q)))
+}
+
+const blocked = (why) => `disabled title="${why}"`
+const SOON_EDIT = '편집 화면은 아직 서버와 연동 전이에요'
+const SOON_PUBLISH = '게시 API 가 아직 준비되지 않았어요'
+
+const serverTitleCell = (e) =>
+  `<td><h3>${esc(e.name)}</h3><small>ID ${e.id}${e.template ? ' · ' + esc(e.template) : ''}</small></td>`
+
+/** 나의 이벤트 — 버전 열 대신 게시 상태 · 기간 (목록 API 에 버전 정보가 없다) */
+function serverMine(es) {
+  const rows = es.map((e) =>
+    '<tr>' + serverTitleCell(e)
+    + '<td>' + badgeOf(serverStatus(e)) + (e.closingSoon ? ' <span class="badge amber">마감 임박</span>' : '')
+    + `<br><small>${serverPeriod(e)}</small></td>`
+    + '<td><div class="row">'
+    + button('versions', '버전 이력', `data-id="${e.id}" ${blocked(SOON_EDIT)}`, 'btn sm')
+    + button('edit', '편집하기', `data-id="${e.id}" ${blocked(SOON_EDIT)}`, 'btn sm soft')
+    + button('publish-latest', '게시하기', `data-id="${e.id}" ${blocked(SOON_PUBLISH)}`, 'btn sm ghost')
+    + button('delete-event', '삭제하기', `data-id="${e.id}"`, 'btn sm danger')
+    + '</div></td></tr>')
+  return `<table class="admin-table"><thead><tr><th>이벤트</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
+    + rows.join('')
+    + (rows.length ? '' : emptyRow(3, '검색 결과가 없습니다.'))
+    + '</tbody></table>'
+}
+
+/** 게시중 — 기간을 보여준다. 게시 버전 번호는 목록 API 에 없다 */
+function serverLive(es) {
+  const rows = es.map((e) =>
+    '<tr>' + serverTitleCell(e)
+    + `<td>${serverPeriod(e)}</td>`
+    + '<td>' + badgeOf('live') + '</td>'
+    + '<td><div class="row">'
+    + button('unpublish', '게시 내리기', `data-id="${e.id}" ${blocked(SOON_PUBLISH)}`, 'btn sm soft')
+    + '</div></td></tr>')
+  return `<table class="admin-table"><thead><tr><th>이벤트</th><th>기간</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
+    + rows.join('')
+    + (rows.length ? '' : emptyRow(4, '게시 중인 이벤트가 없습니다.'))
+    + '</tbody></table>'
+}
+
+/**
+ * 휴지통 — 복구하거나 완전히 지운다.
+ * ★ 목업의 "게시하기(복구 후 게시)" 대신 "복구" 다 — 게시 API 가 아직 없다
+ * ★ 삭제일 대신 마지막 변경일 — 휴지통 응답에 deletedAt 이 없다
+ */
+function serverTrash(es) {
+  const rows = es.map((e) =>
+    '<tr>' + serverTitleCell(e)
+    + `<td><small>${dotted(e.updatedAt)} 변경</small></td>`
+    + '<td><div class="row">'
+    + button('restore-event', '복구', `data-id="${e.id}"`, 'btn sm soft')
+    + button('purge-event', '영구 삭제하기', `data-id="${e.id}"`, 'btn sm danger')
+    + '</div></td></tr>')
+  return `<table class="admin-table"><thead><tr><th>이벤트</th><th>마지막 변경</th><th>관리</th></tr></thead><tbody>`
+    + rows.join('')
+    + (rows.length ? '' : emptyRow(3, '휴지통이 비어 있습니다.'))
+    + '</tbody></table>'
+}
+
+const SERVER_TABLES = { mine: serverMine, live: serverLive, trash: serverTrash }
+
+function serverTable(tab, es) {
+  const s = server()
+  if (s.status === 'idle' || s.status === 'loading') {
+    return '<div class="empty"><strong>이벤트를 불러오고 있어요</strong></div>'
+  }
+  if (s.status === 'error') {
+    return '<div class="empty"><strong>목록을 불러오지 못했어요</strong><p>' + esc(s.error) + '</p>'
+      + button('admin-reload', '다시 불러오기', '', 'btn sm') + '</div>'
+  }
+  return SERVER_TABLES[tab](es)
+}
+
+function metrics() {
+  if (!USE_SERVER) {
+    const active = state.db.events.filter((e) => !e.deletedAt)
+    return metric('전체 이벤트', active.length, '모든 작업 공간', 'layers')
+      + metric('진행 중', active.filter((e) => eventStatus(e) === 'live').length, '현재 게시된 이벤트 기준', 'bolt')
+      + metric('게시 전 변경', active.filter((e) => e.versions.at(-1).v !== e.publishedVersion).length,
+          '최신 저장 버전과 게시 버전이 다른 이벤트', 'edit')
+  }
+  const s = server()
+  const ready = s.status === 'ready'
+  return metric('전체 이벤트', ready ? s.active.length : '–', '모든 작업 공간', 'layers')
+    + metric('진행 중', ready ? s.active.filter((e) => serverStatus(e) === 'live').length : '–', '게시 상태와 기간 기준', 'bolt')
+    + metric('게시 전 변경', '–', '버전 정보 연동 전', 'edit')
+}
+
 /* ───────────────────────── 화면 ───────────────────────── */
 
 function adminView() {
   const tab = currentTab()
-  const slice = adminPageSlice(adminFilteredEvents())
-  const active = state.db.events.filter((e) => !e.deletedAt)
+  const slice = adminPageSlice(USE_SERVER ? serverFiltered() : adminFilteredEvents())
 
   const tabs = TABS.map((t) =>
     button('admin-tab', t.label, `data-tab="${t.key}" aria-pressed="${tab === t.key}"`,
@@ -175,12 +339,7 @@ function adminView() {
     + '<h1>이벤트 관리</h1><p>아이디어를 다듬고, 준비된 이벤트를 게시하세요.</p></div>'
     + button('new', '새 이벤트 만들기 ' + icon('sparkle'), '', 'btn primary')
     + '</div>'
-    + '<div class="metrics">'
-    + metric('전체 이벤트', active.length, '모든 작업 공간', 'layers')
-    + metric('진행 중', active.filter((e) => eventStatus(e) === 'live').length, '현재 게시된 이벤트 기준', 'bolt')
-    + metric('게시 전 변경', active.filter((e) => e.versions.at(-1).v !== e.publishedVersion).length,
-        '최신 저장 버전과 게시 버전이 다른 이벤트', 'edit')
-    + '</div>'
+    + '<div class="metrics">' + metrics() + '</div>'
     + '<section class="admin-list-section">'
     + '<div class="section-title spread"><div class="admin-list-tabs">' + tabs + '</div>'
     + '<label class="search">' + icon('search')
@@ -193,9 +352,10 @@ function adminView() {
     + ((ui.adminFrom || ui.adminTo) ? button('clear-period', '기간 초기화', '', 'btn sm ghost') : '')
     + '</div>'
     + '<p id="admin-result-count" class="admin-result-count">' + slice.total + '개 이벤트</p>'
-    + '<div id="admin-results" class="card table-wrap">' + TABLES[tab](slice.rows) + '</div>'
+    + '<div id="admin-results" class="card table-wrap">'
+    + (USE_SERVER ? serverTable(tab, slice.rows) : TABLES[tab](slice.rows)) + '</div>'
     + pager(slice.page, slice.pages)
     + '</section></div>'
 }
 
-export { adminView, adminFilteredEvents }
+export { adminView, adminFilteredEvents, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem }
