@@ -20,6 +20,23 @@
  *   전에 ensureFresh() 로 잔여 시간을 확보한다.
  */
 
+/**
+ * 서버 인증 사용 여부. 켜려면
+ *   VITE_API_AUTH=on npm run dev
+ * 또는 .env.local 에 VITE_API_AUTH=on
+ *
+ * ★ 인증만 켠다. 이벤트 · 참여 데이터는 repo.js 의 VITE_API_DATA 가 따로 켠다.
+ */
+export const AUTH_ENABLED = import.meta.env.VITE_API_AUTH === 'on'
+
+/**
+ * 백엔드는 성공 응답을 { success, data, message } 로 감싼다 (ApiResponse).
+ * 계약(docs/API.md)은 감싸지 않은 본문이라 여기서 한 번만 벗긴다 — 호출하는 쪽은 계약 모양만 본다.
+ */
+function unwrap(json) {
+  return json && typeof json === 'object' && 'success' in json && 'data' in json ? json.data : json
+}
+
 /** JWT 의 exp(초)를 읽는다. 못 읽으면 null — 서명 검증은 서버 몫이다. */
 function jwtExpiry(token) {
   try {
@@ -89,7 +106,7 @@ export function createApi({ authBase, skewMs = 60_000, pollMs = 30_000 }) {
     refreshing ??= raw(`${authBase}/refresh`, { method: 'POST' })
       .then(async (res) => {
         if (!res.ok) throw new ApiError('세션이 만료되었습니다', res.status)
-        const data = await res.json()
+        const data = unwrap(await res.json())
         setToken(data.accessToken, data.expiresIn)
         return data
       })
@@ -157,17 +174,43 @@ export function createApi({ authBase, skewMs = 60_000, pollMs = 30_000 }) {
     }
 
     if (!res.ok) {
-      const message = await res
-        .json()
-        .then((d) => d.message)
-        .catch(() => null)
-      throw new ApiError(message || `요청에 실패했습니다 (${res.status})`, res.status)
+      const err = await res.json().catch(() => null)
+      throw new ApiError(err?.message || `요청에 실패했습니다 (${res.status})`, res.status, err?.code)
     }
 
-    return res.status === 204 ? null : res.json()
+    return res.status === 204 ? null : unwrap(await res.json())
+  }
+
+  /**
+   * 로그인. 성공하면 Access 토큰을 메모리에 두고 만료 전 갱신을 시작한다.
+   * Refresh 토큰은 서버가 쿠키로 내린다 — JS 는 만지지 않는다.
+   *
+   * ★ 실패(AUTH401-0 등)는 ApiError 로 던진다. 이전 토큰은 건드리지 않는다.
+   */
+  async function login(loginId, password) {
+    const data = await request(`${authBase}/login`, { method: 'POST', body: { loginId, password } })
+    setToken(data.accessToken, data.expiresIn)
+    startWatch()
+    return data
+  }
+
+  /**
+   * 로그아웃. 서버의 Refresh 토큰을 폐기하고 쿠키를 만료시킨다.
+   * 서버가 실패해도(네트워크 등) 화면에서는 로그아웃한다 — 메모리 토큰은 반드시 지운다.
+   */
+  async function logout() {
+    stopWatch()
+    try {
+      await raw(`${authBase}/logout`, { method: 'POST' })
+    } catch {
+      // 무시 — 쿠키는 만료(7일)되거나 다음 로그인에서 폐기된다
+    }
+    clearToken()
   }
 
   return {
+    login,
+    logout,
     setToken,
     clearToken,
     refresh,
@@ -185,9 +228,15 @@ export function createApi({ authBase, skewMs = 60_000, pollMs = 30_000 }) {
 }
 
 export class ApiError extends Error {
-  constructor(message, status) {
+  /**
+   * @param {string} message 사용자에게 보여줄 문구 (서버 message)
+   * @param {number} status  HTTP 상태
+   * @param {string} [code]  서버 에러 코드 (예: AUTH401-0)
+   */
+  constructor(message, status, code) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.code = code
   }
 }

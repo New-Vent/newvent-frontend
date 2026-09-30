@@ -78,6 +78,10 @@ export default defineConfig(({ command }) => {
 
   return {
     root: r(`./src/${APP}`),
+
+    // ★ .env · .env.local 은 레포 최상위에서 읽는다.
+    //   기본값은 root(src/user · src/admin)라서, 지정하지 않으면 최상위 .env.local 이 무시된다.
+    envDir: r('.'),
     base: t.base,
 
     // public/ 은 사용자 "빌드"에서만 복사한다. 양쪽에서 복사하면

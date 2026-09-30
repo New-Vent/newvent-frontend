@@ -7,7 +7,8 @@ import { version } from '@shared/selectors.js'
 import './styles.css'
 
 import { $, esc } from '@shared/dom.js'
-import { createApi } from '@shared/api.js'
+import { AUTH_ENABLED, createApi } from '@shared/api.js'
+import { handleLoginSubmit } from '@shared/login-form.js'
 import { useApi } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
@@ -70,7 +71,7 @@ function header() {
     (ui.logged
       ? '<span class="avatar">' + icon('layers') + '</span><span class="name">운영자님</span>' +
         button('logout', '로그아웃', '', 'btn ghost sm')
-      : '') +
+      : button('route', '로그인', 'data-route="login"', 'btn soft sm')) +
     '</div></div>'
 }
 
@@ -117,9 +118,7 @@ document.addEventListener('click', (ev) => {
 
   if (a === 'logout') {
     Object.keys(ui.requests).forEach((id) => stopRequest(id, '로그아웃하여 요청을 중단했어요. 기존 내용은 유지됩니다.'))
-    ui.logged = false
-    navigate('login')
-    toast('로그아웃했어요.')
+    logout()
     return
   }
 
@@ -222,6 +221,22 @@ document.addEventListener('input',ev=>{
 
 document.addEventListener('input',editButton);
 
+async function logout() {
+  if (AUTH_ENABLED) await api.logout()
+  ui.logged = false
+  navigate('login')
+  toast('로그아웃했어요.')
+}
+
+document.addEventListener('submit', (ev) => {
+  if (ev.target.id !== 'login-form') return
+  handleLoginSubmit(ev, api, () => {
+    ui.logged = true
+    toast('로그인했어요.')
+    navigate('admin')
+  })
+})
+
 document.addEventListener('change',editButton);
 
 document.addEventListener('focusin',()=>highlightEditingText(true));
@@ -241,14 +256,7 @@ window.addEventListener('beforeunload', (ev) => {
 ui.role = 'admin'
 ui.route = 'admin'
 
-/**
- * 서버 인증 사용 여부.
- *
- * 백엔드가 붙기 전까지는 목업 로그인 상태로 돈다. 켜려면
- *   VITE_API_AUTH=on npm run dev
- * 또는 .env 에 VITE_API_AUTH=on
- */
-const AUTH_ENABLED = import.meta.env.VITE_API_AUTH === 'on'
+// 서버 인증 사용 여부는 AUTH_ENABLED (@shared/api.js). 꺼져 있으면 목업 로그인 상태로 돈다.
 
 async function start() {
   if (AUTH_ENABLED) {
