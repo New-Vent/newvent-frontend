@@ -232,11 +232,12 @@ const SOON_STATUS = '게시 내리기 API 가 아직 준비되지 않았어요'
 /**
  * 목록의 게시 — 최신 버전을 게시한다 (다른 버전은 편집 화면 · 버전 이력에서 고른다).
  * 목록 응답에 버전이 없어 누를 때 미리보기로 최신 버전을 알아낸다 (main.js publish-latest)
+ * 이미 게시 중이면 상태만 보여준다 — 재게시는 편집 화면 · 버전 이력에서 버전을 골라 한다.
  */
 function publishButton(e) {
   if (e.status === 'ENDED') return button('publish-latest', '게시하기', `data-id="${e.id}" ${blocked('종료된 이벤트는 게시할 수 없어요')}`, 'btn sm ghost')
-  const again = e.status === 'PUBLISHED'
-  return button('publish-latest', again ? '최신으로 재게시' : '게시하기', `data-id="${e.id}"`, 'btn sm ' + (again ? 'ghost' : 'primary'))
+  if (e.status === 'PUBLISHED') return button('publish-latest', '게시 중', `data-id="${e.id}" ${blocked('재게시는 편집 화면이나 버전 이력에서 할 수 있어요')}`, 'btn sm ghost')
+  return button('publish-latest', '게시하기', `data-id="${e.id}"`, 'btn sm primary')
 }
 
 const serverTitleCell = (e) =>
