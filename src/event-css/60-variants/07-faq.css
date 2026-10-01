@@ -1,0 +1,90 @@
+/* ── faq 변형 ───────────────────────────────────────────────────────────── */
+
+[data-block="faq"].v-faq-cards:not(.ev-block) dt {
+  margin-top: 10px;
+  padding: 14px 16px 0;
+  border: 1px solid var(--ev-border);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  background: var(--ev-surface-subtle);
+}
+[data-block="faq"].v-faq-cards:not(.ev-block) dt:first-child { margin-top: 0; }
+[data-block="faq"].v-faq-cards:not(.ev-block) dd {
+  margin: 0;
+  padding: 6px 16px 14px;
+  border: 1px solid var(--ev-border);
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  background: var(--ev-surface-subtle);
+}
+
+[data-block="faq"].v-faq-qa:not(.ev-block) dt,
+[data-block="faq"].v-faq-qa:not(.ev-block) dd {
+  position: relative;
+  padding-left: 34px;
+}
+[data-block="faq"].v-faq-qa:not(.ev-block) dt::before,
+[data-block="faq"].v-faq-qa:not(.ev-block) dd::before {
+  position: absolute;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 24px;
+}
+[data-block="faq"].v-faq-qa:not(.ev-block) dt::before { content: "Q"; top: 12px; background: var(--ev-primary); color: #fff; }
+[data-block="faq"].v-faq-qa:not(.ev-block) dt:first-child::before { top: -2px; }
+[data-block="faq"].v-faq-qa:not(.ev-block) dd::before { content: "A"; top: -2px; background: var(--ev-primary-light); color: var(--ev-primary); }
+
+/* ── 말풍선 · Bootstrap accordion-flush · 왼쪽 막대 · 번호 ── */
+
+[data-block="faq"].v-faq-chat:not(.ev-block) dt {
+  width: fit-content;
+  max-width: 85%;
+  margin: 0 0 6px;
+  padding: 10px 14px;
+  border-top: 0;
+  border-radius: 16px 16px 16px 4px;
+  background: var(--ev-surface-subtle);
+}
+[data-block="faq"].v-faq-chat:not(.ev-block) dd {
+  width: fit-content;
+  max-width: 85%;
+  margin: 0 0 14px auto;
+  padding: 10px 14px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--ev-primary);
+  color: #fff;
+}
+
+[data-block="faq"].v-faq-flush:not(.ev-block) .ev-accordion { gap: 0; }
+[data-block="faq"].v-faq-flush:not(.ev-block) details {
+  border: 0;
+  border-bottom: 1px solid var(--ev-border);
+  border-radius: 0;
+}
+[data-block="faq"].v-faq-flush:not(.ev-block) details:first-child { border-top: 1px solid var(--ev-border); }
+[data-block="faq"].v-faq-flush:not(.ev-block) summary { padding: 14px 2px; }
+[data-block="faq"].v-faq-flush:not(.ev-block) details[open] > summary { color: var(--ev-primary); }
+
+[data-block="faq"].v-faq-leftbar:not(.ev-block) :is(dt, summary) {
+  padding-left: 12px;
+  border-left: 4px solid var(--ev-primary);
+}
+[data-block="faq"].v-faq-leftbar:not(.ev-block) dd { padding-left: 16px; }
+
+[data-block="faq"].v-faq-numbered:not(.ev-block) :is(dl, .ev-accordion) { counter-reset: nv-faq; }
+[data-block="faq"].v-faq-numbered:not(.ev-block) :is(dt, summary) { counter-increment: nv-faq; }
+[data-block="faq"].v-faq-numbered:not(.ev-block) :is(dt, summary)::before {
+  content: "Q" counter(nv-faq) ".";
+  margin-right: 8px;
+  font-weight: 900;
+  color: var(--ev-primary);
+}
+
+/* 펼침형에서 번호가 붙으면 summary 의 space-between 때문에 질문이 가운데로 밀린다 — 왼쪽에 붙이고 쉐브론만 오른쪽 끝 */
+[data-block="faq"].v-faq-numbered:not(.ev-block) summary { justify-content: flex-start; }
+[data-block="faq"].v-faq-numbered:not(.ev-block) summary::after { margin-left: auto; }

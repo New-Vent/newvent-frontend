@@ -1,0 +1,39 @@
+/* schedule 변형 — 기본(v-schedule-timeline)은 50-blocks/05-schedule.css */
+
+[data-block="schedule"].v-schedule-chips:not(.ev-block) ol { display: flex; flex-wrap: wrap; gap: 8px; }
+[data-block="schedule"].v-schedule-chips:not(.ev-block) li {
+  margin: 0;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ev-primary-light);
+}
+[data-block="schedule"].v-schedule-chips:not(.ev-block) li::before { content: none; }
+[data-block="schedule"].v-schedule-chips:not(.ev-block) li strong { display: inline; margin-right: 6px; }
+
+[data-block="schedule"].v-schedule-table:not(.ev-block) li {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 11px 0;
+  border: 0;
+  border-bottom: 1px solid var(--ev-border);
+}
+[data-block="schedule"].v-schedule-table:not(.ev-block) li:last-child { border-bottom: 0; }
+[data-block="schedule"].v-schedule-table:not(.ev-block) li::before { content: none; }
+
+[data-block="schedule"].v-schedule-cards:not(.ev-block) ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+[data-block="schedule"].v-schedule-cards:not(.ev-block) li {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+}
+[data-block="schedule"].v-schedule-cards:not(.ev-block) li::before { content: none; }

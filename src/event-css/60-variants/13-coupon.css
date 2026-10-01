@@ -1,0 +1,43 @@
+/* coupon 변형 — 기본(v-coupon-ticket)은 50-blocks/04-coupon.css */
+
+[data-block="coupon"].v-coupon-dashed:not(.ev-block) {
+  border: 2px dashed var(--ev-primary);
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  -webkit-mask: none;
+          mask: none;
+}
+[data-block="coupon"].v-coupon-dashed:not(.ev-block) h2 { color: var(--ev-primary); opacity: 1; }
+[data-block="coupon"].v-coupon-dashed:not(.ev-block) ul { border-top-color: var(--ev-border); }
+
+[data-block="coupon"].v-coupon-stamp:not(.ev-block)::after {
+  content: "COUPON";
+  position: absolute;
+  top: 14px;
+  right: 40px;
+  padding: 2px 8px;
+  transform: rotate(12deg);
+  border: 2px solid currentColor;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  opacity: 0.75;
+}
+
+[data-block="coupon"].v-coupon-card:not(.ev-block) {
+  border-radius: 18px;
+  background: #111827;
+  color: #f9fafb;
+  box-shadow: var(--ev-shadow-lg);
+  -webkit-mask: none;
+          mask: none;
+}
+[data-block="coupon"].v-coupon-card:not(.ev-block) h2::after {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 3px;
+  margin-top: 8px;
+  border-radius: 3px;
+  background: var(--ev-gradient-cta);
+}

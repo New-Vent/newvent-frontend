@@ -1,0 +1,18 @@
+/* 어두운 팔레트 — 밝은 배경을 전제로 만든 폴백 색을 맞춘다 */
+.palette-night :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
+.palette-night [data-block="hero"].v-hero-minimal:not(.ev-block) h1,
+.palette-night [data-block="intro"].v-intro-lead:not(.ev-block) p:first-of-type { color: var(--ev-primary); }
+.palette-night [data-block="cta"]:not(.v-cta-outline, .v-cta-gradient-border, .ev-block) :is(.btn, a, button) { color: #111; }
+
+/* 어두운 팔레트 보정 */
+.palette-night [data-block="faq"].v-faq-brutal:not(.ev-block) summary { color: #111; }
+/* 기본 · 줄무늬 머리글만 브랜드색(금색) 바탕이라 글씨를 어둡게. 나머지 변형은 바탕이 어둡다 */
+.palette-night [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #111; }
+.palette-night [data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child :last-child { color: #111; }
+
+/* esports 도 어두운 팔레트 — night 와 같은 보정 */
+.palette-esports :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
+.palette-esports [data-block="cta"]:not(.v-cta-outline, .v-cta-gradient-border, .ev-block) :is(.btn, a, button) { color: #04130a; }
+.palette-esports [data-block="faq"].v-faq-brutal:not(.ev-block) summary { color: #111; }
+.palette-esports [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #04130a; }
+/* 테두리형 버튼(outline · gradient-border)은 바탕이 어둡다 — 위의 어두운 글씨 보정에서 뺐다 */

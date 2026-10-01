@@ -1,0 +1,37 @@
+/* ==========================================================================
+   CSS Reset & Base Structure
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+:where(.ev-container, .event-page) :where(h1, h2, h3, p) { margin-top: 0; }
+.ev-container :where(h1, h2, h3, p, ul, ol) { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--ev-font);
+  background-color: var(--ev-bg);
+  color: var(--ev-text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Main Container (사용자 조회 화면 & iframe 양쪽 일관 크기) */
+.ev-container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  background-color: var(--ev-surface);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Standard Block Wrapper */
+.ev-block {
+  width: 100%;
+  position: relative;
+  padding: 36px 24px;
+}

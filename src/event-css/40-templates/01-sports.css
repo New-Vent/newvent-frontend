@@ -1,0 +1,235 @@
+/* ==========================================================================
+   TEMPLATE 1: SPORTS CHEER (스포츠 포스터형)
+   ========================================================================== */
+.theme-sports .sp-hero {
+  padding: 42px 24px;
+  background: radial-gradient(circle at 85% 20%, rgba(220, 38, 38, 0.22) 0%, transparent 60%),
+              linear-gradient(145deg, #090e17 0%, #111827 50%, #1e1b4b 100%);
+}
+
+.theme-sports .sp-hero-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.theme-sports .sp-hero-left {
+  flex: 1;
+  text-align: left;
+}
+
+.theme-sports .sp-title {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.18;
+  letter-spacing: -1px;
+  color: #ffffff;
+  margin: 14px 0 10px;
+  text-transform: uppercase;
+}
+
+.theme-sports .sp-title .highlight {
+  color: #ef4444;
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+.theme-sports .sp-desc {
+  font-size: 14px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+/* Scoreboard Card */
+.theme-sports .sp-scoreboard {
+  flex: 0 0 230px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 2px solid #dc2626;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(220, 38, 38, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+.theme-sports .sp-sb-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ef4444;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.theme-sports .sp-sb-teams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #0f172a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-weight: 800;
+  font-size: 14px;
+  color: #f8fafc;
+  border: 1px solid #334155;
+}
+
+.theme-sports .sp-sb-vs {
+  font-size: 11px;
+  color: #ef4444;
+  font-weight: 900;
+}
+
+.theme-sports .sp-sb-divider {
+  height: 1px;
+  background: #334155;
+  margin: 10px 0;
+}
+
+.theme-sports .sp-sb-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 5px;
+  color: #cbd5e1;
+}
+
+.theme-sports .sp-sb-row strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+.theme-sports .sp-sb-note {
+  font-size: 10px;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 8px;
+  background: rgba(220, 38, 38, 0.12);
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+/* Featured Prize (Large 1st) */
+.theme-sports .sp-prize-main {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 2px solid #ef4444;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.12);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.theme-sports .sp-prize-main-inner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+}
+
+.theme-sports .sp-icon-lg {
+  width: 64px;
+  height: 64px;
+  font-size: 34px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.theme-sports .sp-name-lg {
+  font-size: 18px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.theme-sports .sp-value-lg {
+  font-size: 17px;
+  font-weight: 900;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+.theme-sports .sp-prize-sub-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.theme-sports .sp-prizes-wrap {
+  display: block;
+}
+
+.theme-sports .sp-prize-sub {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--ev-radius-md);
+  padding: 20px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: var(--ev-shadow-sm);
+}
+
+.theme-sports .sp-prize-sub:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ev-shadow-lg);
+  border-color: #ef4444;
+}
+
+/* Steps: Ticket Style */
+.theme-sports .sp-ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.theme-sports .sp-ticket {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #ffffff;
+  border: 2px dashed #cbd5e1;
+  border-left: 6px solid #dc2626;
+  border-radius: 10px;
+  padding: 16px 18px;
+  position: relative;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.theme-sports .sp-ticket:hover {
+  transform: translateX(4px);
+  border-color: #ef4444;
+}
+
+.theme-sports .sp-ticket-num {
+  font-size: 20px;
+  font-weight: 900;
+  color: #dc2626;
+  font-family: monospace, sans-serif;
+  letter-spacing: -1px;
+  flex: 0 0 32px;
+  text-align: center;
+}
+
+.theme-sports .sp-ticket-divider {
+  width: 1px;
+  height: 36px;
+  background: #e2e8f0;
+}
+
+.theme-sports .sp-cta-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+}

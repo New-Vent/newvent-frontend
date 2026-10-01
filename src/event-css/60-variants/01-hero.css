@@ -1,0 +1,133 @@
+/* ── hero 변형 ──────────────────────────────────────────────────────────── */
+
+[data-block="hero"].v-hero-center:not(.ev-block) {
+  text-align: center;
+  padding: 56px 28px;
+}
+
+[data-block="hero"].v-hero-left:not(.ev-block) {
+  text-align: left;
+  padding: 56px 32px 48px;
+  border-radius: 4px 28px 28px 4px;
+  border-left: 8px solid var(--ev-accent-tag);
+}
+[data-block="hero"].v-hero-left:not(.ev-block) h1 { font-size: 2.3rem; }
+
+[data-block="hero"].v-hero-minimal:not(.ev-block) {
+  background: var(--ev-primary-light);
+  color: var(--ev-text-main);
+  text-align: center;
+  padding: 52px 24px;
+}
+[data-block="hero"].v-hero-minimal:not(.ev-block) h1 { color: var(--ev-primary-hover); font-size: 2.2rem; }
+[data-block="hero"].v-hero-minimal:not(.ev-block) p { color: var(--ev-text-muted); opacity: 1; }
+
+[data-block="hero"].v-hero-poster:not(.ev-block) {
+  text-align: center;
+  padding: 72px 24px 64px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.22) 0, transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(255, 255, 255, 0.14) 0, transparent 45%),
+    var(--ev-gradient-hero);
+}
+[data-block="hero"].v-hero-poster:not(.ev-block) h1 {
+  font-size: 2.9rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+}
+
+[data-block="hero"].v-hero-outline:not(.ev-block) {
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  border: 3px solid var(--ev-primary);
+  box-shadow: 8px 8px 0 var(--ev-primary-light);
+}
+[data-block="hero"].v-hero-outline:not(.ev-block) h1 { color: var(--ev-primary); }
+[data-block="hero"].v-hero-outline:not(.ev-block) p { color: var(--ev-text-muted); opacity: 1; }
+
+/* ── 이식: Bootstrap jumbotron · Flowbite hero · DaisyUI hero ── */
+
+[data-block="hero"].v-hero-split:not(.ev-block) {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 12px 24px;
+  align-items: center;
+  text-align: left;
+  padding: 44px 28px;
+}
+[data-block="hero"].v-hero-split:not(.ev-block) h1 { grid-row: 1 / span 3; margin: 0; font-size: 2.2rem; }
+[data-block="hero"].v-hero-split:not(.ev-block) > :not(h1) {
+  grid-column: 2;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+[data-block="hero"].v-hero-ticket:not(.ev-block) {
+  text-align: center;
+  padding: 48px 44px;
+  border-radius: 18px;
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 22px, #000 22.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 22px, #000 22.5px) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle at 0 50%, transparent 22px, #000 22.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 22px, #000 22.5px) right / 51% 100% no-repeat;
+  outline: 2px dashed rgba(255, 255, 255, 0.35);
+  outline-offset: -14px;
+}
+
+[data-block="hero"].v-hero-gradient-text:not(.ev-block) {
+  background: var(--ev-surface-subtle);
+  color: var(--ev-text-main);
+  text-align: center;
+  padding: 56px 24px;
+}
+[data-block="hero"].v-hero-gradient-text:not(.ev-block) h1 {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: var(--ev-gradient-hero);
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+}
+[data-block="hero"].v-hero-gradient-text:not(.ev-block) p { color: var(--ev-text-muted); opacity: 1; }
+
+[data-block="hero"].v-hero-glass:not(.ev-block) {
+  position: relative;
+  text-align: center;
+  padding: 60px 40px;
+  background:
+    radial-gradient(circle at 15% 20%, var(--ev-accent-tag) 0, transparent 35%),
+    radial-gradient(circle at 85% 80%, var(--ev-primary) 0, transparent 40%),
+    var(--ev-gradient-hero);
+}
+[data-block="hero"].v-hero-glass:not(.ev-block)::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+}
+[data-block="hero"].v-hero-glass:not(.ev-block) > * { position: relative; }
+
+[data-block="hero"].v-hero-wave:not(.ev-block) {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: 52px 24px 64px;
+  border-radius: 20px 20px 0 0;
+}
+[data-block="hero"].v-hero-wave:not(.ev-block)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 18px;
+  background: radial-gradient(circle at 14px 0, transparent 14px, var(--ev-surface) 14.5px) 0 0 / 28px 18px repeat-x;
+}

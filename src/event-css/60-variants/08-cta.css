@@ -1,0 +1,92 @@
+/* ── cta 변형 ───────────────────────────────────────────────────────────── */
+
+[data-block="cta"].v-cta-center:not(.ev-block) { text-align: center; }
+
+[data-block="cta"].v-cta-wide:not(.ev-block) :is(.btn, a, button) {
+  display: block;
+  width: 100%;
+  padding: 18px 24px;
+  font-size: 1.1rem;
+}
+
+[data-block="cta"].v-cta-pill:not(.ev-block) :is(.btn, a, button) {
+  border-radius: 999px;
+  padding: 16px 40px;
+  background: var(--ev-gradient-cta);
+  box-shadow: 0 10px 22px var(--ev-primary-glow);
+}
+
+[data-block="cta"].v-cta-banner:not(.ev-block) {
+  padding: 28px 22px;
+  border-radius: 20px;
+  background: var(--ev-gradient-hero);
+  text-align: center;
+}
+[data-block="cta"].v-cta-banner:not(.ev-block) :is(.btn, a, button) {
+  background: #fff;
+  color: var(--ev-primary-hover);
+}
+
+[data-block="cta"].v-cta-outline:not(.ev-block) :is(.btn, a, button) {
+  background: transparent;
+  color: var(--ev-primary);
+  border: 2px solid var(--ev-primary);
+}
+[data-block="cta"].v-cta-outline:not(.ev-block) :is(.btn, a, button):hover {
+  background: var(--ev-primary);
+  color: #fff;
+}
+
+/* ── 이식: Bootstrap btn-lg · HyperUI 버튼 · Flowbite gradient outline ── */
+
+[data-block="cta"].v-cta-sticky:not(.ev-block) {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  margin-top: 16px;
+}
+[data-block="cta"].v-cta-sticky:not(.ev-block) :is(.btn, a, button) {
+  display: block;
+  width: 100%;
+  box-shadow: var(--ev-shadow-float);
+}
+
+[data-block="cta"].v-cta-glow:not(.ev-block) :is(.btn, a, button) {
+  background: var(--ev-gradient-cta);
+  animation: nv-cta-glow 2.2s ease-in-out infinite;
+}
+@keyframes nv-cta-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--ev-primary-glow); }
+  50%      { box-shadow: 0 0 0 12px transparent, 0 0 26px var(--ev-primary-glow); }
+}
+
+[data-block="cta"].v-cta-gradient-border:not(.ev-block) :is(.btn, a, button) {
+  border: 3px solid transparent;
+  background: linear-gradient(var(--ev-surface), var(--ev-surface)) padding-box, var(--ev-gradient-hero) border-box;
+  color: var(--ev-primary);
+}
+
+[data-block="cta"].v-cta-raised:not(.ev-block) :is(.btn, a, button) {
+  box-shadow: 0 6px 0 var(--ev-primary-hover);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+[data-block="cta"].v-cta-raised:not(.ev-block) :is(.btn, a, button):active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--ev-primary-hover);
+}
+
+[data-block="cta"].v-cta-arrow:not(.ev-block) :is(.btn, a, button)::after {
+  content: "→";
+  display: inline-block;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+[data-block="cta"].v-cta-arrow:not(.ev-block) :is(.btn, a, button):hover::after { transform: translateX(4px); }
+
+[data-block="cta"].v-cta-dark:not(.ev-block) {
+  padding: 26px 22px;
+  border-radius: 18px;
+  background: #0b1020;
+  text-align: center;
+}
+[data-block="cta"].v-cta-dark:not(.ev-block) :is(.btn, a, button) { background: #fff; color: #0b1020; }

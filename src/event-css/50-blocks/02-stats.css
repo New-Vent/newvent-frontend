@@ -1,0 +1,34 @@
+/* stats — 숫자로 보는 혜택. 기본 = v-stats-grid (2열 큰 숫자 카드) */
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) li {
+  padding: 16px 12px;
+  border-radius: 14px;
+  background: var(--ev-primary-light);
+  color: var(--ev-text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) li strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ev-primary);
+}

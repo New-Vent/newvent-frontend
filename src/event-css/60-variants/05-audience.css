@@ -1,0 +1,82 @@
+/* ── audience 변형 ──────────────────────────────────────────────────────── */
+
+[data-block="audience"].v-audience-checks:not(.ev-block) ul { display: block; }
+[data-block="audience"].v-audience-checks:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 8px;
+  padding: 2px 0 2px 30px;
+  border-radius: 0;
+  background: none;
+  color: var(--ev-text-main);
+  font-weight: 500;
+}
+[data-block="audience"].v-audience-checks:not(.ev-block) li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 20px;
+}
+
+[data-block="audience"].v-audience-cards:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+[data-block="audience"].v-audience-cards:not(.ev-block) li {
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--ev-border);
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  box-shadow: var(--ev-shadow-sm);
+}
+
+[data-block="audience"].v-audience-outline:not(.ev-block) li {
+  background: transparent;
+  border: 1.5px solid var(--ev-primary);
+  color: var(--ev-primary);
+}
+
+[data-block="audience"].v-audience-icons:not(.ev-block) ul { display: block; }
+[data-block="audience"].v-audience-icons:not(.ev-block) li {
+  position: relative;
+  padding: 10px 0 10px 42px;
+  border-radius: 0;
+  border-bottom: 1px dashed var(--ev-border);
+  background: none;
+  color: var(--ev-text-main);
+  font-weight: 500;
+}
+[data-block="audience"].v-audience-icons:not(.ev-block) li::before {
+  content: "👤";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 50%;
+  background: var(--ev-primary-light);
+  font-size: 14px;
+  line-height: 30px;
+  text-align: center;
+}
+
+[data-block="audience"].v-audience-inline:not(.ev-block) ul { display: block; }
+[data-block="audience"].v-audience-inline:not(.ev-block) li {
+  display: inline;
+  padding: 0;
+  background: none;
+  color: var(--ev-text-main);
+  font-weight: 600;
+}
+[data-block="audience"].v-audience-inline:not(.ev-block) li + li::before { content: " · "; color: var(--ev-text-light); }

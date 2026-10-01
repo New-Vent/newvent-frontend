@@ -1,0 +1,130 @@
+/* ==========================================================================
+   Mobile Responsive Media Queries (<= 640px & 375px 모바일 뷰)
+   - 375px 폭에서도 긴 문구/뱃지/가격이 겹치거나 잘리지 않도록 2열 그리드 배치
+   ========================================================================== */
+@media (max-width: 640px) {
+  .ev-block {
+    padding: 28px 16px;
+  }
+
+  .block-hero {
+    padding: 40px 16px 30px;
+  }
+
+  .hero-title {
+    font-size: 22px;
+  }
+
+  .hero-desc {
+    font-size: 13px;
+  }
+
+  .hero-period-box {
+    font-size: 11px;
+    padding: 6px 14px;
+  }
+
+  .block-header .title {
+    font-size: 19px;
+  }
+
+  /* 혜택 카드 1열 배치 */
+  .benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /*
+   * 모바일 카드: grid-template-areas로 태그를 normal flow에 배치
+   * [ .    tag  ]
+   * [ icon body ]
+   * [ icon value]
+   * → benefit-tag가 절대 위치에서 벗어나 텍스트와 충돌하지 않음
+   */
+  .benefit-card-default,
+  :where(.benefit-card:not([class*="sp-"]):not([class*="hl-"]):not([class*="vp-"]):not([class*="fs-"]):not([class*="lc-"])),
+  .theme-sports .sp-prize-sub {
+    display: grid;
+    grid-template-areas:
+      ".    tag  "
+      "icon body "
+      "icon value";
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    column-gap: 14px;
+    row-gap: 4px;
+    align-items: start;
+    text-align: left;
+    padding: 16px 14px;
+  }
+
+  .benefit-tag {
+    position: static;
+    grid-area: tag;
+    justify-self: start;
+    font-size: 9px;
+    padding: 2px 7px;
+    margin: 0;
+  }
+
+  .benefit-icon {
+    grid-area: icon;
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    margin-bottom: 0;
+  }
+
+  .benefit-body {
+    grid-area: body;
+    align-items: flex-start;
+    text-align: left;
+    min-width: 0;
+  }
+
+  .benefit-name {
+    font-size: 14px;
+    margin-bottom: 4px;
+    /* padding-right 불필요 — tag가 grid-area로 분리됨 */
+  }
+
+  .benefit-desc {
+    font-size: 12px;
+    margin-bottom: 0;
+    line-height: 1.4;
+  }
+
+  .benefit-value {
+    grid-area: value;
+    margin-top: 2px;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  .step-card-default,
+  :where(.step-card:not([class*="sp-"]):not([class*="hl-"]):not([class*="vp-"]):not([class*="fs-"]):not([class*="lc-"])) {
+    padding: 14px 14px;
+    gap: 12px;
+  }
+
+  .step-badge {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+    flex: 0 0 30px;
+  }
+
+  .step-title {
+    font-size: 14px;
+  }
+
+  .step-desc {
+    font-size: 12px;
+  }
+
+  .cta-btn {
+    font-size: 15px;
+    padding: 14px 20px;
+    border-radius: var(--ev-radius-md);
+  }
+}

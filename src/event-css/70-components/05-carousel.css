@@ -1,0 +1,50 @@
+/* ── 캐러셀 — scroll-snap. 손으로 넘긴다 (자동 넘김은 JS 라 없다) ───────── */
+
+:is([data-block="benefits"].v-benefits-carousel, [data-block="steps"].v-steps-carousel):not(.ev-block) :is(ul, ol) {
+  display: flex;
+  gap: 12px;
+  margin: 0 -22px 4px;
+  padding: 4px 22px 14px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 22px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ev-primary-light) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+:is([data-block="benefits"].v-benefits-carousel, [data-block="steps"].v-steps-carousel):not(.ev-block) li {
+  flex: 0 0 78%;
+  scroll-snap-align: start;
+  margin: 0;
+  padding: 22px 18px;
+  min-height: 120px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-md);
+}
+[data-block="benefits"].v-benefits-carousel:not(.ev-block) li:first-child {
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  border-color: transparent;
+}
+[data-block="steps"].v-steps-carousel:not(.ev-block) ol { counter-reset: nv-step; }
+[data-block="steps"].v-steps-carousel:not(.ev-block) li { counter-increment: nv-step; }
+[data-block="steps"].v-steps-carousel:not(.ev-block) li::before {
+  content: "STEP " counter(nv-step);
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ev-primary);
+}
+/* "옆으로 넘기세요" 힌트 — 목록 뒤에 작게 */
+:is([data-block="benefits"].v-benefits-carousel, [data-block="steps"].v-steps-carousel):not(.ev-block)::after {
+  content: "\2190  옆으로 넘겨 보세요  \2192";
+  display: block;
+  font-size: 11px;
+  color: var(--ev-text-light);
+  text-align: center;
+}

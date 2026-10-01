@@ -1,0 +1,27 @@
+/* coupon — 쿠폰 안내. 기본 = v-coupon-ticket (양옆이 파인 그라데이션 티켓) */
+:where(.event-page, .ev-container) [data-block="coupon"]:not(.ev-block) {
+  position: relative;
+  margin-bottom: 16px;
+  padding: 24px 34px;
+  border-radius: 16px;
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 16px, #000 16.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 16px, #000 16.5px) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle at 0 50%, transparent 16px, #000 16.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 16px, #000 16.5px) right / 51% 100% no-repeat;
+}
+:where(.event-page, .ev-container) [data-block="coupon"]:not(.ev-block) h2 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+:where(.event-page, .ev-container) [data-block="coupon"]:not(.ev-block) p { margin: 0 0 10px; font-size: 1.3rem; font-weight: 800; }
+:where(.event-page, .ev-container) [data-block="coupon"]:not(.ev-block) ul {
+  margin: 12px 0 0;
+  padding: 12px 0 0 18px;
+  border-top: 2px dashed rgba(255, 255, 255, 0.45);
+  font-size: 0.85rem;
+  opacity: 0.92;
+}

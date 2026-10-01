@@ -1,0 +1,242 @@
+/* ==========================================================================
+   TEMPLATE 4: FLASH SALE (가격 강조형)
+   ========================================================================== */
+.theme-sale {
+  --ev-bg: #09090b;
+  --ev-surface: #121215;
+  --ev-text-main: #f4f4f5;
+  --ev-text-muted: #a1a1aa;
+  --ev-border: #27272a;
+}
+
+.theme-sale .fs-hero {
+  padding: 36px 20px 28px;
+  background: #000000;
+  border-bottom: 2px solid #ccff00;
+  text-align: center;
+}
+
+.theme-sale .fs-top-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.theme-sale .fs-deal-badge {
+  background: #ccff00;
+  color: #000000;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.theme-sale .fs-title {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.3;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.theme-sale .fs-title .highlight {
+  color: #ccff00;
+}
+
+.theme-sale .fs-desc {
+  font-size: 13px;
+  color: #a1a1aa;
+  margin-bottom: 16px;
+}
+
+/* Segmented Digital Timer Panel */
+.theme-sale .fs-timer-panel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin-top: 4px;
+}
+
+.theme-sale .fs-timer-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.theme-sale .fs-timer-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e4e4e7;
+  letter-spacing: 0.5px;
+}
+
+.theme-sale .fs-timer-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-sale .fs-timer-digit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+  color: #ccff00;
+  font-family: monospace, sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #52525b;
+  border-radius: 4px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.theme-sale .fs-timer-sep {
+  color: #ccff00;
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.theme-sale .fs-period-sub {
+  font-size: 11px;
+  color: #71717a;
+  margin-top: 8px;
+}
+
+/* Benefits: Deal List Format */
+.theme-sale .fs-deal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.theme-sale .fs-deal-item {
+  display: flex;
+  align-items: center;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 14px 18px;
+  gap: 16px;
+  transition: border-color 0.2s;
+}
+
+.theme-sale .fs-deal-item:hover {
+  border-color: #ccff00;
+}
+
+.theme-sale .fs-deal-icon {
+  font-size: 28px;
+  flex: 0 0 44px;
+  height: 44px;
+  background: #27272a;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-sale .fs-deal-info {
+  flex: 1;
+  text-align: left;
+}
+
+.theme-sale .fs-deal-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f4f4f5;
+  margin-bottom: 2px;
+}
+
+.theme-sale .fs-deal-desc {
+  font-size: 11px;
+  color: #71717a;
+  margin-bottom: 0;
+}
+
+.theme-sale .fs-deal-pricing {
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+.theme-sale .fs-deal-tag {
+  display: inline-block;
+  background: #ccff00;
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 2px;
+  margin-bottom: 2px;
+}
+
+.theme-sale .fs-deal-original {
+  font-size: 11px;
+  color: #71717a;
+  text-decoration: line-through;
+}
+
+.theme-sale .fs-deal-final {
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+/* Steps: Compact Strip */
+.theme-sale .fs-steps-compact {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.theme-sale .fs-step-compact-item {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 12px 10px;
+  text-align: left;
+}
+
+.theme-sale .fs-step-compact-num {
+  font-size: 11px;
+  font-weight: 900;
+  color: #ccff00;
+  margin-bottom: 4px;
+}
+
+.theme-sale .fs-step-compact-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f4f4f5;
+  margin-bottom: 2px;
+}
+
+.theme-sale .fs-step-compact-desc {
+  font-size: 10px;
+  color: #71717a;
+  line-height: 1.35;
+}
+
+/* Rectangular CTA */
+.theme-sale .fs-cta-btn {
+  background: #ccff00;
+  color: #000000;
+  border-radius: 2px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  border: none;
+  box-shadow: 0 6px 20px rgba(204, 255, 0, 0.35);
+}
+
+.theme-sale .fs-cta-btn:hover {
+  background: #b8e600;
+}

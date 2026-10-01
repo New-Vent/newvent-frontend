@@ -1,0 +1,81 @@
+/* ── faq — 펼침형(details) 기본 모양 ───────────────────────────────────── */
+
+[data-block="faq"]:not(.ev-block) .ev-accordion { display: grid; gap: 10px; }
+[data-block="faq"]:not(.ev-block) details {
+  border-top: 1px solid var(--ev-border);
+}
+[data-block="faq"]:not(.ev-block) details:first-child { border-top: 0; }
+[data-block="faq"]:not(.ev-block) summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+[data-block="faq"]:not(.ev-block) summary::-webkit-details-marker { display: none; }
+/* HyperUI 의 svg 쉐브론을 CSS 로 — 생성 결과에는 svg 를 허용하지 않는다 */
+[data-block="faq"]:not(.ev-block) summary::after {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-right: 4px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+[data-block="faq"]:not(.ev-block) details[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
+[data-block="faq"]:not(.ev-block) details > :not(summary) {
+  margin: 0 0 12px;
+  color: var(--ev-text-muted);
+}
+[data-block="faq"]:not(.ev-block) summary:focus-visible {
+  outline: 2px solid var(--ev-primary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* v-faq-accordion — 질문마다 둥근 카드 */
+[data-block="faq"].v-faq-accordion:not(.ev-block) details {
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+[data-block="faq"].v-faq-accordion:not(.ev-block) details[open] { box-shadow: var(--ev-shadow-md); border-color: var(--ev-primary); }
+[data-block="faq"].v-faq-accordion:not(.ev-block) summary { padding: 14px 18px; }
+[data-block="faq"].v-faq-accordion:not(.ev-block) details[open] > summary { color: var(--ev-primary); }
+[data-block="faq"].v-faq-accordion:not(.ev-block) details > :not(summary) { padding: 0 18px; margin-bottom: 16px; }
+
+/* v-faq-brutal — HyperUI: border-2 border-black · shadow-[4px_4px_0_0] · hover:bg-yellow-200 */
+[data-block="faq"].v-faq-brutal:not(.ev-block) .ev-accordion { gap: 14px; }
+[data-block="faq"].v-faq-brutal:not(.ev-block) details { border: 0; }
+[data-block="faq"].v-faq-brutal:not(.ev-block) summary {
+  padding: 12px 16px;
+  border: 2px solid #111;
+  background: #fff;
+  color: #111;
+  box-shadow: 4px 4px 0 0 #111;
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+[data-block="faq"].v-faq-brutal:not(.ev-block) summary:hover,
+[data-block="faq"].v-faq-brutal:not(.ev-block) summary:focus-visible {
+  background: #fef08a;
+  outline: 0;
+}
+[data-block="faq"].v-faq-brutal:not(.ev-block) details[open] > summary {
+  background: #fef08a;
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 #111;
+}
+[data-block="faq"].v-faq-brutal:not(.ev-block) details > :not(summary) {
+  padding: 14px 16px 2px;
+  margin: 0;
+  color: var(--ev-text-main);
+}

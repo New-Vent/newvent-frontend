@@ -10,7 +10,7 @@ const LABELS={title:'메인 제목',intro:'소개 문구',benefitHeading:'혜택
 
 const FIELD_BLOCK={title:'hero',intro:'hero',benefitHeading:'benefits',cta:'cta',start:'hero',end:'hero'};
 
-const BLOCK_LABELS={hero:'제목·소개',highlight:'강조 배너',intro:'이벤트 소개',benefits:'혜택',compare:'비교표',audience:'참여 대상',steps:'참여 방법',faq:'자주 묻는 질문',notices:'유의사항',cta:'참여 버튼'};
+const BLOCK_LABELS={hero:'제목·소개',highlight:'강조 배너',intro:'이벤트 소개',stats:'숫자로 보는 혜택',benefits:'혜택',prize:'경품',coupon:'쿠폰',compare:'비교표',audience:'참여 대상',steps:'참여 방법',schedule:'일정',faq:'자주 묻는 질문',notices:'유의사항',cta:'참여 버튼'};
 
 const CONTENT_FIELDS={title:'.hero-title',intro:'.hero-desc',benefitHeading:'[data-block="benefits"] h2',cta:'[data-slot="cta-link"]'};
 

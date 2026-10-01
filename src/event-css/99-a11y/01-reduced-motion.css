@@ -1,0 +1,13 @@
+@media (prefers-reduced-motion: reduce) {
+  :where(.ev-container, .event-page),
+  :where(.ev-container, .event-page) *,
+  :where(.ev-container, .event-page) *::before,
+  :where(.ev-container, .event-page) *::after,
+  .ev-toast { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* 흐르는 띠는 멈추면 글이 화면 밖에 있다 — 제자리로 돌려 놓는다 */
+@media (prefers-reduced-motion: reduce) {
+  [data-block="highlight"].v-highlight-marquee:not(.ev-block) { white-space: normal; padding: 12px 18px; }
+  [data-block="highlight"].v-highlight-marquee:not(.ev-block) p:first-child { padding-left: 0; }
+}

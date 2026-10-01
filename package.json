@@ -10,7 +10,9 @@
     "build:user": "vite build",
     "build:admin": "cross-env APP=admin vite build",
     "preview": "vite preview",
-    "preview:admin": "cross-env APP=admin vite preview"
+    "preview:admin": "cross-env APP=admin vite preview",
+    "css": "node scripts/build-event-css.mjs",
+    "css:check": "node scripts/build-event-css.mjs --check"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",

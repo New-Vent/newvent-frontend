@@ -1,3 +1,8 @@
+/* ⚠ 생성 파일 — 직접 고치지 마세요.
+ *   원본: src/event-css/  ·  만들기: node scripts/build-event-css.mjs
+ *   (vite dev · build 가 자동으로 다시 만든다) */
+
+/* ── 00-tokens/01-root.css ── */
 /* NewVent merged event.css
  * Sources: event헌진.css (rich components + five themes),
  *          event수현.css (semantic data-block + ul/ol/a.btn fallbacks).
@@ -45,7 +50,7 @@
   --ev-shadow-float: 0 20px 35px -5px rgba(0, 0, 0, 0.15);
 }
 
-
+/* ── 10-fallback/01-semantic.css ── */
 /* Legacy variable vocabulary, resolved inside each themed root. */
 :where(.event-page, .ev-container) {
   --brand: var(--ev-primary);
@@ -204,6 +209,7 @@
   }
 }
 
+/* ── 20-themes/01-template-themes.css ── */
 /* ==========================================================================
    Themes (동적 테마 클래스)
    ========================================================================== */
@@ -263,6 +269,7 @@
   --ev-accent-tag: #a855f7;
 }
 
+/* ── 30-base/01-reset.css ── */
 /* ==========================================================================
    CSS Reset & Base Structure
    ========================================================================== */
@@ -301,6 +308,7 @@ body {
   padding: 36px 24px;
 }
 
+/* ── 30-base/02-template-blocks.css ── */
 /* ==========================================================================
    BLOCK 1: HERO
    ========================================================================== */
@@ -713,6 +721,7 @@ body {
   word-break: keep-all;
 }
 
+/* ── 30-base/03-ui.css ── */
 /* ==========================================================================
    UI 데모 안내 및 토스트 알림
    ========================================================================== */
@@ -765,6 +774,7 @@ body {
   50% { transform: scale(1.25); opacity: 0.7; }
 }
 
+/* ── 30-base/04-responsive.css ── */
 /* ==========================================================================
    Mobile Responsive Media Queries (<= 640px & 375px 모바일 뷰)
    - 375px 폭에서도 긴 문구/뱃지/가격이 겹치거나 잘리지 않도록 2열 그리드 배치
@@ -896,6 +906,7 @@ body {
   }
 }
 
+/* ── 40-templates/01-sports.css ── */
 /* ==========================================================================
    TEMPLATE 1: SPORTS CHEER (스포츠 포스터형)
    ========================================================================== */
@@ -1132,7 +1143,7 @@ body {
   box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
 }
 
-
+/* ── 40-templates/02-holiday.css ── */
 /* ==========================================================================
    TEMPLATE 2: HOLIDAY GIFT (따뜻한 선물 안내형)
    ========================================================================== */
@@ -1289,7 +1300,7 @@ body {
   display: none;
 }
 
-
+/* ── 40-templates/03-vip.css ── */
 /* ==========================================================================
    TEMPLATE 3: MEMBER APPRECIATION (프리미엄 초대장형)
    ========================================================================== */
@@ -1467,7 +1478,7 @@ body {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
-
+/* ── 40-templates/04-sale.css ── */
 /* ==========================================================================
    TEMPLATE 4: FLASH SALE (가격 강조형)
    ========================================================================== */
@@ -1711,7 +1722,7 @@ body {
   background: #b8e600;
 }
 
-
+/* ── 40-templates/05-launch.css ── */
 /* ==========================================================================
    TEMPLATE 5: PRE-REGISTRATION (서비스 소개형)
    ========================================================================== */
@@ -1967,7 +1978,7 @@ body {
   box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
 }
 
-
+/* ── 40-templates/06-responsive.css ── */
 /* ==========================================================================
    THEME-SPECIFIC RESPONSIVE OVERRIDES (<= 640px)
    ========================================================================== */
@@ -2050,7 +2061,7 @@ body {
   }
 }
 
-
+/* ── 40-templates/07-refinements.css ── */
 /* Shared usability and compatibility refinements. */
 :where(.ev-container, .event-page) :where(img, video, svg, canvas) { max-width: 100%; }
 :where(.ev-container, .event-page) img { height: auto; }
@@ -2109,6 +2120,8 @@ body {
   :where(.event-page) { padding: 16px 12px 48px; }
   :where(.event-page) :where([data-block="hero"]) { padding: 32px 20px; }
 }
+
+/* ── 40-templates/08-interactive.css ── */
 /* ==========================================================================
    INTERACTIVE BUTTONS & WIDGET ENHANCEMENTS
    ========================================================================== */
@@ -2557,14 +2570,7 @@ body {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  :where(.ev-container, .event-page),
-  :where(.ev-container, .event-page) *,
-  :where(.ev-container, .event-page) *::before,
-  :where(.ev-container, .event-page) *::after,
-  .ev-toast { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-}
-
+/* ── 50-blocks/01-llm-blocks.css ── */
 /* ==========================================================================
    Blocks · Variants · Palettes
    --------------------------------------------------------------------------
@@ -2662,6 +2668,137 @@ body {
 }
 :where(.event-page, .ev-container) [data-block="faq"]:not(.ev-block) dd:last-child { margin-bottom: 0; }
 
+/* ── 50-blocks/02-stats.css ── */
+/* stats — 숫자로 보는 혜택. 기본 = v-stats-grid (2열 큰 숫자 카드) */
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) li {
+  padding: 16px 12px;
+  border-radius: 14px;
+  background: var(--ev-primary-light);
+  color: var(--ev-text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+:where(.event-page, .ev-container) [data-block="stats"]:not(.ev-block) li strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ev-primary);
+}
+
+/* ── 50-blocks/03-prize.css ── */
+/* prize — 경품. 기본 = v-prize-list (선물 아이콘 목록, 첫 항목은 트로피) */
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) ul { list-style: none; margin: 0; padding: 0; }
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 8px;
+  padding: 12px 14px 12px 50px;
+  border-radius: 12px;
+  background: var(--ev-surface-subtle);
+  font-weight: 600;
+}
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) li::before {
+  content: "🎁";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+}
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) li:first-child::before { content: "🏆"; }
+
+/* ── 50-blocks/04-coupon.css ── */
+/* coupon — 쿠폰 안내. 기본 = v-coupon-ticket (양옆이 파인 그라데이션 티켓) */
+:where(.event-page, .ev-container) [data-block="coupon"]:not(.ev-block) {
+  position: relative;
+  margin-bottom: 16px;
+  padding: 24px 34px;
+  border-radius: 16px;
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 16px, #000 16.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 16px, #000 16.5px) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle at 0 50%, transparent 16px, #000 16.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 16px, #000 16.5px) right / 51% 100% no-repeat;
+}
+:where(.event-page, .ev-container) [data-block="coupon"]:not(.ev-block) h2 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+:where(.event-page, .ev-container) [data-block="coupon"]:not(.ev-block) p { margin: 0 0 10px; font-size: 1.3rem; font-weight: 800; }
+:where(.event-page, .ev-container) [data-block="coupon"]:not(.ev-block) ul {
+  margin: 12px 0 0;
+  padding: 12px 0 0 18px;
+  border-top: 2px dashed rgba(255, 255, 255, 0.45);
+  font-size: 0.85rem;
+  opacity: 0.92;
+}
+
+/* ── 50-blocks/05-schedule.css ── */
+/* schedule — 일정. 기본 = v-schedule-timeline (세로 타임라인) */
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) h2 { margin: 0 0 14px; font-size: 1.05rem; }
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) ol { list-style: none; margin: 0; padding: 0; }
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 0 8px;
+  padding: 0 0 18px 26px;
+  border-left: 2px solid var(--ev-primary-light);
+}
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) li:last-child { padding-bottom: 0; border-left-color: transparent; }
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) li::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) li strong {
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--ev-primary);
+}
+
+/* ── 60-variants/01-hero.css ── */
 /* ── hero 변형 ──────────────────────────────────────────────────────────── */
 
 [data-block="hero"].v-hero-center:not(.ev-block) {
@@ -2711,6 +2848,92 @@ body {
 [data-block="hero"].v-hero-outline:not(.ev-block) h1 { color: var(--ev-primary); }
 [data-block="hero"].v-hero-outline:not(.ev-block) p { color: var(--ev-text-muted); opacity: 1; }
 
+/* ── 이식: Bootstrap jumbotron · Flowbite hero · DaisyUI hero ── */
+
+[data-block="hero"].v-hero-split:not(.ev-block) {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 12px 24px;
+  align-items: center;
+  text-align: left;
+  padding: 44px 28px;
+}
+[data-block="hero"].v-hero-split:not(.ev-block) h1 { grid-row: 1 / span 3; margin: 0; font-size: 2.2rem; }
+[data-block="hero"].v-hero-split:not(.ev-block) > :not(h1) {
+  grid-column: 2;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+[data-block="hero"].v-hero-ticket:not(.ev-block) {
+  text-align: center;
+  padding: 48px 44px;
+  border-radius: 18px;
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 22px, #000 22.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 22px, #000 22.5px) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle at 0 50%, transparent 22px, #000 22.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 22px, #000 22.5px) right / 51% 100% no-repeat;
+  outline: 2px dashed rgba(255, 255, 255, 0.35);
+  outline-offset: -14px;
+}
+
+[data-block="hero"].v-hero-gradient-text:not(.ev-block) {
+  background: var(--ev-surface-subtle);
+  color: var(--ev-text-main);
+  text-align: center;
+  padding: 56px 24px;
+}
+[data-block="hero"].v-hero-gradient-text:not(.ev-block) h1 {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: var(--ev-gradient-hero);
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+}
+[data-block="hero"].v-hero-gradient-text:not(.ev-block) p { color: var(--ev-text-muted); opacity: 1; }
+
+[data-block="hero"].v-hero-glass:not(.ev-block) {
+  position: relative;
+  text-align: center;
+  padding: 60px 40px;
+  background:
+    radial-gradient(circle at 15% 20%, var(--ev-accent-tag) 0, transparent 35%),
+    radial-gradient(circle at 85% 80%, var(--ev-primary) 0, transparent 40%),
+    var(--ev-gradient-hero);
+}
+[data-block="hero"].v-hero-glass:not(.ev-block)::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+}
+[data-block="hero"].v-hero-glass:not(.ev-block) > * { position: relative; }
+
+[data-block="hero"].v-hero-wave:not(.ev-block) {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: 52px 24px 64px;
+  border-radius: 20px 20px 0 0;
+}
+[data-block="hero"].v-hero-wave:not(.ev-block)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 18px;
+  background: radial-gradient(circle at 14px 0, transparent 14px, var(--ev-surface) 14.5px) 0 0 / 28px 18px repeat-x;
+}
+
+/* ── 60-variants/02-highlight.css ── */
 /* ── highlight 변형 ─────────────────────────────────────────────────────── */
 
 [data-block="highlight"].v-highlight-badge:not(.ev-block) {
@@ -2746,6 +2969,81 @@ body {
 }
 [data-block="highlight"].v-highlight-glow:not(.ev-block) p:first-child { color: #fff; text-shadow: 0 0 14px var(--ev-primary); }
 
+/* ── 이식: Bootstrap alert-danger · alert-dark · DaisyUI marquee ── */
+
+[data-block="highlight"].v-highlight-danger:not(.ev-block) {
+  position: relative;
+  padding: 16px 18px 16px 58px;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+  color: #7f1d1d;
+  box-shadow: none;
+}
+[data-block="highlight"].v-highlight-danger:not(.ev-block)::before {
+  content: "!";
+  position: absolute;
+  left: 18px;
+  top: 16px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #fff;
+  font-weight: 900;
+  line-height: 26px;
+  text-align: center;
+}
+
+[data-block="highlight"].v-highlight-dark:not(.ev-block) {
+  text-align: left;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border-left: 6px solid var(--ev-primary);
+  background: #111827;
+  color: #f9fafb;
+  box-shadow: none;
+}
+
+[data-block="highlight"].v-highlight-marquee:not(.ev-block) {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 12px 0;
+  border-radius: 0;
+}
+[data-block="highlight"].v-highlight-marquee:not(.ev-block) p:first-child {
+  display: inline-block;
+  padding-left: 100%;
+  animation: nv-marquee 14s linear infinite;
+}
+[data-block="highlight"].v-highlight-marquee:not(.ev-block) p + p { display: none; }
+@keyframes nv-marquee { to { transform: translateX(-100%); } }
+
+[data-block="highlight"].v-highlight-stamp:not(.ev-block) {
+  display: table;
+  margin: 8px auto 20px;
+  padding: 12px 24px;
+  transform: rotate(-3deg);
+  border: 3px double var(--ev-accent-tag);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ev-accent-tag);
+  box-shadow: none;
+}
+[data-block="highlight"].v-highlight-stamp:not(.ev-block) p { font-weight: 900; letter-spacing: 0.04em; }
+
+[data-block="highlight"].v-highlight-neon:not(.ev-block) {
+  background: #05060f;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+[data-block="highlight"].v-highlight-neon:not(.ev-block) p:first-child {
+  font-size: 1.2rem;
+  color: #fff;
+  text-shadow: 0 0 6px var(--ev-primary), 0 0 18px var(--ev-primary), 0 0 32px var(--ev-primary-glow);
+}
+
+/* ── 60-variants/03-intro.css ── */
 /* ── intro 변형 ─────────────────────────────────────────────────────────── */
 
 [data-block="intro"].v-intro-quote:not(.ev-block) {
@@ -2777,6 +3075,45 @@ body {
   color: var(--ev-primary-hover);
 }
 
+/* ── 잡지 · Bootstrap card 계열 ── */
+
+[data-block="intro"].v-intro-dropcap:not(.ev-block) p:first-of-type::first-letter {
+  float: left;
+  margin: 6px 10px 0 0;
+  font-size: 3.2em;
+  font-weight: 900;
+  line-height: 0.9;
+  color: var(--ev-primary);
+}
+
+[data-block="intro"].v-intro-two-col:not(.ev-block) { column-count: 2; column-gap: 28px; }
+[data-block="intro"].v-intro-two-col:not(.ev-block) h2 { column-span: all; }
+
+[data-block="intro"].v-intro-boxed:not(.ev-block) { padding: 0; overflow: hidden; }
+[data-block="intro"].v-intro-boxed:not(.ev-block) h2 {
+  margin: 0 0 14px;
+  padding: 14px 22px;
+  background: var(--ev-primary);
+  color: #fff;
+}
+[data-block="intro"].v-intro-boxed:not(.ev-block) p { padding: 0 22px; }
+[data-block="intro"].v-intro-boxed:not(.ev-block) p:last-child { padding-bottom: 20px; }
+
+[data-block="intro"].v-intro-sidebar:not(.ev-block) {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 6px 20px;
+}
+[data-block="intro"].v-intro-sidebar:not(.ev-block) h2 {
+  grid-row: 1 / span 9;
+  margin: 0;
+  padding-right: 16px;
+  border-right: 3px solid var(--ev-primary);
+  font-size: 1.1rem;
+}
+[data-block="intro"].v-intro-sidebar:not(.ev-block) p { grid-column: 2; }
+
+/* ── 60-variants/04-benefits.css ── */
 /* ── benefits 변형 ──────────────────────────────────────────────────────── */
 /* 기본 폴백(ul li 왼쪽 선)이 :where() 라 여기서 덮을 수 있다 */
 
@@ -2870,6 +3207,119 @@ body {
   box-shadow: 0 12px 28px var(--ev-primary-glow);
 }
 
+/* ── 이식: Bootstrap pricing · Preline card · HyperUI ticket ── */
+
+[data-block="benefits"].v-benefits-ticket:not(.ev-block) li {
+  margin: 0 0 12px;
+  padding: 16px 18px 16px 22px;
+  border: 1px solid var(--ev-border);
+  border-left: 10px solid var(--ev-primary);
+  border-radius: 12px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+}
+
+[data-block="benefits"].v-benefits-icon:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 10px;
+  padding: 12px 14px 12px 54px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ev-surface-subtle);
+}
+[data-block="benefits"].v-benefits-icon:not(.ev-block) li::before {
+  content: "★";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 50%;
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  font-size: 14px;
+  line-height: 30px;
+  text-align: center;
+}
+
+[data-block="benefits"].v-benefits-pricing:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+  padding-top: 10px;
+}
+[data-block="benefits"].v-benefits-pricing:not(.ev-block) li {
+  margin: 0;
+  padding: 26px 16px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  background: var(--ev-surface);
+  font-weight: 600;
+  text-align: center;
+}
+[data-block="benefits"].v-benefits-pricing:not(.ev-block) li:nth-child(2) {
+  transform: translateY(-8px);
+  border: 2px solid var(--ev-primary);
+  box-shadow: 0 14px 30px var(--ev-primary-glow);
+}
+
+[data-block="benefits"].v-benefits-checklist:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 6px;
+  padding: 6px 0 6px 34px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+[data-block="benefits"].v-benefits-checklist:not(.ev-block) li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ev-primary-light);
+  color: var(--ev-primary);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 22px;
+  text-align: center;
+}
+
+[data-block="benefits"].v-benefits-stripe:not(.ev-block) ul {
+  overflow: hidden;
+  border: 1px solid var(--ev-border);
+  border-radius: 12px;
+}
+[data-block="benefits"].v-benefits-stripe:not(.ev-block) li {
+  margin: 0;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+[data-block="benefits"].v-benefits-stripe:not(.ev-block) li:nth-child(odd) { background: var(--ev-primary-light); }
+
+[data-block="benefits"].v-benefits-three-col:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+[data-block="benefits"].v-benefits-three-col:not(.ev-block) li {
+  margin: 0;
+  padding: 16px 12px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+  font-size: 0.92rem;
+  text-align: center;
+}
+
+/* ── 60-variants/05-audience.css ── */
 /* ── audience 변형 ──────────────────────────────────────────────────────── */
 
 [data-block="audience"].v-audience-checks:not(.ev-block) ul { display: block; }
@@ -2912,6 +3362,48 @@ body {
   box-shadow: var(--ev-shadow-sm);
 }
 
+[data-block="audience"].v-audience-outline:not(.ev-block) li {
+  background: transparent;
+  border: 1.5px solid var(--ev-primary);
+  color: var(--ev-primary);
+}
+
+[data-block="audience"].v-audience-icons:not(.ev-block) ul { display: block; }
+[data-block="audience"].v-audience-icons:not(.ev-block) li {
+  position: relative;
+  padding: 10px 0 10px 42px;
+  border-radius: 0;
+  border-bottom: 1px dashed var(--ev-border);
+  background: none;
+  color: var(--ev-text-main);
+  font-weight: 500;
+}
+[data-block="audience"].v-audience-icons:not(.ev-block) li::before {
+  content: "👤";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 50%;
+  background: var(--ev-primary-light);
+  font-size: 14px;
+  line-height: 30px;
+  text-align: center;
+}
+
+[data-block="audience"].v-audience-inline:not(.ev-block) ul { display: block; }
+[data-block="audience"].v-audience-inline:not(.ev-block) li {
+  display: inline;
+  padding: 0;
+  background: none;
+  color: var(--ev-text-main);
+  font-weight: 600;
+}
+[data-block="audience"].v-audience-inline:not(.ev-block) li + li::before { content: " · "; color: var(--ev-text-light); }
+
+/* ── 60-variants/06-steps.css ── */
 /* ── steps 변형 ─────────────────────────────────────────────────────────── */
 
 [data-block="steps"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
@@ -3022,6 +3514,129 @@ body {
 }
 [data-block="steps"].v-steps-arrows:not(.ev-block) li:last-child { margin-bottom: 0; }
 
+/* ── 이식: DaisyUI steps · Flowbite stepper ── */
+
+[data-block="steps"].v-steps-progress:not(.ev-block) ol {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: nv-step;
+}
+[data-block="steps"].v-steps-progress:not(.ev-block) ol::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 15px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--ev-primary-light);
+}
+[data-block="steps"].v-steps-progress:not(.ev-block) li {
+  position: relative;
+  flex: 1;
+  padding: 44px 4px 0;
+  font-size: 0.85rem;
+  text-align: center;
+  counter-increment: nv-step;
+}
+[data-block="steps"].v-steps-progress:not(.ev-block) li::before {
+  content: counter(nv-step);
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 800;
+  line-height: 34px;
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+
+[data-block="steps"].v-steps-checklist:not(.ev-block) ol { margin: 0; padding: 0; list-style: none; }
+[data-block="steps"].v-steps-checklist:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 8px;
+  padding: 11px 12px 11px 44px;
+  border: 1px solid var(--ev-border);
+  border-radius: 10px;
+}
+[data-block="steps"].v-steps-checklist:not(.ev-block) li::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border: 2px solid var(--ev-primary);
+  border-radius: 5px;
+}
+
+[data-block="steps"].v-steps-zigzag:not(.ev-block) ol { margin: 0; padding: 0; list-style: none; counter-reset: nv-step; }
+[data-block="steps"].v-steps-zigzag:not(.ev-block) li {
+  width: 78%;
+  margin: 0 0 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--ev-primary-light);
+  counter-increment: nv-step;
+}
+[data-block="steps"].v-steps-zigzag:not(.ev-block) li:nth-child(even) { margin-left: auto; background: var(--ev-surface-subtle); }
+[data-block="steps"].v-steps-zigzag:not(.ev-block) li::before {
+  content: "STEP " counter(nv-step);
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ev-primary);
+}
+
+[data-block="steps"].v-steps-bubble:not(.ev-block) ol { margin: 0; padding: 0; list-style: none; counter-reset: nv-step; }
+[data-block="steps"].v-steps-bubble:not(.ev-block) li {
+  width: fit-content;
+  max-width: 90%;
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px 16px 16px 4px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+  counter-increment: nv-step;
+}
+[data-block="steps"].v-steps-bubble:not(.ev-block) li::before {
+  content: counter(nv-step) ".";
+  margin-right: 8px;
+  font-weight: 900;
+  color: var(--ev-primary);
+}
+
+[data-block="steps"].v-steps-minimal:not(.ev-block) ol { margin: 0; padding: 0; list-style: none; counter-reset: nv-step; }
+[data-block="steps"].v-steps-minimal:not(.ev-block) li {
+  position: relative;
+  min-height: 48px;
+  padding: 12px 0 12px 60px;
+  border-bottom: 1px solid var(--ev-border);
+  counter-increment: nv-step;
+}
+[data-block="steps"].v-steps-minimal:not(.ev-block) li::before {
+  content: "0" counter(nv-step);
+  position: absolute;
+  left: 0;
+  top: 4px;
+  font-size: 2rem;
+  font-weight: 900;
+  color: color-mix(in srgb, var(--ev-primary) 35%, transparent);
+}
+
+/* ── 60-variants/07-faq.css ── */
 /* ── faq 변형 ───────────────────────────────────────────────────────────── */
 
 [data-block="faq"].v-faq-cards:not(.ev-block) dt {
@@ -3063,6 +3678,57 @@ body {
 [data-block="faq"].v-faq-qa:not(.ev-block) dt:first-child::before { top: -2px; }
 [data-block="faq"].v-faq-qa:not(.ev-block) dd::before { content: "A"; top: -2px; background: var(--ev-primary-light); color: var(--ev-primary); }
 
+/* ── 말풍선 · Bootstrap accordion-flush · 왼쪽 막대 · 번호 ── */
+
+[data-block="faq"].v-faq-chat:not(.ev-block) dt {
+  width: fit-content;
+  max-width: 85%;
+  margin: 0 0 6px;
+  padding: 10px 14px;
+  border-top: 0;
+  border-radius: 16px 16px 16px 4px;
+  background: var(--ev-surface-subtle);
+}
+[data-block="faq"].v-faq-chat:not(.ev-block) dd {
+  width: fit-content;
+  max-width: 85%;
+  margin: 0 0 14px auto;
+  padding: 10px 14px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--ev-primary);
+  color: #fff;
+}
+
+[data-block="faq"].v-faq-flush:not(.ev-block) .ev-accordion { gap: 0; }
+[data-block="faq"].v-faq-flush:not(.ev-block) details {
+  border: 0;
+  border-bottom: 1px solid var(--ev-border);
+  border-radius: 0;
+}
+[data-block="faq"].v-faq-flush:not(.ev-block) details:first-child { border-top: 1px solid var(--ev-border); }
+[data-block="faq"].v-faq-flush:not(.ev-block) summary { padding: 14px 2px; }
+[data-block="faq"].v-faq-flush:not(.ev-block) details[open] > summary { color: var(--ev-primary); }
+
+[data-block="faq"].v-faq-leftbar:not(.ev-block) :is(dt, summary) {
+  padding-left: 12px;
+  border-left: 4px solid var(--ev-primary);
+}
+[data-block="faq"].v-faq-leftbar:not(.ev-block) dd { padding-left: 16px; }
+
+[data-block="faq"].v-faq-numbered:not(.ev-block) :is(dl, .ev-accordion) { counter-reset: nv-faq; }
+[data-block="faq"].v-faq-numbered:not(.ev-block) :is(dt, summary) { counter-increment: nv-faq; }
+[data-block="faq"].v-faq-numbered:not(.ev-block) :is(dt, summary)::before {
+  content: "Q" counter(nv-faq) ".";
+  margin-right: 8px;
+  font-weight: 900;
+  color: var(--ev-primary);
+}
+
+/* 펼침형에서 번호가 붙으면 summary 의 space-between 때문에 질문이 가운데로 밀린다 — 왼쪽에 붙이고 쉐브론만 오른쪽 끝 */
+[data-block="faq"].v-faq-numbered:not(.ev-block) summary { justify-content: flex-start; }
+[data-block="faq"].v-faq-numbered:not(.ev-block) summary::after { margin-left: auto; }
+
+/* ── 60-variants/08-cta.css ── */
 /* ── cta 변형 ───────────────────────────────────────────────────────────── */
 
 [data-block="cta"].v-cta-center:not(.ev-block) { text-align: center; }
@@ -3102,6 +3768,264 @@ body {
   color: #fff;
 }
 
+/* ── 이식: Bootstrap btn-lg · HyperUI 버튼 · Flowbite gradient outline ── */
+
+[data-block="cta"].v-cta-sticky:not(.ev-block) {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  margin-top: 16px;
+}
+[data-block="cta"].v-cta-sticky:not(.ev-block) :is(.btn, a, button) {
+  display: block;
+  width: 100%;
+  box-shadow: var(--ev-shadow-float);
+}
+
+[data-block="cta"].v-cta-glow:not(.ev-block) :is(.btn, a, button) {
+  background: var(--ev-gradient-cta);
+  animation: nv-cta-glow 2.2s ease-in-out infinite;
+}
+@keyframes nv-cta-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--ev-primary-glow); }
+  50%      { box-shadow: 0 0 0 12px transparent, 0 0 26px var(--ev-primary-glow); }
+}
+
+[data-block="cta"].v-cta-gradient-border:not(.ev-block) :is(.btn, a, button) {
+  border: 3px solid transparent;
+  background: linear-gradient(var(--ev-surface), var(--ev-surface)) padding-box, var(--ev-gradient-hero) border-box;
+  color: var(--ev-primary);
+}
+
+[data-block="cta"].v-cta-raised:not(.ev-block) :is(.btn, a, button) {
+  box-shadow: 0 6px 0 var(--ev-primary-hover);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+[data-block="cta"].v-cta-raised:not(.ev-block) :is(.btn, a, button):active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--ev-primary-hover);
+}
+
+[data-block="cta"].v-cta-arrow:not(.ev-block) :is(.btn, a, button)::after {
+  content: "→";
+  display: inline-block;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+[data-block="cta"].v-cta-arrow:not(.ev-block) :is(.btn, a, button):hover::after { transform: translateX(4px); }
+
+[data-block="cta"].v-cta-dark:not(.ev-block) {
+  padding: 26px 22px;
+  border-radius: 18px;
+  background: #0b1020;
+  text-align: center;
+}
+[data-block="cta"].v-cta-dark:not(.ev-block) :is(.btn, a, button) { background: #fff; color: #0b1020; }
+
+/* ── 60-variants/11-stats.css ── */
+/* stats 변형 — 기본(v-stats-grid)은 50-blocks/02-stats.css */
+
+/* 한 줄에 다 넣는다 — 줄바꿈되면 구분선이 어긋난다. 좁으면 글자를 줄인다 */
+[data-block="stats"].v-stats-inline:not(.ev-block) ul { display: flex; gap: 0; }
+[data-block="stats"].v-stats-inline:not(.ev-block) li {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 6px;
+  border-radius: 0;
+  border-left: 1px solid var(--ev-border);
+  background: none;
+}
+[data-block="stats"].v-stats-inline:not(.ev-block) li:first-child { border-left: 0; }
+[data-block="stats"].v-stats-inline:not(.ev-block) li strong { font-size: clamp(1.1rem, 4.5vw, 1.8rem); }
+
+[data-block="stats"].v-stats-ring:not(.ev-block) li { background: none; }
+[data-block="stats"].v-stats-ring:not(.ev-block) li strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 8px;
+  border: 6px solid var(--ev-primary-light);
+  border-top-color: var(--ev-primary);
+  border-radius: 50%;
+  font-size: 1.25rem;
+}
+
+[data-block="stats"].v-stats-bar:not(.ev-block) li { background: var(--ev-surface-subtle); text-align: left; }
+[data-block="stats"].v-stats-bar:not(.ev-block) li strong::after {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 4px;
+  background: var(--ev-gradient-cta);
+}
+
+/* ── 60-variants/12-prize.css ── */
+/* prize 변형 — 기본(v-prize-list)은 50-blocks/03-prize.css */
+
+[data-block="prize"].v-prize-podium:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+}
+[data-block="prize"].v-prize-podium:not(.ev-block) li {
+  margin: 0;
+  padding: 14px 8px;
+  border-radius: 12px 12px 0 0;
+  background: var(--ev-primary-light);
+  font-size: 0.88rem;
+  text-align: center;
+}
+[data-block="prize"].v-prize-podium:not(.ev-block) li::before {
+  position: static;
+  display: block;
+  margin: 0 auto 6px;
+  transform: none;
+}
+[data-block="prize"].v-prize-podium:not(.ev-block) li:nth-child(1) {
+  order: 2;
+  padding-top: 34px;
+  background: var(--ev-gradient-cta);
+  color: #fff;
+}
+[data-block="prize"].v-prize-podium:not(.ev-block) li:nth-child(2) { order: 1; padding-top: 22px; }
+[data-block="prize"].v-prize-podium:not(.ev-block) li:nth-child(3) { order: 3; }
+[data-block="prize"].v-prize-podium:not(.ev-block) li:nth-child(n + 4) { grid-column: 1 / -1; order: 4; border-radius: 12px; }
+
+[data-block="prize"].v-prize-cards:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+[data-block="prize"].v-prize-cards:not(.ev-block) li {
+  margin: 0;
+  padding: 18px 12px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+  text-align: center;
+}
+[data-block="prize"].v-prize-cards:not(.ev-block) li::before {
+  position: static;
+  display: block;
+  margin-bottom: 6px;
+  font-size: 2rem;
+  transform: none;
+}
+
+[data-block="prize"].v-prize-ribbon:not(.ev-block) li:first-child {
+  position: relative;
+  overflow: hidden;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  background: var(--ev-gradient-cta);
+  color: #fff;
+}
+[data-block="prize"].v-prize-ribbon:not(.ev-block) li:first-child::after {
+  content: "★";
+  position: absolute;
+  top: 8px;
+  right: -26px;
+  padding: 2px 32px;
+  transform: rotate(45deg);
+  background: var(--ev-accent-tag);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* ── 60-variants/13-coupon.css ── */
+/* coupon 변형 — 기본(v-coupon-ticket)은 50-blocks/04-coupon.css */
+
+[data-block="coupon"].v-coupon-dashed:not(.ev-block) {
+  border: 2px dashed var(--ev-primary);
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  -webkit-mask: none;
+          mask: none;
+}
+[data-block="coupon"].v-coupon-dashed:not(.ev-block) h2 { color: var(--ev-primary); opacity: 1; }
+[data-block="coupon"].v-coupon-dashed:not(.ev-block) ul { border-top-color: var(--ev-border); }
+
+[data-block="coupon"].v-coupon-stamp:not(.ev-block)::after {
+  content: "COUPON";
+  position: absolute;
+  top: 14px;
+  right: 40px;
+  padding: 2px 8px;
+  transform: rotate(12deg);
+  border: 2px solid currentColor;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  opacity: 0.75;
+}
+
+[data-block="coupon"].v-coupon-card:not(.ev-block) {
+  border-radius: 18px;
+  background: #111827;
+  color: #f9fafb;
+  box-shadow: var(--ev-shadow-lg);
+  -webkit-mask: none;
+          mask: none;
+}
+[data-block="coupon"].v-coupon-card:not(.ev-block) h2::after {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 3px;
+  margin-top: 8px;
+  border-radius: 3px;
+  background: var(--ev-gradient-cta);
+}
+
+/* ── 60-variants/14-schedule.css ── */
+/* schedule 변형 — 기본(v-schedule-timeline)은 50-blocks/05-schedule.css */
+
+[data-block="schedule"].v-schedule-chips:not(.ev-block) ol { display: flex; flex-wrap: wrap; gap: 8px; }
+[data-block="schedule"].v-schedule-chips:not(.ev-block) li {
+  margin: 0;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ev-primary-light);
+}
+[data-block="schedule"].v-schedule-chips:not(.ev-block) li::before { content: none; }
+[data-block="schedule"].v-schedule-chips:not(.ev-block) li strong { display: inline; margin-right: 6px; }
+
+[data-block="schedule"].v-schedule-table:not(.ev-block) li {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 11px 0;
+  border: 0;
+  border-bottom: 1px solid var(--ev-border);
+}
+[data-block="schedule"].v-schedule-table:not(.ev-block) li:last-child { border-bottom: 0; }
+[data-block="schedule"].v-schedule-table:not(.ev-block) li::before { content: none; }
+
+[data-block="schedule"].v-schedule-cards:not(.ev-block) ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+[data-block="schedule"].v-schedule-cards:not(.ev-block) li {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+}
+[data-block="schedule"].v-schedule-cards:not(.ev-block) li::before { content: none; }
+
+/* ── 60-variants/80-surface.css ── */
 /* ── 배경 변형 (intro · benefits · audience · steps · faq) ─────────────── */
 
 [data-block].v-surface-card:not(.ev-block) {
@@ -3141,6 +4065,62 @@ body {
   margin-bottom: 20px;
 }
 
+/* ── 배경 추가 — 그라데이션 · 유리 · 무늬 · 테두리 · 그림자 ── */
+
+[data-block].v-surface-gradient:not(.ev-block) {
+  background: linear-gradient(160deg, var(--ev-primary-light), var(--ev-surface) 70%);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-glass:not(.ev-block) {
+  background: color-mix(in srgb, var(--ev-surface) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ev-primary) 18%, transparent);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+}
+
+[data-block].v-surface-dots:not(.ev-block) {
+  background-color: var(--ev-surface);
+  background-image: radial-gradient(color-mix(in srgb, var(--ev-primary) 20%, transparent) 1.2px, transparent 1.6px);
+  background-size: 14px 14px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-stripes:not(.ev-block) {
+  background: repeating-linear-gradient(135deg, var(--ev-surface) 0 12px, var(--ev-primary-light) 12px 24px);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-outline:not(.ev-block) {
+  background: transparent;
+  border: 2px solid var(--ev-primary);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-shadow:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 0;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: var(--ev-shadow-float);
+}
+
+/* ── 60-variants/90-responsive.css ── */
 @media (max-width: 560px) {
   [data-block="hero"].v-hero-poster:not(.ev-block) h1 { font-size: 2.1rem; }
   [data-block="hero"].v-hero-left:not(.ev-block) h1 { font-size: 1.8rem; }
@@ -3149,6 +4129,383 @@ body {
   [data-block="audience"].v-audience-cards:not(.ev-block) ul { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 560px) {
+  [data-block="hero"].v-hero-split:not(.ev-block) { grid-template-columns: 1fr; text-align: center; }
+  [data-block="hero"].v-hero-split:not(.ev-block) h1 { grid-row: auto; }
+  [data-block="hero"].v-hero-split:not(.ev-block) > :not(h1) { grid-column: 1; }
+  [data-block="intro"].v-intro-two-col:not(.ev-block) { column-count: 1; }
+  [data-block="intro"].v-intro-sidebar:not(.ev-block) { grid-template-columns: 1fr; }
+  [data-block="intro"].v-intro-sidebar:not(.ev-block) h2 { grid-row: auto; border-right: 0; border-bottom: 3px solid var(--ev-primary); padding: 0 0 8px; }
+  [data-block="intro"].v-intro-sidebar:not(.ev-block) p { grid-column: 1; }
+  [data-block="benefits"].v-benefits-three-col:not(.ev-block) ul,
+  [data-block="prize"].v-prize-cards:not(.ev-block) ul { grid-template-columns: 1fr; }
+  [data-block="schedule"].v-schedule-table:not(.ev-block) li { grid-template-columns: 1fr; gap: 2px; }
+  [data-block="steps"].v-steps-zigzag:not(.ev-block) li { width: 100%; }
+}
+
+/* ── 70-components/01-tags.css ── */
+/* ==========================================================================
+   JS 없이 동작하는 컴포넌트 — 아코디언 · 안내 상자 · 캐러셀 · 비교표 · 배지
+   --------------------------------------------------------------------------
+   짝: registry/Variant.java (v-*) · registry/Inline.java (t-*) · Block.COMPARE
+   HyperUI · Preline 디자인을 이름 붙은 class 로 옮겨 왔다 (Tailwind 를 싣지 않는다).
+   ========================================================================== */
+
+/* ── 공통 태그: hr · figure · mark ─────────────────────────────────────── */
+
+:where(.event-page, .ev-container) [data-block]:not(.ev-block) hr {
+  border: 0;
+  height: 1px;
+  margin: 16px 0;
+  background: linear-gradient(90deg, transparent, var(--ev-border) 15%, var(--ev-border) 85%, transparent);
+}
+
+:where(.event-page, .ev-container) [data-block]:not(.ev-block) figure {
+  margin: 0 0 12px;
+}
+:where(.event-page, .ev-container) [data-block]:not(.ev-block) figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+}
+:where(.event-page, .ev-container) [data-block]:not(.ev-block) figcaption {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--ev-text-muted);
+  text-align: center;
+}
+
+:where(.event-page, .ev-container) mark {
+  padding: 0 3px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ev-accent-tag) 28%, transparent);
+  color: inherit;
+}
+
+/* ── 70-components/02-inline.css ── */
+/* ── 문구 꾸밈 (t-*) — 템플릿 블록에도 걸린다 ──────────────────────────── */
+/* Preline Badge Group 을 옮김: inline-flex · rounded-full · text-xs · font-medium */
+
+:where(.event-page, .ev-container) .t-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  margin: 0 2px;
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  vertical-align: 0.12em;
+  white-space: nowrap;
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+}
+:where(.event-page, .ev-container) .t-badge.t-badge-solid   { background: var(--ev-primary); color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-dark    { background: #18181b; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-red     { background: #ef4444; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-yellow  { background: #facc15; color: #422006; }
+:where(.event-page, .ev-container) .t-badge.t-badge-green   { background: #22c55e; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-teal    { background: #14b8a6; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-outline { background: transparent; color: var(--ev-primary); box-shadow: inset 0 0 0 1.5px currentColor; }
+
+:where(.event-page, .ev-container) .t-highlight {
+  background: linear-gradient(transparent 58%, color-mix(in srgb, var(--ev-accent-tag) 40%, transparent) 58%);
+  padding: 0 2px;
+}
+:where(.event-page, .ev-container) .t-accent {
+  color: var(--ev-primary);
+  font-weight: 800;
+}
+/* 어두운 배경 위의 강조색은 흰색이 낫다 */
+:where(.event-page, .ev-container) :is([data-block="hero"], [data-block="highlight"], .v-surface-dark, .v-cta-banner) .t-accent { color: inherit; text-decoration: underline 2px; text-underline-offset: 3px; }
+
+/* ── 추가 배지 · 강조 (Preline · Flowbite badge 색) ── */
+:where(.event-page, .ev-container) .t-badge.t-badge-blue   { background: #3b82f6; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-purple { background: #8b5cf6; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-hot    { background: linear-gradient(90deg, #f97316, #ef4444); color: #fff; }
+
+:where(.event-page, .ev-container) .t-strike {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  color: var(--ev-text-light);
+}
+:where(.event-page, .ev-container) .t-big {
+  font-size: 1.6em;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ev-primary);
+}
+:where(.event-page, .ev-container) .t-underline {
+  text-decoration: underline wavy var(--ev-accent-tag);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+/* 어두운 배경 위 — 브랜드색 글씨는 흰색으로 */
+:where(.event-page, .ev-container) :is([data-block="hero"], [data-block="highlight"], [data-block="coupon"], .v-surface-dark, .v-cta-banner, .v-cta-dark) :is(.t-big) { color: inherit; }
+:where(.event-page, .ev-container) :is([data-block="hero"], [data-block="highlight"], [data-block="coupon"], .v-surface-dark) .t-strike { color: inherit; opacity: 0.7; }
+
+/* ── 70-components/03-faq-accordion.css ── */
+/* ── faq — 펼침형(details) 기본 모양 ───────────────────────────────────── */
+
+[data-block="faq"]:not(.ev-block) .ev-accordion { display: grid; gap: 10px; }
+[data-block="faq"]:not(.ev-block) details {
+  border-top: 1px solid var(--ev-border);
+}
+[data-block="faq"]:not(.ev-block) details:first-child { border-top: 0; }
+[data-block="faq"]:not(.ev-block) summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+[data-block="faq"]:not(.ev-block) summary::-webkit-details-marker { display: none; }
+/* HyperUI 의 svg 쉐브론을 CSS 로 — 생성 결과에는 svg 를 허용하지 않는다 */
+[data-block="faq"]:not(.ev-block) summary::after {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-right: 4px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+[data-block="faq"]:not(.ev-block) details[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
+[data-block="faq"]:not(.ev-block) details > :not(summary) {
+  margin: 0 0 12px;
+  color: var(--ev-text-muted);
+}
+[data-block="faq"]:not(.ev-block) summary:focus-visible {
+  outline: 2px solid var(--ev-primary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* v-faq-accordion — 질문마다 둥근 카드 */
+[data-block="faq"].v-faq-accordion:not(.ev-block) details {
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+[data-block="faq"].v-faq-accordion:not(.ev-block) details[open] { box-shadow: var(--ev-shadow-md); border-color: var(--ev-primary); }
+[data-block="faq"].v-faq-accordion:not(.ev-block) summary { padding: 14px 18px; }
+[data-block="faq"].v-faq-accordion:not(.ev-block) details[open] > summary { color: var(--ev-primary); }
+[data-block="faq"].v-faq-accordion:not(.ev-block) details > :not(summary) { padding: 0 18px; margin-bottom: 16px; }
+
+/* v-faq-brutal — HyperUI: border-2 border-black · shadow-[4px_4px_0_0] · hover:bg-yellow-200 */
+[data-block="faq"].v-faq-brutal:not(.ev-block) .ev-accordion { gap: 14px; }
+[data-block="faq"].v-faq-brutal:not(.ev-block) details { border: 0; }
+[data-block="faq"].v-faq-brutal:not(.ev-block) summary {
+  padding: 12px 16px;
+  border: 2px solid #111;
+  background: #fff;
+  color: #111;
+  box-shadow: 4px 4px 0 0 #111;
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+[data-block="faq"].v-faq-brutal:not(.ev-block) summary:hover,
+[data-block="faq"].v-faq-brutal:not(.ev-block) summary:focus-visible {
+  background: #fef08a;
+  outline: 0;
+}
+[data-block="faq"].v-faq-brutal:not(.ev-block) details[open] > summary {
+  background: #fef08a;
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 #111;
+}
+[data-block="faq"].v-faq-brutal:not(.ev-block) details > :not(summary) {
+  padding: 14px 16px 2px;
+  margin: 0;
+  color: var(--ev-text-main);
+}
+
+/* ── 70-components/04-callout.css ── */
+/* ── highlight — 안내 상자(경고창) ─────────────────────────────────────── */
+
+[data-block="highlight"]:is(.v-highlight-alert, .v-highlight-info, .v-highlight-success):not(.ev-block) {
+  position: relative;
+  padding: 16px 18px 16px 58px;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid;
+  box-shadow: none;
+}
+[data-block="highlight"]:is(.v-highlight-alert, .v-highlight-info, .v-highlight-success):not(.ev-block)::before {
+  position: absolute;
+  left: 18px;
+  top: 16px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 26px;
+  text-align: center;
+}
+[data-block="highlight"]:is(.v-highlight-alert, .v-highlight-info, .v-highlight-success):not(.ev-block) p + p { opacity: 0.85; }
+
+[data-block="highlight"].v-highlight-alert:not(.ev-block)   { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
+[data-block="highlight"].v-highlight-alert:not(.ev-block)::before   { content: "!"; background: #f59e0b; }
+[data-block="highlight"].v-highlight-info:not(.ev-block)    { background: #eff6ff; border-color: #93c5fd; color: #1e3a8a; }
+[data-block="highlight"].v-highlight-info:not(.ev-block)::before    { content: "i"; background: #3b82f6; font-family: Georgia, serif; font-style: italic; }
+[data-block="highlight"].v-highlight-success:not(.ev-block) { background: #f0fdf4; border-color: #86efac; color: #14532d; }
+[data-block="highlight"].v-highlight-success:not(.ev-block)::before { content: "\2713"; background: #22c55e; }
+
+/* ── 70-components/05-carousel.css ── */
+/* ── 캐러셀 — scroll-snap. 손으로 넘긴다 (자동 넘김은 JS 라 없다) ───────── */
+
+:is([data-block="benefits"].v-benefits-carousel, [data-block="steps"].v-steps-carousel):not(.ev-block) :is(ul, ol) {
+  display: flex;
+  gap: 12px;
+  margin: 0 -22px 4px;
+  padding: 4px 22px 14px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 22px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ev-primary-light) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+:is([data-block="benefits"].v-benefits-carousel, [data-block="steps"].v-steps-carousel):not(.ev-block) li {
+  flex: 0 0 78%;
+  scroll-snap-align: start;
+  margin: 0;
+  padding: 22px 18px;
+  min-height: 120px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-md);
+}
+[data-block="benefits"].v-benefits-carousel:not(.ev-block) li:first-child {
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  border-color: transparent;
+}
+[data-block="steps"].v-steps-carousel:not(.ev-block) ol { counter-reset: nv-step; }
+[data-block="steps"].v-steps-carousel:not(.ev-block) li { counter-increment: nv-step; }
+[data-block="steps"].v-steps-carousel:not(.ev-block) li::before {
+  content: "STEP " counter(nv-step);
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ev-primary);
+}
+/* "옆으로 넘기세요" 힌트 — 목록 뒤에 작게 */
+:is([data-block="benefits"].v-benefits-carousel, [data-block="steps"].v-steps-carousel):not(.ev-block)::after {
+  content: "\2190  옆으로 넘겨 보세요  \2192";
+  display: block;
+  font-size: 11px;
+  color: var(--ev-text-light);
+  text-align: center;
+}
+
+/* ── 70-components/06-compare.css ── */
+/* ── compare — 비교표 ──────────────────────────────────────────────────── */
+
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) table {
+  width: 100%;
+  min-width: 360px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.92rem;
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) :is(th, td) {
+  padding: 11px 12px;
+  text-align: center;
+  vertical-align: middle;
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ev-text-muted);
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) th {
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 700;
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) :is(th, td):first-child { text-align: left; }
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) tr:first-child th:first-child { border-radius: 10px 0 0 10px; }
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) tr:first-child th:last-child  { border-radius: 0 10px 10px 0; }
+/* 기본 = 줄무늬 (v-compare-striped 와 같다) */
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) tr:nth-child(even) td { background: var(--ev-surface-subtle); }
+
+[data-block="compare"].v-compare-bordered:not(.ev-block) table { border: 1px solid var(--ev-border); border-radius: 12px; overflow: hidden; }
+[data-block="compare"].v-compare-bordered:not(.ev-block) :is(th, td) { border-right: 1px solid var(--ev-border); border-bottom: 1px solid var(--ev-border); }
+[data-block="compare"].v-compare-bordered:not(.ev-block) :is(th, td):last-child { border-right: 0; }
+[data-block="compare"].v-compare-bordered:not(.ev-block) tr:last-child td { border-bottom: 0; }
+[data-block="compare"].v-compare-bordered:not(.ev-block) th { background: var(--ev-surface-subtle); color: var(--ev-text-main); border-radius: 0 !important; }
+[data-block="compare"].v-compare-bordered:not(.ev-block) tr:nth-child(even) td { background: transparent; }
+
+[data-block="compare"].v-compare-highlight:not(.ev-block) th { background: var(--ev-surface-subtle); color: var(--ev-text-main); }
+[data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child th:first-child { color: var(--ev-text-muted); }
+[data-block="compare"].v-compare-highlight:not(.ev-block) tr:nth-child(even) td { background: transparent; }
+[data-block="compare"].v-compare-highlight:not(.ev-block) :is(th, td):last-child {
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+  font-weight: 800;
+  box-shadow: inset 2px 0 0 var(--ev-primary), inset -2px 0 0 var(--ev-primary);
+}
+[data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child :last-child {
+  background: var(--ev-primary);
+  color: #fff;
+  border-radius: 10px 10px 0 0;
+}
+[data-block="compare"].v-compare-highlight:not(.ev-block) tr:last-child td:last-child {
+  border-radius: 0 0 10px 10px;
+  box-shadow: inset 2px 0 0 var(--ev-primary), inset -2px 0 0 var(--ev-primary), inset 0 -2px 0 var(--ev-primary);
+}
+
+[data-block="compare"].v-compare-minimal:not(.ev-block) th { background: transparent; color: var(--ev-text-main); border-bottom: 2px solid var(--ev-text-main); border-radius: 0 !important; }
+[data-block="compare"].v-compare-minimal:not(.ev-block) tr:first-child th:first-child { color: var(--ev-text-muted); }
+[data-block="compare"].v-compare-minimal:not(.ev-block) td { border-bottom: 1px solid var(--ev-border); }
+[data-block="compare"].v-compare-minimal:not(.ev-block) tr:nth-child(even) td { background: transparent; }
+
+/* ── 이식: Bootstrap table-dark · table-sm · 카드형 ── */
+
+[data-block="compare"].v-compare-dark:not(.ev-block) th { background: #111827; color: #f9fafb; }
+[data-block="compare"].v-compare-dark:not(.ev-block) td { background: #1f2937; color: #f3f4f6; }
+[data-block="compare"].v-compare-dark:not(.ev-block) td:first-child { color: #cbd5e1; }
+[data-block="compare"].v-compare-dark:not(.ev-block) tr:nth-child(even) td { background: #273244; }
+
+[data-block="compare"].v-compare-compact:not(.ev-block) table { font-size: 0.82rem; }
+[data-block="compare"].v-compare-compact:not(.ev-block) :is(th, td) { padding: 6px 8px; }
+
+[data-block="compare"].v-compare-rounded:not(.ev-block) table {
+  overflow: hidden;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  box-shadow: var(--ev-shadow-md);
+}
+[data-block="compare"].v-compare-rounded:not(.ev-block) th { border-radius: 0 !important; }
+
+/* ── 90-palettes/01-base-set.css ── */
 /* ── 팔레트 — 페이지 루트에 붙는다. 테마(theme-*)보다 뒤에 있어야 이긴다 ── */
 
 .palette-spring {
@@ -3242,326 +4599,113 @@ body {
   --ev-bg: #fffbf5; --ev-surface: #ffffff; --ev-surface-subtle: #fff7ed; --ev-border: #fde2c4;
 }
 
+/* ── 90-palettes/02-extra-set.css ── */
+/* 팔레트 추가 — registry/Palette.java 와 짝 */
+
+.palette-christmas {
+  --ev-primary: #166534; --ev-primary-hover: #14532d; --ev-primary-light: #f0fdf4;
+  --ev-primary-glow: rgba(22, 101, 52, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #052e16 0%, #14532d 55%, #7f1d1d 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  --ev-accent-tag: #dc2626;
+  --ev-bg: #fbfdf9; --ev-surface: #ffffff; --ev-surface-subtle: #f0fdf4; --ev-border: #d9f0de;
+}
+
+.palette-newyear {
+  --ev-primary: #1e3a8a; --ev-primary-hover: #172554; --ev-primary-light: #eef2ff;
+  --ev-primary-glow: rgba(30, 58, 138, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0b1437 0%, #1e3a8a 55%, #a16207 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  --ev-accent-tag: #ca8a04;
+  --ev-bg: #f8f9fd; --ev-surface: #ffffff; --ev-surface-subtle: #eef2ff; --ev-border: #dbe2f5;
+}
+
+.palette-valentine {
+  --ev-primary: #be185d; --ev-primary-hover: #9d174d; --ev-primary-light: #fdf2f8;
+  --ev-primary-glow: rgba(190, 24, 93, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #4a044e 0%, #9d174d 55%, #f43f5e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #f43f5e 0%, #be185d 100%);
+  --ev-accent-tag: #7f1d1d;
+  --ev-bg: #fff7fa; --ev-surface: #ffffff; --ev-surface-subtle: #fdf2f8; --ev-border: #f9d0e3;
+}
+
+.palette-kids {
+  --ev-primary: #2563eb; --ev-primary-hover: #1d4ed8; --ev-primary-light: #fef9c3;
+  --ev-primary-glow: rgba(37, 99, 235, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2563eb 0%, #7c3aed 55%, #f59e0b 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+  --ev-accent-tag: #f59e0b;
+  --ev-bg: #fffdf2; --ev-surface: #ffffff; --ev-surface-subtle: #fef9c3; --ev-border: #fde68a;
+}
+
+.palette-esports {
+  --ev-primary: #22c55e; --ev-primary-hover: #16a34a; --ev-primary-light: #0f2a1a;
+  --ev-primary-glow: rgba(34, 197, 94, 0.35);
+  --ev-gradient-hero: linear-gradient(135deg, #000000 0%, #0d1117 55%, #14532d 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+  --ev-accent-tag: #a3e635;
+  --ev-bg: #05070a; --ev-surface: #0d1117; --ev-surface-subtle: #161b22; --ev-border: #232a33;
+  --ev-text-main: #e6edf3; --ev-text-muted: #9aa5b1; --ev-text-light: #6b7682;
+}
+
+.palette-lavender {
+  --ev-primary: #6d5bd0; --ev-primary-hover: #5b48bd; --ev-primary-light: #f3f0ff;
+  --ev-primary-glow: rgba(109, 91, 208, 0.22);
+  --ev-gradient-hero: linear-gradient(135deg, #3b2a7a 0%, #6d5bd0 55%, #a78bfa 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #8b7cf0 0%, #6d5bd0 100%);
+  --ev-accent-tag: #ec4899;
+  --ev-bg: #faf9ff; --ev-surface: #ffffff; --ev-surface-subtle: #f3f0ff; --ev-border: #e4defc;
+}
+
+.palette-coffee {
+  --ev-primary: #92400e; --ev-primary-hover: #78350f; --ev-primary-light: #fdf4e7;
+  --ev-primary-glow: rgba(146, 64, 14, 0.22);
+  --ev-gradient-hero: linear-gradient(135deg, #2b1a10 0%, #5b3a24 55%, #92400e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+  --ev-accent-tag: #d97706;
+  --ev-bg: #fbf7f2; --ev-surface: #fffdf9; --ev-surface-subtle: #fdf4e7; --ev-border: #ead9c2;
+}
+
+.palette-brand {
+  --ev-primary: #d60076; --ev-primary-hover: #b00062; --ev-primary-light: #fff0f7;
+  --ev-primary-glow: rgba(214, 0, 118, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #3b0a2a 0%, #8a0050 55%, #d60076 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ec4899 0%, #d60076 100%);
+  --ev-accent-tag: #7c3aed;
+  --ev-bg: #fff8fb; --ev-surface: #ffffff; --ev-surface-subtle: #fff0f7; --ev-border: #f8d3e6;
+}
+
+/* ── 90-palettes/99-dark-fixes.css ── */
 /* 어두운 팔레트 — 밝은 배경을 전제로 만든 폴백 색을 맞춘다 */
 .palette-night :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
 .palette-night [data-block="hero"].v-hero-minimal:not(.ev-block) h1,
 .palette-night [data-block="intro"].v-intro-lead:not(.ev-block) p:first-of-type { color: var(--ev-primary); }
-.palette-night [data-block="cta"]:not(.ev-block) :is(.btn, a, button) { color: #111; }
-
-/* ==========================================================================
-   JS 없이 동작하는 컴포넌트 — 아코디언 · 안내 상자 · 캐러셀 · 비교표 · 배지
-   --------------------------------------------------------------------------
-   짝: registry/Variant.java (v-*) · registry/Inline.java (t-*) · Block.COMPARE
-   HyperUI · Preline 디자인을 이름 붙은 class 로 옮겨 왔다 (Tailwind 를 싣지 않는다).
-   ========================================================================== */
-
-/* ── 공통 태그: hr · figure · mark ─────────────────────────────────────── */
-
-:where(.event-page, .ev-container) [data-block]:not(.ev-block) hr {
-  border: 0;
-  height: 1px;
-  margin: 16px 0;
-  background: linear-gradient(90deg, transparent, var(--ev-border) 15%, var(--ev-border) 85%, transparent);
-}
-
-:where(.event-page, .ev-container) [data-block]:not(.ev-block) figure {
-  margin: 0 0 12px;
-}
-:where(.event-page, .ev-container) [data-block]:not(.ev-block) figure img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 14px;
-}
-:where(.event-page, .ev-container) [data-block]:not(.ev-block) figcaption {
-  margin-top: 6px;
-  font-size: 0.85rem;
-  color: var(--ev-text-muted);
-  text-align: center;
-}
-
-:where(.event-page, .ev-container) mark {
-  padding: 0 3px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--ev-accent-tag) 28%, transparent);
-  color: inherit;
-}
-
-/* ── 문구 꾸밈 (t-*) — 템플릿 블록에도 걸린다 ──────────────────────────── */
-/* Preline Badge Group 을 옮김: inline-flex · rounded-full · text-xs · font-medium */
-
-:where(.event-page, .ev-container) .t-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  margin: 0 2px;
-  border-radius: 999px;
-  font-size: 0.72em;
-  font-weight: 700;
-  line-height: 1.5;
-  letter-spacing: 0.01em;
-  vertical-align: 0.12em;
-  white-space: nowrap;
-  background: var(--ev-primary-light);
-  color: var(--ev-primary-hover);
-}
-:where(.event-page, .ev-container) .t-badge.t-badge-solid   { background: var(--ev-primary); color: #fff; }
-:where(.event-page, .ev-container) .t-badge.t-badge-dark    { background: #18181b; color: #fff; }
-:where(.event-page, .ev-container) .t-badge.t-badge-red     { background: #ef4444; color: #fff; }
-:where(.event-page, .ev-container) .t-badge.t-badge-yellow  { background: #facc15; color: #422006; }
-:where(.event-page, .ev-container) .t-badge.t-badge-green   { background: #22c55e; color: #fff; }
-:where(.event-page, .ev-container) .t-badge.t-badge-teal    { background: #14b8a6; color: #fff; }
-:where(.event-page, .ev-container) .t-badge.t-badge-outline { background: transparent; color: var(--ev-primary); box-shadow: inset 0 0 0 1.5px currentColor; }
-
-:where(.event-page, .ev-container) .t-highlight {
-  background: linear-gradient(transparent 58%, color-mix(in srgb, var(--ev-accent-tag) 40%, transparent) 58%);
-  padding: 0 2px;
-}
-:where(.event-page, .ev-container) .t-accent {
-  color: var(--ev-primary);
-  font-weight: 800;
-}
-/* 어두운 배경 위의 강조색은 흰색이 낫다 */
-:where(.event-page, .ev-container) :is([data-block="hero"], [data-block="highlight"], .v-surface-dark, .v-cta-banner) .t-accent { color: inherit; text-decoration: underline 2px; text-underline-offset: 3px; }
-
-/* ── faq — 펼침형(details) 기본 모양 ───────────────────────────────────── */
-
-[data-block="faq"]:not(.ev-block) .ev-accordion { display: grid; gap: 10px; }
-[data-block="faq"]:not(.ev-block) details {
-  border-top: 1px solid var(--ev-border);
-}
-[data-block="faq"]:not(.ev-block) details:first-child { border-top: 0; }
-[data-block="faq"]:not(.ev-block) summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 0;
-  font-weight: 700;
-  cursor: pointer;
-  list-style: none;
-}
-[data-block="faq"]:not(.ev-block) summary::-webkit-details-marker { display: none; }
-/* HyperUI 의 svg 쉐브론을 CSS 로 — 생성 결과에는 svg 를 허용하지 않는다 */
-[data-block="faq"]:not(.ev-block) summary::after {
-  content: "";
-  flex: none;
-  width: 9px;
-  height: 9px;
-  margin-right: 4px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: translateY(-3px) rotate(45deg);
-  transition: transform 0.2s ease;
-  opacity: 0.7;
-}
-[data-block="faq"]:not(.ev-block) details[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
-[data-block="faq"]:not(.ev-block) details > :not(summary) {
-  margin: 0 0 12px;
-  color: var(--ev-text-muted);
-}
-[data-block="faq"]:not(.ev-block) summary:focus-visible {
-  outline: 2px solid var(--ev-primary);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-/* v-faq-accordion — 질문마다 둥근 카드 */
-[data-block="faq"].v-faq-accordion:not(.ev-block) details {
-  border: 1px solid var(--ev-border);
-  border-radius: 14px;
-  background: var(--ev-surface);
-  overflow: hidden;
-  transition: box-shadow 0.2s ease;
-}
-[data-block="faq"].v-faq-accordion:not(.ev-block) details[open] { box-shadow: var(--ev-shadow-md); border-color: var(--ev-primary); }
-[data-block="faq"].v-faq-accordion:not(.ev-block) summary { padding: 14px 18px; }
-[data-block="faq"].v-faq-accordion:not(.ev-block) details[open] > summary { color: var(--ev-primary); }
-[data-block="faq"].v-faq-accordion:not(.ev-block) details > :not(summary) { padding: 0 18px; margin-bottom: 16px; }
-
-/* v-faq-brutal — HyperUI: border-2 border-black · shadow-[4px_4px_0_0] · hover:bg-yellow-200 */
-[data-block="faq"].v-faq-brutal:not(.ev-block) .ev-accordion { gap: 14px; }
-[data-block="faq"].v-faq-brutal:not(.ev-block) details { border: 0; }
-[data-block="faq"].v-faq-brutal:not(.ev-block) summary {
-  padding: 12px 16px;
-  border: 2px solid #111;
-  background: #fff;
-  color: #111;
-  box-shadow: 4px 4px 0 0 #111;
-  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-}
-[data-block="faq"].v-faq-brutal:not(.ev-block) summary:hover,
-[data-block="faq"].v-faq-brutal:not(.ev-block) summary:focus-visible {
-  background: #fef08a;
-  outline: 0;
-}
-[data-block="faq"].v-faq-brutal:not(.ev-block) details[open] > summary {
-  background: #fef08a;
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 0 #111;
-}
-[data-block="faq"].v-faq-brutal:not(.ev-block) details > :not(summary) {
-  padding: 14px 16px 2px;
-  margin: 0;
-  color: var(--ev-text-main);
-}
-
-/* ── highlight — 안내 상자(경고창) ─────────────────────────────────────── */
-
-[data-block="highlight"]:is(.v-highlight-alert, .v-highlight-info, .v-highlight-success):not(.ev-block) {
-  position: relative;
-  padding: 16px 18px 16px 58px;
-  text-align: left;
-  border-radius: 14px;
-  border: 1px solid;
-  box-shadow: none;
-}
-[data-block="highlight"]:is(.v-highlight-alert, .v-highlight-info, .v-highlight-success):not(.ev-block)::before {
-  position: absolute;
-  left: 18px;
-  top: 16px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 900;
-  line-height: 26px;
-  text-align: center;
-}
-[data-block="highlight"]:is(.v-highlight-alert, .v-highlight-info, .v-highlight-success):not(.ev-block) p + p { opacity: 0.85; }
-
-[data-block="highlight"].v-highlight-alert:not(.ev-block)   { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
-[data-block="highlight"].v-highlight-alert:not(.ev-block)::before   { content: "!"; background: #f59e0b; }
-[data-block="highlight"].v-highlight-info:not(.ev-block)    { background: #eff6ff; border-color: #93c5fd; color: #1e3a8a; }
-[data-block="highlight"].v-highlight-info:not(.ev-block)::before    { content: "i"; background: #3b82f6; font-family: Georgia, serif; font-style: italic; }
-[data-block="highlight"].v-highlight-success:not(.ev-block) { background: #f0fdf4; border-color: #86efac; color: #14532d; }
-[data-block="highlight"].v-highlight-success:not(.ev-block)::before { content: "\2713"; background: #22c55e; }
-
-/* ── 캐러셀 — scroll-snap. 손으로 넘긴다 (자동 넘김은 JS 라 없다) ───────── */
-
-:is([data-block="benefits"].v-benefits-carousel, [data-block="steps"].v-steps-carousel):not(.ev-block) :is(ul, ol) {
-  display: flex;
-  gap: 12px;
-  margin: 0 -22px 4px;
-  padding: 4px 22px 14px;
-  list-style: none;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-padding: 0 22px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--ev-primary-light) transparent;
-  -webkit-overflow-scrolling: touch;
-}
-:is([data-block="benefits"].v-benefits-carousel, [data-block="steps"].v-steps-carousel):not(.ev-block) li {
-  flex: 0 0 78%;
-  scroll-snap-align: start;
-  margin: 0;
-  padding: 22px 18px;
-  min-height: 120px;
-  border: 1px solid var(--ev-border);
-  border-radius: 16px;
-  background: var(--ev-surface);
-  box-shadow: var(--ev-shadow-md);
-}
-[data-block="benefits"].v-benefits-carousel:not(.ev-block) li:first-child {
-  background: var(--ev-gradient-cta);
-  color: #fff;
-  border-color: transparent;
-}
-[data-block="steps"].v-steps-carousel:not(.ev-block) ol { counter-reset: nv-step; }
-[data-block="steps"].v-steps-carousel:not(.ev-block) li { counter-increment: nv-step; }
-[data-block="steps"].v-steps-carousel:not(.ev-block) li::before {
-  content: "STEP " counter(nv-step);
-  display: block;
-  margin-bottom: 8px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--ev-primary);
-}
-/* "옆으로 넘기세요" 힌트 — 목록 뒤에 작게 */
-:is([data-block="benefits"].v-benefits-carousel, [data-block="steps"].v-steps-carousel):not(.ev-block)::after {
-  content: "\2190  옆으로 넘겨 보세요  \2192";
-  display: block;
-  font-size: 11px;
-  color: var(--ev-text-light);
-  text-align: center;
-}
-
-/* ── compare — 비교표 ──────────────────────────────────────────────────── */
-
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) {
-  background: var(--ev-surface);
-  border: 1px solid var(--ev-border);
-  border-radius: 16px;
-  padding: 22px;
-  margin-bottom: 16px;
-  overflow-x: auto;
-}
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) table {
-  width: 100%;
-  min-width: 360px;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 0.92rem;
-}
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) :is(th, td) {
-  padding: 11px 12px;
-  text-align: center;
-  vertical-align: middle;
-}
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) td:first-child {
-  text-align: left;
-  font-weight: 600;
-  color: var(--ev-text-muted);
-}
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) th {
-  background: var(--ev-primary);
-  color: #fff;
-  font-weight: 700;
-}
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) :is(th, td):first-child { text-align: left; }
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) tr:first-child th:first-child { border-radius: 10px 0 0 10px; }
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) tr:first-child th:last-child  { border-radius: 0 10px 10px 0; }
-/* 기본 = 줄무늬 (v-compare-striped 와 같다) */
-:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) tr:nth-child(even) td { background: var(--ev-surface-subtle); }
-
-[data-block="compare"].v-compare-bordered:not(.ev-block) table { border: 1px solid var(--ev-border); border-radius: 12px; overflow: hidden; }
-[data-block="compare"].v-compare-bordered:not(.ev-block) :is(th, td) { border-right: 1px solid var(--ev-border); border-bottom: 1px solid var(--ev-border); }
-[data-block="compare"].v-compare-bordered:not(.ev-block) :is(th, td):last-child { border-right: 0; }
-[data-block="compare"].v-compare-bordered:not(.ev-block) tr:last-child td { border-bottom: 0; }
-[data-block="compare"].v-compare-bordered:not(.ev-block) th { background: var(--ev-surface-subtle); color: var(--ev-text-main); border-radius: 0 !important; }
-[data-block="compare"].v-compare-bordered:not(.ev-block) tr:nth-child(even) td { background: transparent; }
-
-[data-block="compare"].v-compare-highlight:not(.ev-block) th { background: var(--ev-surface-subtle); color: var(--ev-text-main); }
-[data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child th:first-child { color: var(--ev-text-muted); }
-[data-block="compare"].v-compare-highlight:not(.ev-block) tr:nth-child(even) td { background: transparent; }
-[data-block="compare"].v-compare-highlight:not(.ev-block) :is(th, td):last-child {
-  background: var(--ev-primary-light);
-  color: var(--ev-primary-hover);
-  font-weight: 800;
-  box-shadow: inset 2px 0 0 var(--ev-primary), inset -2px 0 0 var(--ev-primary);
-}
-[data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child :last-child {
-  background: var(--ev-primary);
-  color: #fff;
-  border-radius: 10px 10px 0 0;
-}
-[data-block="compare"].v-compare-highlight:not(.ev-block) tr:last-child td:last-child {
-  border-radius: 0 0 10px 10px;
-  box-shadow: inset 2px 0 0 var(--ev-primary), inset -2px 0 0 var(--ev-primary), inset 0 -2px 0 var(--ev-primary);
-}
-
-[data-block="compare"].v-compare-minimal:not(.ev-block) th { background: transparent; color: var(--ev-text-main); border-bottom: 2px solid var(--ev-text-main); border-radius: 0 !important; }
-[data-block="compare"].v-compare-minimal:not(.ev-block) tr:first-child th:first-child { color: var(--ev-text-muted); }
-[data-block="compare"].v-compare-minimal:not(.ev-block) td { border-bottom: 1px solid var(--ev-border); }
-[data-block="compare"].v-compare-minimal:not(.ev-block) tr:nth-child(even) td { background: transparent; }
+.palette-night [data-block="cta"]:not(.v-cta-outline, .v-cta-gradient-border, .ev-block) :is(.btn, a, button) { color: #111; }
 
 /* 어두운 팔레트 보정 */
 .palette-night [data-block="faq"].v-faq-brutal:not(.ev-block) summary { color: #111; }
 /* 기본 · 줄무늬 머리글만 브랜드색(금색) 바탕이라 글씨를 어둡게. 나머지 변형은 바탕이 어둡다 */
 .palette-night [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #111; }
 .palette-night [data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child :last-child { color: #111; }
+
+/* esports 도 어두운 팔레트 — night 와 같은 보정 */
+.palette-esports :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
+.palette-esports [data-block="cta"]:not(.v-cta-outline, .v-cta-gradient-border, .ev-block) :is(.btn, a, button) { color: #04130a; }
+.palette-esports [data-block="faq"].v-faq-brutal:not(.ev-block) summary { color: #111; }
+.palette-esports [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #04130a; }
+/* 테두리형 버튼(outline · gradient-border)은 바탕이 어둡다 — 위의 어두운 글씨 보정에서 뺐다 */
+
+/* ── 99-a11y/01-reduced-motion.css ── */
+@media (prefers-reduced-motion: reduce) {
+  :where(.ev-container, .event-page),
+  :where(.ev-container, .event-page) *,
+  :where(.ev-container, .event-page) *::before,
+  :where(.ev-container, .event-page) *::after,
+  .ev-toast { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* 흐르는 띠는 멈추면 글이 화면 밖에 있다 — 제자리로 돌려 놓는다 */
+@media (prefers-reduced-motion: reduce) {
+  [data-block="highlight"].v-highlight-marquee:not(.ev-block) { white-space: normal; padding: 12px 18px; }
+  [data-block="highlight"].v-highlight-marquee:not(.ev-block) p:first-child { padding-left: 0; }
+}

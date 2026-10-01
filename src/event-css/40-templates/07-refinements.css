@@ -1,0 +1,58 @@
+/* Shared usability and compatibility refinements. */
+:where(.ev-container, .event-page) :where(img, video, svg, canvas) { max-width: 100%; }
+:where(.ev-container, .event-page) img { height: auto; }
+:where(.ev-container, .event-page) :where(button, input, select, textarea) { font: inherit; }
+:where(.ev-container, .event-page) :where(.benefit-body, .step-content,
+  .sp-hero-left, .lc-hero-left, .vp-coupon-right, .fs-deal-info,
+  .sp-prize-main-inner > *, .lc-timeline-node) { min-width: 0; }
+.hero-period-box, .notice-header { flex-wrap: wrap; max-width: 100%; }
+:where(.ev-container, .event-page) [data-block="hero"] .period { color: inherit; }
+.cta-btn, :where(.ev-container, .event-page) [data-block="cta"] .btn {
+  min-height: 44px; white-space: normal; overflow-wrap: anywhere;
+}
+:where(.ev-container, .event-page) :where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid #2563eb; outline-offset: 4px;
+}
+:where(.ev-container, .event-page) :where(button:disabled, .btn[aria-disabled="true"], .cta-btn[aria-disabled="true"]) {
+  opacity: .55; cursor: not-allowed; transform: none; box-shadow: none;
+}
+/* aria-disabled is styling only: JavaScript must prevent the action. */
+.ev-toast { width: max-content; max-width: calc(100vw - 32px); overflow-wrap: anywhere; border-radius: 16px; }
+.cta-subtext { color: var(--ev-text-muted); }
+.theme-sale {
+  --ev-surface-subtle: #18181b;
+  --ev-border-focus: #52525b;
+  --ev-primary: #ccff00;
+  --ev-primary-hover: #b8e600;
+  --ev-primary-light: #272c15;
+  --ev-gradient-cta: linear-gradient(#ccff00, #b8e600);
+  --ev-primary-glow: rgba(204,255,0,.18);
+}
+.theme-sale .cta-btn, .theme-sale .step-badge,
+.theme-sale [data-block="cta"] .btn { color: #09090b; }
+.theme-sale :where(.event-page, .ev-container),
+:where(.event-page, .ev-container).theme-sale {
+  --notice: #292315; --notice-ink: #fde68a;
+}
+.theme-sale .fs-deal-desc, .theme-sale .fs-deal-original,
+.theme-sale .fs-step-compact-desc, .theme-sale .fs-period-sub { color: #a1a1aa; }
+.theme-holiday .cta-btn, .theme-vip .cta-btn { color: #1c1917; }
+.theme-vip .vp-cta-btn { color: #fef08a; }
+.theme-launch .cta-btn { color: #0f172a; }
+.theme-launch .lc-cta-btn { color: #ffffff; }
+/* Nested tags in featured components are not outer grid items. */
+:where(.sp-prize-main, .hl-gift-featured, .vp-coupon, .lc-prize-featured) .benefit-tag {
+  position: static; display: inline-block; max-width: 100%;
+}
+@media (max-width: 640px) {
+  .theme-launch .lc-mockup { flex: none; }
+  .theme-sale .fs-deal-item { flex-wrap: wrap; }
+  .theme-sale .fs-deal-info { flex: 1 1 130px; }
+  .theme-sale .fs-deal-pricing { margin-left: auto; max-width: 100%; }
+  .theme-sports .sp-prize-main-inner { flex-wrap: wrap; }
+  .theme-sports .sp-prize-main-inner > .benefit-body { flex: 1 1 140px; }
+  .theme-holiday .hl-gift-featured-inner,
+  .theme-launch .lc-prize-featured-inner { flex-wrap: wrap; }
+  :where(.event-page) { padding: 16px 12px 48px; }
+  :where(.event-page) :where([data-block="hero"]) { padding: 32px 20px; }
+}

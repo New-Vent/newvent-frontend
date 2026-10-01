@@ -1,0 +1,58 @@
+/* ==========================================================================
+   Themes (동적 테마 클래스)
+   ========================================================================== */
+
+/* 1. 스포츠 / 승부예측 (Dynamic Red & Navy) */
+.theme-sports {
+  --ev-primary: #dc2626;
+  --ev-primary-hover: #b91c1c;
+  --ev-primary-light: #fef2f2;
+  --ev-primary-glow: rgba(220, 38, 38, 0.28);
+  --ev-gradient-hero: linear-gradient(135deg, #090d16 0%, #1e293b 60%, #991b1b 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  --ev-accent-tag: #f59e0b;
+}
+
+/* 2. 명절 / 시즌 선물 (Warm Gold & Crimson) */
+.theme-holiday {
+  --ev-primary: #d97706;
+  --ev-primary-hover: #b45309;
+  --ev-primary-light: #fffbeb;
+  --ev-primary-glow: rgba(217, 119, 6, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2b1055 0%, #591a3a 50%, #832729 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --ev-accent-tag: #ef4444;
+}
+
+/* 3. 회원 감사 / VIP 프로모션 (Luxury Champagne Gold & Dark Indigo) */
+.theme-vip {
+  --ev-primary: #ca8a04;
+  --ev-primary-hover: #a16207;
+  --ev-primary-light: #fefce8;
+  --ev-primary-glow: rgba(202, 138, 4, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  --ev-accent-tag: #38bdf8;
+}
+
+/* 4. 타임 세일 / 플래시 세일 (Vibrant Coral & Sunset Gradient) */
+.theme-sale {
+  --ev-primary: #ff4757;
+  --ev-primary-hover: #e0404f;
+  --ev-primary-light: #fff0f1;
+  --ev-primary-glow: rgba(255, 71, 87, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #2f3542 0%, #ff4757 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ff6b81 0%, #ff4757 100%);
+  --ev-accent-tag: #ffa502;
+}
+
+/* 5. 신규 런칭 / 사전예약 (Cyber Neon Cyan & Electric Violet) */
+.theme-launch {
+  --ev-primary: #06b6d4;
+  --ev-primary-hover: #0891b2;
+  --ev-primary-light: #ecfeff;
+  --ev-primary-glow: rgba(6, 182, 212, 0.35);
+  --ev-gradient-hero: linear-gradient(135deg, #050515 0%, #1e1035 60%, #083344 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  --ev-accent-tag: #a855f7;
+}

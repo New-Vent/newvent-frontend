@@ -1,0 +1,93 @@
+/* ── 배경 변형 (intro · benefits · audience · steps · faq) ─────────────── */
+
+[data-block].v-surface-card:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-tint:not(.ev-block) {
+  background: var(--ev-primary-light);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-dark:not(.ev-block) {
+  background: color-mix(in srgb, var(--ev-primary) 22%, #0b1020);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+  color: #f8fafc;
+}
+[data-block].v-surface-dark:not(.ev-block) :is(p, li, dt, dd, h2) { color: inherit; }
+[data-block].v-surface-dark:not(.ev-block) li { background-color: rgba(255, 255, 255, 0.06); }
+[data-block].v-surface-dark:not(.ev-block) :is(li, dt, dd) { border-color: rgba(255, 255, 255, 0.14); }
+[data-block].v-surface-dark:not(.ev-block) dd { color: rgba(248, 250, 252, 0.75); }
+
+[data-block].v-surface-plain:not(.ev-block) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 8px 4px;
+  margin-bottom: 20px;
+}
+
+/* ── 배경 추가 — 그라데이션 · 유리 · 무늬 · 테두리 · 그림자 ── */
+
+[data-block].v-surface-gradient:not(.ev-block) {
+  background: linear-gradient(160deg, var(--ev-primary-light), var(--ev-surface) 70%);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-glass:not(.ev-block) {
+  background: color-mix(in srgb, var(--ev-surface) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ev-primary) 18%, transparent);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+}
+
+[data-block].v-surface-dots:not(.ev-block) {
+  background-color: var(--ev-surface);
+  background-image: radial-gradient(color-mix(in srgb, var(--ev-primary) 20%, transparent) 1.2px, transparent 1.6px);
+  background-size: 14px 14px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-stripes:not(.ev-block) {
+  background: repeating-linear-gradient(135deg, var(--ev-surface) 0 12px, var(--ev-primary-light) 12px 24px);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-outline:not(.ev-block) {
+  background: transparent;
+  border: 2px solid var(--ev-primary);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+[data-block].v-surface-shadow:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 0;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: var(--ev-shadow-float);
+}

@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { extname, join, normalize } from 'node:path'
+import { buildEventCss, SRC_DIR as EVENT_CSS_SRC } from './scripts/build-event-css.mjs'
 
 const r = (p) => fileURLToPath(new URL(p, import.meta.url))
 
@@ -37,6 +38,37 @@ function serveAssetsAtRoot(dir) {
 
         res.setHeader('Content-Type', MIME[extname(file)] || 'application/octet-stream')
         createReadStream(file).pipe(res)
+      })
+    },
+  }
+}
+
+/**
+ * src/event-css/ 를 합쳐 public/assets/event.css 를 만든다 (scripts/build-event-css.mjs).
+ *
+ *   build  시작할 때 한 번 만든다 — 배포 산출물이 항상 원본과 같다
+ *   dev    원본 .css 가 바뀌면 다시 만들고 페이지를 새로 고친다
+ *
+ * ★ public/ 은 Vite 가 가공하지 않는다. 그래서 합치기를 Vite 에 맡기지 않고 파일로 만든다 —
+ *   게시 페이지 · 미리보기 iframe 이 고정 주소 /assets/event.css 를 링크하기 때문이다.
+ */
+function eventCss() {
+  const src = normalize(EVENT_CSS_SRC)
+  return {
+    name: 'newvent-event-css',
+    buildStart() {
+      buildEventCss()
+    },
+    configureServer(server) {
+      server.watcher.add(src)
+      server.watcher.on('all', (_event, file) => {
+        if (!normalize(file).startsWith(src) || !file.endsWith('.css')) return
+        try {
+          if (buildEventCss()) server.ws.send({ type: 'full-reload' })
+        } catch (e) {
+          // 원본에 문제가 있어도 dev 서버는 살려 둔다. 고치면 다시 만든다
+          server.config.logger.error('[event-css] ' + e.message)
+        }
       })
     },
   }
@@ -92,7 +124,7 @@ export default defineConfig(({ command }) => {
     //   운영에서는 nginx 가 /assets/ 를 서빙하므로 빌드 산출물에 없어도 된다.
     publicDir: command === 'serve' || APP === 'user' ? r('./public') : false,
 
-    plugins: [serveAssetsAtRoot(r('./public/assets'))],
+    plugins: [eventCss(), serveAssetsAtRoot(r('./public/assets'))],
 
     resolve: {
       alias: { '@shared': r('./src/shared') },
