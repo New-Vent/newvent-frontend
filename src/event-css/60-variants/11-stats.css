@@ -1,0 +1,39 @@
+/* stats 변형 — 기본(v-stats-grid)은 50-blocks/02-stats.css */
+
+/* 한 줄에 다 넣는다 — 줄바꿈되면 구분선이 어긋난다. 좁으면 글자를 줄인다 */
+[data-block="stats"].v-stats-inline:not(.ev-block) ul { display: flex; gap: 0; }
+[data-block="stats"].v-stats-inline:not(.ev-block) li {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 6px;
+  border-radius: 0;
+  border-left: 1px solid var(--ev-border);
+  background: none;
+}
+[data-block="stats"].v-stats-inline:not(.ev-block) li:first-child { border-left: 0; }
+[data-block="stats"].v-stats-inline:not(.ev-block) li strong { font-size: clamp(1.1rem, 4.5vw, 1.8rem); }
+
+[data-block="stats"].v-stats-ring:not(.ev-block) li { background: none; }
+[data-block="stats"].v-stats-ring:not(.ev-block) li strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 8px;
+  border: 6px solid var(--ev-primary-light);
+  border-top-color: var(--ev-primary);
+  border-radius: 50%;
+  font-size: 1.25rem;
+}
+
+[data-block="stats"].v-stats-bar:not(.ev-block) li { background: var(--ev-surface-subtle); text-align: left; }
+[data-block="stats"].v-stats-bar:not(.ev-block) li strong::after {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 4px;
+  background: var(--ev-gradient-cta);
+}

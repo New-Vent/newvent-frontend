@@ -1,0 +1,157 @@
+/* Legacy variable vocabulary, resolved inside each themed root. */
+:where(.event-page, .ev-container) {
+  --brand: var(--ev-primary);
+  --brand-dark: var(--ev-primary-hover);
+  --ink: var(--ev-text-main);
+  --muted: var(--ev-text-muted);
+  --line: var(--ev-border);
+  --paper: var(--ev-surface);
+  --bg: var(--ev-bg);
+  --notice: #fef3c7;
+  --notice-ink: #78350f;
+  color: var(--ink);
+  font-family: var(--ev-font);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* Semantic HTML fallback (low specificity). */
+:where(.event-page) {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+}
+
+:where(.event-page, .ev-container) :where([data-block="hero"]:not(.ev-block)) {
+  background: var(--ev-gradient-hero);
+  color: #fff;
+  border-radius: 20px;
+  padding: 48px 28px;
+  margin-bottom: 20px;
+}
+
+:where(.event-page, .ev-container) :where([data-block="hero"]:not(.ev-block) .badge) {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+:where(.event-page, .ev-container) :where([data-block="hero"]:not(.ev-block) h1) {
+  margin: 0 0 10px;
+  font-size: 2rem;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+:where(.event-page, .ev-container) :where([data-block="hero"]:not(.ev-block) p) {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.92;
+}
+
+:where(.event-page, .ev-container) :where([data-block="benefits"]:not(.ev-block), [data-block="steps"]:not(.ev-block), [data-block="notices"]:not(.ev-block)) {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px 22px 10px;
+  margin-bottom: 16px;
+}
+
+:where(.event-page, .ev-container) :where([data-block]:not(.ev-block) h2) {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+}
+
+:where(.event-page, .ev-container) :where([data-block="benefits"]:not(.ev-block) ul) {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+:where(.event-page, .ev-container) :where([data-block="benefits"]:not(.ev-block) li) {
+  border-left: 3px solid var(--brand);
+  padding: 10px 0 10px 14px;
+  margin-bottom: 8px;
+  background: var(--ev-primary-light);
+  border-radius: 0 10px 10px 0;
+}
+
+:where(.event-page, .ev-container) :where([data-block="benefits"]:not(.ev-block).cards ul) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+:where(.event-page, .ev-container) :where([data-block="benefits"]:not(.ev-block).cards li) {
+  border-left: none;
+  border-top: 3px solid var(--brand);
+  border-radius: 12px;
+  padding: 14px;
+  margin: 0;
+}
+
+:where(.event-page, .ev-container) :where([data-block="steps"]:not(.ev-block) ol) {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+
+:where(.event-page, .ev-container) :where([data-block="steps"]:not(.ev-block) li) {
+  margin-bottom: 10px;
+}
+
+:where(.event-page, .ev-container) :where([data-block="notices"]:not(.ev-block)) {
+  background: var(--notice);
+  border-color: #fde68a;
+}
+
+:where(.event-page, .ev-container) :where([data-block="notices"]:not(.ev-block) h2, [data-block="notices"]:not(.ev-block) li) {
+  color: var(--notice-ink);
+}
+
+:where(.event-page, .ev-container) :where([data-block="cta"]:not(.ev-block)) {
+  text-align: center;
+  margin-top: 8px;
+}
+
+:where(.event-page, .ev-container) :where([data-block="cta"]:not(.ev-block) .btn) {
+  display: inline-block;
+  min-width: 0;
+  min-height: 44px;
+  max-width: 100%;
+  text-align: center;
+  background: var(--brand);
+  color: #fff;
+  text-decoration: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+:where(.event-page, .ev-container) :where([data-block="cta"]:not(.ev-block) .btn.wide) {
+  display: block;
+  width: 100%;
+}
+
+:where(.event-page, .ev-container) :where([data-block="cta"]:not(.ev-block) .btn:hover) {
+  background: var(--brand-dark);
+}
+
+:where(.event-page, .ev-container) :where(.period) {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+@media (max-width: 560px) {
+:where(.event-page, .ev-container) :where([data-block="hero"]:not(.ev-block) h1) {
+    font-size: 1.55rem;
+  }
+
+:where(.event-page, .ev-container) :where([data-block="benefits"]:not(.ev-block).cards ul) {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,87 @@
+/* ── compare — 비교표 ──────────────────────────────────────────────────── */
+
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) table {
+  width: 100%;
+  min-width: 360px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.92rem;
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) :is(th, td) {
+  padding: 11px 12px;
+  text-align: center;
+  vertical-align: middle;
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ev-text-muted);
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) th {
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 700;
+}
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) :is(th, td):first-child { text-align: left; }
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) tr:first-child th:first-child { border-radius: 10px 0 0 10px; }
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) tr:first-child th:last-child  { border-radius: 0 10px 10px 0; }
+/* 기본 = 줄무늬 (v-compare-striped 와 같다) */
+:where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) tr:nth-child(even) td { background: var(--ev-surface-subtle); }
+
+[data-block="compare"].v-compare-bordered:not(.ev-block) table { border: 1px solid var(--ev-border); border-radius: 12px; overflow: hidden; }
+[data-block="compare"].v-compare-bordered:not(.ev-block) :is(th, td) { border-right: 1px solid var(--ev-border); border-bottom: 1px solid var(--ev-border); }
+[data-block="compare"].v-compare-bordered:not(.ev-block) :is(th, td):last-child { border-right: 0; }
+[data-block="compare"].v-compare-bordered:not(.ev-block) tr:last-child td { border-bottom: 0; }
+[data-block="compare"].v-compare-bordered:not(.ev-block) th { background: var(--ev-surface-subtle); color: var(--ev-text-main); border-radius: 0 !important; }
+[data-block="compare"].v-compare-bordered:not(.ev-block) tr:nth-child(even) td { background: transparent; }
+
+[data-block="compare"].v-compare-highlight:not(.ev-block) th { background: var(--ev-surface-subtle); color: var(--ev-text-main); }
+[data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child th:first-child { color: var(--ev-text-muted); }
+[data-block="compare"].v-compare-highlight:not(.ev-block) tr:nth-child(even) td { background: transparent; }
+[data-block="compare"].v-compare-highlight:not(.ev-block) :is(th, td):last-child {
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+  font-weight: 800;
+  box-shadow: inset 2px 0 0 var(--ev-primary), inset -2px 0 0 var(--ev-primary);
+}
+[data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child :last-child {
+  background: var(--ev-primary);
+  color: #fff;
+  border-radius: 10px 10px 0 0;
+}
+[data-block="compare"].v-compare-highlight:not(.ev-block) tr:last-child td:last-child {
+  border-radius: 0 0 10px 10px;
+  box-shadow: inset 2px 0 0 var(--ev-primary), inset -2px 0 0 var(--ev-primary), inset 0 -2px 0 var(--ev-primary);
+}
+
+[data-block="compare"].v-compare-minimal:not(.ev-block) th { background: transparent; color: var(--ev-text-main); border-bottom: 2px solid var(--ev-text-main); border-radius: 0 !important; }
+[data-block="compare"].v-compare-minimal:not(.ev-block) tr:first-child th:first-child { color: var(--ev-text-muted); }
+[data-block="compare"].v-compare-minimal:not(.ev-block) td { border-bottom: 1px solid var(--ev-border); }
+[data-block="compare"].v-compare-minimal:not(.ev-block) tr:nth-child(even) td { background: transparent; }
+
+/* ── 이식: Bootstrap table-dark · table-sm · 카드형 ── */
+
+[data-block="compare"].v-compare-dark:not(.ev-block) th { background: #111827; color: #f9fafb; }
+[data-block="compare"].v-compare-dark:not(.ev-block) td { background: #1f2937; color: #f3f4f6; }
+[data-block="compare"].v-compare-dark:not(.ev-block) td:first-child { color: #cbd5e1; }
+[data-block="compare"].v-compare-dark:not(.ev-block) tr:nth-child(even) td { background: #273244; }
+
+[data-block="compare"].v-compare-compact:not(.ev-block) table { font-size: 0.82rem; }
+[data-block="compare"].v-compare-compact:not(.ev-block) :is(th, td) { padding: 6px 8px; }
+
+[data-block="compare"].v-compare-rounded:not(.ev-block) table {
+  overflow: hidden;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  box-shadow: var(--ev-shadow-md);
+}
+[data-block="compare"].v-compare-rounded:not(.ev-block) th { border-radius: 0 !important; }

@@ -1,0 +1,204 @@
+/* ── benefits 변형 ──────────────────────────────────────────────────────── */
+/* 기본 폴백(ul li 왼쪽 선)이 :where() 라 여기서 덮을 수 있다 */
+
+[data-block="benefits"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
+[data-block="benefits"][class*="v-benefits-"]:not(.ev-block) ul { list-style: none; margin: 0 0 12px; padding: 0; }
+
+[data-block="benefits"].v-benefits-grid:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+[data-block="benefits"].v-benefits-grid:not(.ev-block) li {
+  margin: 0;
+  padding: 18px 16px;
+  border: 1px solid var(--ev-border);
+  border-top: 4px solid var(--ev-primary);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-md);
+}
+
+[data-block="benefits"].v-benefits-coupon:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 12px;
+  padding: 18px 26px;
+  border: 2px dashed var(--ev-primary);
+  border-radius: 14px;
+  background: var(--ev-primary-light);
+  font-weight: 600;
+}
+[data-block="benefits"].v-benefits-coupon:not(.ev-block) li::before,
+[data-block="benefits"].v-benefits-coupon:not(.ev-block) li::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--ev-surface);
+}
+[data-block="benefits"].v-benefits-coupon:not(.ev-block) li::before { left: -10px; }
+[data-block="benefits"].v-benefits-coupon:not(.ev-block) li::after { right: -10px; }
+
+[data-block="benefits"].v-benefits-numbered:not(.ev-block) ul { counter-reset: nv-benefit; }
+[data-block="benefits"].v-benefits-numbered:not(.ev-block) li {
+  counter-increment: nv-benefit;
+  position: relative;
+  margin: 0 0 10px;
+  padding: 12px 14px 12px 54px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ev-surface-subtle);
+}
+[data-block="benefits"].v-benefits-numbered:not(.ev-block) li::before {
+  content: counter(nv-benefit);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 800;
+  text-align: center;
+  line-height: 30px;
+}
+
+[data-block="benefits"].v-benefits-spotlight:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+[data-block="benefits"].v-benefits-spotlight:not(.ev-block) li {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--ev-border);
+  border-radius: 12px;
+  background: var(--ev-surface);
+}
+[data-block="benefits"].v-benefits-spotlight:not(.ev-block) li:first-child {
+  grid-column: 1 / -1;
+  padding: 26px 22px;
+  border: 0;
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  box-shadow: 0 12px 28px var(--ev-primary-glow);
+}
+
+/* ── 이식: Bootstrap pricing · Preline card · HyperUI ticket ── */
+
+[data-block="benefits"].v-benefits-ticket:not(.ev-block) li {
+  margin: 0 0 12px;
+  padding: 16px 18px 16px 22px;
+  border: 1px solid var(--ev-border);
+  border-left: 10px solid var(--ev-primary);
+  border-radius: 12px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+}
+
+[data-block="benefits"].v-benefits-icon:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 10px;
+  padding: 12px 14px 12px 54px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ev-surface-subtle);
+}
+[data-block="benefits"].v-benefits-icon:not(.ev-block) li::before {
+  content: "★";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 50%;
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  font-size: 14px;
+  line-height: 30px;
+  text-align: center;
+}
+
+[data-block="benefits"].v-benefits-pricing:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+  padding-top: 10px;
+}
+[data-block="benefits"].v-benefits-pricing:not(.ev-block) li {
+  margin: 0;
+  padding: 26px 16px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  background: var(--ev-surface);
+  font-weight: 600;
+  text-align: center;
+}
+[data-block="benefits"].v-benefits-pricing:not(.ev-block) li:nth-child(2) {
+  transform: translateY(-8px);
+  border: 2px solid var(--ev-primary);
+  box-shadow: 0 14px 30px var(--ev-primary-glow);
+}
+
+[data-block="benefits"].v-benefits-checklist:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 6px;
+  padding: 6px 0 6px 34px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+[data-block="benefits"].v-benefits-checklist:not(.ev-block) li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ev-primary-light);
+  color: var(--ev-primary);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 22px;
+  text-align: center;
+}
+
+[data-block="benefits"].v-benefits-stripe:not(.ev-block) ul {
+  overflow: hidden;
+  border: 1px solid var(--ev-border);
+  border-radius: 12px;
+}
+[data-block="benefits"].v-benefits-stripe:not(.ev-block) li {
+  margin: 0;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+[data-block="benefits"].v-benefits-stripe:not(.ev-block) li:nth-child(odd) { background: var(--ev-primary-light); }
+
+[data-block="benefits"].v-benefits-three-col:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+[data-block="benefits"].v-benefits-three-col:not(.ev-block) li {
+  margin: 0;
+  padding: 16px 12px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+  font-size: 0.92rem;
+  text-align: center;
+}

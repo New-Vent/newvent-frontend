@@ -1,0 +1,68 @@
+/* ── intro 변형 ─────────────────────────────────────────────────────────── */
+
+[data-block="intro"].v-intro-quote:not(.ev-block) {
+  border: 0;
+  border-left: 5px solid var(--ev-primary);
+  border-radius: 0 16px 16px 0;
+  background: var(--ev-surface-subtle);
+}
+[data-block="intro"].v-intro-quote:not(.ev-block) p { font-style: italic; }
+
+[data-block="intro"].v-intro-center:not(.ev-block) {
+  text-align: center;
+  padding: 36px 32px;
+}
+[data-block="intro"].v-intro-center:not(.ev-block) h2::after {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 3px;
+  margin: 10px auto 0;
+  border-radius: 3px;
+  background: var(--ev-primary);
+}
+
+[data-block="intro"].v-intro-lead:not(.ev-block) p:first-of-type {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--ev-primary-hover);
+}
+
+/* ── 잡지 · Bootstrap card 계열 ── */
+
+[data-block="intro"].v-intro-dropcap:not(.ev-block) p:first-of-type::first-letter {
+  float: left;
+  margin: 6px 10px 0 0;
+  font-size: 3.2em;
+  font-weight: 900;
+  line-height: 0.9;
+  color: var(--ev-primary);
+}
+
+[data-block="intro"].v-intro-two-col:not(.ev-block) { column-count: 2; column-gap: 28px; }
+[data-block="intro"].v-intro-two-col:not(.ev-block) h2 { column-span: all; }
+
+[data-block="intro"].v-intro-boxed:not(.ev-block) { padding: 0; overflow: hidden; }
+[data-block="intro"].v-intro-boxed:not(.ev-block) h2 {
+  margin: 0 0 14px;
+  padding: 14px 22px;
+  background: var(--ev-primary);
+  color: #fff;
+}
+[data-block="intro"].v-intro-boxed:not(.ev-block) p { padding: 0 22px; }
+[data-block="intro"].v-intro-boxed:not(.ev-block) p:last-child { padding-bottom: 20px; }
+
+[data-block="intro"].v-intro-sidebar:not(.ev-block) {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 6px 20px;
+}
+[data-block="intro"].v-intro-sidebar:not(.ev-block) h2 {
+  grid-row: 1 / span 9;
+  margin: 0;
+  padding-right: 16px;
+  border-right: 3px solid var(--ev-primary);
+  font-size: 1.1rem;
+}
+[data-block="intro"].v-intro-sidebar:not(.ev-block) p { grid-column: 2; }

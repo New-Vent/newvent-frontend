@@ -1,0 +1,34 @@
+/* schedule — 일정. 기본 = v-schedule-timeline (세로 타임라인) */
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) h2 { margin: 0 0 14px; font-size: 1.05rem; }
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) ol { list-style: none; margin: 0; padding: 0; }
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 0 8px;
+  padding: 0 0 18px 26px;
+  border-left: 2px solid var(--ev-primary-light);
+}
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) li:last-child { padding-bottom: 0; border-left-color: transparent; }
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) li::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+:where(.event-page, .ev-container) [data-block="schedule"]:not(.ev-block) li strong {
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--ev-primary);
+}

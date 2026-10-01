@@ -1,0 +1,254 @@
+/* ==========================================================================
+   TEMPLATE 5: PRE-REGISTRATION (서비스 소개형)
+   ========================================================================== */
+.theme-launch {
+  --ev-bg: #f8fafc;
+  --ev-surface: #ffffff;
+  --ev-border: #e2e8f0;
+}
+
+.theme-launch .lc-hero {
+  padding: 44px 24px 36px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #172554 100%);
+  color: #ffffff;
+}
+
+.theme-launch .lc-hero-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.theme-launch .lc-hero-left {
+  flex: 1;
+  text-align: left;
+}
+
+.theme-launch .lc-title {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #ffffff;
+  margin: 12px 0 10px;
+}
+
+.theme-launch .lc-title .highlight {
+  color: #38bdf8;
+}
+
+.theme-launch .lc-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.theme-launch .lc-period {
+  font-size: 11px;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+/* Service UI Mockup (Decorative CSS-only App Window) */
+.theme-launch .lc-mockup {
+  flex: 0 0 240px;
+  background: #090d16;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.45);
+}
+
+.theme-launch .lc-mockup-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+
+.theme-launch .lc-mockup-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.theme-launch .lc-mockup-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #475569;
+}
+
+.theme-launch .lc-mockup-dot:nth-child(1) { background: #ef4444; }
+.theme-launch .lc-mockup-dot:nth-child(2) { background: #f59e0b; }
+.theme-launch .lc-mockup-dot:nth-child(3) { background: #10b981; }
+
+.theme-launch .lc-mockup-title {
+  font-size: 9px;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.theme-launch .lc-mockup-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.theme-launch .lc-mockup-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 9px;
+  color: #38bdf8;
+}
+
+.theme-launch .lc-mockup-preview-card {
+  background: #0f172a;
+  border: 1px dashed #38bdf8;
+  border-radius: 4px;
+  padding: 8px;
+  text-align: center;
+}
+
+.theme-launch .lc-mockup-preview-card strong {
+  display: block;
+  font-size: 10px;
+  color: #f8fafc;
+}
+
+.theme-launch .lc-mockup-preview-card span {
+  font-size: 8px;
+  color: #94a3b8;
+}
+
+.theme-launch .lc-mockup-caption {
+  font-size: 9px;
+  color: #64748b;
+  text-align: center;
+  padding: 4px;
+  background: #090d16;
+  border-top: 1px solid #1e293b;
+}
+
+/* Benefits: 1 Featured Wide + 2 Sub */
+.theme-launch .lc-prize-featured {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid #2563eb;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.theme-launch .lc-prize-featured-inner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+}
+
+.theme-launch .lc-icon-lg {
+  width: 64px;
+  height: 64px;
+  font-size: 34px;
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.theme-launch .lc-name-lg {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+
+.theme-launch .lc-value-lg {
+  font-size: 17px;
+  font-weight: 900;
+  color: #2563eb;
+  margin-top: 4px;
+}
+
+.theme-launch .lc-prize-sub-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* Steps: Timeline Flow */
+.theme-launch .lc-timeline {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  position: relative;
+  gap: 12px;
+}
+
+.theme-launch .lc-timeline-node {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: left;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.theme-launch .lc-timeline-node-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.theme-launch .lc-timeline-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-launch .lc-timeline-phase {
+  font-size: 11px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.theme-launch .lc-timeline-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.theme-launch .lc-timeline-desc {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.theme-launch .lc-cta-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+}

@@ -1,0 +1,31 @@
+/* ── highlight — 안내 상자(경고창) ─────────────────────────────────────── */
+
+[data-block="highlight"]:is(.v-highlight-alert, .v-highlight-info, .v-highlight-success):not(.ev-block) {
+  position: relative;
+  padding: 16px 18px 16px 58px;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid;
+  box-shadow: none;
+}
+[data-block="highlight"]:is(.v-highlight-alert, .v-highlight-info, .v-highlight-success):not(.ev-block)::before {
+  position: absolute;
+  left: 18px;
+  top: 16px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 26px;
+  text-align: center;
+}
+[data-block="highlight"]:is(.v-highlight-alert, .v-highlight-info, .v-highlight-success):not(.ev-block) p + p { opacity: 0.85; }
+
+[data-block="highlight"].v-highlight-alert:not(.ev-block)   { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
+[data-block="highlight"].v-highlight-alert:not(.ev-block)::before   { content: "!"; background: #f59e0b; }
+[data-block="highlight"].v-highlight-info:not(.ev-block)    { background: #eff6ff; border-color: #93c5fd; color: #1e3a8a; }
+[data-block="highlight"].v-highlight-info:not(.ev-block)::before    { content: "i"; background: #3b82f6; font-family: Georgia, serif; font-style: italic; }
+[data-block="highlight"].v-highlight-success:not(.ev-block) { background: #f0fdf4; border-color: #86efac; color: #14532d; }
+[data-block="highlight"].v-highlight-success:not(.ev-block)::before { content: "\2713"; background: #22c55e; }

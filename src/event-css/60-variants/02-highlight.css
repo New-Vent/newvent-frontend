@@ -1,0 +1,108 @@
+/* ── highlight 변형 ─────────────────────────────────────────────────────── */
+
+[data-block="highlight"].v-highlight-badge:not(.ev-block) {
+  display: table;
+  margin: 0 auto 16px;
+  padding: 14px 28px;
+  border-radius: 999px;
+}
+[data-block="highlight"].v-highlight-badge:not(.ev-block) p:first-child { font-size: 1.15rem; }
+
+[data-block="highlight"].v-highlight-quote:not(.ev-block) {
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+  box-shadow: none;
+  padding: 26px 28px 22px;
+  position: relative;
+}
+[data-block="highlight"].v-highlight-quote:not(.ev-block)::before {
+  content: "\201C";
+  position: absolute;
+  top: -6px;
+  left: 14px;
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--ev-primary);
+  opacity: 0.35;
+}
+
+[data-block="highlight"].v-highlight-glow:not(.ev-block) {
+  background: #0b1020;
+  border: 1px solid var(--ev-primary);
+  box-shadow: 0 0 0 4px var(--ev-primary-glow), 0 0 36px var(--ev-primary-glow);
+}
+[data-block="highlight"].v-highlight-glow:not(.ev-block) p:first-child { color: #fff; text-shadow: 0 0 14px var(--ev-primary); }
+
+/* ── 이식: Bootstrap alert-danger · alert-dark · DaisyUI marquee ── */
+
+[data-block="highlight"].v-highlight-danger:not(.ev-block) {
+  position: relative;
+  padding: 16px 18px 16px 58px;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+  color: #7f1d1d;
+  box-shadow: none;
+}
+[data-block="highlight"].v-highlight-danger:not(.ev-block)::before {
+  content: "!";
+  position: absolute;
+  left: 18px;
+  top: 16px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #fff;
+  font-weight: 900;
+  line-height: 26px;
+  text-align: center;
+}
+
+[data-block="highlight"].v-highlight-dark:not(.ev-block) {
+  text-align: left;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border-left: 6px solid var(--ev-primary);
+  background: #111827;
+  color: #f9fafb;
+  box-shadow: none;
+}
+
+[data-block="highlight"].v-highlight-marquee:not(.ev-block) {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 12px 0;
+  border-radius: 0;
+}
+[data-block="highlight"].v-highlight-marquee:not(.ev-block) p:first-child {
+  display: inline-block;
+  padding-left: 100%;
+  animation: nv-marquee 14s linear infinite;
+}
+[data-block="highlight"].v-highlight-marquee:not(.ev-block) p + p { display: none; }
+@keyframes nv-marquee { to { transform: translateX(-100%); } }
+
+[data-block="highlight"].v-highlight-stamp:not(.ev-block) {
+  display: table;
+  margin: 8px auto 20px;
+  padding: 12px 24px;
+  transform: rotate(-3deg);
+  border: 3px double var(--ev-accent-tag);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ev-accent-tag);
+  box-shadow: none;
+}
+[data-block="highlight"].v-highlight-stamp:not(.ev-block) p { font-weight: 900; letter-spacing: 0.04em; }
+
+[data-block="highlight"].v-highlight-neon:not(.ev-block) {
+  background: #05060f;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+[data-block="highlight"].v-highlight-neon:not(.ev-block) p:first-child {
+  font-size: 1.2rem;
+  color: #fff;
+  text-shadow: 0 0 6px var(--ev-primary), 0 0 18px var(--ev-primary), 0 0 32px var(--ev-primary-glow);
+}

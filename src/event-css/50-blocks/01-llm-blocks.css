@@ -1,0 +1,96 @@
+/* ==========================================================================
+   Blocks · Variants · Palettes
+   --------------------------------------------------------------------------
+   백엔드 레지스트리와 짝이다. 이름을 바꾸거나 추가하면 같이 고친다.
+     블록     registry/Block.java    highlight · intro · audience · faq
+     변형     registry/Variant.java  .v-*        — 블록 루트 <section> 에 붙는다
+     팔레트   registry/Palette.java  .palette-*  — 페이지 루트에 붙는다 (서버가 hero 에서 옮긴다)
+
+   ★ 변형(.v-*)은 백지 생성 블록에만 건다 — 전부 :not(.ev-block)
+     템플릿 블록은 자기 디자인(.hl-* · .sp-* …)이 있어 섞으면 둘 다 망가진다.
+   ★ 팔레트는 CSS 변수만 바꾼다. 파일 맨 뒤에 있어야 테마(theme-*)를 이긴다.
+   ★ 특이도: 기본 폴백은 :where() 라 0 이다. 아래 규칙은 리셋
+     (.ev-container :where(h1 … ol) { margin:0; padding:0 })보다 세야 해서
+     [data-block="…"]:not(.ev-block) 로 시작한다.
+   ========================================================================== */
+
+/* ── 새 블록 기본 모양 ───────────────────────────────────────────────────── */
+
+/* highlight — 띠 배너 */
+:where(.event-page, .ev-container) [data-block="highlight"]:not(.ev-block) {
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  border-radius: 16px;
+  padding: 16px 22px;
+  margin-bottom: 16px;
+  text-align: center;
+  box-shadow: 0 10px 24px var(--ev-primary-glow);
+}
+:where(.event-page, .ev-container) [data-block="highlight"]:not(.ev-block) p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+:where(.event-page, .ev-container) [data-block="highlight"]:not(.ev-block) p + p {
+  margin-top: 4px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  opacity: 0.92;
+}
+
+/* intro · audience · faq — 카드 */
+:where(.event-page, .ev-container) :is([data-block="intro"], [data-block="audience"], [data-block="faq"]):not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+:where(.event-page, .ev-container) :is([data-block="intro"], [data-block="audience"], [data-block="faq"]):not(.ev-block) h2 {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+/* intro */
+:where(.event-page, .ev-container) [data-block="intro"]:not(.ev-block) p {
+  margin: 0 0 10px;
+  color: var(--ev-text-main);
+}
+:where(.event-page, .ev-container) [data-block="intro"]:not(.ev-block) p:last-child { margin-bottom: 0; }
+
+/* audience — 기본은 태그 칩 */
+:where(.event-page, .ev-container) [data-block="audience"]:not(.ev-block) ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+:where(.event-page, .ev-container) [data-block="audience"]:not(.ev-block) li {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+/* faq — 기본은 구분선 목록 */
+:where(.event-page, .ev-container) [data-block="faq"]:not(.ev-block) dl { margin: 0; }
+:where(.event-page, .ev-container) [data-block="faq"]:not(.ev-block) dt {
+  font-weight: 700;
+  padding-top: 14px;
+  border-top: 1px solid var(--ev-border);
+}
+:where(.event-page, .ev-container) [data-block="faq"]:not(.ev-block) dt:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+:where(.event-page, .ev-container) [data-block="faq"]:not(.ev-block) dd {
+  margin: 4px 0 14px;
+  color: var(--ev-text-muted);
+}
+:where(.event-page, .ev-container) [data-block="faq"]:not(.ev-block) dd:last-child { margin-bottom: 0; }

@@ -1,0 +1,231 @@
+/* ── steps 변형 ─────────────────────────────────────────────────────────── */
+
+[data-block="steps"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
+
+[data-block="steps"].v-steps-numbered:not(.ev-block) ol { list-style: none; margin: 0; padding: 0; counter-reset: nv-step; }
+[data-block="steps"].v-steps-numbered:not(.ev-block) li {
+  counter-increment: nv-step;
+  position: relative;
+  min-height: 34px;
+  margin: 0 0 12px;
+  padding: 5px 0 0 48px;
+}
+[data-block="steps"].v-steps-numbered:not(.ev-block) li::before {
+  content: counter(nv-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--ev-primary);
+  color: var(--ev-primary);
+  font-weight: 800;
+  text-align: center;
+  line-height: 30px;
+}
+
+[data-block="steps"].v-steps-timeline:not(.ev-block) ol {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 26px;
+  border-left: 3px solid var(--ev-primary-light);
+  counter-reset: nv-step;
+}
+[data-block="steps"].v-steps-timeline:not(.ev-block) li {
+  counter-increment: nv-step;
+  position: relative;
+  margin: 0 0 18px;
+  padding-left: 6px;
+}
+[data-block="steps"].v-steps-timeline:not(.ev-block) li::before {
+  content: "STEP " counter(nv-step);
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ev-primary);
+}
+[data-block="steps"].v-steps-timeline:not(.ev-block) li::after {
+  content: "";
+  position: absolute;
+  left: -40px;
+  top: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+
+[data-block="steps"].v-steps-cards:not(.ev-block) ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  counter-reset: nv-step;
+}
+[data-block="steps"].v-steps-cards:not(.ev-block) li {
+  counter-increment: nv-step;
+  margin: 0;
+  padding: 16px 14px;
+  border-radius: 14px;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  box-shadow: var(--ev-shadow-sm);
+  font-size: 0.92rem;
+}
+[data-block="steps"].v-steps-cards:not(.ev-block) li::before {
+  content: "0" counter(nv-step);
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--ev-primary);
+}
+
+[data-block="steps"].v-steps-arrows:not(.ev-block) ol { list-style: none; margin: 0; padding: 0; }
+[data-block="steps"].v-steps-arrows:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 26px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: var(--ev-primary-light);
+  text-align: center;
+  font-weight: 600;
+}
+[data-block="steps"].v-steps-arrows:not(.ev-block) li:not(:last-child)::after {
+  content: "\25BC";
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--ev-primary);
+}
+[data-block="steps"].v-steps-arrows:not(.ev-block) li:last-child { margin-bottom: 0; }
+
+/* ── 이식: DaisyUI steps · Flowbite stepper ── */
+
+[data-block="steps"].v-steps-progress:not(.ev-block) ol {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: nv-step;
+}
+[data-block="steps"].v-steps-progress:not(.ev-block) ol::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 15px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--ev-primary-light);
+}
+[data-block="steps"].v-steps-progress:not(.ev-block) li {
+  position: relative;
+  flex: 1;
+  padding: 44px 4px 0;
+  font-size: 0.85rem;
+  text-align: center;
+  counter-increment: nv-step;
+}
+[data-block="steps"].v-steps-progress:not(.ev-block) li::before {
+  content: counter(nv-step);
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 800;
+  line-height: 34px;
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+
+[data-block="steps"].v-steps-checklist:not(.ev-block) ol { margin: 0; padding: 0; list-style: none; }
+[data-block="steps"].v-steps-checklist:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 8px;
+  padding: 11px 12px 11px 44px;
+  border: 1px solid var(--ev-border);
+  border-radius: 10px;
+}
+[data-block="steps"].v-steps-checklist:not(.ev-block) li::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border: 2px solid var(--ev-primary);
+  border-radius: 5px;
+}
+
+[data-block="steps"].v-steps-zigzag:not(.ev-block) ol { margin: 0; padding: 0; list-style: none; counter-reset: nv-step; }
+[data-block="steps"].v-steps-zigzag:not(.ev-block) li {
+  width: 78%;
+  margin: 0 0 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--ev-primary-light);
+  counter-increment: nv-step;
+}
+[data-block="steps"].v-steps-zigzag:not(.ev-block) li:nth-child(even) { margin-left: auto; background: var(--ev-surface-subtle); }
+[data-block="steps"].v-steps-zigzag:not(.ev-block) li::before {
+  content: "STEP " counter(nv-step);
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ev-primary);
+}
+
+[data-block="steps"].v-steps-bubble:not(.ev-block) ol { margin: 0; padding: 0; list-style: none; counter-reset: nv-step; }
+[data-block="steps"].v-steps-bubble:not(.ev-block) li {
+  width: fit-content;
+  max-width: 90%;
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px 16px 16px 4px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+  counter-increment: nv-step;
+}
+[data-block="steps"].v-steps-bubble:not(.ev-block) li::before {
+  content: counter(nv-step) ".";
+  margin-right: 8px;
+  font-weight: 900;
+  color: var(--ev-primary);
+}
+
+[data-block="steps"].v-steps-minimal:not(.ev-block) ol { margin: 0; padding: 0; list-style: none; counter-reset: nv-step; }
+[data-block="steps"].v-steps-minimal:not(.ev-block) li {
+  position: relative;
+  min-height: 48px;
+  padding: 12px 0 12px 60px;
+  border-bottom: 1px solid var(--ev-border);
+  counter-increment: nv-step;
+}
+[data-block="steps"].v-steps-minimal:not(.ev-block) li::before {
+  content: "0" counter(nv-step);
+  position: absolute;
+  left: 0;
+  top: 4px;
+  font-size: 2rem;
+  font-weight: 900;
+  color: color-mix(in srgb, var(--ev-primary) 35%, transparent);
+}

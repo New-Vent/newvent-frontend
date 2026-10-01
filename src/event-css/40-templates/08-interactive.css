@@ -1,0 +1,447 @@
+/* ==========================================================================
+   INTERACTIVE BUTTONS & WIDGET ENHANCEMENTS
+   ========================================================================== */
+
+/* Template 1: Sports Vote Buttons */
+.theme-sports .sp-vote-wrap {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(220, 38, 38, 0.4);
+  text-align: center;
+}
+.theme-sports .sp-vote-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+.theme-sports .sp-vote-btns {
+  display: flex;
+  gap: 6px;
+}
+.theme-sports .sp-vote-btn {
+  flex: 1;
+  padding: 7px 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #e2e8f0;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.theme-sports .sp-vote-btn:hover {
+  background: rgba(220, 38, 38, 0.25);
+  border-color: #ef4444;
+  color: #fff;
+  transform: translateY(-1px);
+}
+.theme-sports .sp-vote-btn.active {
+  background: #dc2626;
+  border-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+/* Template 2: Holiday 3 Lucky Draw Songpyeon Boxes */
+.theme-holiday .hl-gift-boxes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+/* Template 2: Traditional Korean Fortune Pouch (복주머니) Styles */
+.theme-holiday .hl-gift-boxes,
+.theme-holiday .hl-pouches-wrap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.theme-holiday .hl-pouch-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #ffffff;
+  border: 2px solid #fed7aa;
+  border-radius: 20px;
+  padding: 20px 12px 16px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  overflow: hidden;
+}
+.theme-holiday .hl-pouch-card:hover {
+  transform: translateY(-6px);
+  border-color: #ea580c;
+  box-shadow: 0 12px 24px rgba(180, 83, 9, 0.15);
+}
+.theme-holiday .hl-pouch-visual {
+  position: relative;
+  width: 90px;
+  height: 98px;
+  margin: 12px auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.theme-holiday .hl-pouch-card:hover .hl-pouch-visual {
+  transform: scale(1.08) rotate(-2deg);
+}
+.theme-holiday .hl-pouch-top {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 16px;
+  background: #f59e0b;
+  border-radius: 10px 10px 4px 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  z-index: 2;
+}
+.theme-holiday .hl-pouch-tie {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  z-index: 4;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  line-height: 1;
+}
+.theme-holiday .hl-pouch-body {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 82px;
+  height: 82px;
+  border-radius: 40% 40% 50% 50% / 30% 30% 60% 60%;
+  box-shadow: inset 0 -8px 14px rgba(0,0,0,0.25), inset 0 4px 8px rgba(255,255,255,0.4), 0 6px 14px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fde68a;
+  z-index: 1;
+}
+.theme-holiday .hl-pouch-red .hl-pouch-body {
+  background: radial-gradient(circle at 35% 35%, #ef4444 0%, #b91c1c 60%, #7f1d1d 100%);
+}
+.theme-holiday .hl-pouch-gold .hl-pouch-body {
+  background: radial-gradient(circle at 35% 35%, #fbbf24 0%, #d97706 60%, #92400e 100%);
+}
+.theme-holiday .hl-pouch-blue .hl-pouch-body {
+  background: radial-gradient(circle at 35% 35%, #38bdf8 0%, #2563eb 60%, #1e3a8a 100%);
+}
+.theme-holiday .hl-pouch-hanja {
+  font-family: "Noto Serif KR", serif, -apple-system, sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  color: #fef08a;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 0 8px rgba(254, 240, 138, 0.6);
+  user-select: none;
+}
+.theme-holiday .hl-pouch-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #7c2d12;
+  margin-bottom: 3px;
+}
+.theme-holiday .hl-pouch-prize {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ea580c;
+  margin-bottom: 6px;
+}
+.theme-holiday .hl-pouch-desc {
+  font-size: 11px;
+  color: #9a3412;
+  opacity: 0.85;
+  margin-bottom: 12px;
+  flex-grow: 1;
+  line-height: 1.4;
+}
+.theme-holiday .hl-pouch-btn {
+  width: 100%;
+  padding: 9px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(234, 88, 12, 0.3);
+  transition: all 0.2s ease;
+}
+.theme-holiday .hl-pouch-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 5px 12px rgba(234, 88, 12, 0.4);
+}
+.theme-holiday .hl-pouch-btn.opened {
+  background: #15803d;
+  box-shadow: none;
+}
+@keyframes pouch-shake {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.12) rotate(-8deg); }
+  50% { transform: scale(1.12) rotate(8deg); }
+  75% { transform: scale(1.06) rotate(-4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.theme-holiday .hl-pouch-visual.shake {
+  animation: pouch-shake 0.5s ease-in-out;
+}
+.theme-holiday .hl-share-wrap {
+  text-align: center;
+  margin-top: 12px;
+  margin-bottom: 16px;
+}
+.theme-holiday .hl-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #78350f;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.theme-holiday .hl-share-btn:hover {
+  background: #fde68a;
+  color: #92400e;
+}
+.theme-holiday .hl-cta-btn.cta-completed {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+  color: #fff !important;
+}
+
+/* Template 3: VIP Coupon Action Button */
+.theme-vip .vp-coupon-btn {
+  margin-top: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #854d0e;
+  background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
+  border: 1px solid #ca8a04;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+.theme-vip .vp-coupon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(202, 138, 4, 0.3);
+  color: #713f12;
+}
+.theme-vip .vp-coupon-btn.downloaded {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #64748b;
+  cursor: default;
+}
+
+/* Template 4: Flash Sale Deal Button */
+.theme-sale .fs-deal-btn {
+  margin-top: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #000;
+  background: #ccff00;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+  display: inline-block;
+  white-space: nowrap;
+}
+.theme-sale .fs-deal-btn:hover {
+  background: #e6ff66;
+  box-shadow: 0 0 12px rgba(204, 255, 0, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Template 5: Tech Launch Milestone Gauge & Form */
+.theme-launch .lc-gauge-card {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.06);
+}
+.theme-launch .lc-gauge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.theme-launch .lc-gauge-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+.theme-launch .lc-gauge-percent {
+  font-size: 15px;
+  font-weight: 900;
+  color: #2563eb;
+}
+.theme-launch .lc-progress-track {
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.theme-launch .lc-progress-fill {
+  height: 100%;
+  width: 74%;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+.theme-launch .lc-milestones-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.theme-launch .lc-milestone-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+}
+.theme-launch .lc-milestone-item.achieved {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+.theme-launch .lc-ms-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  margin-bottom: 4px;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.theme-launch .lc-milestone-item.achieved .lc-ms-badge {
+  background: #dcfce7;
+  color: #15803d;
+}
+.theme-launch .lc-ms-target {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+}
+.theme-launch .lc-ms-reward {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Interactive Form */
+.theme-launch .lc-form-card {
+  background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  color: #fff;
+}
+.theme-launch .lc-form-title {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.theme-launch .lc-form-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+.theme-launch .lc-form-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.theme-launch .lc-input {
+  flex: 1;
+  padding: 12px 14px;
+  background: #090d16;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.theme-launch .lc-input:focus {
+  border-color: #3b82f6;
+}
+.theme-launch .lc-form-btn {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.theme-launch .lc-form-btn:hover {
+  background: #1d4ed8;
+}
+.theme-launch .lc-share-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #334155;
+}
+.theme-launch .lc-share-text {
+  font-size: 12px;
+  color: #94a3b8;
+}
+.theme-launch .lc-share-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.theme-launch .lc-share-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+}
+
+@media (max-width: 640px) {
+  .theme-holiday .hl-gift-boxes {
+    grid-template-columns: 1fr;
+  }
+  .theme-launch .lc-milestones-grid {
+    grid-template-columns: 1fr;
+  }
+  .theme-launch .lc-form-row {
+    flex-direction: column;
+  }
+}

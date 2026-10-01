@@ -1,0 +1,27 @@
+/* prize — 경품. 기본 = v-prize-list (선물 아이콘 목록, 첫 항목은 트로피) */
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) h2 { margin: 0 0 12px; font-size: 1.05rem; }
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) ul { list-style: none; margin: 0; padding: 0; }
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 8px;
+  padding: 12px 14px 12px 50px;
+  border-radius: 12px;
+  background: var(--ev-surface-subtle);
+  font-weight: 600;
+}
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) li::before {
+  content: "🎁";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+}
+:where(.event-page, .ev-container) [data-block="prize"]:not(.ev-block) li:first-child::before { content: "🏆"; }

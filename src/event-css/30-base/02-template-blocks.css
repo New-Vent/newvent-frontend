@@ -1,0 +1,411 @@
+/* ==========================================================================
+   BLOCK 1: HERO
+   ========================================================================== */
+.block-hero {
+  background: var(--ev-gradient-hero);
+  color: var(--ev-text-inverse);
+  text-align: center;
+  padding: 56px 24px 44px;
+  position: relative;
+  overflow: hidden;
+}
+
+.block-hero::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.hero-badge-wrap {
+  margin-bottom: 16px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: var(--ev-radius-full);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.hero-badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--ev-accent-tag);
+  box-shadow: 0 0 8px var(--ev-accent-tag);
+  animation: ev-pulse 2s infinite;
+}
+
+.hero-title {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+  word-break: keep-all;
+}
+
+.hero-title span.highlight {
+  color: var(--ev-accent-tag);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 20px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.hero-period-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 8px 18px;
+  border-radius: var(--ev-radius-full);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* ==========================================================================
+   BLOCK 2: BENEFITS
+   ========================================================================== */
+.block-benefits {
+  background-color: var(--ev-surface);
+}
+
+.block-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.block-header .sub-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ev-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.block-header .title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ev-text-main);
+  letter-spacing: -0.3px;
+}
+
+.benefits-grid,
+.benefits-list-default {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* 공통 식별 클래스 (Identification): 레이아웃·배경을 강제하지 않음 */
+.benefits-list {
+  box-sizing: border-box;
+}
+
+.benefit-card {
+  box-sizing: border-box;
+}
+
+/* 카드 기본 표현 클래스 (데스크톱): 세로형 레이아웃 */
+.benefit-card-default,
+:where(.benefit-card:not([class*="sp-"]):not([class*="hl-"]):not([class*="vp-"]):not([class*="fs-"]):not([class*="lc-"])) {
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: var(--ev-radius-md);
+  padding: 20px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: var(--ev-shadow-sm);
+}
+
+.benefit-card-default:hover,
+:where(.benefit-card:not([class*="sp-"]):not([class*="hl-"]):not([class*="vp-"]):not([class*="fs-"]):not([class*="lc-"])):hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ev-shadow-lg);
+  border-color: var(--ev-primary);
+}
+
+.benefit-tag {
+  position: static;
+  align-self: flex-start;
+  max-width: 100%;
+  margin-bottom: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--ev-radius-full);
+  background: var(--ev-primary-light);
+  color: var(--ev-primary);
+  z-index: 2;
+  white-space: normal;
+}
+
+.benefit-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--ev-radius-md);
+  background: var(--ev-primary-light);
+  color: var(--ev-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+/* 이름과 설명을 하나의 바디 묶음으로 감싸 레이아웃 안정성 확보 */
+.benefit-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+}
+
+.benefit-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ev-text-main);
+  margin-bottom: 6px;
+  word-break: keep-all;
+  /* Tags occupy their own layout space. */
+}
+
+.benefit-desc {
+  font-size: 12px;
+  color: var(--ev-text-muted);
+  line-height: 1.45;
+  margin-bottom: 12px;
+  word-break: keep-all;
+}
+
+.benefit-value {
+  margin-top: auto;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ev-primary);
+  white-space: normal;
+}
+
+/* ==========================================================================
+   BLOCK 3: STEPS
+   ========================================================================== */
+.block-steps {
+  background-color: var(--ev-surface-subtle);
+  border-top: 1px solid var(--ev-border);
+  border-bottom: 1px solid var(--ev-border);
+}
+
+/* 공통 식별 클래스 (Identification): 레이아웃·배경을 강제하지 않음 */
+.steps-list {
+  box-sizing: border-box;
+}
+
+.step-card {
+  box-sizing: border-box;
+}
+
+/* 기본 단계 목록 및 카드 표현 클래스 */
+.steps-list-default,
+:where(.steps-list:not([class*="sp-"]):not([class*="hl-"]):not([class*="vp-"]):not([class*="fs-"]):not([class*="lc-"])) {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.step-card-default,
+:where(.step-card:not([class*="sp-"]):not([class*="hl-"]):not([class*="vp-"]):not([class*="fs-"]):not([class*="lc-"])) {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: var(--ev-radius-md);
+  padding: 18px 20px;
+  box-shadow: var(--ev-shadow-sm);
+  transition: transform 0.2s ease;
+}
+
+.step-card-default:hover,
+:where(.step-card:not([class*="sp-"]):not([class*="hl-"]):not([class*="vp-"]):not([class*="fs-"]):not([class*="lc-"])):hover {
+  transform: translateX(4px);
+}
+
+.step-badge {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px var(--ev-primary-glow);
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ev-text-main);
+  margin-bottom: 4px;
+  word-break: keep-all;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--ev-text-muted);
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+/* ==========================================================================
+   BLOCK 4: NOTICES (서버 소유 블록)
+   - LLM이 임의로 생성/수정하지 않으며, 서버가 승인된 공통 문구만 삽입
+   - 관리자 배지(.server-badge)는 관리자 화면에서만 노출
+   ========================================================================== */
+.block-notices {
+  background-color: var(--ev-surface);
+  padding: 32px 24px;
+}
+
+.notice-box {
+  background: var(--ev-surface-subtle);
+  border: 1px dashed var(--ev-border-focus);
+  border-radius: var(--ev-radius-md);
+  padding: 20px 22px;
+}
+
+.notice-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ev-text-main);
+  margin-bottom: 12px;
+}
+
+/* 관리자용 배지: 사용자 화면에서는 숨김 처리 */
+.server-badge {
+  display: none;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  background: #e2e8f0;
+  color: #475569;
+  border-radius: 4px;
+}
+
+/* 관리자 미리보기 컨테이너 내에서만 노출 */
+.admin-preview .server-badge,
+[data-view="admin"] .server-badge {
+  display: inline-block;
+}
+
+.notice-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notice-list li {
+  font-size: 12px;
+  color: var(--ev-text-muted);
+  line-height: 1.55;
+  position: relative;
+  padding-left: 14px;
+  word-break: keep-all;
+}
+
+.notice-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--ev-text-light);
+  font-weight: bold;
+}
+
+/* ==========================================================================
+   BLOCK 5: CTA (Call to Action)
+   ========================================================================== */
+.block-cta {
+  background-color: var(--ev-surface);
+  text-align: center;
+  padding: 28px 24px 48px;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 440px;
+  padding: 16px 28px;
+  border-radius: var(--ev-radius-lg);
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 20px var(--ev-primary-glow);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.3px;
+}
+
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px var(--ev-primary-glow);
+  filter: brightness(1.05);
+}
+
+.cta-btn:active {
+  transform: translateY(0);
+}
+
+.cta-subtext {
+  font-size: 12px;
+  color: var(--ev-text-light);
+  margin-top: 12px;
+  word-break: keep-all;
+}

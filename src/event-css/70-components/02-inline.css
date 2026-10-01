@@ -1,0 +1,63 @@
+/* ── 문구 꾸밈 (t-*) — 템플릿 블록에도 걸린다 ──────────────────────────── */
+/* Preline Badge Group 을 옮김: inline-flex · rounded-full · text-xs · font-medium */
+
+:where(.event-page, .ev-container) .t-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  margin: 0 2px;
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  vertical-align: 0.12em;
+  white-space: nowrap;
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+}
+:where(.event-page, .ev-container) .t-badge.t-badge-solid   { background: var(--ev-primary); color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-dark    { background: #18181b; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-red     { background: #ef4444; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-yellow  { background: #facc15; color: #422006; }
+:where(.event-page, .ev-container) .t-badge.t-badge-green   { background: #22c55e; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-teal    { background: #14b8a6; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-outline { background: transparent; color: var(--ev-primary); box-shadow: inset 0 0 0 1.5px currentColor; }
+
+:where(.event-page, .ev-container) .t-highlight {
+  background: linear-gradient(transparent 58%, color-mix(in srgb, var(--ev-accent-tag) 40%, transparent) 58%);
+  padding: 0 2px;
+}
+:where(.event-page, .ev-container) .t-accent {
+  color: var(--ev-primary);
+  font-weight: 800;
+}
+/* 어두운 배경 위의 강조색은 흰색이 낫다 */
+:where(.event-page, .ev-container) :is([data-block="hero"], [data-block="highlight"], .v-surface-dark, .v-cta-banner) .t-accent { color: inherit; text-decoration: underline 2px; text-underline-offset: 3px; }
+
+/* ── 추가 배지 · 강조 (Preline · Flowbite badge 색) ── */
+:where(.event-page, .ev-container) .t-badge.t-badge-blue   { background: #3b82f6; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-purple { background: #8b5cf6; color: #fff; }
+:where(.event-page, .ev-container) .t-badge.t-badge-hot    { background: linear-gradient(90deg, #f97316, #ef4444); color: #fff; }
+
+:where(.event-page, .ev-container) .t-strike {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  color: var(--ev-text-light);
+}
+:where(.event-page, .ev-container) .t-big {
+  font-size: 1.6em;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ev-primary);
+}
+:where(.event-page, .ev-container) .t-underline {
+  text-decoration: underline wavy var(--ev-accent-tag);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+/* 어두운 배경 위 — 브랜드색 글씨는 흰색으로 */
+:where(.event-page, .ev-container) :is([data-block="hero"], [data-block="highlight"], [data-block="coupon"], .v-surface-dark, .v-cta-banner, .v-cta-dark) :is(.t-big) { color: inherit; }
+:where(.event-page, .ev-container) :is([data-block="hero"], [data-block="highlight"], [data-block="coupon"], .v-surface-dark) .t-strike { color: inherit; opacity: 0.7; }

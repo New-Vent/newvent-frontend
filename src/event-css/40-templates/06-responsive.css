@@ -1,0 +1,81 @@
+/* ==========================================================================
+   THEME-SPECIFIC RESPONSIVE OVERRIDES (<= 640px)
+   ========================================================================== */
+@media (max-width: 640px) {
+  /* Template 1 Mobile */
+  .theme-sports .sp-hero-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .theme-sports .sp-hero-left {
+    text-align: center;
+  }
+  .theme-sports .sp-scoreboard {
+    width: 100%;
+    flex: none;
+    max-width: 320px;
+    margin: 10px auto 0;
+  }
+  .theme-sports .sp-prize-sub-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Template 2 Mobile */
+  .theme-holiday .hl-gift-sub-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Template 3 Mobile: Coupon Layout */
+  .theme-vip .vp-coupon {
+    flex-direction: row;
+  }
+  .theme-vip .vp-coupon-left {
+    flex: 0 0 85px;
+    padding: 12px 6px;
+  }
+  .theme-vip .vp-coupon-value {
+    font-size: 19px;
+  }
+  .theme-vip .vp-coupon-right {
+    padding: 12px 14px;
+  }
+  .theme-vip .vp-coupon-right .benefit-name {
+    font-size: 13px;
+  }
+  .theme-vip .vp-coupon-right .benefit-desc {
+    font-size: 11px;
+  }
+
+  /* Template 4 Mobile */
+  .theme-sale .fs-steps-compact {
+    grid-template-columns: 1fr;
+  }
+  .theme-sale .fs-deal-item {
+    padding: 12px;
+    gap: 10px;
+  }
+  .theme-sale .fs-deal-final {
+    font-size: 14px;
+  }
+
+  /* Template 5 Mobile */
+  .theme-launch .lc-hero-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .theme-launch .lc-hero-left {
+    text-align: center;
+  }
+  .theme-launch .lc-mockup {
+    width: 100%;
+    max-width: 280px;
+    margin: 10px auto 0;
+  }
+  .theme-launch .lc-prize-sub-row {
+    grid-template-columns: 1fr;
+  }
+  .theme-launch .lc-timeline {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

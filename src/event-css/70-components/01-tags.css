@@ -1,0 +1,38 @@
+/* ==========================================================================
+   JS 없이 동작하는 컴포넌트 — 아코디언 · 안내 상자 · 캐러셀 · 비교표 · 배지
+   --------------------------------------------------------------------------
+   짝: registry/Variant.java (v-*) · registry/Inline.java (t-*) · Block.COMPARE
+   HyperUI · Preline 디자인을 이름 붙은 class 로 옮겨 왔다 (Tailwind 를 싣지 않는다).
+   ========================================================================== */
+
+/* ── 공통 태그: hr · figure · mark ─────────────────────────────────────── */
+
+:where(.event-page, .ev-container) [data-block]:not(.ev-block) hr {
+  border: 0;
+  height: 1px;
+  margin: 16px 0;
+  background: linear-gradient(90deg, transparent, var(--ev-border) 15%, var(--ev-border) 85%, transparent);
+}
+
+:where(.event-page, .ev-container) [data-block]:not(.ev-block) figure {
+  margin: 0 0 12px;
+}
+:where(.event-page, .ev-container) [data-block]:not(.ev-block) figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+}
+:where(.event-page, .ev-container) [data-block]:not(.ev-block) figcaption {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--ev-text-muted);
+  text-align: center;
+}
+
+:where(.event-page, .ev-container) mark {
+  padding: 0 3px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ev-accent-tag) 28%, transparent);
+  color: inherit;
+}

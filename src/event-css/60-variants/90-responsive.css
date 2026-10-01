@@ -1,0 +1,21 @@
+@media (max-width: 560px) {
+  [data-block="hero"].v-hero-poster:not(.ev-block) h1 { font-size: 2.1rem; }
+  [data-block="hero"].v-hero-left:not(.ev-block) h1 { font-size: 1.8rem; }
+  [data-block="benefits"].v-benefits-grid:not(.ev-block) ul,
+  [data-block="benefits"].v-benefits-spotlight:not(.ev-block) ul,
+  [data-block="audience"].v-audience-cards:not(.ev-block) ul { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  [data-block="hero"].v-hero-split:not(.ev-block) { grid-template-columns: 1fr; text-align: center; }
+  [data-block="hero"].v-hero-split:not(.ev-block) h1 { grid-row: auto; }
+  [data-block="hero"].v-hero-split:not(.ev-block) > :not(h1) { grid-column: 1; }
+  [data-block="intro"].v-intro-two-col:not(.ev-block) { column-count: 1; }
+  [data-block="intro"].v-intro-sidebar:not(.ev-block) { grid-template-columns: 1fr; }
+  [data-block="intro"].v-intro-sidebar:not(.ev-block) h2 { grid-row: auto; border-right: 0; border-bottom: 3px solid var(--ev-primary); padding: 0 0 8px; }
+  [data-block="intro"].v-intro-sidebar:not(.ev-block) p { grid-column: 1; }
+  [data-block="benefits"].v-benefits-three-col:not(.ev-block) ul,
+  [data-block="prize"].v-prize-cards:not(.ev-block) ul { grid-template-columns: 1fr; }
+  [data-block="schedule"].v-schedule-table:not(.ev-block) li { grid-template-columns: 1fr; gap: 2px; }
+  [data-block="steps"].v-steps-zigzag:not(.ev-block) li { width: 100%; }
+}
