@@ -40,6 +40,25 @@ function bindFrame(frame){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
  }
+ // 서버 편집 화면의 AI 대화 — 누른 영역(data-block)을 편집 화면에 알린다. 유의사항은 서버 소유라 고를 수 없다
+ if(mode==='server-select'){
+  doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
+  doc.querySelectorAll('[data-block]').forEach(b=>{const own=b.dataset.block==='notices';b.style.cursor=own?'default':'pointer';b.title=own?'유의사항은 고칠 수 없어요':(BLOCK_LABELS[b.dataset.block]||b.dataset.block)+' 영역 — 눌러서 고르기';});
+  // 올린 영역에 이름표 — "누르면 고를 수 있다"를 미리보기 안에서 바로 알린다
+  const tag=doc.createElement('div');tag.className='nv-pick-tag';tag.hidden=true;doc.body.appendChild(tag);
+  let over=null;
+  const label=b=>{const own=b.dataset.block==='notices',name=BLOCK_LABELS[b.dataset.block]||b.dataset.block;
+   tag.textContent=own?name+' · 고칠 수 없어요':b.classList.contains('newvent-selected')?'✓ '+name+' 선택됨 · 눌러서 해제':name+' · 눌러서 고르기';
+   tag.classList.toggle('own',own);tag.classList.toggle('on',!own&&b.classList.contains('newvent-selected'));};
+  const place=b=>{const r=b.getBoundingClientRect(),w=doc.defaultView;tag.style.top=Math.max(0,r.top+w.scrollY-11)+'px';tag.style.left=(r.left+w.scrollX+12)+'px';};
+  doc.addEventListener('mouseover',ev=>{const b=ev.target.closest('[data-block]');if(b===over)return;
+   over?.classList.remove('nv-pick-hover');over=b;tag.hidden=!b;if(!b)return;
+   if(b.dataset.block!=='notices')b.classList.add('nv-pick-hover');label(b);place(b);});
+  doc.addEventListener('mouseleave',()=>{over?.classList.remove('nv-pick-hover');over=null;tag.hidden=true;});
+  doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();const b=ev.target.closest('[data-block]');if(!b)return;frame.dispatchEvent(new CustomEvent('nv-block',{bubbles:true,detail:{block:b.dataset.block}}));
+   // 칩 · 외곽선은 편집 화면이 바로 바꾼다 — 이름표도 그 상태로 다시 쓴다
+   if(b===over)label(b);},true);return;
+ }
  if(mode==='readonly'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();},true);return;

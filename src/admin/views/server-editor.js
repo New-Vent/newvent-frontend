@@ -68,6 +68,7 @@ function openServerEditor(id, { jobId = null, request = null, startError = null 
     prompt: request || '',             // 다시 만들기 입력칸
     chatInput: '',
     tab: 'chat',                       // chat | direct
+    selected: [],                      // AI 대화 — 미리보기에서 고른 영역(data-block). 최대 MAX_SELECTED
     direct: freshDirect(),
     busy: false,                       // 직접 수정 적용 · 버전 저장 중
     notice: startError,                // 생성 시작 실패 문구
@@ -104,6 +105,64 @@ async function refreshPage(s) {
   s.preview = preview
   if (versions) s.versions = versions.versions
   s.direct = freshDirect()
+  // ★ 고른 영역은 남긴다 — 같은 영역을 이어서 다듬는 경우가 많다. 새 버전에서 사라진 영역만 뺀다
+  s.selected = s.selected.filter((k) => preview?.html?.includes('data-block="' + k + '"'))
+}
+
+/* ───────────────────────── AI 대화 — 영역 고르기 ───────────────────────── */
+
+/** 서버 EditRequest 의 @Size(max = 4) 와 같다 */
+const MAX_SELECTED = 4
+
+/** 고른 영역을 Block 선언 순서로 — 칩 · 요청 본문이 늘 같은 순서로 보이게 */
+const BLOCK_ORDER = Object.keys(BLOCK_LABELS)
+const ordered = (keys) => [...keys].sort((a, b) => BLOCK_ORDER.indexOf(a) - BLOCK_ORDER.indexOf(b))
+
+const labelOf = (k) => BLOCK_LABELS[k] || k
+
+function selectionHTML(s, busy) {
+  // 비어 있어도 "어디를 고치는지"를 늘 보여 준다 — 범위를 좁힐 수 있다는 걸 여기서 알게 된다
+  if (!s.selected.length) {
+    return '<div class="sel-row"><span class="sel-label">고칠 곳</span><span class="sel-chip all">페이지 전체</span></div>'
+      + '<p class="helper sel-hint">' + icon('sparkle') + '오른쪽 미리보기에서 영역을 누르면 그 부분만 고쳐요 (최대 ' + MAX_SELECTED + '개)</p>'
+  }
+  return '<div class="sel-row"><span class="sel-label">고칠 곳</span>'
+    + s.selected.map((k) => '<span class="sel-chip">' + esc(labelOf(k))
+      + button('server-unselect', '×', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k)) + ' 선택 해제" ' + (busy ? 'disabled' : ''), 'sel-x')
+      + '</span>').join('')
+    + button('server-unselect-all', '전체 해제', busy ? 'disabled' : '', 'sel-clear') + '</div>'
+    + '<p class="helper sel-hint">고른 영역 밖은 바뀌지 않아요</p>'
+}
+
+/** 입력칸 안내도 고른 영역을 따라간다 */
+const chatPlaceholder = (s) => (s.selected.length
+  ? s.selected.map(labelOf).join(' · ') + '을(를) 어떻게 바꿀까요? 예: 더 눈에 띄게'
+  : '예: 제목을 가을 대축제로 바꿔줘')
+
+/** 다시 그리지 않고 칩 · 미리보기 외곽선만 고친다 — iframe 을 새로 띄우면 깜빡인다 */
+function paintSelection(s) {
+  const box = $('#server-selection')
+  if (box) box.innerHTML = selectionHTML(s, running(s))
+  const input = $('#server-chat')
+  if (input) input.placeholder = chatPlaceholder(s)
+  const doc = $('.event-frame')?.contentDocument
+  doc?.querySelectorAll('[data-block]').forEach((n) => n.classList.toggle('newvent-selected', s.selected.includes(n.dataset.block)))
+}
+
+function toggleBlock(s, key) {
+  if (key === 'notices') { toast('유의사항은 승인된 문구라 고칠 수 없어요.'); return }
+  if (s.selected.includes(key)) s.selected = s.selected.filter((k) => k !== key)
+  else if (s.selected.length >= MAX_SELECTED) { toast('영역은 ' + MAX_SELECTED + '개까지 고를 수 있어요.'); return }
+  else s.selected = ordered([...s.selected, key])
+  paintSelection(s)
+}
+
+/** 미리보기에서 누른 영역 — frame.js 의 server-select 모드가 보낸다 */
+function handleServerBlock(ev) {
+  const s = ui.serverEditor
+  if (!s || s.tab !== 'chat' || running(s)) return
+  const key = ev.detail?.block
+  if (key) toggleBlock(s, key)
 }
 
 const alive = (s) => ui.serverEditor === s && ['editor', 'versions'].includes(ui.route)
@@ -171,11 +230,13 @@ async function sendChat(text, rerender) {
   if (!request) return
   if (request.length > REQUEST_MAX) { toast('요청은 ' + REQUEST_MAX + '자 이내로 입력해주세요.'); return }
   const chat = chatOf(s.id)
-  chat.push({ role: 'user', text: request })
+  const blocks = [...s.selected]
+  // 고른 영역을 말풍선에 남긴다 — 대화를 다시 볼 때 무엇을 고쳤는지 보이게
+  chat.push({ role: 'user', text: request, blocks })
   s.chatInput = ''
   s.notice = null
   try {
-    const r = await startEdit(s.id, request)
+    const r = await startEdit(s.id, request, blocks)
     s.job = { jobId: r.jobId, kind: 'edit', phase: r.phase, label: '대기 중', percent: r.percent ?? 0, done: false }
   } catch (e) {
     chat.push({ role: 'assistant', tone: 'FAILED', text: e?.message || '요청을 보내지 못했어요.' })
@@ -464,14 +525,16 @@ const TONE = { FAILED: 'tone-fail', ASK_BACK: 'tone-ask', CANCELLED: 'tone-ask' 
 /** AI 대화 — 대화 · 다시 만들기는 스크롤, 입력칸은 아래 고정 */
 function chatPanel(s) {
   const busy = running(s)
+  const tags = (m) => (m.blocks?.length ? '<span class="bubble-tags">' + m.blocks.map((k) => '<span>' + esc(labelOf(k)) + '</span>').join('') + '</span>' : '')
   const log = chatOf(s.id).map((m) => '<div class="bubble ' + (m.role === 'user' ? 'me' : TONE[m.tone] || '') + '"><small>'
     + (m.role === 'user' ? '관리자' : 'NewVent 어시스턴트' + (m.tone && m.tone !== 'DONE' ? ' · ' + (RESULT[m.tone]?.[1] || '') : ''))
-    + '</small>' + esc(m.text) + '</div>').join('')
+    + '</small>' + tags(m) + esc(m.text) + '</div>').join('')
   return '<div class="server-scroll" id="server-scroll">'
     + '<div class="chat" id="chat-log" role="log" aria-label="AI 대화" aria-live="polite">' + log + '</div>'
     + '<details class="server-regen"><summary>처음부터 다시 만들기</summary>' + generateForm(s) + '</details></div>'
-    + '<form class="server-foot" id="server-chat-form" aria-busy="' + busy + '"><label class="field">'
-    + '<textarea id="server-chat" rows="3" aria-label="수정 요청" maxlength="' + REQUEST_MAX + '" placeholder="예: 제목을 가을 대축제로 바꿔줘" ' + (busy ? 'disabled' : '') + '>'
+    + '<form class="server-foot" id="server-chat-form" aria-busy="' + busy + '">'
+    + '<div id="server-selection">' + selectionHTML(s, busy) + '</div><label class="field">'
+    + '<textarea id="server-chat" rows="3" aria-label="수정 요청" maxlength="' + REQUEST_MAX + '" placeholder="' + esc(chatPlaceholder(s)) + '" ' + (busy ? 'disabled' : '') + '>'
     + esc(s.chatInput || '') + '</textarea></label>'
     + '<div class="chips">' + EXAMPLES.map((t) => button('server-chat-example', t, 'data-prompt="' + esc(t) + '" ' + (busy ? 'disabled' : ''), 'chip')).join('') + '</div>'
     + '<div class="foot-row"><span class="helper" id="server-chat-count">' + (s.chatInput || '').length + ' / ' + REQUEST_MAX + '자 · 최신 버전 기준</span>'
@@ -545,12 +608,13 @@ function previewPanel(s) {
   const published = (s.versions || []).find((v) => v.published)
   const body = p
     ? '<div class="canvas"><div class="canvas-frame ' + (ui.mobile ? 'mobile' : '') + '">'
-      + serverFrame(p.html, '이벤트 미리보기', s.tab === 'direct' ? 'server-edit' : 'readonly') + '</div></div>'
+      + serverFrame(p.html, '이벤트 미리보기', s.tab === 'direct' ? 'server-edit' : 'server-select') + '</div></div>'
     : '<div class="empty"><strong>아직 만들어진 페이지가 없어요</strong><p>왼쪽에서 페이지를 만들어보세요.</p></div>'
   return '<div class="studio-preview-column"><section class="panel"><div class="preview-controls"><div class="row wrap"><span>미리보기</span>'
     + (p ? '<span class="badge pink">최신 v' + p.versionNo + '</span>'
       + '<span class="badge ' + (isSaved(s) ? '' : 'amber') + '">' + (isSaved(s) ? '저장된 버전' : '이력에 저장 전') + '</span>' : '')
     + (published ? '<span class="badge green">게시 v' + published.versionNo + '</span>' : '')
+    + (p && s.tab === 'chat' ? '<span class="pick-guide">' + icon('sparkle') + '영역을 눌러 고칠 곳을 고르세요</span>' : '')
     + '</div><div class="device-controls">'
     + button('device', icon('desktop'), 'data-mode="desktop" aria-label="데스크톱 미리보기"', 'btn sm ' + (!ui.mobile ? 'active' : ''))
     + button('device', icon('phone'), 'data-mode="mobile" aria-label="모바일 미리보기"', 'btn sm ' + (ui.mobile ? 'active' : ''))
@@ -608,6 +672,10 @@ function afterServerRender() {
     const frame = $('.event-frame')
     // 고치던 값이 남아 있으면 (탭 전환 · 기기 전환) 새 iframe 에도 다시 입힌다
     if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s) }, { once: true })
+  } else {
+    // 고른 영역 외곽선 — 새 iframe(새 버전 · 기기 전환)에도 다시 입힌다
+    const frame = $('.event-frame')
+    if (frame) frame.addEventListener('load', () => paintSelection(s), { once: true })
   }
 }
 
@@ -641,6 +709,12 @@ function handleServerClick(a, b, rerender) {
       if (s && input && !input.disabled) { s.chatInput = b.dataset.prompt; input.value = s.chatInput; input.focus(); onChatInput(s.chatInput) }
       return true
     }
+    case 'server-unselect':
+      if (s && !running(s)) { s.selected = s.selected.filter((k) => k !== b.dataset.block); paintSelection(s) }
+      return true
+    case 'server-unselect-all':
+      if (s && !running(s)) { s.selected = []; paintSelection(s) }
+      return true
     case 'server-direct-apply': applyDirect(rerender); return true
     case 'server-direct-reset': resetDirect(rerender); return true
     case 'server-publish': openPublish(); return true
@@ -745,5 +819,5 @@ function reloadServerEditor(rerender) {
 export {
   openServerEditor, ensureServerEditor, serverEditorView, afterServerRender, loadingView, refreshPage, running, openPublish,
   regenerate, cancel as cancelServerGeneration, onServerPromptInput, reloadServerEditor,
-  handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick,
+  handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock,
 }

@@ -24,7 +24,7 @@ import { requestFor, requestPending, updateEditor } from '@shared/editor-state.j
 import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
 import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
-import { ensureServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick } from './views/server-editor.js'
+import { ensureServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock } from './views/server-editor.js'
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
@@ -367,6 +367,7 @@ document.addEventListener('focusin',ev=>{if(USE_SERVER){handleServerFocus(ev);re
 
 // 서버 편집 화면 — 미리보기에서 누른 글자 (frame.js 의 server-edit 모드가 보낸다)
 document.addEventListener('nv-pick',handleServerPick);
+document.addEventListener('nv-block',handleServerBlock);
 
 document.addEventListener('focusout',()=>queueMicrotask(()=>highlightEditingText()));
 
