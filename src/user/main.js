@@ -3,7 +3,7 @@ import './styles.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
-import { useApi } from '@shared/repo.js'
+import { loadEvent, loadEvents, useApi, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -91,9 +91,45 @@ function header() {
     '<p>데모 데이터로 동작하는 화면입니다. 실제 경품은 지급되지 않습니다.</p></div>'
 }
 
+/* ───────────── 서버 모드 데이터 ─────────────
+ * 화면이 동기 렌더라 먼저 불러오고 끝나면 다시 그린다.
+ * 상태를 ui 에 담아 뷰가 로딩 · 오류를 그릴 수 있게 한다.
+ */
+
+/** 목록 — 한 번만 부르고, 실패하면 다시 시도 버튼이 재호출한다. */
+function ensureEvents(rerender) {
+  if (!USE_SERVER) return
+  if (ui.serverEventsState === 'loading' || ui.serverEventsState === 'done') return
+  ui.serverEventsState = 'loading'
+  loadEvents().then(
+    (list) => { ui.serverEvents = list; ui.serverEventsState = 'done'; rerender() },
+    (err) => { ui.serverEventsError = err?.message || '목록을 불러오지 못했어요.'
+               ui.serverEventsState = 'error'; rerender() },
+  )
+}
+
+/** 상세 — 보고 있는 이벤트가 바뀌면 다시 부른다. */
+function ensureEvent(id, rerender) {
+  if (!USE_SERVER || !id) return
+  if (ui.serverEvent?.id === Number(id) && ui.serverEventState === 'done') return
+  if (ui.serverEventState === 'loading' && ui.serverEventId === String(id)) return
+  ui.serverEventId = String(id)
+  ui.serverEventState = 'loading'
+  loadEvent(id).then(
+    (ev) => { if (ui.serverEventId !== String(id)) return
+              ui.serverEvent = ev; ui.serverEventState = 'done'; rerender() },
+    (err) => { if (ui.serverEventId !== String(id)) return
+               ui.serverEventError = err?.message || '이벤트를 불러오지 못했어요.'
+               ui.serverEventState = 'error'; rerender() },
+  )
+}
+
+
 function render(scroll = false) {
   state.observers.forEach((x) => x.disconnect())
   state.observers = []
+  if (ui.route === 'home') ensureEvents(() => render())
+  if (ui.route === 'event') ensureEvent(ui.activeId, () => render())
   header()
   $('#app').innerHTML = (VIEWS[ui.route] || homeView)()
   hydrate()
@@ -159,6 +195,11 @@ document.addEventListener('click', (ev) => {
     const fn = state.confirmAction
     closeModal()
     if (fn) fn()
+    return
+  }
+  if (a === 'reload-events') {
+    ui.serverEventsState = null
+    render()
     return
   }
   if (a === 'close') return closeModal()

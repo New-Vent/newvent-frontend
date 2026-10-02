@@ -43,11 +43,43 @@ function requireApi() {
 
 /* ────────────────────────── 조회 ────────────────────────── */
 
+/**
+ * 공개 이벤트 목록 — 사용자 화면.
+ *
+ * ★ 경로가 /api/public/events 다. /api/events 는 컨트롤러가 없어서
+ *   404 가 아니라 401 이 온다 (SecurityConfig 의 /api/** 규칙에 먼저 걸린다).
+ *
+ * 응답은 Spring Page 모양이고 썸네일·본문 HTML 이 없다.
+ *   { content: [{ id, title, startDate, endDate, status, category, closingSoon }], … }
+ *
+ * 그래서 목록 화면은 제목 · 기간만 쓴다. 썸네일은 백엔드에 요청해둔 상태다.
+ *
+ * @returns {Promise<Array<{id:number,title:string,startDate:string,endDate:string,
+ *                          status:string,closingSoon:boolean,thumbnailHtml?:string}>>}
+ */
 export async function loadEvents() {
   if (!USE_SERVER) return state.db.events.filter((e) => !e.deletedAt)
-  const { events } = await requireApi().get('/api/events')
-  mergeEvents(events)
-  return events
+  const out = []
+  for (let page = 0; ; page++) {
+    const d = await requireApi().get(`/api/public/events?page=${page}&size=50`)
+    out.push(...d.content)
+    if (page + 1 >= d.totalPages || d.content.length === 0) return out
+  }
+}
+
+/**
+ * 공개 이벤트 상세 — 게시된 HTML 을 통째로 받는다.
+ *
+ * publishedHtml 은 <html>·<head> 없는 **조각**이고 스타일시트 링크도 없다.
+ * `.ev-container` 부터 시작하며 테마는 그 컨테이너에 붙어 있다.
+ * serverFrame() 이 doctype · head · /assets/event.css 를 씌워 iframe 에 넣는다.
+ *
+ * @returns {Promise<{id:number,title:string,startDate:string,endDate:string,
+ *                    status:string,grade:string,url:string|null,
+ *                    publishedHtml:string|null,closingSoon:boolean}>}
+ */
+export async function loadEvent(eventId) {
+  return requireApi().get(`/api/public/events/${eventId}`)
 }
 
 /**
@@ -230,7 +262,7 @@ export async function purgeEvent(eventId) {
 
 export async function participate(eventId, payload) {
   if (!USE_SERVER) throw new Error('목업 모드에서는 user/actions.js 가 직접 만든다')
-  const p = await requireApi().post(`/api/events/${eventId}/participations`, payload)
+  const p = await requireApi().post(`/api/users/me/events/${eventId}/participations`, payload)
   state.db.participations.push({ ...p, userId: USER_ID })
   return p
 }
