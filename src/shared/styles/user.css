@@ -81,3 +81,14 @@ main{min-height:70vh;padding:30px 0 64px}
 .demo-grade-control select{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12px}
 .demo-grade-control small{font-size:10px;font-weight:500}
 @media(max-width:600px){.publish-checks ul{grid-template-columns:1fr}}
+
+/* 목록 응답에 썸네일 HTML 이 없을 때의 자리표시자 (2026-10-02) */
+.thumb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tint);
+  color: var(--pink);
+  aspect-ratio: 720 / 440;
+}
+.thumb-empty svg { width: 48px; height: 48px; opacity: 0.55; }

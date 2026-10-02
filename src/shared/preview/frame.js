@@ -63,6 +63,9 @@ function bindFrame(frame){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();},true);return;
  }
+ // 서버 모드 프레임에는 목업 이벤트가 없다. 참여 로직은 목업 전용이므로
+ // 못 찾으면 읽기 전용처럼 두고 빠진다.
+ if(!e){doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();},true);return;}
  const st=eventStatus(e),p=ui.logged?currentParticipation(e):null;
  if(st!=='live'||participationAccess(e).kind==='grade'){
   doc.querySelectorAll('button,input').forEach(b=>{b.disabled=true;b.title=participationAccess(e).message;});
@@ -152,8 +155,12 @@ function hydrate(root=document){
   if(html!==undefined)frame.srcdoc=html;
  });
  root.querySelectorAll('.thumb').forEach(el=>{
-  if(el.dataset.bound)return;el.dataset.bound='true';
-  const frame=el.querySelector('iframe');const scale=()=>{if(el.isConnected)frame.style.transform='scale('+(el.clientWidth/720)+')';};
+  if(el.dataset.bound)return;
+  // 썸네일 HTML 이 없으면 자리표시자(.thumb-empty)만 있고 iframe 이 없다.
+  const frame=el.querySelector('iframe');
+  if(!frame)return;
+  el.dataset.bound='true';
+  const scale=()=>{if(el.isConnected)frame.style.transform='scale('+(el.clientWidth/720)+')';};
   scale();const ro=new ResizeObserver(scale);ro.observe(el);state.observers.push(ro);
  });
  root.querySelectorAll('.event-frame').forEach(frame=>{frame.onload=()=>bindFrame(frame);bindFrame(frame);});
