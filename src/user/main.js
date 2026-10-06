@@ -3,7 +3,7 @@ import './styles.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
-import { loadEvent, loadEvents, useApi, USE_SERVER } from '@shared/repo.js'
+import { loadEvent, loadEvents, loadParticipations, useApi, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -125,11 +125,32 @@ function ensureEvent(id, rerender) {
 }
 
 
+/**
+ * 내 참여 목록 — 요약과 목록을 한 번에 받는다.
+ * 필터(전체/받은 혜택)가 바뀌면 서버에 다시 묻는다. 서버가 거르는 쪽이
+ * 요약 숫자와 어긋나지 않는다 — 페이지네이션이 있어 현재 페이지만으로는 셀 수 없다.
+ */
+function ensureMy(rerender) {
+  if (!USE_SERVER || !ui.logged) return
+  const want = ui.myFilter === 'rewards' ? 'REWARDS' : 'ALL'
+  if (ui.serverMyState === 'loading') return
+  if (ui.serverMyState === 'done' && ui.serverMyFilter === want) return
+  ui.serverMyFilter = want
+  ui.serverMyState = 'loading'
+  loadParticipations({ filter: want }).then(
+    (d) => { ui.serverMy = d; ui.serverMyState = 'done'; rerender() },
+    (err) => { ui.serverMyError = err?.message || '참여 내역을 불러오지 못했어요.'
+               ui.serverMyState = 'error'; rerender() },
+  )
+}
+
+
 function render(scroll = false) {
   state.observers.forEach((x) => x.disconnect())
   state.observers = []
   if (ui.route === 'home') ensureEvents(() => render())
   if (ui.route === 'event') ensureEvent(ui.activeId, () => render())
+  if (ui.route === 'my') ensureMy(() => render())
   header()
   $('#app').innerHTML = (VIEWS[ui.route] || homeView)()
   hydrate()
@@ -197,6 +218,11 @@ document.addEventListener('click', (ev) => {
     if (fn) fn()
     return
   }
+  if (a === 'reload-my') {
+    ui.serverMyState = null
+    render()
+    return
+  }
   if (a === 'reload-events') {
     ui.serverEventsState = null
     render()
@@ -240,6 +266,8 @@ document.addEventListener('click', (ev) => {
   }
   if (a === 'my-filter') {
     ui.myFilter = b.dataset.value
+    // 서버 모드는 필터를 서버가 건다. 상태를 비워 ensureMy 가 다시 묻게 한다.
+    if (USE_SERVER) ui.serverMyState = null
     render()
     return
   }

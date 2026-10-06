@@ -102,11 +102,76 @@ export async function loadAdminEvents({ deleted = false } = {}) {
   }
 }
 
-export async function loadParticipations() {
-  if (!USE_SERVER) return state.db.participations.filter((p) => p.userId === USER_ID)
-  const { participations } = await requireApi().get('/api/me/participations')
-  state.db.participations = participations.map((p) => ({ ...p, userId: USER_ID }))
-  return participations
+/**
+ * 내 참여 목록 — `GET /api/users/me/participations` (PR #128)
+ *
+ * ★ 경로에 `/users` 가 들어간다. 예전 `/api/me/participations` 는 없는 경로라
+ *   404 가 아니라 **401** 이 온다 (SecurityConfig 의 /api/** 규칙에 먼저 걸린다).
+ *
+ * ★ filter 는 대문자만 받는다. `?filter=all` 은 400 이다.
+ *
+ * 응답은 요약과 목록이 함께 온다.
+ *   data.summary        { totalParticipationCount, rewardCount, pendingCount }
+ *   data.participations { content[], page, size, totalElements, totalPages }
+ *
+ * 항목 필드는 화면이 쓰는 이름과 달라서 여기서 한 번만 바꿔준다.
+ *   participationId → id      eventTitle → title       participatedAt → at
+ *   resultStatus    → state   prizeName  → reward
+ *
+ * @param {{filter?:'ALL'|'REWARDS', page?:number, size?:number}} [opts]
+ * @returns {Promise<{summary:object, items:Array, page:number, totalPages:number, totalElements:number}>}
+ */
+export async function loadParticipations({ filter = 'ALL', page = 0, size = 20 } = {}) {
+  if (!USE_SERVER) {
+    const mine = state.db.participations.filter((p) => p.userId === USER_ID)
+    const items = filter === 'REWARDS' ? mine.filter((p) => p.reward) : mine
+    return {
+      summary: {
+        totalParticipationCount: mine.length,
+        rewardCount: mine.filter((p) => p.reward).length,
+        pendingCount: mine.filter((p) => p.state === 'pending').length,
+      },
+      items,
+      page: 0,
+      totalPages: 1,
+      totalElements: items.length,
+    }
+  }
+
+  const q = new URLSearchParams({ filter, page: String(page), size: String(size) })
+  const d = await requireApi().get(`/api/users/me/participations?${q}`)
+  const list = d.participations
+
+  return {
+    summary: d.summary,
+    items: list.content.map(toParticipation),
+    page: list.page,
+    totalPages: list.totalPages,
+    totalElements: list.totalElements,
+  }
+}
+
+/**
+ * 서버 참여 항목 → 화면이 쓰는 모양.
+ *
+ * resultStatus 는 WON · LOST · PENDING 셋뿐이고, prizeName 은 WON 일 때만 값이 있다.
+ * 화면은 "결과 대기 / 참여 완료" 두 가지로만 보여주므로 PENDING 만 갈라낸다.
+ */
+function toParticipation(p) {
+  const pending = p.resultStatus === 'PENDING'
+  return {
+    id: p.participationId,
+    eventId: p.eventId,
+    title: p.eventTitle,
+    at: p.participatedAt,
+    state: pending ? 'pending' : 'done',
+    resultStatus: p.resultStatus,
+    reward: p.prizeName ?? null,
+    // 서버는 당첨 여부만 준다. 화면의 "결과" 문구는 그걸로 만든다.
+    result: pending ? '결과를 기다리는 중이에요' : p.resultStatus === 'WON' ? '당첨되었어요' : '아쉽게 당첨되지 않았어요',
+    selection: null,
+    userId: USER_ID,
+  }
 }
 
 /* ────────────────────────── 변경 ────────────────────────── */
