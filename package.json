@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:admin": "cross-env APP=admin vite",
+    "dev:admin:mock": "cross-env APP=admin VITE_API_AUTH=off vite",
     "build": "npm run build:user && npm run build:admin",
     "build:user": "vite build",
     "build:admin": "cross-env APP=admin vite build",
