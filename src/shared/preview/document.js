@@ -139,6 +139,17 @@ const SANDBOX = 'allow-same-origin allow-scripts'
 function serverDocument(html){
  const doc=new DOMParser().parseFromString('<body>'+(html||'')+'</body>','text/html');
  doc.querySelectorAll('iframe').forEach(n=>n.remove());
+ // 조각에 .ev-container 가 없으면 감싸준다.
+ //   event.css 의 폭·여백·배경은 전부 .ev-container 기준이라, 없으면 본문이
+ //   맨몸으로 붙어 읽기 어렵다. 템플릿으로 만든 페이지는 컨테이너를 들고 오지만
+ //   LLM 을 안 거친 더미·초안은 <section> 조각만 오는 경우가 있다.
+ //   이미 있으면 건드리지 않는다 — 테마 class 가 거기 붙어 있다.
+ if(!doc.body.querySelector('.ev-container')){
+  const wrap=doc.createElement('div');
+  wrap.className='ev-container event-page';
+  while(doc.body.firstChild)wrap.appendChild(doc.body.firstChild);
+  doc.body.appendChild(wrap);
+ }
  doc.querySelectorAll('*').forEach(n=>{Array.from(n.attributes).forEach(a=>{if(a.name.startsWith('on'))n.removeAttribute(a.name);});});
  return '<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+EVENT_STYLE_LINKS+'<style>'+frameCss()+'</style></head>'+doc.body.outerHTML+'</html>';
 }
