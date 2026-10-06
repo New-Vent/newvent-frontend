@@ -18,6 +18,7 @@ import { state, ui } from './state.js'
 import { persist } from './persist.js'
 import { DEMO_DATE, USER_ID } from './constants.js'
 import { initialDatabase } from './mock/fixtures.js'
+import { mockLibraryPage, mockTemplatePreview } from './mock/library.js'
 
 /**
  * 서버를 쓸지 목업을 쓸지 — 인증과 같은 스위치(VITE_API_AUTH) 하나로 정한다.
@@ -25,7 +26,11 @@ import { initialDatabase } from './mock/fixtures.js'
  *   off  전부 목업
  *
  * ★ 화면 단위로 하나씩 붙이는 중이다. 아직 붙이지 않은 화면은 on 이어도 목업(state.db)으로 돈다.
- *   붙인 화면: 관리자 이벤트 목록(나의 이벤트 · 게시중 · 휴지통) · 삭제 · 복구 · 영구 삭제
+ *   붙인 화면: 관리자 이벤트 목록(나의 이벤트 · 게시중 · 휴지통) · 삭제 · 복구 · 영구 삭제,
+ *             편집 · 버전 이력, 사용자 공개 목록 · 상세 · 내 참여 목록, 템플릿 라이브러리
+ *
+ * ★ 템플릿 라이브러리는 예외다 — 목록 · 미리보기는 목업에도 있다(mock/library.js).
+ *   목업에 기본 제공 5종이 들어 있어 백엔드 없이도 화면을 볼 수 있다.
  */
 export const USE_SERVER = AUTH_ENABLED
 
@@ -323,6 +328,90 @@ export async function purgeEvent(eventId) {
     return
   }
   await requireApi().del(`/api/admin/events/${eventId}/permanent`)
+}
+
+/* ──────────────── 템플릿 라이브러리 (PR #133) ──────────────── */
+
+/**
+ * 템플릿 목록 → 서버 PageResponse 그대로.
+ *   { content:[{templateKey,name,description,builtin,active,thumbnailPath}], page, size, totalElements, totalPages }
+ *
+ * ★ 목록에는 HTML 본문이 없다 — 미리보기는 loadTemplatePreview 로 따로 받는다.
+ * ★ builtin 은 3값이다: null 전체 · true 기본 제공 · false 관리자 등록.
+ *   false 를 보내야 "내가 등록한 것만" 이다 — 생략하면 전체다.
+ * ★ 관리자 등록본은 **등록자만** 보인다. 남의 등록본은 404 (EVENT404-1).
+ *
+ * @param {{keyword?:string, builtin?:boolean|null, includeInactive?:boolean, page?:number, size?:number}} [opts]
+ */
+export async function loadTemplateLibrary({ keyword = '', builtin = null, includeInactive = false, page = 0, size = 12 } = {}) {
+  if (!USE_SERVER) return mockLibraryPage({ keyword, builtin, page, size })
+
+  const q = new URLSearchParams({ page: String(page), size: String(size) })
+  // 빈 keyword 를 보내면 서버가 빈 문자열로 검색한다 — 값이 있을 때만 붙인다.
+  if (keyword.trim()) q.set('keyword', keyword.trim())
+  if (builtin !== null) q.set('builtin', String(builtin))
+  if (includeInactive) q.set('includeInactive', 'true')
+  return requireApi().get(`/api/admin/template-library?${q}`)
+}
+
+/**
+ * 템플릿 미리보기 → { templateKey, html }
+ * ★ html 은 완성 문서가 아니라 `.ev-container` 조각이고 기간 · 참여 링크는 비어 있다.
+ *   관리자 DOM 에 바로 넣지 않는다 — serverFrame() 으로 iframe 에 격리해 띄운다.
+ */
+export async function loadTemplatePreview(code) {
+  if (!USE_SERVER) return mockTemplatePreview(code)
+  return requireApi().get(`/api/admin/template-library/${encodeURIComponent(code)}/preview`)
+}
+
+/**
+ * 저장된 버전을 템플릿으로 등록 → 201 + 템플릿 메타데이터.
+ *
+ * ★ 외부 HTML · 파일 업로드는 없다. **본인 이벤트의 저장된 버전 ID** 로만 등록한다.
+ * ★ 원본 HTML 을 복사해 보관하므로, 원본 이벤트를 고치거나 지워도 등록본은 남는다.
+ * ★ 기준 버전이 그 이벤트 것이 아니면 404, 남의 이벤트면 403.
+ *
+ * @param {{eventId:number, sourceVersionId:number, name:string, description?:string}} body
+ */
+export async function registerTemplate(body) {
+  if (!USE_SERVER) throw new Error('템플릿 등록은 서버 모드에서만 할 수 있어요.')
+  return requireApi().post('/api/admin/template-library', body)
+}
+
+/**
+ * 이름 · 설명만 변경 → 200 + 메타데이터. HTML 은 바뀌지 않는다.
+ * ★ description 을 생략하거나 null 로 보내면 설명이 비워진다.
+ * ★ 기본 제공 템플릿은 403 (EVENT403-0).
+ */
+export async function updateTemplate(code, { name, description }) {
+  if (!USE_SERVER) throw new Error('템플릿 수정은 서버 모드에서만 할 수 있어요.')
+  return requireApi().patch(`/api/admin/template-library/${encodeURIComponent(code)}`, { name, description })
+}
+
+/**
+ * 비활성화 — 물리 삭제가 아니다. 이미 쓰고 있는 이벤트는 그대로 둔다.
+ * ★ 비활성 템플릿은 새 이벤트에 고를 수 없다. 반복 호출도 성공한다.
+ * ★ 기본 제공 템플릿은 403 (EVENT403-0).
+ */
+export async function deactivateTemplate(code) {
+  if (!USE_SERVER) throw new Error('템플릿 비활성화는 서버 모드에서만 할 수 있어요.')
+  return requireApi().del(`/api/admin/template-library/${encodeURIComponent(code)}`)
+}
+
+/**
+ * 템플릿으로 새 이벤트 만들기 → 201 { eventId, versionId, versionNo }
+ *
+ * ★ 이벤트 생성과 첫 버전 저장이 **한 트랜잭션**이다. 그래서 생성 직후 편집 화면을
+ *   열면 이미 버전이 있다 — createEvent 처럼 generate 를 따로 부르지 않는다.
+ * ★ LLM 을 부르지 않는다. 게시도 하지 않는다 (DRAFT).
+ * ★ 이벤트명은 메타데이터일 뿐 HTML 제목 문구를 바꾸지 않는다 — 복사된 제목은
+ *   편집 화면에서 고친다.
+ *
+ * @param {{name:string, startAt:string, endAt:string, grade?:string}} body
+ */
+export async function useTemplate(code, body) {
+  if (!USE_SERVER) throw new Error('템플릿으로 이벤트 만들기는 서버 모드에서만 할 수 있어요.')
+  return requireApi().post(`/api/admin/template-library/${encodeURIComponent(code)}/events`, body)
 }
 
 export async function participate(eventId, payload) {

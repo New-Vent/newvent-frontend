@@ -24,7 +24,8 @@ import { requestFor, requestPending, updateEditor } from '@shared/editor-state.j
 import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
 import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
-import { ensureServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock } from './views/server-editor.js'
+import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock } from './views/server-editor.js'
+import { templatesView, ensureLibrary, resetLibrary, handleLibraryClick, handleLibrarySubmit, handleLibraryChange } from './views/templates.js'
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
@@ -44,11 +45,12 @@ export const api = createApi({ authBase: '/api/admin/auth' })
 // repo 가 이 클라이언트로 서버를 부른다 (목업 모드면 안 쓰인다).
 useApi(api)
 
-const VIEWS = { admin: adminView, editor: editorView, versions: versionsView, create: creationView, login: loginView }
+const VIEWS = { admin: adminView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, login: loginView }
 
 const ROUTES = [
   { path: '/', name: 'admin' },
   { path: '/login', name: 'login' },
+  { path: '/templates', name: 'templates' },
   { path: '/events/new', name: 'create' },
   { path: '/events/:id/edit', name: 'editor' },
   { path: '/events/:id/versions', name: 'versions' },
@@ -57,6 +59,7 @@ const ROUTES = [
 const PATH = {
   admin: () => '/',
   login: () => '/login',
+  templates: () => '/templates',
   create: () => '/events/new',
   editor: (id) => `/events/${id}/edit`,
   versions: (id) => `/events/${id}/versions`,
@@ -70,6 +73,8 @@ function header() {
     '<nav class="nav" aria-label="주 메뉴">' +
     button('route', '이벤트 관리', 'data-route="admin"',
       ['admin', 'editor', 'versions', 'create'].includes(ui.route) ? 'active' : '') +
+    button('route', '템플릿 라이브러리', 'data-route="templates"',
+      ui.route === 'templates' ? 'active' : '') +
     '</nav><div class="account">' +
     (ui.logged
       ? '<span class="avatar">' + icon('layers') + '</span><span class="name">운영자님</span>' +
@@ -87,6 +92,8 @@ function render(scroll = false) {
   }
   // 서버 모드 — 목록 화면에 처음 들어올 때 한 번 불러 오고, 다 오면 다시 그린다
   if (ui.route === 'admin') ensureAdminServer(() => render())
+  // 템플릿 라이브러리는 목업 모드에서도 목록이 있다 (mock/library.js)
+  if (ui.route === 'templates') ensureLibrary(() => render())
   // 서버 모드 편집 · 버전 이력 화면은 목업 화면 대신 서버 화면이다 (views/server-editor.js · server-versions.js)
   const serverView = USE_SERVER && { editor: serverEditorView, versions: serverVersionsView }[ui.route]
   if (serverView) ensureServerEditor(ui.activeId, () => render())
@@ -95,7 +102,9 @@ function render(scroll = false) {
   $('#app').innerHTML = (serverView || VIEWS[ui.route] || adminView)()
   hydrate()
   if (serverView) afterServerRender()
-  document.title = (ui.route === 'editor' ? '이벤트 제작 스튜디오' : '이벤트 관리') + ' | NewVent'
+  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리' }[ui.route]
+    ?? '이벤트 관리'
+  document.title += ' | NewVent'
   if (scroll) window.scrollTo(0, 0)
 }
 
@@ -115,6 +124,19 @@ function navigate(route, id) {
 // 이식한 뷰들이 @shared/navigate.js 를 통해 이걸 부른다.
 setNavigate(navigate)
 
+/**
+ * 템플릿으로 만든 이벤트의 편집 화면을 연다 (views/templates.js 가 부른다).
+ *
+ * 생성과 첫 버전 저장이 서버에서 같은 트랜잭션으로 끝나 있으므로, create.js 의
+ * serverCreate 와 달리 generate 를 따로 시작하지 않는다 — 작업 없이 바로 띄운다.
+ * 목록 캐시는 비워 둔다. 새 이벤트가 들어가 있어야 하기 때문이다.
+ */
+function openTemplateEvent(eventId) {
+  resetAdminServer()
+  openServerEditor(eventId)
+  navigate('editor', String(eventId))
+}
+
 document.addEventListener('click', (ev) => {
   const link = ev.target.closest('a[data-link]')
   if (link) {
@@ -133,6 +155,9 @@ document.addEventListener('click', (ev) => {
     logout()
     return
   }
+
+  // ── 템플릿 라이브러리 (PR #133) — 목업 · 서버 둘 다 쓴다 ────────
+  if(handleLibraryClick(a,b,()=>render()))return;
 
   // ── 서버 모드 편집 화면 ─────────────────────────────────────────
   if(USE_SERVER&&(handleServerClick(a,b,()=>render())||handleVersionsClick(a,b,()=>render())))return;
@@ -289,6 +314,7 @@ document.addEventListener('input',ev=>{
 });
 
 document.addEventListener('change',ev=>{
+ if(handleLibraryChange(ev,()=>render()))return;
  if(ev.target.id==='admin-from'||ev.target.id==='admin-to'){
   if(ev.target.id==='admin-from')ui.adminFrom=ev.target.value; else ui.adminTo=ev.target.value;
   ui.adminPage=1;render();return;
@@ -309,6 +335,8 @@ document.addEventListener('submit',ev=>{
   if(validateCreation()){ui.creation.step=2;render(true);}
   return;
  }
+ // 템플릿 검색 · 정보 수정 · 등록 · 이 템플릿으로 만들기
+ if(handleLibrarySubmit(ev,{rerender:()=>render(),openEditor:openTemplateEvent}))return;
  if(USE_SERVER&&handleServerSubmit(ev,()=>render()))return;
  if(ev.target.id==='chat-form'){ev.preventDefault();const p=ev.target.querySelector('textarea').value.trim();if(p&&!requestPending())handlePrompt(p);}
 });
@@ -347,6 +375,7 @@ document.addEventListener('input',editButton);
 async function logout() {
   if (AUTH_ENABLED) await api.logout()
   resetAdminServer()
+  resetLibrary()
   ui.logged = false
   navigate('login')
   toast('로그아웃했어요.')

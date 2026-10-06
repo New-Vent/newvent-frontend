@@ -225,3 +225,21 @@
 .server-version-row .version-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
 .server-version-row .version-actions .btn{width:auto}
 @media(max-width:620px){.version-row.server-version-row{grid-template-columns:40px minmax(0,1fr)}.server-version-row .version-actions{grid-column:2;justify-content:flex-start}}
+
+/* ── 템플릿 라이브러리 (views/templates.js) ── */
+.template-library-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.template-card{display:flex;flex-direction:column;gap:8px;padding:18px}
+.template-card.inactive{background:#fbfafc;border-style:dashed}
+.template-card.inactive .template-card-head h3{color:var(--muted)}
+.template-card-head{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.template-card-head h3{margin:0;font-size:14px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
+.template-card-desc{margin:0;font-size:12px;line-height:1.7;color:var(--muted);overflow-wrap:anywhere}
+.template-card-desc.no-desc{color:#b5aec0}
+/* 템플릿 키는 등록·사용 때 백엔드와 맞춰 보는 값이라 숨기지 않는다 */
+.template-card-key{display:block;margin-top:auto;font-size:10px;color:#b5aec0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
+.template-card-actions{flex-wrap:wrap;gap:6px;padding-top:10px;border-top:1px solid var(--line)}
+.template-card-actions .btn{width:auto}
+.template-inactive-toggle{display:inline-flex;align-items:center;gap:7px;margin:0 0 4px;font-size:11px;color:var(--muted);cursor:pointer}
+.template-inactive-toggle input{accent-color:var(--pink)}
+@media(max-width:900px){.template-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.template-library-grid{grid-template-columns:1fr}}
