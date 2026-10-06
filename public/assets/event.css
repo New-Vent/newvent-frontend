@@ -4120,6 +4120,44 @@ body {
   box-shadow: var(--ev-shadow-float);
 }
 
+/* ── 배경 — 색 지정 (v-surface-blue …) ──────────────────────────────
+ * 관리자가 "이 영역을 파란색으로" 처럼 색을 말했을 때 모델이 고른다. 생성에서는 안 쓴다.
+ * ★ 팔레트를 따르지 않는 고정 색이다 — 위 배경들은 브랜드색을 따라가서 영역 하나만 칠할 수 없었다.
+ * ★ 글자색을 직접 정한다 — 어두운 팔레트(night · esports)에서도 밝은 바탕 위 글자가 보이게.
+ * 짝: newvent-backend registry/Variant.java 의 SURFACE_BLUE … SURFACE_GRAY
+ */
+[data-block]:is(.v-surface-blue, .v-surface-green, .v-surface-yellow, .v-surface-orange,
+                .v-surface-red, .v-surface-purple, .v-surface-pink, .v-surface-gray):not(.ev-block) {
+  background: var(--sf-bg);
+  border: 1px solid var(--sf-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+  color: var(--sf-text);
+}
+[data-block]:is(.v-surface-blue, .v-surface-green, .v-surface-yellow, .v-surface-orange,
+                .v-surface-red, .v-surface-purple, .v-surface-pink, .v-surface-gray):not(.ev-block) :is(p, li, dt, dd) {
+  color: inherit;
+}
+[data-block]:is(.v-surface-blue, .v-surface-green, .v-surface-yellow, .v-surface-orange,
+                .v-surface-red, .v-surface-purple, .v-surface-pink, .v-surface-gray):not(.ev-block) h2 {
+  color: var(--sf-accent);
+}
+[data-block]:is(.v-surface-blue, .v-surface-green, .v-surface-yellow, .v-surface-orange,
+                .v-surface-red, .v-surface-purple, .v-surface-pink, .v-surface-gray):not(.ev-block) li {
+  background-color: rgba(255, 255, 255, 0.7);
+  border-color: var(--sf-border);
+}
+
+[data-block].v-surface-blue:not(.ev-block)   { --sf-bg: #eff6ff; --sf-border: #bfdbfe; --sf-text: #1e293b; --sf-accent: #1d4ed8; }
+[data-block].v-surface-green:not(.ev-block)  { --sf-bg: #f0fdf4; --sf-border: #bbf7d0; --sf-text: #1e293b; --sf-accent: #15803d; }
+[data-block].v-surface-yellow:not(.ev-block) { --sf-bg: #fefce8; --sf-border: #fde68a; --sf-text: #1e293b; --sf-accent: #a16207; }
+[data-block].v-surface-orange:not(.ev-block) { --sf-bg: #fff7ed; --sf-border: #fed7aa; --sf-text: #1e293b; --sf-accent: #c2410c; }
+[data-block].v-surface-red:not(.ev-block)    { --sf-bg: #fef2f2; --sf-border: #fecaca; --sf-text: #1e293b; --sf-accent: #b91c1c; }
+[data-block].v-surface-purple:not(.ev-block) { --sf-bg: #faf5ff; --sf-border: #e9d5ff; --sf-text: #1e293b; --sf-accent: #7e22ce; }
+[data-block].v-surface-pink:not(.ev-block)   { --sf-bg: #fdf2f8; --sf-border: #fbcfe8; --sf-text: #1e293b; --sf-accent: #be185d; }
+[data-block].v-surface-gray:not(.ev-block)   { --sf-bg: #f8fafc; --sf-border: #e2e8f0; --sf-text: #1e293b; --sf-accent: #334155; }
+
 /* ── 60-variants/90-responsive.css ── */
 @media (max-width: 560px) {
   [data-block="hero"].v-hero-poster:not(.ev-block) h1 { font-size: 2.1rem; }
