@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
-import { createReadStream, existsSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { extname, join, normalize } from 'node:path'
 import { buildEventCss, SRC_DIR as EVENT_CSS_SRC } from './scripts/build-event-css.mjs'
 
@@ -105,6 +105,30 @@ const proxy = {
   '^/e/': { target: API_TARGET, changeOrigin: true },
 }
 
+/**
+ * public/ 에서 그대로 복사된 것 중 배포에 필요 없는 것을 지운다.
+ * .gitkeep 은 빈 디렉터리를 git 에 남기려는 것이고, .DS_Store · ._* 는 macOS 찌꺼기다.
+ * vite 는 publicDir 를 통째로 복사하므로 여기서 걸러야 한다.
+ */
+function cleanPublicArtifacts(outDir) {
+  return {
+    name: 'newvent-clean-public',
+    apply: 'build',
+    closeBundle() {
+      const junk = /^(\.gitkeep|\.DS_Store|\._.*|README\.md)$/
+      const walk = (dir) => {
+        if (!existsSync(dir)) return
+        for (const e of readdirSync(dir, { withFileTypes: true })) {
+          const full = join(dir, e.name)
+          if (e.isDirectory()) walk(full)
+          else if (junk.test(e.name)) rmSync(full)
+        }
+      }
+      walk(outDir)
+    },
+  }
+}
+
 export default defineConfig(({ command }) => {
   const t = TARGETS[APP]
 
@@ -124,7 +148,14 @@ export default defineConfig(({ command }) => {
     //   운영에서는 nginx 가 /assets/ 를 서빙하므로 빌드 산출물에 없어도 된다.
     publicDir: command === 'serve' || APP === 'user' ? r('./public') : false,
 
-    plugins: [eventCss(), serveAssetsAtRoot(r('./public/assets'))],
+    // public/ 의 자리지기와 OS 찌꺼기는 배포에 섞이지 않게 한다.
+    // (public 은 그대로 복사되는 디렉터리라 vite 가 걸러주지 않는다)
+
+    plugins: [
+      eventCss(),
+      serveAssetsAtRoot(r('./public/assets')),
+      cleanPublicArtifacts(r(`./dist/${APP}`)),
+    ],
 
     resolve: {
       alias: { '@shared': r('./src/shared') },
@@ -139,7 +170,9 @@ export default defineConfig(({ command }) => {
       //   배포할 때마다 서로 덮어쓴다. (deploy/nginx/newvent.conf 참고)
       assetsDir: 'static',
 
-      sourcemap: true,
+      // 운영 번들에는 소스맵을 넣지 않는다 — 소스가 그대로 노출되고 용량이 두 배가 된다.
+      // 로컬에서 디버깅할 때만 켠다:  SOURCEMAP=1 npm run build
+      sourcemap: process.env.SOURCEMAP === '1',
     },
 
     server: {
