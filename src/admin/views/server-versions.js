@@ -4,6 +4,7 @@
  *   목록       GET    /api/admin/events/{id}/versions               (버전 저장한 것만)
  *   미리보기   GET    /api/admin/events/{id}/versions/{versionId}   (저장본 — 기간 자리는 비어 있다)
  *   저장 해제  DELETE /api/admin/events/{id}/versions/{versionId}/checkpoint
+ *   템플릿 등록 POST  /api/admin/template-library                   (views/templates.js 의 openRegister)
  *
  * ★ "이 버전에서 이어서 작업" — 백엔드에 되돌리기 API 가 아직 없어 버튼만 두고 막아 둔다.
  *   (우회하지 않는다. API 가 생기면 handleVersionsClick 의 server-version-restore 에 연결)
@@ -21,6 +22,7 @@ import { ask, modal } from '@shared/ui/modal.js'
 import { toast } from '@shared/ui/toast.js'
 
 import { loadingView, openPublish, running } from './server-editor.js'
+import { openRegister } from './templates.js'
 
 const SOON_RESTORE = 'disabled title="되돌리기 API 가 아직 없어 서버와 연동 전이에요"'
 
@@ -63,6 +65,7 @@ function serverVersionsView() {
           + button('server-version-publish', v.published ? '게시 중' : '이 버전 게시',
               'data-version="' + v.versionId + '" ' + ((v.published || busy || ended) ? 'disabled' : ''), 'btn sm ' + (v.published ? 'ghost' : 'soft'))
           + button('server-version-restore', '이 버전에서 이어서 작업', 'data-version="' + v.versionId + '" ' + SOON_RESTORE, 'btn sm')
+          + button('server-version-template', '템플릿으로 등록', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm soft')
           + button('server-version-unsave', '저장 해제', 'data-version="' + v.versionId + '" ' + ((v.published || busy) ? 'disabled title="게시 중인 버전은 해제할 수 없어요"' : ''), 'btn sm ghost')
           + '</div></div>'
       }).join('') + '</div>'
@@ -71,6 +74,7 @@ function serverVersionsView() {
     + '<div class="page-heading"><span class="eyebrow">VERSION HISTORY</span><h1>버전 이력</h1><p>' + esc(s.event.name) + '</p></div>'
     + current + rows
     + '<p class="review-note">생성 · 수정할 때마다 버전이 자동으로 만들어지지만, 이력에는 "버전 저장" 한 버전만 남아요. '
+    + '마음에 드는 버전은 <strong>템플릿으로 등록</strong>해 두면 다른 이벤트에서 다시 쓸 수 있어요. '
     + '이전 버전에서 이어서 작업하기는 서버 연동 전이에요.</p></div>'
 }
 
@@ -112,6 +116,12 @@ function handleVersionsClick(a, b, rerender) {
   const id = Number(b.dataset.version)
   switch (a) {
     case 'server-version-preview': previewSaved(id); return true
+    // 템플릿 라이브러리 등록 (PR #133) — 저장된 버전 ID 로만 등록한다
+    case 'server-version-template': {
+      const v = (s?.versions || []).find((x) => x.versionId === id)
+      if (v) openRegister({ eventId: s.id, versionId: id, versionNo: v.versionNo, eventName: s.event?.name })
+      return true
+    }
     case 'server-version-publish': openPublish(id); return true
     case 'server-version-save': if (s?.preview) toggleSaved(s.preview.versionId, true, rerender); return true
     case 'server-version-unsave':
