@@ -35,40 +35,52 @@
 
 /* ── ① 변수 ────────────────────────────────────────────────────── */
 
+/* ★★ 여기서 --ev-* 를 덮지 않는다.
+     전에는 이 자리에서 민트색 한 벌을 통째로 박아 뒀다. 그랬더니
+     "가을 단풍 축제" 요청에 palette-autumn 이 와도 **hero 와 배경이 민트**로 나왔다.
+     내용은 주황인데 상단만 민트인 화면을 보고 알았다.
+
+     계약은 "테마 = 구조, 팔레트 = 색" 이다. 테마가 색을 쥐면 그 계약이 깨지고
+     테마×팔레트 조합이 전부 말이 안 되는 화면이 된다. 그래서 bloom 은
+     **모양만** 쥔다 — 구름, 외곽선 타이포, 알약 소제목, 두툼한 그림자.
+     색은 하나도 빠짐없이 팔레트에서 받는다.
+
+   ★ 이 테마 안에서만 쓰는 값도 팔레트에서 파생시킨다. */
 .theme-bloom {
-  --ev-primary:        #34c77b;
-  --ev-primary-hover:  #22a862;
-  --ev-primary-light:  #e3f8ec;
-  --ev-primary-glow:   rgba(52, 199, 123, 0.35);
-
-  --ev-gradient-hero:  linear-gradient(180deg, #d9f3e4 0%, #eaf9ef 55%, #fdfcf3 100%);
-  --ev-gradient-cta:   linear-gradient(135deg, #34c77b 0%, #7ad97f 100%);
-  --ev-accent-tag:     #ff8fb1;
-
-  --ev-bg:             #eef9f1;
-  --ev-surface:        #fffdf6;
-  --ev-surface-subtle: #f3fbf5;
-  --ev-border:         #cdeedb;
-
-  --ev-text-main:      #22402f;
-  --ev-text-muted:     #5d7a69;
-  --ev-text-light:     #92aa9d;
-
-  --bloom-sky:         #5bc0eb;
-  --bloom-pink:        #ff7fa8;
-  --bloom-cream:       #fffdf6;
-  --bloom-shadow:      0 10px 0 rgba(34, 64, 47, 0.06), 0 18px 40px rgba(34, 64, 47, 0.09);
+  --bloom-sky:    var(--ev-primary);
+  --bloom-pink:   var(--ev-accent-tag, var(--ev-primary));
+  --bloom-cream:  var(--ev-surface);
+  --bloom-shadow: 0 10px 0 color-mix(in srgb, var(--ev-text-main) 7%, transparent),
+                  0 18px 40px color-mix(in srgb, var(--ev-text-main) 11%, transparent);
+  /* 구름 · 외곽선에 쓰는 "종이색" — 표면색을 그대로 쓴다 */
+  --bloom-paper:  var(--ev-surface);
 }
 
 /* ── ② 페이지 배경 — 구름이 떠 있는 하늘 ──────────────────────── */
 
+/* ★★ 팔레트 변수는 90-palettes 에서 body:has(.palette-*) 로도 선언된다.
+     그래서 여기서 var(--ev-bg) 를 읽으면 **요청문에 맞는 색**이 나온다.
+     (전에는 팔레트가 .ev-container 에만 붙어 body 가 :root 기본값을 읽었고,
+      어떤 요청이든 같은 색이 깔렸다 — "가을 요청에 민트 배경" 의 원인.)
+   ★ 컨테이너의 ::before 로 깔면 안 된다 — 이 테마는 ::before·::after 를
+     구름에 쓰고 있어서 서로 덮는다. 실제로 배경이 사라졌다. */
 body:has(.theme-bloom) {
-  background-color: #eef9f1;
+  background-color: var(--ev-bg);
+  /* ★★ 하늘은 --ev-primary 를 **섞어서** 만든다. --ev-bg 와 --ev-surface 만 쓰면
+       밝은 팔레트에서 둘 다 거의 흰색이라(autumn: #fffaf3 vs #fffdf9)
+       구름이 배경에 묻혀 사라진다 — 실제로 "구름이 어디 갔냐" 는 말을 들었다.
+       하늘에 색을 섞어 두면 구름(= --ev-surface, 밝은 팔레트에선 거의 흰색,
+       어두운 팔레트에선 어두운 카드색)이 또렷하게 떠오른다. */
   background-image:
-    radial-gradient(42% 30% at 12% 10%, rgba(255, 255, 255, 0.95), transparent 70%),
-    radial-gradient(34% 26% at 88% 24%, rgba(255, 255, 255, 0.85), transparent 70%),
-    radial-gradient(50% 34% at 50% 100%, rgba(122, 217, 127, 0.45), transparent 70%),
-    linear-gradient(180deg, #cdeff0 0%, #e4f7e9 42%, #f6fbe9 100%);
+    radial-gradient(44% 26% at 14% 9%,  var(--ev-surface) 0, transparent 68%),
+    radial-gradient(30% 18% at 30% 15%, var(--ev-surface) 0, transparent 68%),
+    radial-gradient(36% 22% at 86% 22%, var(--ev-surface) 0, transparent 68%),
+    radial-gradient(26% 16% at 70% 30%, var(--ev-surface) 0, transparent 68%),
+    radial-gradient(60% 34% at 50% 102%, var(--ev-primary-glow), transparent 70%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--ev-primary) 24%, var(--ev-bg)) 0%,
+      color-mix(in srgb, var(--ev-primary) 10%, var(--ev-bg)) 46%,
+      var(--ev-bg) 100%);
   background-attachment: fixed;
 }
 
@@ -91,14 +103,16 @@ body:has(.theme-bloom) {
 .theme-bloom .ev-container::before {
   content: "";
   position: absolute;
-  top: 120px;
-  left: -46px;
+  /* ★ 미리보기 iframe 은 컨테이너 폭에 맞춰 잘리므로 음수 좌표는 안 보인다.
+     안쪽으로 당겨서 카드 사이 여백에 걸치게 둔다 */
+  top: 104px;
+  left: -12px;
   width: 190px;
   height: 92px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 74px -30px 0 -12px rgba(255, 255, 255, 0.9),
-              150px -4px 0 -24px rgba(255, 255, 255, 0.85);
+  background: color-mix(in srgb, var(--bloom-paper) 92%, transparent);
+  box-shadow: 74px -30px 0 -12px color-mix(in srgb, var(--bloom-paper) 90%, transparent),
+              150px -4px 0 -24px color-mix(in srgb, var(--bloom-paper) 85%, transparent);
   pointer-events: none;
   z-index: 0;
 }
@@ -108,27 +122,46 @@ body:has(.theme-bloom) {
   content: "";
   position: absolute;
   top: 300px;
-  right: -40px;
+  right: -10px;
   width: 150px;
   height: 74px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: -60px 26px 0 -14px rgba(255, 255, 255, 0.75);
+  background: color-mix(in srgb, var(--bloom-paper) 80%, transparent);
+  box-shadow: -60px 26px 0 -14px color-mix(in srgb, var(--bloom-paper) 75%, transparent);
   pointer-events: none;
   z-index: 0;
 }
 
 /* ── ③ 섹션 — 크림색 둥근 카드가 겹겹이 ───────────────────────── */
 
+/* ★ 잉크를 고정하지 않는다. 표면을 var(--ev-surface) 로 받으므로
+     팔레트가 어두워지면 표면과 글자가 **같이** 어두워진다 — 짝이 맞는다.
+     (전에는 크림색을 박아 두고 잉크만 팔레트에서 받아 palette-night 에서
+      소제목이 사라졌다. 표면을 팔레트에 돌려주면서 그 고정도 뺀다.) */
+
+/* ★ 카드를 **반투명**으로 둔다. 불투명한 흰 사각형을 색 있는 하늘 위에 얹으면
+     카드와 배경이 따로 놀아 "오려 붙인 것" 처럼 보인다 — 실제로 그런 지적을 받았다.
+     표면색을 86%만 쓰고 뒤를 흐리면 하늘색이 은은하게 배어 한 덩어리가 된다.
+     어두운 팔레트에서는 --ev-surface 가 어두우므로 그대로 어두운 유리가 된다. */
 .theme-bloom [data-block]:not(.ev-block) {
   position: relative;
   z-index: 1;
   margin: 0 18px 18px;
   padding: 32px 26px;
-  background: var(--bloom-cream);
-  border: 0;
+  background: color-mix(in srgb, var(--bloom-cream) 86%, transparent);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  border: 1px solid color-mix(in srgb, var(--bloom-paper) 65%, transparent);
   border-radius: 26px;
   box-shadow: var(--bloom-shadow);
+}
+
+/* ★ 카드마다 같은 흰 사각형이라 단조롭다는 지적 — 한 칸 걸러 하늘색을 한 겹 더 섞어
+     리듬을 만든다. 색이 아니라 **농도**로 나누는 것이라 어떤 팔레트에서도 안 튄다. */
+.theme-bloom [data-block]:not(.ev-block):nth-of-type(even) {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ev-primary) 7%, transparent) 0, transparent 120px),
+    color-mix(in srgb, var(--bloom-cream) 86%, transparent);
 }
 
 /* ── ④ hero — 테두리 글자 + 떠 있는 장식 ──────────────────────── */
@@ -149,10 +182,23 @@ body:has(.theme-bloom) {
   font-weight: 900;
   letter-spacing: -0.02em;
   color: var(--bloom-sky);
-  -webkit-text-stroke: 9px #fff;
+  -webkit-text-stroke: 9px var(--bloom-paper);
   paint-order: stroke fill;
-  text-shadow: 0 8px 0 rgba(91, 192, 235, 0.16), 0 16px 26px rgba(34, 64, 47, 0.14);
+  text-shadow: 0 8px 0 var(--ev-primary-glow), 0 16px 26px color-mix(in srgb, var(--ev-text-main) 14%, transparent);
   margin: 10px 0 14px;
+}
+
+/* ★★ 한국어 줄바꿈 — 제목 전체에 한 번만 건다.
+     기본값(word-break: normal)은 한국어를 **글자 단위**로 끊는다. 제목 칸을
+     좁히는 변형과 만나면 단어 중간이 갈라진다 — 실측한 것들:
+       v-hero-split(제목 칸 1.3fr)   "가을 한가위 송편 쿠폰 이 / 벤트"
+       v-intro-sidebar(제목 칸 140px) "요금제 개편 안 / 내"
+     keep-all 은 띄어쓰기에서만 끊으므로 "… 쿠폰 / 이벤트" 가 된다.
+   ★ 변형은 font-size·칸 폭만 정하고 word-break 은 안 건드리므로 이 값이 살아남는다.
+   ★ overflow-wrap: anywhere 는 안전망 — 한 단어가 칸보다 길 때만 글자 단위로 돌아간다. */
+.theme-bloom [data-block]:not(.ev-block) :is(h1, h2, h3, .title, .benefit-name, .step-title) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 /* ★ 반짝이 — 제목 옆에 하나 */
@@ -163,21 +209,37 @@ body:has(.theme-bloom) {
   right: 34px;
   font-size: 1.5rem;
   color: var(--bloom-pink);
-  text-shadow: 0 0 14px rgba(255, 127, 168, 0.6);
+  text-shadow: 0 0 14px var(--ev-primary-glow);
 }
 
-.theme-bloom [data-block="hero"]:not(.ev-block) p {
-  color: #4a6b58;
+/* ★★ hero 는 **배경과 글자색을 테마가 함께 쥔다.**
+     bloom 의 얼굴이 "밝은 하늘 위 외곽선 제목" 이라 배경이 바뀌면 테마가 무너진다.
+     그런데 변형(v-hero-*)은 0,3,0 동점 + 뒤 파일이라 배경만 가져가고,
+     글자색은 base 의 color:#fff 가 남는다 → 어두운 변형 위에 어두운 글자,
+     밝은 변형 위에 흰 글자가 되어 설명문이 사라진다(palette-summer 에서 실측).
+     그래서 선택자를 .theme-bloom.theme-bloom 으로 한 단계(0,4,0) 올려
+     **배경과 글자색을 짝지어** 쥔다. 변형은 정렬 · 여백 · 크기를 그대로 가져간다. */
+.theme-bloom.theme-bloom [data-block="hero"]:not(.ev-block) {
+  background: transparent;
+  box-shadow: none;
+  /* ★ 카드 테두리도 같이 끈다. 안 끄면 hero 만 빈 네모가 그려진다 */
+  border: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.theme-bloom.theme-bloom [data-block="hero"]:not(.ev-block) p {
+  color: var(--ev-text-muted);
   font-size: 1rem;
   font-weight: 600;
 }
 
-.theme-bloom [data-block="hero"]:not(.ev-block) [data-slot="period"] {
+.theme-bloom.theme-bloom [data-block="hero"]:not(.ev-block) [data-slot="period"] {
   display: inline-block;
   margin-top: 12px;
   padding: 8px 18px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--bloom-paper);
   border: 2px solid var(--ev-border);
   font-size: 0.86rem;
   font-weight: 700;
@@ -189,12 +251,12 @@ body:has(.theme-bloom) {
   padding: 9px 22px;
   border-radius: 999px;
   /* ★ #ff7fa8 에 흰 글자는 대비 2.3:1 로 모자랐다. 바탕을 한 단계 진하게 */
-  background: #ef5a90;
-  border: 3px solid #fff;
+  background: var(--bloom-pink);
+  border: 3px solid var(--bloom-paper);
   color: #fff;
   font-weight: 800;
   font-size: 0.84rem;
-  box-shadow: 0 6px 0 rgba(239, 90, 144, 0.26);
+  box-shadow: 0 6px 0 var(--ev-primary-glow);
 }
 
 /* ── ⑤ 소제목 — 섹션 위에 걸터앉은 알약 ───────────────────────── */
@@ -220,7 +282,7 @@ body:has(.theme-bloom) {
   padding: 11px 32px 13px;
   border-radius: 18px;
   background: var(--ev-gradient-cta);
-  box-shadow: 0 7px 0 rgba(34, 168, 98, 0.26);
+  box-shadow: 0 7px 0 var(--ev-primary-glow);
 }
 
 .theme-bloom .block-header .title {
@@ -253,36 +315,42 @@ body:has(.theme-bloom) {
 
 /* ── ⑥ 항목 — 번호 + 오른쪽 아이콘 ────────────────────────────── */
 
+/* ★★ 변형이 걸리면 테마는 번호를 그리지 않는다.
+     변형(.v-steps-*)은 0,3,0 동점 + 뒤 파일이라 테마의 padding-left 를 덮는다.
+     그런데 테마가 ::before 로 그린 번호는 absolute 라 그대로 남는다 →
+     왼쪽 자리가 사라진 채 동그라미만 글자 위에 겹친다.
+     실측 화면에서 "다운로드" 가 "운로드", "전 신청" 이 "신청" 으로 보였다.
+     :not([class*="v-steps-"]) 로 변형이 없을 때만 그리게 한다. */
 .theme-bloom [data-block="benefits"]:not(.ev-block) ul,
-.theme-bloom [data-block="steps"]:not(.ev-block) ol {
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) ol {
   list-style: none;
   display: grid;
   gap: 0;
 }
 
-.theme-bloom [data-block="steps"]:not(.ev-block) ol { counter-reset: bloom-step; }
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) ol { counter-reset: bloom-step; }
 
 .theme-bloom [data-block="benefits"]:not(.ev-block) li,
-.theme-bloom [data-block="steps"]:not(.ev-block) li {
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li {
   position: relative;
   background: transparent;
   border: 0;
   border-radius: 0;
   box-shadow: none;
   padding: 17px 54px 17px 0;
-  border-bottom: 2px dotted #dceee4;
+  border-bottom: 2px dotted var(--ev-border);
 }
 
 .theme-bloom [data-block="benefits"]:not(.ev-block) li:last-child,
-.theme-bloom [data-block="steps"]:not(.ev-block) li:last-child { border-bottom: 0; }
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li:last-child { border-bottom: 0; }
 
 /* 번호 동그라미 */
-.theme-bloom [data-block="steps"]:not(.ev-block) li {
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li {
   counter-increment: bloom-step;
   padding-left: 50px;
 }
 
-.theme-bloom [data-block="steps"]:not(.ev-block) li::before {
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li::before {
   content: counter(bloom-step);
   position: absolute;
   left: 0;
@@ -296,12 +364,12 @@ body:has(.theme-bloom) {
   color: #fff;
   font-weight: 900;
   font-size: 0.9rem;
-  box-shadow: 0 4px 0 rgba(34, 168, 98, 0.3);
+  box-shadow: 0 4px 0 var(--ev-primary-glow);
 }
 
 /* ★ 오른쪽 아이콘 — 참고 디자인의 그 자리. 단계마다 다른 기호를 돌려 쓴다.
      HTML 에 아이콘 자리가 없어도 가상요소로 넣을 수 있다. */
-.theme-bloom [data-block="steps"]:not(.ev-block) li::after {
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li::after {
   position: absolute;
   right: 4px;
   top: 50%;
@@ -312,15 +380,22 @@ body:has(.theme-bloom) {
   display: grid;
   place-items: center;
   font-size: 0.95rem;
-  background: #fff5f8;
+  background: var(--ev-primary-light);
   color: var(--bloom-pink);
-  border: 2px solid #ffe0ea;
+  border: 2px solid var(--ev-border);
 }
 
-.theme-bloom [data-block="steps"]:not(.ev-block) li:nth-child(3n+1)::after { content: "♥"; }
-.theme-bloom [data-block="steps"]:not(.ev-block) li:nth-child(3n+2)::after { content: "◷"; background: #fff8e8; color: #e9a33b; border-color: #ffeccc; }
-.theme-bloom [data-block="steps"]:not(.ev-block) li:nth-child(3n)::after   { content: "✓"; background: #eafaf0; color: var(--ev-primary); border-color: #c9eeda; }
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li:nth-child(3n+1)::after { content: "♥"; }
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li:nth-child(3n+2)::after { content: "◷"; background: #fff8e8; color: #e9a33b; border-color: #ffeccc; }
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li:nth-child(3n)::after   { content: "✓"; background: #eafaf0; color: var(--ev-primary); border-color: #c9eeda; }
 
+/* ★★ 여기부터 --bloom-pink(= 팔레트 2차색)를 더 쓴다.
+     팔레트는 색을 두 가지 주는데(spring = 분홍 + 올리브, summer = 파랑 + 호박색)
+     이 테마는 ✦ 한 개와 배지 한 개에만 썼다. 나머지가 전부 primary 라
+     어떤 팔레트를 골라도 화면이 한 가지 색으로 보였다 — 지적받은 그대로다.
+   ★ 글자색으로는 안 쓴다. 2차색은 팔레트마다 밝기가 제각각이라
+     흰 글자를 올리면 어딘가에서 대비가 무너진다(호박색 = 2.15:1).
+     받침 · 테두리 · 틴트에만 쓴다. */
 .theme-bloom .benefit-icon {
   width: 44px;
   height: 44px;
@@ -328,7 +403,8 @@ body:has(.theme-bloom) {
   display: grid;
   place-items: center;
   font-size: 1.35rem;
-  background: var(--ev-primary-light);
+  background: color-mix(in srgb, var(--bloom-pink) 16%, var(--ev-surface));
+  border: 2px solid color-mix(in srgb, var(--bloom-pink) 34%, transparent);
   margin-bottom: 11px;
 }
 
@@ -383,7 +459,11 @@ body:has(.theme-bloom) {
   padding: 18px 10px;
   border: 0;
   border-radius: 20px;
+  /* ★★ 2차색을 **배경에 깔았다가 되돌렸다.** 13% 틴트만으로도 숫자(primary-hover)
+       대비가 2.39:1 까지 떨어졌다(winter 실측, 큰 글자 기준 3:1 미달).
+       머리말 그대로다 — 2차색은 글자 뒤에 깔지 않는다. 테두리로 옮긴다. */
   background: var(--ev-surface-subtle);
+  border: 2px solid color-mix(in srgb, var(--bloom-pink) 42%, transparent);
   color: var(--ev-text-muted);
   font-size: 0.86rem;
   font-weight: 600;
@@ -448,7 +528,7 @@ body:has(.theme-bloom) {
 /* ── ⑨ prize · coupon — 눈에 띄는 둘 ─────────────────────────── */
 
 .theme-bloom [data-block="prize"]:not(.ev-block) {
-  background: linear-gradient(135deg, #fff6e5 0%, #ffeef4 100%);
+  background: linear-gradient(135deg, var(--ev-primary-light) 0%, var(--ev-surface-subtle) 100%);
 }
 
 .theme-bloom [data-block="prize"]:not(.ev-block) ul { list-style: none; display: grid; gap: 10px; }
@@ -456,19 +536,22 @@ body:has(.theme-bloom) {
 .theme-bloom [data-block="prize"]:not(.ev-block) li {
   padding: 15px 16px 15px 52px;
   border-radius: 16px;
-  background: #fff;
-  border: 2px solid #ffe3c9;
+  background: var(--bloom-paper);
+  border: 2px solid var(--ev-border);
   font-weight: 700;
   color: var(--ev-text-main);
 }
 
-.theme-bloom [data-block="prize"]:not(.ev-block) li strong { color: #e9821b; margin-right: 8px; }
+/* ★ primary-hover — primary 는 밝은 종이색 위에서 4.10:1 이었다(summer 실측) */
+.theme-bloom [data-block="prize"]:not(.ev-block) li strong { color: var(--ev-primary-hover, var(--ev-primary)); margin-right: 8px; }
 
 .theme-bloom [data-block="coupon"]:not(.ev-block) {
   -webkit-mask: none;
           mask: none;
-  background: linear-gradient(135deg, #e9f9f0 0%, #f6fbe9 100%);
-  border: 3px dashed #a8e3c3;
+  background: linear-gradient(135deg, var(--ev-primary-light) 0%, var(--ev-surface-subtle) 100%);
+  /* ★ 쿠폰 점선 테두리를 2차색으로. 쿠폰은 페이지에서 제일 눈에 띄어야 하는데
+       primary 점선이면 배경에 묻힌다 */
+  border: 3px dashed color-mix(in srgb, var(--bloom-pink) 52%, transparent);
   color: var(--ev-text-main);
 }
 
@@ -528,11 +611,11 @@ body:has(.theme-bloom) {
   line-height: 1.7;
   margin: 7px 0 0;
   padding: 0 0 14px 26px;
-  border-bottom: 2px dotted #dceee4;
+  border-bottom: 2px dotted var(--ev-border);
 }
 
 .theme-bloom [data-block="notices"]:not(.ev-block) {
-  background: #f4f7f3;
+  background: var(--ev-surface-subtle);
   box-shadow: none;
 }
 
@@ -559,6 +642,9 @@ body:has(.theme-bloom) {
 .theme-bloom [data-block="cta"]:not(.ev-block) {
   background: transparent;
   box-shadow: none;
+  border: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   text-align: center;
   padding: 10px 26px 58px;
   overflow: visible;
@@ -570,21 +656,21 @@ body:has(.theme-bloom) {
   display: inline-block;
   padding: 19px 58px;
   border-radius: 999px;
-  border: 4px solid #fff;
+  border: 4px solid var(--bloom-paper);
   background: var(--ev-gradient-cta);
   color: #fff;
   font-size: 1.08rem;
   font-weight: 900;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 9px 0 rgba(34, 168, 98, 0.32), 0 18px 34px rgba(34, 64, 47, 0.16);
+  box-shadow: 0 9px 0 var(--ev-primary-glow), 0 18px 34px color-mix(in srgb, var(--ev-text-main) 16%, transparent);
   transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .theme-bloom [data-block="cta"]:not(.ev-block) .btn:hover,
 .theme-bloom [data-block="cta"]:not(.ev-block) .cta-btn:hover {
   transform: translateY(3px);
-  box-shadow: 0 5px 0 rgba(34, 168, 98, 0.32), 0 12px 24px rgba(34, 64, 47, 0.16);
+  box-shadow: 0 5px 0 var(--ev-primary-glow), 0 12px 24px color-mix(in srgb, var(--ev-text-main) 16%, transparent);
 }
 
 /* ★ 버튼 옆 떠 있는 배지 — 참고 디자인의 "참여 인증 완료!" 자리 */
@@ -598,19 +684,44 @@ body:has(.theme-bloom) {
   padding: 7px 16px;
   border-radius: 999px;
   background: var(--bloom-pink);
-  border: 3px solid #fff;
+  border: 3px solid var(--bloom-paper);
   color: #fff;
   font-size: 0.76rem;
   font-weight: 800;
-  box-shadow: 0 5px 14px rgba(255, 127, 168, 0.4);
+  box-shadow: 0 5px 14px var(--ev-primary-glow);
   white-space: nowrap;
 }
 
 /* ── ⑫ 문구 꾸밈 ─────────────────────────────────────────────── */
 
 .theme-bloom .t-accent    { color: var(--ev-primary-hover); }
-.theme-bloom .t-highlight { background: linear-gradient(transparent 62%, #ffe3ec 0); }
-.theme-bloom .t-big       { color: #e9821b; }
+.theme-bloom .t-highlight { background: linear-gradient(transparent 62%, var(--ev-primary-light) 0); }
+.theme-bloom .t-big       { color: var(--ev-primary); }
+
+/* ── 띠 배너 ──────────────────────────────────────────────────── */
+
+/* ★ base(50-blocks/01-llm-blocks)가 color:#fff 를 **리터럴로** 박아 둔다.
+     bloom 이 배경만 크림으로 덮으면 흰 글자가 크림 위에 앉아 안 보인다 — 실측 1.02:1.
+     배너는 원래 튀어야 하는 자리이므로 배경을 돌려주고 흰 글자를 유지한다.
+
+   ★ 이 규칙은 위의 일반 블록 규칙(.theme-bloom [data-block]:not(.ev-block))과
+     특이도가 0,3,0 으로 **같다.** 그래서 반드시 **뒤에** 와야 이긴다 —
+     앞에 뒀다가 배너가 그대로 크림으로 남는 걸 렌더해서 봤다. */
+/* ★★ 클래스를 두 번 써서 0,4,0 으로 올린다.
+     0,3,0 으로 두면 v-highlight-* 변형(0,3,0 + 뒤 파일)이 **배경만** 가져가고
+     base 의 color:#fff 가 남아 밝은 배너에 흰 글자가 앉는다 — 실제 화면에서
+     "추첨을 통해 최대 5만원…" 줄이 통째로 안 보였다.
+     배너는 배경과 글자색이 한 짝이라 둘 다 테마가 쥐어야 한다. */
+.theme-bloom.theme-bloom [data-block="highlight"]:not(.ev-block) {
+  background: var(--ev-gradient-cta);
+  border: 0;
+  box-shadow: 0 8px 0 var(--ev-primary-glow);
+}
+
+.theme-bloom.theme-bloom [data-block="highlight"]:not(.ev-block),
+.theme-bloom.theme-bloom [data-block="highlight"]:not(.ev-block) :is(p, strong, span) {
+  color: #fff;
+}
 
 /* ── ⑬ 좁은 화면 ─────────────────────────────────────────────── */
 
@@ -623,7 +734,7 @@ body:has(.theme-bloom) {
   .theme-bloom [data-block]:not(.ev-block) { margin: 0 12px 14px; padding: 26px 18px; }
   .theme-bloom [data-block="hero"]:not(.ev-block) h1 { -webkit-text-stroke-width: 6px; }
   .theme-bloom [data-block="schedule"]:not(.ev-block) li strong { flex-basis: 96px; font-size: 0.78rem; }
-  .theme-bloom [data-block="steps"]:not(.ev-block) li { padding-right: 46px; }
+  .theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li { padding-right: 46px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
