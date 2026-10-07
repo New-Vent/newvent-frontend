@@ -91,6 +91,18 @@ API 는 양쪽 다 `/api` **상대경로**다. 환경별 분기가 없다.
 
 회귀 테스트: `node --experimental-vm-modules --test tests/version-restore.test.mjs`
 
+#### 템플릿 라이브러리 서버 연동
+
+`VITE_API_AUTH=on`에서 기본 제공·내 등록 템플릿 목록, 검색·페이지 이동,
+미리보기, 저장된 버전 등록, 이름·설명 수정, 템플릿으로 새 이벤트 생성,
+비활성화를 서버 API로 처리한다. 외부 HTML 업로드는 받지 않는다.
+비활성 템플릿은 새 이벤트에 사용할 수 없으며 기존 이벤트는 유지된다.
+
+필터를 연속 변경하면 마지막 요청의 응답만 반영한다. 등록·수정·이벤트 생성
+폼은 처리 중 중복 제출을 막고 실패하면 다시 제출할 수 있다.
+
+회귀 테스트: `node --experimental-vm-modules --test tests/template-library.test.mjs`
+
 #### 관리 목록은 탭마다 열도 버튼도 다르다
 
 | 탭 | 열 | 버튼 |
