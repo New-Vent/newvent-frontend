@@ -100,8 +100,11 @@ async function load(s, rerender) {
 }
 
 /** 새 버전이 생긴 뒤 — 미리보기와 저장한 버전 목록을 다시 읽는다. 고치던 직접 수정 값은 버린다 */
-async function refreshPage(s) {
-  const [preview, versions] = await Promise.all([loadPreview(s.id), loadVersions(s.id).catch(() => null)])
+async function refreshPage(s, { strictVersions = false } = {}) {
+  const versionsRequest = loadVersions(s.id)
+  const [preview, versions] = await Promise.all([
+    loadPreview(s.id), strictVersions ? versionsRequest : versionsRequest.catch(() => null),
+  ])
   s.preview = preview
   if (versions) s.versions = versions.versions
   s.direct = freshDirect()

@@ -265,6 +265,11 @@ export async function loadVersion(eventId, versionId) {
   return requireApi().get(`/api/admin/events/${eventId}/versions/${versionId}`)
 }
 
+/** 이전 버전의 내용으로 새 최신 버전 생성. 요청 본문은 없다. */
+export async function restoreVersion(eventId, versionId) {
+  return requireApi().post(`/api/admin/events/${eventId}/versions/${versionId}/restore`)
+}
+
 /** 버전 저장 — 그 버전을 이력에 남긴다 */
 export async function saveCheckpoint(eventId, versionId) {
   return requireApi().put(`/api/admin/events/${eventId}/versions/${versionId}/checkpoint`)
