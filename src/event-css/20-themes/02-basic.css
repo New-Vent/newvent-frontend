@@ -91,8 +91,22 @@ body:has(.theme-basic) {
   padding: 78px 36px 66px;
   /* ★ 컨테이너에 overflow:hidden 을 쓰지 않으므로 여기서 윗모서리를 둥글린다 */
   border-radius: 25px 25px 0 0;
-  /* ★ base 그라데이션 위에 아래쪽만 살짝 눌러 깊이를 준다.
-       background 를 덮지 않으므로 팔레트별 그라데이션은 그대로다 */
+}
+
+/* ★★ 아래쪽을 눌러 깊이를 주는 **검은 inset 그림자**는 hero 배경이 어두울 때만 맞다.
+     hero 변형 10개의 배경 밝기를 실제 픽셀로 재 보니 **세 개가 밝다** —
+       v-hero-minimal       밝기 0.48
+       v-hero-gradient-text 밝기 0.48
+       v-hero-outline       밝기 1.00
+     거기에 45% 검정을 깔면 아래쪽이 잿빛으로 뜬다. rgb(255,240,247) 이어야 할
+     자리가 **rgb(193,181,187)** 이 됐다 — 화면에서 "제목·소개가 허옇다" 로
+     보인 것이 바로 이것이다.
+     (v-hero-outline 만 멀쩡해 보였던 건 그 변형이 자기 box-shadow 로 이걸 통째로
+      덮어써서지, 테마가 맞아서가 아니다.)
+   ★ :where() 는 특이도 0 이라 0,3,0 이 유지된다. :not() 을 그냥 붙이면 0,6,0 이
+     되어 변형이 hero 에 건 다른 값까지 덮는다 — aurora 띠 배너에서 겪은 그 함정이다. */
+.theme-basic [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline)) {
+  /* ★ background 를 덮지 않으므로 팔레트별 그라데이션은 그대로다 */
   box-shadow: inset 0 -90px 120px -70px rgba(0, 0, 0, 0.45);
 }
 
@@ -119,7 +133,12 @@ body:has(.theme-basic) {
      칸을 넓히는 건 변형의 일이라 테마가 못 고친다 — 끊는 **자리**만 바로잡는다.
    ★ overflow-wrap: anywhere 는 안전망이다. 한 단어가 칸보다 길 때만
      글자 단위로 돌아간다(안 넣으면 그 단어가 칸 밖으로 삐져나간다). */
-.theme-basic [data-block]:not(.ev-block) :is(h1, h2, h3, .title, .benefit-name, .step-title) {
+.theme-basic [data-block]:not(.ev-block) :is(
+  h1, h2, h3, .title, .benefit-name, .step-title,
+  /* ★ 쿠폰·띠 배너의 큰 문구는 제목처럼 쓰이지만 태그가 <p> 다.
+       빼놨더니 "할인 쿠 / 폰을 제공합니다" 로 끊겼다(실측). */
+  [data-block="coupon"] p, [data-block="highlight"] p
+) {
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
@@ -308,14 +327,50 @@ body:has(.theme-basic) {
   content: none;
 }
 
-/* ★ .block-header 를 쓰는 마크업(템플릿식)은 가운데 정렬이라 막대가 축을 흐트린다 */
-.theme-basic [data-block]:not(.ev-block) .block-header h2 {
-  display: block;
+/* ★★ .block-header 는 템플릿만 쓰는 줄 알고 번호칩과 선을 통째로 껐었다.
+     그런데 **백지 생성도 이 마크업을 쓴다** — PromptBuilder 가
+     block-header · sub-label · h2.title 을 시킨다. 그 결과 백지 화면에서
+     01 · 02 칩과 오른쪽 선이 통째로 사라져 테마의 얼굴이 없어졌다(실제 화면에서 확인).
+
+   ★ 끄지 않고 basic 의 꼴로 다시 그린다 — 눈썹(sub-label)은 칩 위 작은 글자로,
+     제목은 그대로 번호칩 + 선. h2 에 거는 규칙(④)이 .title 에도 그대로 걸린다
+     (.title 이 곧 <h2> 다). 여기서는 base 의 가운데 정렬만 되돌리면 된다.
+
+   ★ base(30-base/02-template-blocks)가 .block-header 에 text-align: center 와
+     margin-bottom: 28px 을 건다. 0,1,0 이라 아래 0,3,0 이 이긴다. */
+.theme-basic [data-block]:not(.ev-block) .block-header {
+  text-align: left;
+  margin-bottom: 22px;
 }
 
-.theme-basic [data-block]:not(.ev-block) .block-header h2::before,
-.theme-basic [data-block]:not(.ev-block) .block-header h2::after {
-  content: none;
+/* ★★ 눈썹을 2차색 **글자**로 썼다가 되돌렸다. 12개 팔레트에서 재 보니
+     7개가 기준(4.5:1) 미달이었고 여름 · 어린이 · 노을은 1.97:1 이었다.
+     머리말 그대로다 — 2차색은 글자 뒤에도, 글자 자체로도 쓰지 않는다.
+   ★ 대신 앞에 짧은 막대로 넣는다. 선이라 대비와 무관하고,
+     번호칩(primary)과 색이 갈려 눈썹이 제목에 묻히지 않는다. */
+.theme-basic [data-block]:not(.ev-block) .block-header .sub-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--ev-primary-hover, var(--ev-primary));
+  margin: 0 0 7px;
+}
+
+.theme-basic [data-block]:not(.ev-block) .block-header .sub-label::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  margin: 0 7px 0.22em 0;
+  vertical-align: middle;
+  background: var(--nv-accent);
+}
+
+/* ★ 제목은 ④ 의 h2 규칙을 그대로 받는다. 아래 여백만 .block-header 가 쥔다 */
+.theme-basic [data-block]:not(.ev-block) .block-header h2 {
+  margin-bottom: 0;
 }
 
 /* ── ⑤ 혜택 — 아이콘 타일 + 값 알약 ─────────────────────────── */

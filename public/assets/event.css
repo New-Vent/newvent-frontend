@@ -363,8 +363,22 @@ body:has(.theme-basic) {
   padding: 78px 36px 66px;
   /* ★ 컨테이너에 overflow:hidden 을 쓰지 않으므로 여기서 윗모서리를 둥글린다 */
   border-radius: 25px 25px 0 0;
-  /* ★ base 그라데이션 위에 아래쪽만 살짝 눌러 깊이를 준다.
-       background 를 덮지 않으므로 팔레트별 그라데이션은 그대로다 */
+}
+
+/* ★★ 아래쪽을 눌러 깊이를 주는 **검은 inset 그림자**는 hero 배경이 어두울 때만 맞다.
+     hero 변형 10개의 배경 밝기를 실제 픽셀로 재 보니 **세 개가 밝다** —
+       v-hero-minimal       밝기 0.48
+       v-hero-gradient-text 밝기 0.48
+       v-hero-outline       밝기 1.00
+     거기에 45% 검정을 깔면 아래쪽이 잿빛으로 뜬다. rgb(255,240,247) 이어야 할
+     자리가 **rgb(193,181,187)** 이 됐다 — 화면에서 "제목·소개가 허옇다" 로
+     보인 것이 바로 이것이다.
+     (v-hero-outline 만 멀쩡해 보였던 건 그 변형이 자기 box-shadow 로 이걸 통째로
+      덮어써서지, 테마가 맞아서가 아니다.)
+   ★ :where() 는 특이도 0 이라 0,3,0 이 유지된다. :not() 을 그냥 붙이면 0,6,0 이
+     되어 변형이 hero 에 건 다른 값까지 덮는다 — aurora 띠 배너에서 겪은 그 함정이다. */
+.theme-basic [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline)) {
+  /* ★ background 를 덮지 않으므로 팔레트별 그라데이션은 그대로다 */
   box-shadow: inset 0 -90px 120px -70px rgba(0, 0, 0, 0.45);
 }
 
@@ -391,7 +405,12 @@ body:has(.theme-basic) {
      칸을 넓히는 건 변형의 일이라 테마가 못 고친다 — 끊는 **자리**만 바로잡는다.
    ★ overflow-wrap: anywhere 는 안전망이다. 한 단어가 칸보다 길 때만
      글자 단위로 돌아간다(안 넣으면 그 단어가 칸 밖으로 삐져나간다). */
-.theme-basic [data-block]:not(.ev-block) :is(h1, h2, h3, .title, .benefit-name, .step-title) {
+.theme-basic [data-block]:not(.ev-block) :is(
+  h1, h2, h3, .title, .benefit-name, .step-title,
+  /* ★ 쿠폰·띠 배너의 큰 문구는 제목처럼 쓰이지만 태그가 <p> 다.
+       빼놨더니 "할인 쿠 / 폰을 제공합니다" 로 끊겼다(실측). */
+  [data-block="coupon"] p, [data-block="highlight"] p
+) {
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
@@ -580,14 +599,50 @@ body:has(.theme-basic) {
   content: none;
 }
 
-/* ★ .block-header 를 쓰는 마크업(템플릿식)은 가운데 정렬이라 막대가 축을 흐트린다 */
-.theme-basic [data-block]:not(.ev-block) .block-header h2 {
-  display: block;
+/* ★★ .block-header 는 템플릿만 쓰는 줄 알고 번호칩과 선을 통째로 껐었다.
+     그런데 **백지 생성도 이 마크업을 쓴다** — PromptBuilder 가
+     block-header · sub-label · h2.title 을 시킨다. 그 결과 백지 화면에서
+     01 · 02 칩과 오른쪽 선이 통째로 사라져 테마의 얼굴이 없어졌다(실제 화면에서 확인).
+
+   ★ 끄지 않고 basic 의 꼴로 다시 그린다 — 눈썹(sub-label)은 칩 위 작은 글자로,
+     제목은 그대로 번호칩 + 선. h2 에 거는 규칙(④)이 .title 에도 그대로 걸린다
+     (.title 이 곧 <h2> 다). 여기서는 base 의 가운데 정렬만 되돌리면 된다.
+
+   ★ base(30-base/02-template-blocks)가 .block-header 에 text-align: center 와
+     margin-bottom: 28px 을 건다. 0,1,0 이라 아래 0,3,0 이 이긴다. */
+.theme-basic [data-block]:not(.ev-block) .block-header {
+  text-align: left;
+  margin-bottom: 22px;
 }
 
-.theme-basic [data-block]:not(.ev-block) .block-header h2::before,
-.theme-basic [data-block]:not(.ev-block) .block-header h2::after {
-  content: none;
+/* ★★ 눈썹을 2차색 **글자**로 썼다가 되돌렸다. 12개 팔레트에서 재 보니
+     7개가 기준(4.5:1) 미달이었고 여름 · 어린이 · 노을은 1.97:1 이었다.
+     머리말 그대로다 — 2차색은 글자 뒤에도, 글자 자체로도 쓰지 않는다.
+   ★ 대신 앞에 짧은 막대로 넣는다. 선이라 대비와 무관하고,
+     번호칩(primary)과 색이 갈려 눈썹이 제목에 묻히지 않는다. */
+.theme-basic [data-block]:not(.ev-block) .block-header .sub-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--ev-primary-hover, var(--ev-primary));
+  margin: 0 0 7px;
+}
+
+.theme-basic [data-block]:not(.ev-block) .block-header .sub-label::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  margin: 0 7px 0.22em 0;
+  vertical-align: middle;
+  background: var(--nv-accent);
+}
+
+/* ★ 제목은 ④ 의 h2 규칙을 그대로 받는다. 아래 여백만 .block-header 가 쥔다 */
+.theme-basic [data-block]:not(.ev-block) .block-header h2 {
+  margin-bottom: 0;
 }
 
 /* ── ⑤ 혜택 — 아이콘 타일 + 값 알약 ─────────────────────────── */
@@ -1752,6 +1807,20 @@ body:has(.theme-bloom) {
   /* 별가루 — 글자색에서 파생시키면 밝은 팔레트에서는 어두운 점, 어두운 팔레트에서는
      밝은 점이 된다. 흰색을 박으면 밝은 팔레트에서 안 보인다. */
   --aurora-dust: color-mix(in srgb, var(--ev-text-main) 42%, transparent);
+
+  /* ★★ 오로라 커튼 — 이 테마의 이름값.
+       전에는 이름만 aurora 고 화면에는 **아무것도 없었다.** 별가루는 1px 점에
+       transparent 100% 라 뭉개져 안 보였고, 컨테이너가 불투명이라 body 배경까지
+       가려서 어두운 팔레트에서는 그냥 **검은 상자**가 나왔다.
+
+     ★ 커튼 색을 테마가 박으면 안 된다 — "테마 = 구조, 팔레트 = 색" 계약이 깨진다.
+       팔레트가 주는 **두 색**(primary · accent)을 그대로 쓴다. 그러면 night 는
+       금빛 커튼, esports 는 네온 초록 커튼, summer 는 하늘빛 커튼이 된다.
+       모양(비스듬히 드리운 두 겹 커튼 + 세로 결)만 테마가 쥔다. */
+  --aurora-veil-1: color-mix(in srgb, var(--ev-primary) 38%, transparent);
+  --aurora-veil-2: color-mix(in srgb, var(--ev-accent-tag, var(--ev-primary)) 30%, transparent);
+  /* 별 — transparent 를 **좁게** 끊어야 점으로 보인다. 100% 로 두면 번져서 사라진다 */
+  --aurora-star: color-mix(in srgb, var(--ev-text-main) 62%, transparent);
 }
 
 /* ── ② 페이지 틀 ──────────────────────────────────────────────── */
@@ -1765,10 +1834,11 @@ body:has(.theme-bloom) {
 body:has(.theme-aurora) {
   background-color: var(--ev-bg);
   background-image:
-    radial-gradient(1.5px 1.5px at 18% 22%, var(--aurora-dust), transparent 100%),
-    radial-gradient(1.5px 1.5px at 72% 14%, var(--aurora-dust), transparent 100%),
-    radial-gradient(1px   1px   at 42% 64%, var(--aurora-dust), transparent 100%),
-    radial-gradient(1px   1px   at 88% 78%, var(--aurora-dust), transparent 100%),
+    /* ★ transparent 를 60% 에서 끊는다. 100% 로 두면 점이 번져 사라진다 — 실제로 안 보였다 */
+    radial-gradient(1.6px 1.6px at 18% 22%, var(--aurora-star), transparent 60%),
+    radial-gradient(1.6px 1.6px at 72% 14%, var(--aurora-star), transparent 60%),
+    radial-gradient(1.2px 1.2px at 42% 64%, var(--aurora-star), transparent 60%),
+    radial-gradient(1.2px 1.2px at 88% 78%, var(--aurora-star), transparent 60%),
     radial-gradient(60% 45% at 50% 0%, var(--ev-primary-glow), transparent 70%),
     linear-gradient(180deg, var(--ev-primary-light) 0%, var(--ev-bg) 58%, var(--ev-surface-subtle) 100%);
   background-size: 260px 260px, 340px 340px, 200px 200px, 420px 420px, 100% 100%, 100% 100%;
@@ -1785,11 +1855,23 @@ body:has(.theme-aurora) {
   padding: 0 0 8px;
   /* ★ 표면도 팔레트에서 받는다. 한때 여기에 어두운 보라를 박아 뒀는데,
        그러면 밝은 팔레트를 골라도 카드만 어둡게 남아 테마가 팔레트를 이긴다.
-       표면과 글자를 **둘 다** 팔레트에서 받으면 짝이 맞아 어느 팔레트에서도 읽힌다. */
-  background: var(--ev-surface);
+       표면과 글자를 **둘 다** 팔레트에서 받으면 짝이 맞아 어느 팔레트에서도 읽힌다.
+   ★★ 다만 --ev-surface 만 쓰면 어두운 팔레트(night · esports)에서 카드가 **새까맣다.**
+       hero 에만 오로라가 있고 그 아래는 검은 상자라 기운이 뚝 끊겼다.
+       팔레트 색을 아주 옅게(7%) 위에서 아래로 번지게 깔아 hero 와 잇는다.
+       **칠이 아니라 틴트**라 글자색은 그대로 상속된다 — "칠하면 잉크도 쥔다" 위반 아님.
+       밝은 팔레트에서는 거의 안 보일 만큼 옅다. */
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--ev-primary) 7%, transparent) 0,
+      transparent 340px),
+    var(--ev-surface);
   border: 1px solid var(--ev-border);
   border-radius: 28px;
-  box-shadow: 0 30px 80px color-mix(in srgb, var(--ev-text-main) 55%, transparent), var(--aurora-ring);
+  /* ★ 윗변에 팔레트 색 빛을 한 줄 — 오로라가 hero 에서 뚝 끊기지 않게 잇는다 */
+  box-shadow: 0 30px 80px color-mix(in srgb, var(--ev-text-main) 55%, transparent),
+              inset 0 2px 0 color-mix(in srgb, var(--ev-primary) 55%, transparent),
+              var(--aurora-ring);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   overflow: hidden;
@@ -1815,9 +1897,80 @@ body:has(.theme-aurora) {
 /* ── ④ hero — 제목이 페이지에서 제일 크다 ─────────────────────── */
 
 .theme-aurora [data-block="hero"]:not(.ev-block) {
-  padding: 62px 28px 54px;
+  position: relative;
+  overflow: hidden;
+  padding: 72px 28px 62px;
   text-align: center;
-  background: var(--ev-gradient-hero);
+  /* ★★ 어두운 막을 한 겹 깐다.
+       --ev-gradient-hero 는 19벌 다 "어둡다" 고 적어 뒀지만, **밝은 끝**은 꽤 밝다.
+       summer 는 #0ea5e9 로 끝나고 거기 흰 글자는 3.40:1 이다 — 설명문이 6벌에서
+       본문 기준에 못 미쳤다(실측). 글자를 밝혀서는 못 고친다. h1 도 이미 순백인데
+       3.81 이었다. **바탕을 눌러야** 한다.
+     ★ 아래로 갈수록 진하게. 설명문과 기간이 아래쪽에 앉는다.
+     ★ 색상(hue)은 그대로라 팔레트별 그라데이션은 살아 있고, 어두워진 만큼
+       그 위의 오로라 커튼이 더 또렷해진다 — 테마에도 맞다. */
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0%, rgba(0, 0, 0, 0.52) 100%),
+    var(--ev-gradient-hero);
+}
+
+/* ★★ 밝은 hero 변형에는 커튼을 안 그린다.
+     v-hero-minimal · v-hero-gradient-text · v-hero-outline 세 변형은 hero 배경을
+     **밝게** 바꾼다(실측 밝기 0.48 · 0.48 · 1.00). 거기에 커튼을 얹으면 파스텔로
+     물들면서 그 위 **어두운 글자**의 대비가 떨어진다 — 설명문이 4.3 → 3.8 이 됐다.
+     오로라는 어두운 하늘의 것이다. 밝은 하늘에는 안 뜬다.
+   ★ :where() 는 특이도 0 이라 0,3,0 이 유지된다. */
+
+/* ★★ 오로라 커튼 — 비스듬히 드리운 두 겹.
+     컨테이너가 불투명(--ev-surface)이라 body 배경이 통째로 가린다. 그래서 오로라를
+     보여 줄 수 있는 자리는 **hero 뿐**이다. 여기에 안 그리면 이름값이 없다.
+   ★ 두 색을 **다른 각도**로 겹친다. 한 색만 쓰면 그냥 빛무리고, 각도가 같으면
+     띠 하나로 보인다. 오로라는 결이 엇갈려야 커튼이 된다. */
+.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline))::before {
+  content: "";
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 150%;
+  /* ★ 타원을 **좁고 길게**(폭 22~34% · 높이 110~130%) 세워야 띠가 된다.
+       처음엔 60%×46% 처럼 둥글게 썼더니 커튼이 아니라 구석의 빛무리로 보였다. */
+  background:
+    radial-gradient(26% 120% at 14% 30%, var(--aurora-veil-1) 0, transparent 44%),
+    radial-gradient(22% 112% at 34% 12%, var(--aurora-veil-2) 0, transparent 44%),
+    radial-gradient(30% 128% at 58% 34%, var(--aurora-veil-1) 0, transparent 46%),
+    radial-gradient(20% 104% at 79% 10%, var(--aurora-veil-2) 0, transparent 44%),
+    radial-gradient(24% 116% at 94% 32%, var(--aurora-veil-1) 0, transparent 44%);
+  /* 기울여야 하늘에 드리운 꼴이 된다. 수직이면 커튼이 아니라 줄무늬다 */
+  transform: rotate(-13deg) scaleY(1.15);
+  /* ★★ 농도와 블러를 **둘 다** 낮춰야 띠가 갈린다.
+       처음에 62%/52% + blur 26px 으로 뒀더니 블러가 띠를 하나로 뭉쳐
+       hero 전체가 한 색으로 칠해졌다 — 커튼이 아니라 그냥 색면이었다.
+       38%/30% + blur 14px 이면 띠 사이에 **어둠이 남아** 커튼으로 읽힌다.
+       네 가지 조합을 렌더해 나란히 놓고 고른 값이다. */
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+/* ★ 세로 결 — 오로라는 위에서 아래로 빗살 무늬가 진다.
+     아주 옅게(6%) 깔아야 무늬가 아니라 **질감**으로 보인다. */
+.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline))::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(99deg,
+    color-mix(in srgb, var(--ev-text-main) 9%, transparent) 0 1.5px,
+    transparent 1.5px 11px);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 72%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 72%);
+  pointer-events: none;
+}
+
+/* ★★ 커튼은 글자 **뒤**로 보낸다.
+     가상요소는 absolute 라 흐름 속 형제보다 위에 그려진다 — 그냥 두면 제목을 덮는다.
+     z-index: -1 로 내리면 hero 의 **자기 배경 뒤**로 가서 아예 안 보인다.
+     그래서 hero 의 직계 자식을 전부 올린다. 마크업은 안 바뀐다. */
+.theme-aurora [data-block="hero"]:not(.ev-block) > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* 0,2,1 — :where 폴백(0,0,0)은 이기고, 스스로 크기를 정한 변형(0,3,1)에는 진다 */
@@ -1831,24 +1984,18 @@ body:has(.theme-aurora) {
   margin: 14px 0 12px;
 }
 
-/* ★★ 한국어 줄바꿈 — 제목 전체에 한 번만 건다.
-     기본값(word-break: normal)은 한국어를 **글자 단위**로 끊는다. 제목 칸을
-     좁히는 변형과 만나면 단어 중간이 갈라진다 — 실측한 것들:
-       v-hero-split(제목 칸 1.3fr)   "VIP 심야 라운지 초대 이 / 벤트"
-       v-intro-sidebar(제목 칸 140px) "요금제 개편 안 / 내"
-     keep-all 은 띄어쓰기에서만 끊으므로 "… 초대 / 이벤트" 가 된다.
-   ★ 변형은 font-size·칸 폭만 정하고 word-break 은 안 건드리므로 이 값이 살아남는다.
-   ★ overflow-wrap: anywhere 는 안전망 — 한 단어가 칸보다 길 때만 글자 단위로 돌아간다. */
-.theme-aurora [data-block]:not(.ev-block) :is(h1, h2, h3, .title, .benefit-name, .step-title) {
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
+/* ★ 한국어 줄바꿈 · 일정 타임라인 점 · 경품 이모지 자리 · 움직임 줄이기는
+     20-themes/09-common.css 와 99-a11y 가 처리한다. 여기서 또 쓰지 않는다. */
 
 /* ★ hero 배경은 --ev-gradient-hero 다. 팔레트 19개 전부 **어두운** 그라데이션이라
      여기 글자는 늘 밝아야 한다. --ev-text-muted 를 쓰면 밝은 팔레트에서
      어두운 글자가 어두운 그라데이션에 앉아 설명문이 사라진다 — 실측. */
 .theme-aurora [data-block="hero"]:not(.ev-block) p {
-  color: rgba(255, 255, 255, 0.86);
+  /* ★★ rgba(255,255,255,0.86) 으로 두면 밝은 팔레트의 그라데이션 **밝은 끝**에서
+       3.40:1 까지 떨어진다(summer · spring · sunset · pastel · kids · lavender 6벌 실측).
+       14% 를 깎아 얻는 "조용함" 보다 읽히는 쪽이 먼저다. 순백으로 올린다.
+     ★ 이건 커튼 때문에 생긴 게 아니다 — 커튼을 꺼도 같은 3.40 이 나왔다. 원래 있던 것이다. */
+  color: #fff;
   font-size: 1rem;
   line-height: 1.7;
 }
@@ -1859,10 +2006,17 @@ body:has(.theme-aurora) {
   margin-top: 14px;
   padding: 7px 16px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  /* ★★ 흰 글자 + 흰 반투명 바탕을 **리터럴로** 박아 뒀었다. hero 배경이 늘 어두운
+       --ev-gradient-hero 라는 전제였는데, v-hero-minimal · v-hero-gradient-text ·
+       v-hero-outline 세 변형은 배경을 **밝게** 바꾼다. 거기서 실제 픽셀로 재니
+       **1.0:1** — 기간 줄이 통째로 안 보였다.
+     ★ currentColor 로 받으면 배경이 밝든 어둡든 글자색을 따라간다.
+       basic 이 같은 방법을 쓰고 있고 전 변형에서 13~18:1 이 나온다. */
+  background: transparent;
+  border: 1px solid currentColor;
   font-size: 0.86rem;
-  color: #fff;
+  color: inherit;
+  opacity: 0.95;
 }
 
 .theme-aurora [data-block="hero"]:not(.ev-block) .badge {
@@ -1900,6 +2054,29 @@ body:has(.theme-aurora) {
 }
 
 .theme-aurora .block-header .title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--ev-text-main);
+  letter-spacing: -0.01em;
+}
+
+/* ★★ 모델이 머리말 묶음 없이 **맨 <h2>** 만 내는 경우가 있다.
+     소제목을 .block-header 에만 걸어 뒀더니 그때 아무 꾸밈 없는 글자로 나왔다 —
+     VIP 화면에서 실제로 그랬다. 어느 마크업이 올지 보장할 수 없으므로 둘 다 받는다.
+   ★ hero · 띠 배너 · 쿠폰은 제외한다. 거기는 테마가 따로 칠하는 자리다. */
+.theme-aurora :is(
+  [data-block="intro"],
+  [data-block="stats"],
+  [data-block="benefits"],
+  [data-block="audience"],
+  [data-block="steps"],
+  [data-block="schedule"],
+  [data-block="compare"],
+  [data-block="prize"],
+  [data-block="faq"]
+):not(.ev-block) > h2 {
+  text-align: center;
+  margin: 0 0 26px;
   font-size: 1.55rem;
   font-weight: 800;
   color: var(--ev-text-main);
@@ -2115,7 +2292,6 @@ body:has(.theme-aurora) {
 
 /* ★ 기본은 왼쪽 세로선 + 점(li::before)으로 타임라인을 그린다.
      여기서는 항목마다 카드를 쓰므로 그 둘이 카드 밖에 떠서 어긋난다. 끈다. */
-.theme-aurora [data-block="schedule"]:not(.ev-block) li::before { display: none; }
 
 .theme-aurora [data-block="schedule"]:not(.ev-block) li {
   border-left: 0;
@@ -2268,9 +2444,80 @@ body:has(.theme-aurora) {
 
 /* ── ⑮ 접근성 ────────────────────────────────────────────────── */
 
-@media (prefers-reduced-motion: reduce) {
-  .theme-aurora [data-block="cta"]:not(.ev-block) .btn,
-  .theme-aurora [data-block="cta"]:not(.ev-block) .cta-btn { transition: none; }
+/* ── 20-themes/09-common.css ── */
+/* ══════════════════════════════════════════════════════════════════
+   백지 테마 공통 — 테마마다 **또 풀 필요 없는 함정**만 모은다.
+   src/event-css/20-themes/09-common.css
+
+   ★ 왜 생겼나
+     basic · bloom · aurora 를 재 보니 세 테마가 **같은 자리 20곳**을 건드리는데
+     선언까지 똑같은 규칙은 **2개**뿐이었다. 같은 자리를 다르게 칠하는 게 테마의
+     정의이므로 당연하다 — 공유할 "모양" 은 거의 없다.
+
+     그런데 **함정**은 공유된다. 세 테마가 똑같이 풀어 둔 방어 코드가 7개였고,
+     3개는 어느 한 테마에서 빠져 있었다. 지금까지 깨진 화면은 거의 전부
+     이 목록에서 하나를 빠뜨려서 났다. 모양이 아니라 **함정**을 공통으로 뺀다.
+
+   ★ 파일 자리 — 09 이라 테마들(01~05) **뒤**, 변형(60-) **앞**이다.
+       테마 < 공통 < 변형
+     테마가 깜빡해도 공통이 덮고, 관리자가 고른 변형은 여전히 이긴다.
+     특이도를 맞추려고 :where() 가 아니라 :is() 를 쓴다 — :where() 는 0 이라
+     테마(0,3,0)에 져서 덮지 못한다. :is() 는 0,1,0 이라 0,3,0 이 되고,
+     같은 0,3,0 이면 **뒤엣것이 이긴다**. 그게 이 파일이다.
+
+   ★★ 새 테마를 쓸 때의 체크리스트 — 여기서 처리되는 것은 안 써도 된다.
+       ① 한국어 줄바꿈 keep-all              ← 여기서 처리
+       ② 일정 타임라인 점 끄기                ← 여기서 처리
+       ③ 경품 이모지 자리 비우기              ← 여기서 처리
+       ④ 움직임 줄이기                       ← 99-a11y 가 !important 로 이미 처리.
+                                               테마에 또 쓰면 죽은 코드다
+       ⑤ 특이도 방어 :not(.ev-block)         ← 테마가 직접. 선택자마다 붙인다
+       ⑥ 변형 방어 :not([class*="v-steps-"]) ← 테마가 직접. 번호를 ::before 로
+                                               그릴 때만 필요하다
+       ⑦ 팔레트 읽기 body:has(.theme-*)       ← 테마가 직접. 배경색을 팔레트에서 받는다
+       ⑧ 칠하면 잉크도 쥔다                   ← 테마가 직접. 배경을 바꾼 자리는
+                                               color 도 같이 정한다
+       ⑨ 띠 배너 글자색 되찾기                ← 테마가 직접. 배너 배경을 건드렸을 때만
+       ⑩ 좁은 화면 @media                    ← 테마가 직접
+   ══════════════════════════════════════════════════════════════════ */
+
+/* 백지 테마 전부. 새 테마를 만들면 여기에 이름을 추가한다 */
+
+/* ── ① 한국어 줄바꿈 ──────────────────────────────────────────────
+   기본값(word-break: normal)은 한국어를 **글자 단위**로 끊는다. 제목 칸을
+   좁히는 변형과 만나면 단어 중간이 갈라진다 — 실측한 것들:
+     v-hero-split(제목 칸 1.3fr)    "VIP 심야 라운지 초대 이 / 벤트"
+     v-intro-sidebar(제목 칸 140px)  "요금제 개편 안 / 내"
+   keep-all 은 띄어쓰기에서만 끊으므로 "… 초대 / 이벤트" 가 된다.
+   ★ 쿠폰·띠 배너의 큰 문구는 제목처럼 쓰이지만 태그가 <p> 다. 빼놨더니
+     "할인 쿠 / 폰을 제공합니다" 로 끊겼다(실측) — 그래서 둘을 따로 적는다.
+   ★ overflow-wrap: anywhere 는 안전망. 한 단어가 칸보다 길 때만 글자 단위로
+     돌아간다(안 넣으면 그 단어가 칸 밖으로 삐져나간다). */
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block]:not(.ev-block) :is(
+  h1, h2, h3, .title, .benefit-name, .step-title,
+  [data-block="coupon"] p, [data-block="highlight"] p
+) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* ── ② 일정 — base 의 타임라인 점을 끈다 ──────────────────────────
+   base(50-blocks)는 왼쪽 세로선 + 점(li::before)으로 타임라인을 그린다.
+   백지 테마 셋은 전부 일정을 **라벨 표**나 카드로 바꾸는데, 그러면 그 점이
+   카드 밖에 떠서 어긋난다. 세 테마가 똑같이 꺼 두고 있었다.
+   ★ 타임라인을 그대로 쓰고 싶은 테마는 자기 파일에서 display 를 되살리면 된다 —
+     같은 0,3,0 이라도 변형이 아니라 테마가 뒤에 오면 이긴다. */
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block="schedule"]:not(.ev-block) li::before {
+  display: none;
+}
+
+/* ── ③ 경품 — 이모지 자리를 비운다 ────────────────────────────────
+   base 가 li::before 로 🏆 · 🎁 를 left:14px 에 **절대 위치**로 놓는다.
+   padding-left 를 줄이면 이모지가 <strong>1등</strong> 을 그대로 덮는다 —
+   실제로 겪었다. 52px 은 테마가 바꿀 값이 아니라 base 가 정한 **제약**이라
+   여기서 못 박는다. 테마가 padding 단축속성을 쓰다 깜빡해도 이게 덮는다. */
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block="prize"]:not(.ev-block) li {
+  padding-left: 52px;
 }
 
 /* ── 30-base/01-reset.css ── */
