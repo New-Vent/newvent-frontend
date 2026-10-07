@@ -122,8 +122,8 @@ function takeStagedDocument(id) {
 }
 
 /**
- * allow-scripts 를 준다 — 템플릿의 window.newVentReinit 과 타이머가
- * 동작해야 블록 부분 교체 후 재연결이 된다 (AI_EDIT_RULES 2-2).
+ * allow-scripts 를 준다 — 서버 문서의 /assets/event-runtime.js(data-behavior 실행)와,
+ * 목업 템플릿의 window.newVentReinit · 타이머가 동작해야 한다 (AI_EDIT_RULES 2-2).
  *
  * ⚠ allow-scripts 와 allow-same-origin 을 함께 주면 sandbox 는 사실상
  *   무력해진다. 이 구성은 "서버가 Jsoup Safelist 로 정화한 HTML 만
@@ -131,14 +131,31 @@ function takeStagedDocument(id) {
  */
 const SANDBOX = 'allow-same-origin allow-scripts'
 
+/** 실행될 수 있는 것을 걷어낸다 — iframe · on* 핸들러. (서버 정화가 1차 방어선이고 이건 2차다) */
+function disarm(doc){
+ doc.querySelectorAll('iframe').forEach(n=>n.remove());
+ doc.querySelectorAll('*').forEach(n=>{Array.from(n.attributes).forEach(a=>{if(a.name.startsWith('on'))n.removeAttribute(a.name);});});
+}
+
 /**
- * 서버가 준 조각(GET …/preview 의 html)을 미리보기 문서로 감싼다.
- * ★ 조각에는 래퍼 · 테마 · 유의사항이 있고 스타일시트는 없다 — 여기서 /assets/event.css 를 붙인다
- * ★ 템플릿의 <script> 는 남긴다 (templateDocument 와 같은 전제 — 서버 정화가 방어선)
+ * 서버가 준 HTML 을 미리보기 문서로 만든다.
+ *
+ * ★ 완전한 문서(<!doctype …>)면 다시 감싸지 않는다 — GET …/preview 의 html, 공개 상세의 publishedHtml.
+ *   서버가 head · /assets/event.css · 글꼴 · 테마 · /assets/event-runtime.js 를 이미 붙였다 (PageShell.standalone).
+ *   여기서는 미리보기 iframe 용 스타일(frameCss)만 더한다.
+ *   이름표(data-behavior) 페이지는 runtime.js 가, 이름표 이전 페이지는 남아 있는 옛 <script> 가 동작시킨다.
+ * ★ 조각이면 예전처럼 감싼다 — 목록 썸네일(thumbnailHtml), 버전 상세(htmlContent).
  */
 function serverDocument(html){
- const doc=new DOMParser().parseFromString('<body>'+(html||'')+'</body>','text/html');
- doc.querySelectorAll('iframe').forEach(n=>n.remove());
+ const src=html||'';
+ if(/^\s*<!doctype/i.test(src)){
+  const doc=new DOMParser().parseFromString(src,'text/html');
+  disarm(doc);
+  doc.head.insertAdjacentHTML('beforeend','<style>'+frameCss()+'</style>');
+  return '<!doctype html>'+doc.documentElement.outerHTML;
+ }
+ const doc=new DOMParser().parseFromString('<body>'+src+'</body>','text/html');
+ disarm(doc);
  // 조각에 .ev-container 가 없으면 감싸준다.
  //   event.css 의 폭·여백·배경은 전부 .ev-container 기준이라, 없으면 본문이
  //   맨몸으로 붙어 읽기 어렵다. 템플릿으로 만든 페이지는 컨테이너를 들고 오지만
@@ -150,7 +167,6 @@ function serverDocument(html){
   while(doc.body.firstChild)wrap.appendChild(doc.body.firstChild);
   doc.body.appendChild(wrap);
  }
- doc.querySelectorAll('*').forEach(n=>{Array.from(n.attributes).forEach(a=>{if(a.name.startsWith('on'))n.removeAttribute(a.name);});});
  return '<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+EVENT_STYLE_LINKS+'<style>'+frameCss()+'</style></head>'+doc.body.outerHTML+'</html>';
 }
 

@@ -59,6 +59,8 @@ function bindFrame(frame){
    // 칩 · 외곽선은 편집 화면이 바로 바꾼다 — 이름표도 그 상태로 다시 쓴다
    if(b===over)label(b);},true);return;
  }
+ // 공개 이벤트 상세 — 서버 문서의 runtime.js 가 data-behavior 로 동작한다. 막지 않는다
+ if(mode==='live')return;
  if(mode==='readonly'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();},true);return;

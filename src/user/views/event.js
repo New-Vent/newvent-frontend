@@ -28,7 +28,8 @@ function participationControl(e){
 /**
  * 공개 이벤트 상세 — 서버가 준 publishedHtml 을 그대로 띄운다.
  *
- * 조립할 게 없다. serverFrame() 이 doctype · head · /assets/event.css 를 씌운다.
+ * 조립할 게 없다. 서버가 완전한 문서(head · event.css · 테마 · runtime.js)로 감싸서 준다.
+ * ★ 'live' — 버튼을 막지 않는다. 동작(안내 · 스크롤 · 타이머 …)은 runtime.js 가 data-behavior 로 한다
  * 참여 · 등급 · 혜택 요약은 공개 응답에 없어서 빼뒀다 (제목 · 기간만).
  */
 function serverEventView() {
@@ -50,7 +51,7 @@ function serverEventView() {
   return '<div class="container">'
     + button('route', icon('back') + '이벤트 목록', 'data-route="home"', 'backlink')
     + '<div class="detail-layout"><div class="detail-frame">'
-    + serverFrame(e.publishedHtml, esc(e.title), 'readonly')
+    + serverFrame(e.publishedHtml, esc(e.title), 'live')
     + '</div><aside class="detail-side card">'
     + '<div class="spread"><span class="badge green">진행 중</span>'
     + (e.closingSoon ? '<span class="badge pink">마감 임박</span>' : '') + '</div>'

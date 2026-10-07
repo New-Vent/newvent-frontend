@@ -75,9 +75,9 @@ export async function loadEvents() {
 /**
  * 공개 이벤트 상세 — 게시된 HTML 을 통째로 받는다.
  *
- * publishedHtml 은 <html>·<head> 없는 **조각**이고 스타일시트 링크도 없다.
- * `.ev-container` 부터 시작하며 테마는 그 컨테이너에 붙어 있다.
- * serverFrame() 이 doctype · head · /assets/event.css 를 씌워 iframe 에 넣는다.
+ * publishedHtml 은 **완전한 문서**다 — doctype · head(/assets/event.css) ·
+ * <body class="theme-…"> · /assets/event-runtime.js.
+ * serverFrame() 은 다시 감싸지 않고 미리보기 스타일만 더해 iframe 에 넣는다.
  *
  * @returns {Promise<{id:number,title:string,startDate:string,endDate:string,
  *                    status:string,grade:string,url:string|null,
@@ -219,7 +219,8 @@ export async function cancelGeneration(eventId, jobId) {
 
 /**
  * 최신 버전 미리보기 → { html, versionId, versionNo, editableTexts }. 페이지가 아직 없으면 null.
- * ★ html 은 조각이다 — 래퍼 · 테마 · 유의사항은 있고 <link> 는 없다. 스타일은 화면이 붙인다
+ * ★ html 은 완전한 문서다 — head(/assets/event.css) · 테마 · /assets/event-runtime.js.
+ *   editableTexts 의 index 는 문서가 아니라 저장된 조각 기준이다 (서버가 조각에서 뽑는다)
  */
 export async function loadPreview(eventId) {
   try {
