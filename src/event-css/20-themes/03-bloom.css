@@ -1,0 +1,632 @@
+/* ══════════════════════════════════════════════════════════════════
+   theme-bloom — 밝고 화려한 페이지 테마
+   src/event-css/90-themes/02-bloom.css
+
+   ★ aurora 는 "변형과 안 싸우기" 에만 신경 써서 얌전했다.
+     여기서는 **장식을 적극적으로 그린다** — 구름 · 반짝이 · 떠 있는 배지 ·
+     테두리 글자 · 라벨 표. 전부 가상요소(::before · ::after)로 그리므로
+     생성되는 HTML 은 한 글자도 안 바뀐다.
+
+   ★ position 을 마음껏 쓴다
+     "모델에게 position 을 열지 않는다" 와 "CSS 가 position 을 쓴다" 는 다른 말이다.
+     event.css 는 이미 77곳에서 쓴다. 장식은 사람이 쓰는 CSS 의 일이다.
+
+   ★ 특이도 — aurora 와 같은 규칙
+     기본 폴백은 :where(...) 0,0,0 이라 0,2,0 이면 이긴다.
+     변형(0,3,1)이 스스로 정한 값은 건드리지 않는다.
+   ══════════════════════════════════════════════════════════════════ */
+
+
+/* ──────────────────────────────────────────────────────────────────
+   ★ 왜 선택자마다 :not(.ev-block) 이 붙어 있나 — 실제 빌드로 돌려 보고 알았다.
+
+   event.css 의 블록 기본 규칙은 두 가지 꼴이 섞여 있다.
+     :where(...) :where([data-block="x"]:not(.ev-block))   → 0,0,0
+     :where(...) [data-block="x"]:not(.ev-block)           → 0,2,0   ← coupon 등
+
+   테마를 .theme-X [data-block="coupon"] (0,2,0) 으로 쓰면 뒤엣것과 **동점**이고,
+   테마는 20-themes/ · 블록은 50-blocks/ 라 **블록이 뒤에 와서 이긴다.**
+   단독 파일로 미리보기할 때는 내 파일이 마지막이라 멀쩡해 보였고,
+   node scripts/build-event-css.mjs 로 합쳐서 렌더하고서야 쿠폰이 틀어진 걸 봤다.
+
+   :not(.ev-block) 을 붙이면 0,3,0 이 되어 순서와 무관하게 이기고,
+   변형(0,3,1)에는 여전히 진다 — 그게 맞는 순서다.
+   ────────────────────────────────────────────────────────────────── */
+
+/* ── ① 변수 ────────────────────────────────────────────────────── */
+
+.theme-bloom {
+  --ev-primary:        #34c77b;
+  --ev-primary-hover:  #22a862;
+  --ev-primary-light:  #e3f8ec;
+  --ev-primary-glow:   rgba(52, 199, 123, 0.35);
+
+  --ev-gradient-hero:  linear-gradient(180deg, #d9f3e4 0%, #eaf9ef 55%, #fdfcf3 100%);
+  --ev-gradient-cta:   linear-gradient(135deg, #34c77b 0%, #7ad97f 100%);
+  --ev-accent-tag:     #ff8fb1;
+
+  --ev-bg:             #eef9f1;
+  --ev-surface:        #fffdf6;
+  --ev-surface-subtle: #f3fbf5;
+  --ev-border:         #cdeedb;
+
+  --ev-text-main:      #22402f;
+  --ev-text-muted:     #5d7a69;
+  --ev-text-light:     #92aa9d;
+
+  --bloom-sky:         #5bc0eb;
+  --bloom-pink:        #ff7fa8;
+  --bloom-cream:       #fffdf6;
+  --bloom-shadow:      0 10px 0 rgba(34, 64, 47, 0.06), 0 18px 40px rgba(34, 64, 47, 0.09);
+}
+
+/* ── ② 페이지 배경 — 구름이 떠 있는 하늘 ──────────────────────── */
+
+body:has(.theme-bloom) {
+  background-color: #eef9f1;
+  background-image:
+    radial-gradient(42% 30% at 12% 10%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(34% 26% at 88% 24%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(50% 34% at 50% 100%, rgba(122, 217, 127, 0.45), transparent 70%),
+    linear-gradient(180deg, #cdeff0 0%, #e4f7e9 42%, #f6fbe9 100%);
+  background-attachment: fixed;
+}
+
+.theme-bloom.ev-container,
+.theme-bloom .ev-container {
+  position: relative;
+  max-width: 760px;
+  margin: 36px auto;
+  min-height: auto;
+  padding: 0 0 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+/* ★ 구름 — 컨테이너 가상요소로 그린다. HTML 은 그대로다 */
+.theme-bloom.ev-container::before,
+.theme-bloom .ev-container::before {
+  content: "";
+  position: absolute;
+  top: 120px;
+  left: -46px;
+  width: 190px;
+  height: 92px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 74px -30px 0 -12px rgba(255, 255, 255, 0.9),
+              150px -4px 0 -24px rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.theme-bloom.ev-container::after,
+.theme-bloom .ev-container::after {
+  content: "";
+  position: absolute;
+  top: 300px;
+  right: -40px;
+  width: 150px;
+  height: 74px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: -60px 26px 0 -14px rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── ③ 섹션 — 크림색 둥근 카드가 겹겹이 ───────────────────────── */
+
+.theme-bloom [data-block]:not(.ev-block) {
+  position: relative;
+  z-index: 1;
+  margin: 0 18px 18px;
+  padding: 32px 26px;
+  background: var(--bloom-cream);
+  border: 0;
+  border-radius: 26px;
+  box-shadow: var(--bloom-shadow);
+}
+
+/* ── ④ hero — 테두리 글자 + 떠 있는 장식 ──────────────────────── */
+
+.theme-bloom [data-block="hero"]:not(.ev-block) {
+  background: transparent;
+  box-shadow: none;
+  padding: 44px 26px 30px;
+  text-align: center;
+  overflow: visible;
+}
+
+/* ★ 테두리 글자 — paint-order 로 획을 글자 **뒤**에 깐다.
+     이게 없으면 획이 글자를 덮어 얇은 획만 보인다. */
+.theme-bloom [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(2.7rem, 10vw, 4.6rem);
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--bloom-sky);
+  -webkit-text-stroke: 9px #fff;
+  paint-order: stroke fill;
+  text-shadow: 0 8px 0 rgba(91, 192, 235, 0.16), 0 16px 26px rgba(34, 64, 47, 0.14);
+  margin: 10px 0 14px;
+}
+
+/* ★ 반짝이 — 제목 옆에 하나 */
+.theme-bloom [data-block="hero"]:not(.ev-block)::after {
+  content: "✦";
+  position: absolute;
+  top: 54px;
+  right: 34px;
+  font-size: 1.5rem;
+  color: var(--bloom-pink);
+  text-shadow: 0 0 14px rgba(255, 127, 168, 0.6);
+}
+
+.theme-bloom [data-block="hero"]:not(.ev-block) p {
+  color: #4a6b58;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.theme-bloom [data-block="hero"]:not(.ev-block) [data-slot="period"] {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid var(--ev-border);
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ev-primary-hover);
+}
+
+.theme-bloom [data-block="hero"]:not(.ev-block) .badge {
+  display: inline-block;
+  padding: 9px 22px;
+  border-radius: 999px;
+  /* ★ #ff7fa8 에 흰 글자는 대비 2.3:1 로 모자랐다. 바탕을 한 단계 진하게 */
+  background: #ef5a90;
+  border: 3px solid #fff;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.84rem;
+  box-shadow: 0 6px 0 rgba(239, 90, 144, 0.26);
+}
+
+/* ── ⑤ 소제목 — 섹션 위에 걸터앉은 알약 ───────────────────────── */
+
+/* ★ 카드 **위쪽 테두리에 걸치게** 올린다. 참고 디자인의 그 모양이다 */
+/* ★ 알약을 가운데로 보내려면 **부모**가 text-align: center 여야 한다
+     (inline-flex 는 inline 수준이라 text-align 이 먹는다).
+     display: block 을 줬더니 알약이 꽉 찬 띠가 됐다 — 렌더해 보고 알았다.
+     대신 부모를 가운데로 하면 목록 글자까지 따라가므로 목록은 되돌린다. */
+.theme-bloom [data-block]:not(.ev-block) { text-align: center; }
+
+.theme-bloom [data-block]:not(.ev-block) > .block-header { margin: -54px 0 24px; }
+
+.theme-bloom [data-block]:not(.ev-block) ul,
+.theme-bloom [data-block]:not(.ev-block) ol,
+.theme-bloom [data-block]:not(.ev-block) dl { text-align: left; }
+
+/* ★ 알약은 .title 이 아니라 .block-header 가 된다 — sub-label 까지 같이 담아야 한다 */
+.theme-bloom .block-header {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 11px 32px 13px;
+  border-radius: 18px;
+  background: var(--ev-gradient-cta);
+  box-shadow: 0 7px 0 rgba(34, 168, 98, 0.26);
+}
+
+.theme-bloom .block-header .title {
+  color: #fff;
+  font-size: 1.18rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+/* ★ 알약을 카드 위로 끌어올렸더니 sub-label 이 카드 밖 배경에 떠서 미아가 됐다.
+     렌더해 보고 알았다. 알약 **안쪽 윗줄**로 넣어 한 덩어리로 만든다. */
+.theme-bloom .block-header .sub-label {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 700;
+  margin: 0 0 2px;
+  order: -1;
+}
+
+.theme-bloom .block-header .title {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* hero 다음 첫 카드는 걸칠 데가 없으니 자기 자리에서 시작 */
+.theme-bloom [data-block="hero"]:not(.ev-block) + [data-block] { margin-top: 10px; }
+
+/* ── ⑥ 항목 — 번호 + 오른쪽 아이콘 ────────────────────────────── */
+
+.theme-bloom [data-block="benefits"]:not(.ev-block) ul,
+.theme-bloom [data-block="steps"]:not(.ev-block) ol {
+  list-style: none;
+  display: grid;
+  gap: 0;
+}
+
+.theme-bloom [data-block="steps"]:not(.ev-block) ol { counter-reset: bloom-step; }
+
+.theme-bloom [data-block="benefits"]:not(.ev-block) li,
+.theme-bloom [data-block="steps"]:not(.ev-block) li {
+  position: relative;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 17px 54px 17px 0;
+  border-bottom: 2px dotted #dceee4;
+}
+
+.theme-bloom [data-block="benefits"]:not(.ev-block) li:last-child,
+.theme-bloom [data-block="steps"]:not(.ev-block) li:last-child { border-bottom: 0; }
+
+/* 번호 동그라미 */
+.theme-bloom [data-block="steps"]:not(.ev-block) li {
+  counter-increment: bloom-step;
+  padding-left: 50px;
+}
+
+.theme-bloom [data-block="steps"]:not(.ev-block) li::before {
+  content: counter(bloom-step);
+  position: absolute;
+  left: 0;
+  top: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 0 rgba(34, 168, 98, 0.3);
+}
+
+/* ★ 오른쪽 아이콘 — 참고 디자인의 그 자리. 단계마다 다른 기호를 돌려 쓴다.
+     HTML 에 아이콘 자리가 없어도 가상요소로 넣을 수 있다. */
+.theme-bloom [data-block="steps"]:not(.ev-block) li::after {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  background: #fff5f8;
+  color: var(--bloom-pink);
+  border: 2px solid #ffe0ea;
+}
+
+.theme-bloom [data-block="steps"]:not(.ev-block) li:nth-child(3n+1)::after { content: "♥"; }
+.theme-bloom [data-block="steps"]:not(.ev-block) li:nth-child(3n+2)::after { content: "◷"; background: #fff8e8; color: #e9a33b; border-color: #ffeccc; }
+.theme-bloom [data-block="steps"]:not(.ev-block) li:nth-child(3n)::after   { content: "✓"; background: #eafaf0; color: var(--ev-primary); border-color: #c9eeda; }
+
+.theme-bloom .benefit-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  background: var(--ev-primary-light);
+  margin-bottom: 11px;
+}
+
+.theme-bloom .benefit-name,
+.theme-bloom .step-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--ev-text-main);
+  margin-bottom: 4px;
+}
+
+.theme-bloom .benefit-desc,
+.theme-bloom .step-desc {
+  font-size: 0.89rem;
+  color: var(--ev-text-muted);
+  line-height: 1.6;
+}
+
+.theme-bloom .benefit-value {
+  display: inline-block;
+  margin-top: 9px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+.theme-bloom .benefit-tag {
+  display: inline-block;
+  margin-bottom: 9px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--bloom-pink);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+/* ── ⑦ stats ──────────────────────────────────────────────────── */
+
+.theme-bloom [data-block="stats"]:not(.ev-block) ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.theme-bloom [data-block="stats"]:not(.ev-block) li {
+  text-align: center;
+  padding: 18px 10px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--ev-surface-subtle);
+  color: var(--ev-text-muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.theme-bloom [data-block="stats"]:not(.ev-block) strong {
+  display: block;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--ev-primary-hover);
+  margin-bottom: 4px;
+}
+
+/* ── ⑧ schedule — 왼쪽 라벨 표 ────────────────────────────────── */
+
+/* ★ 참고 디자인의 "이벤트 기간 | 10월 1일 ~ …" 표. 기본 타임라인은 끈다 */
+.theme-bloom [data-block="schedule"]:not(.ev-block) ol {
+  list-style: none;
+  display: grid;
+  gap: 0;
+  border: 2px solid var(--ev-border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.theme-bloom [data-block="schedule"]:not(.ev-block) li::before { display: none; }
+
+.theme-bloom [data-block="schedule"]:not(.ev-block) li {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 2px solid var(--ev-border);
+  color: var(--ev-text-main);
+  font-size: 0.92rem;
+}
+
+.theme-bloom [data-block="schedule"]:not(.ev-block) li:first-child { border-top: 0; }
+
+.theme-bloom [data-block="schedule"]:not(.ev-block) li strong {
+  flex: 0 0 132px;
+  display: grid;
+  place-items: center;
+  padding: 15px 10px;
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* ★ strong 뒤는 **텍스트 노드**라 strong + * 가 안 맞는다 (렌더해 보고 알았다).
+     flex 컨테이너 안의 텍스트 노드는 익명 flex 항목이 되므로 gap 이 먹는다. */
+.theme-bloom [data-block="schedule"]:not(.ev-block) li {
+  align-items: center;
+  gap: 16px;
+  padding-right: 16px;
+}
+
+/* ── ⑨ prize · coupon — 눈에 띄는 둘 ─────────────────────────── */
+
+.theme-bloom [data-block="prize"]:not(.ev-block) {
+  background: linear-gradient(135deg, #fff6e5 0%, #ffeef4 100%);
+}
+
+.theme-bloom [data-block="prize"]:not(.ev-block) ul { list-style: none; display: grid; gap: 10px; }
+
+.theme-bloom [data-block="prize"]:not(.ev-block) li {
+  padding: 15px 16px 15px 52px;
+  border-radius: 16px;
+  background: #fff;
+  border: 2px solid #ffe3c9;
+  font-weight: 700;
+  color: var(--ev-text-main);
+}
+
+.theme-bloom [data-block="prize"]:not(.ev-block) li strong { color: #e9821b; margin-right: 8px; }
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) {
+  -webkit-mask: none;
+          mask: none;
+  background: linear-gradient(135deg, #e9f9f0 0%, #f6fbe9 100%);
+  border: 3px dashed #a8e3c3;
+  color: var(--ev-text-main);
+}
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) p {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--ev-primary-hover);
+  text-align: center;
+  margin: 6px 0 14px;
+}
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) ul { list-style: none; display: grid; gap: 7px; border: 0; }
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 0.88rem;
+  color: var(--ev-text-muted);
+}
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--ev-primary);
+  font-weight: 900;
+}
+
+/* ── ⑩ faq · notices ──────────────────────────────────────────── */
+
+.theme-bloom [data-block="faq"]:not(.ev-block) dt {
+  font-weight: 800;
+  color: var(--ev-text-main);
+  margin-top: 14px;
+  padding-left: 26px;
+  position: relative;
+}
+
+.theme-bloom [data-block="faq"]:not(.ev-block) dt::before {
+  content: "Q";
+  position: absolute;
+  left: 0;
+  width: 19px;
+  height: 19px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.theme-bloom [data-block="faq"]:not(.ev-block) dd {
+  color: var(--ev-text-muted);
+  font-size: 0.89rem;
+  line-height: 1.7;
+  margin: 7px 0 0;
+  padding: 0 0 14px 26px;
+  border-bottom: 2px dotted #dceee4;
+}
+
+.theme-bloom [data-block="notices"]:not(.ev-block) {
+  background: #f4f7f3;
+  box-shadow: none;
+}
+
+.theme-bloom [data-block="notices"]:not(.ev-block) ul { list-style: none; display: grid; gap: 6px; }
+
+/* ★ 유의사항은 법적 고지다. 흐리게 하되 **읽을 수 있어야** 한다.
+     --ev-text-light + 0.77rem 은 대비가 2.3:1 이었다(실측). WCAG AA 는 4.5:1 이다. */
+.theme-bloom [data-block="notices"]:not(.ev-block) li {
+  position: relative;
+  padding-left: 13px;
+  font-size: 0.82rem;
+  color: var(--ev-text-muted);
+  line-height: 1.7;
+}
+
+.theme-bloom [data-block="notices"]:not(.ev-block) li::before {
+  content: "·";
+  position: absolute;
+  left: 2px;
+}
+
+/* ── ⑪ cta — 떠 있는 배지가 붙은 버튼 ─────────────────────────── */
+
+.theme-bloom [data-block="cta"]:not(.ev-block) {
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+  padding: 10px 26px 58px;
+  overflow: visible;
+}
+
+.theme-bloom [data-block="cta"]:not(.ev-block) .btn,
+.theme-bloom [data-block="cta"]:not(.ev-block) .cta-btn {
+  position: relative;
+  display: inline-block;
+  padding: 19px 58px;
+  border-radius: 999px;
+  border: 4px solid #fff;
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 9px 0 rgba(34, 168, 98, 0.32), 0 18px 34px rgba(34, 64, 47, 0.16);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.theme-bloom [data-block="cta"]:not(.ev-block) .btn:hover,
+.theme-bloom [data-block="cta"]:not(.ev-block) .cta-btn:hover {
+  transform: translateY(3px);
+  box-shadow: 0 5px 0 rgba(34, 168, 98, 0.32), 0 12px 24px rgba(34, 64, 47, 0.16);
+}
+
+/* ★ 버튼 옆 떠 있는 배지 — 참고 디자인의 "참여 인증 완료!" 자리 */
+.theme-bloom [data-block="cta"]:not(.ev-block)::after {
+  content: "✓ 지금 참여하세요";
+  position: absolute;
+  /* ★ bottom: 8px 로 뒀더니 버튼 위에 겹쳤다. 버튼 아래로 내린다 */
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%) rotate(-3deg);
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--bloom-pink);
+  border: 3px solid #fff;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  box-shadow: 0 5px 14px rgba(255, 127, 168, 0.4);
+  white-space: nowrap;
+}
+
+/* ── ⑫ 문구 꾸밈 ─────────────────────────────────────────────── */
+
+.theme-bloom .t-accent    { color: var(--ev-primary-hover); }
+.theme-bloom .t-highlight { background: linear-gradient(transparent 62%, #ffe3ec 0); }
+.theme-bloom .t-big       { color: #e9821b; }
+
+/* ── ⑬ 좁은 화면 ─────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .theme-bloom.ev-container::before,
+  .theme-bloom .ev-container::before,
+  .theme-bloom.ev-container::after,
+  .theme-bloom .ev-container::after { display: none; }
+
+  .theme-bloom [data-block]:not(.ev-block) { margin: 0 12px 14px; padding: 26px 18px; }
+  .theme-bloom [data-block="hero"]:not(.ev-block) h1 { -webkit-text-stroke-width: 6px; }
+  .theme-bloom [data-block="schedule"]:not(.ev-block) li strong { flex-basis: 96px; font-size: 0.78rem; }
+  .theme-bloom [data-block="steps"]:not(.ev-block) li { padding-right: 46px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-bloom [data-block="cta"]:not(.ev-block) .btn,
+  .theme-bloom [data-block="cta"]:not(.ev-block) .cta-btn { transition: none; }
+}

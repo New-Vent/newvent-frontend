@@ -1,0 +1,334 @@
+/* ═══════════════════════════════════════════════════════════════════
+   theme-basic — 기본 테마. **성격이 없는 것이 목적이다.**
+
+   ★ 왜 성격이 없어야 하나
+     이 테마는 모델이 분위기를 안 골랐거나 지어냈을 때 서버가 박는 기본값이다
+     (PageShell.ensureRoot · Theme.DEFAULT). 성격이 센 테마를 기본으로 두면
+     "법인 고객 요금제 비교 사전예약" 에 구름이 뜬다. 조용한 기본값은
+     조금 안 맞아도 괜찮지만, 시끄러운 기본값은 그냥 틀린다.
+
+   ★ 그래서 고치는 건 셋뿐이다 — 이슈가 말한 "밋밋함" 의 실제 원인
+       ① 타이포 단계   제목이 본문보다 별로 크지 않다
+       ② 섹션 리듬     전부 같은 폭 · 모서리 · 여백의 흰 카드라 리듬이 없다
+       ③ 배경          순백이라 카드와 배경이 구분되지 않는다
+     장식(무늬 · 그림자 놀이 · 회전 아이콘)은 넣지 않는다.
+
+   ★ 선택자는 전부 .theme-basic ... :not(.ev-block) = 0,3,0
+       기본 폴백  :where(...)                              0,0,0  ← 이긴다
+       변형       [data-block="y"].v-z:not(.ev-block)      0,3,1  ← 진다
+     :not(.ev-block) 을 빼면 일부 블록 기본 규칙(coupon 등 0,2,0)과 동점이 되고,
+     50-blocks 가 20-themes 보다 뒤라 파일 순서에서 진다. 합쳐진 event.css 로
+     렌더해 보고서야 쿠폰만 틀어지는 걸 확인했다.
+
+   ★ 색은 전부 var() 로 받는다. 이 테마는 LIGHT(Theme.Tone.LIGHT) 이고
+     팔레트 19개 중 17개가 LIGHT 라서 표면색을 팔레트에 맡겨도 안전하다.
+     어두운 테마(aurora)는 그러면 안 된다 — 그쪽 주석에 적어 두었다.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── ① 배경 — 아주 옅은 틴트 ──────────────────────────────────── */
+
+body:has(.theme-basic) {
+  /* ★ 순백 위의 흰 카드는 카드로 안 보인다. 틴트는 팔레트 색에서 받아
+       색감을 바꾸면 배경도 같이 따라가게 한다. */
+  background-color: var(--ev-bg, #f7f7fb);
+  background-image: linear-gradient(180deg, var(--ev-primary-light, rgba(0, 0, 0, 0.035)) 0, transparent 420px);
+}
+
+.theme-basic.ev-container,
+.theme-basic .ev-container {
+  max-width: 720px;
+  margin: 32px auto;
+  padding: 0 0 12px;
+  /* ★ #fff 를 박으면 안 된다. palette-night · esports 는 --ev-text-main 을
+       밝게 바꾸는데 표면이 흰색으로 고정되면 흰 글자가 흰 바탕에 앉는다.
+       실제로 theme-basic + palette-night 를 렌더해 보고 소제목이 통째로
+       사라진 걸 봤다. **밝은 테마는 표면도 글자도 둘 다 팔레트에서 받는다** —
+       그래야 팔레트가 어두워질 때 같이 어두워진다.
+       (어두운 테마 aurora 는 반대다. 거기 주석을 보라 — 표면을 테마가 쥐고,
+        글자색도 테마가 --ev-text-main 으로 직접 정한다.) */
+  background: var(--ev-surface, #fff);
+  border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.07);
+}
+
+/* ── ② 섹션 리듬 — 카드를 겹치지 않는다 ───────────────────────── */
+
+/* ★ 내용 영역은 카드를 벗기고 선으로 나눈다. 카드 안에 카드가 들어가면
+     모서리가 두 겹이 되어 전부 같은 덩어리로 보인다. */
+.theme-basic [data-block]:not(.ev-block) {
+  margin: 0;
+  padding: 34px 30px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-top: 1px solid var(--ev-border, rgba(0, 0, 0, 0.07));
+}
+
+.theme-basic [data-block="hero"]:not(.ev-block) {
+  border-top: 0;
+}
+
+/* ★ 강조가 필요한 둘만 카드로 남긴다 — 경품 · 쿠폰.
+     "전부 카드" 와 "전부 평면" 사이의 리듬이 이 둘에서 나온다. */
+.theme-basic [data-block="prize"]:not(.ev-block),
+.theme-basic [data-block="coupon"]:not(.ev-block) {
+  margin: 10px 22px;
+  padding: 28px 24px;
+  background: var(--ev-surface-subtle, rgba(0, 0, 0, 0.025));
+  border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+  border-top: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+  border-radius: 16px;
+}
+
+/* ── ③ 타이포 단계 ────────────────────────────────────────────── */
+
+/* ★ 지금 제일 큰 문제다. h1 이 본문의 1.4배밖에 안 돼서 "제목" 으로 안 읽힌다 */
+.theme-basic [data-block="hero"]:not(.ev-block) {
+  padding: 56px 30px 44px;
+  text-align: center;
+  background: linear-gradient(170deg, var(--ev-primary-light, rgba(0, 0, 0, 0.04)) 0, transparent 100%);
+}
+
+.theme-basic [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(1.9rem, 6.2vw, 2.7rem);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: -0.025em;
+  color: var(--ev-text-main);
+  margin: 0 0 14px;
+}
+
+.theme-basic [data-block="hero"]:not(.ev-block) p {
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--ev-text-muted);
+  margin: 0 auto;
+  max-width: 34em;
+}
+
+.theme-basic [data-block]:not(.ev-block) h2 {
+  font-size: 1.28rem;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  color: var(--ev-text-main);
+  margin: 0 0 18px;
+}
+
+/* ★ 소제목 왼쪽에 짧은 색 막대 하나. 이게 "장식" 의 전부다 —
+     팔레트 색을 받으므로 색감을 바꾸면 같이 바뀐다. */
+.theme-basic [data-block]:not(.ev-block) h2::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 0.95em;
+  margin-right: 10px;
+  border-radius: 2px;
+  background: var(--ev-primary);
+  vertical-align: -0.11em;
+}
+
+.theme-basic [data-block="hero"]:not(.ev-block) h2::before {
+  content: none;
+}
+
+/* ── 본문 · 항목 ──────────────────────────────────────────────── */
+
+.theme-basic [data-block]:not(.ev-block) :is(p, li, dd) {
+  font-size: 0.97rem;
+  line-height: 1.75;
+  color: var(--ev-text-main);
+}
+
+/* ★ 왼쪽 자리를 쓰는 블록 셋은 건드리지 않는다 — prize(🎁 · 🏆 아이콘),
+     schedule(타임라인 점), notices(• 불릿). 전부 base 가 li 를
+     position:relative + padding-left 로 만들고 ::before 를 absolute 로 띄운다.
+     테마가 padding 단축 속성으로 덮으면 그 왼쪽 자리가 사라져 아이콘이
+     글자 위에 겹친다. 실제로 렌더해 보고 "1🏆제주도 여행권" 을 봤다.
+     이 셋은 base 모양이 이미 충분하다 — 테마가 할 일이 없다. */
+.theme-basic [data-block]:not(.ev-block):not([data-block="prize"]):not([data-block="schedule"]):not([data-block="notices"]) :is(ul, ol) {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.theme-basic [data-block]:not(.ev-block):not([data-block="prize"]):not([data-block="schedule"]):not([data-block="notices"]) :is(ul, ol) > li {
+  padding: 14px 16px;
+  background: var(--ev-surface-subtle, rgba(0, 0, 0, 0.022));
+  border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.06));
+  border-radius: 12px;
+}
+
+/* ★ 번호는 테마가 붙인다. list-style 을 none 으로 했으니 복구해야 한다 —
+     steps 에서 "1단계" 가 사라진 적이 있다.
+     변형(v-steps-numbered)은 0,3,1 이라 이 규칙을 이긴다. 의도된 순서다 —
+     관리자가 모양을 고르면 테마 기본값을 덮어야 한다.
+
+   ★ :not() 사슬을 위 일반 li 규칙과 **똑같이** 셋으로 맞춘다. 하나라도 빠지면
+     특이도가 0,5,2 가 되어 0,6,1 인 일반 규칙에 padding-left 를 뺏긴다 —
+     번호 동그라미가 글자 위에 겹친다. 실제로 렌더해서 "1벤트 페이지" 를 봤다.
+
+   ★ grid 로 "26px 1fr" 을 깔면 안 된다. <li> 안의 자식 수가 블록마다 다르다 —
+     steps 는 .step-title + .step-desc 두 개다. ::before 까지 세 칸이 되면
+     세 번째가 26px 칸으로 떨어져 **글자가 한 자씩 세로로** 쌓인다.
+     자식 수에 안 기대려면 li 를 relative 로 두고 번호를 absolute 로 띄운다. */
+.theme-basic [data-block]:not(.ev-block):not([data-block="prize"]):not([data-block="schedule"]):not([data-block="notices"]) ol {
+  counter-reset: nv-step;
+}
+
+.theme-basic [data-block]:not(.ev-block):not([data-block="prize"]):not([data-block="schedule"]):not([data-block="notices"]) ol > li {
+  counter-increment: nv-step;
+  position: relative;
+  padding-left: 52px;
+  min-height: 26px;
+}
+
+.theme-basic [data-block]:not(.ev-block):not([data-block="prize"]):not([data-block="schedule"]):not([data-block="notices"]) ol > li::before {
+  content: counter(nv-step);
+  position: absolute;
+  top: 13px;
+  left: 16px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.theme-basic [data-block]:not(.ev-block) strong {
+  font-weight: 800;
+  color: var(--ev-text-main);
+}
+
+/* ★ <strong>1등</strong>제주도 여행권 처럼 공백 없이 붙여 쓰는 출력이 온다.
+     "strong + 텍스트" 는 인접 형제 선택자로 못 잡는다 — 텍스트 노드는 요소가 아니다.
+     strong 쪽에 오른쪽 여백을 주는 게 유일하게 되는 방법이다. */
+.theme-basic [data-block]:not(.ev-block) :is(ul, ol) > li > strong:first-child {
+  margin-right: 6px;
+}
+
+/* ── 띠 배너 · 참여 버튼 ──────────────────────────────────────── */
+
+.theme-basic [data-block="highlight"]:not(.ev-block) {
+  margin: 0;
+  padding: 22px 30px;
+  text-align: center;
+  background: var(--ev-primary-light, rgba(0, 0, 0, 0.04));
+  border-top: 1px solid var(--ev-border, rgba(0, 0, 0, 0.07));
+}
+
+.theme-basic [data-block="highlight"]:not(.ev-block) p:first-child {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--ev-text-main);
+}
+
+.theme-basic [data-block="highlight"]:not(.ev-block) p + p {
+  font-size: 0.86rem;
+  color: var(--ev-text-muted);
+}
+
+.theme-basic [data-block="cta"]:not(.ev-block) {
+  padding: 36px 30px 44px;
+  text-align: center;
+}
+
+/* ★ :is(a, button) 으로 둘 다 받는다 — 템플릿은 button, 백지는 a 다.
+     버튼 색은 관리자가 미리보기에서 직접 고를 수 있고, 그쪽이
+     style 태그에 !important 로 들어가므로 이 규칙을 이긴다. 의도된 순서다. */
+.theme-basic [data-block="cta"]:not(.ev-block) :is(a, button) {
+  display: inline-block;
+  padding: 17px 42px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 8px 20px var(--ev-primary-glow, rgba(0, 0, 0, 0.18));
+}
+
+/* ── 꼬리말 배지 · 유의사항 ───────────────────────────────────── */
+
+.theme-basic [data-block="hero"]:not(.ev-block) .badge {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 6px 15px;
+  border-radius: 999px;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* ★ 유의사항은 서버 소유다. 눈에 덜 띄게만 하고 구조는 건드리지 않는다 */
+.theme-basic [data-block="notices"]:not(.ev-block) {
+  padding: 26px 30px 30px;
+  background: var(--ev-surface-subtle, rgba(0, 0, 0, 0.02));
+}
+
+/* ★ 유의사항은 법적 고지다. 흐리게 하되 **읽을 수 있어야** 한다.
+     --ev-text-light 로 두면 대비가 2.4:1 까지 떨어진다(실측). WCAG AA 는 4.5:1 이고
+     작은 글자라 더 불리하다. --ev-text-muted 를 쓰고 크기도 0.84rem 까지만 줄인다. */
+.theme-basic [data-block="notices"]:not(.ev-block) :is(p, li) {
+  font-size: 0.84rem;
+  line-height: 1.75;
+  color: var(--ev-text-muted);
+}
+
+/* ── 표 ───────────────────────────────────────────────────────── */
+
+.theme-basic [data-block="compare"]:not(.ev-block) table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.93rem;
+}
+
+.theme-basic [data-block="compare"]:not(.ev-block) :is(th, td) {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+  color: var(--ev-text-main);
+}
+
+.theme-basic [data-block="compare"]:not(.ev-block) th {
+  background: var(--ev-primary-light, rgba(0, 0, 0, 0.04));
+  font-weight: 800;
+}
+
+/* ── 좁은 화면 ────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .theme-basic.ev-container,
+  .theme-basic .ev-container {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .theme-basic [data-block]:not(.ev-block) {
+    padding: 28px 18px;
+  }
+
+  .theme-basic [data-block="hero"]:not(.ev-block) {
+    padding: 44px 18px 34px;
+  }
+
+  .theme-basic [data-block="prize"]:not(.ev-block),
+  .theme-basic [data-block="coupon"]:not(.ev-block) {
+    margin: 10px 14px;
+    padding: 22px 16px;
+  }
+}

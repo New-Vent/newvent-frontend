@@ -1,0 +1,534 @@
+/* ══════════════════════════════════════════════════════════════════
+   theme-aurora — 백지 생성용 페이지 테마
+   src/event-css/90-themes/01-aurora.css
+
+   ★ 설계 원칙 — 변형(v-*)과 싸우지 않는다
+     event.css 의 기본 폴백은 전부 :where(...) 라 특이도 0,0,0 이고
+     변형 규칙은 [data-block="x"].v-y:not(.ev-block) 로 0,3,1 이다.
+     테마가 같은 속성을 0,3,1 로 또 쓰면 파일 순서로 이기고 지는 싸움이 된다.
+
+     그래서 테마는 세 가지만 한다.
+       ① CSS 변수            변형이 var() 로 읽으므로 특이도 싸움이 없다
+       ② 페이지 틀           body 배경 · .ev-container — 경쟁자가 없다
+       ③ 변형이 안 건드리는 것  .block-header · 섹션 리듬 (0,2,0 으로 충분)
+
+     h1 크기만 0,2,1 로 올린다. v-hero-poster 처럼 **스스로 크기를 정한 변형**
+     (0,3,1)은 그대로 이기게 둔다 — 그게 맞다.
+
+   ★ 왜 "전부 같은 흰 카드" 를 깨야 하나
+     섹션마다 카드를 씌우면 폭·모서리·여백이 전부 같아 리듬이 사라진다.
+     여기서는 컨테이너 하나만 카드로 띄우고, 섹션은 선으로 나눈다.
+     눈에 띄어야 할 것(prize · coupon · cta)만 따로 칠한다.
+   ══════════════════════════════════════════════════════════════════ */
+
+
+/* ──────────────────────────────────────────────────────────────────
+   ★ 왜 선택자마다 :not(.ev-block) 이 붙어 있나 — 실제 빌드로 돌려 보고 알았다.
+
+   event.css 의 블록 기본 규칙은 두 가지 꼴이 섞여 있다.
+     :where(...) :where([data-block="x"]:not(.ev-block))   → 0,0,0
+     :where(...) [data-block="x"]:not(.ev-block)           → 0,2,0   ← coupon 등
+
+   테마를 .theme-X [data-block="coupon"] (0,2,0) 으로 쓰면 뒤엣것과 **동점**이고,
+   테마는 20-themes/ · 블록은 50-blocks/ 라 **블록이 뒤에 와서 이긴다.**
+   단독 파일로 미리보기할 때는 내 파일이 마지막이라 멀쩡해 보였고,
+   node scripts/build-event-css.mjs 로 합쳐서 렌더하고서야 쿠폰이 틀어진 걸 봤다.
+
+   :not(.ev-block) 을 붙이면 0,3,0 이 되어 순서와 무관하게 이기고,
+   변형(0,3,1)에는 여전히 진다 — 그게 맞는 순서다.
+   ────────────────────────────────────────────────────────────────── */
+
+/* ── ① 변수 ────────────────────────────────────────────────────── */
+
+.theme-aurora {
+  --ev-primary:        #a78bfa;
+  --ev-primary-hover:  #8b5cf6;
+  --ev-primary-light:  rgba(167, 139, 250, 0.14);
+  --ev-primary-glow:   rgba(167, 139, 250, 0.42);
+
+  --ev-gradient-hero:  radial-gradient(90% 120% at 50% -10%, #4c1d95 0%, #2e1065 45%, #180d3a 100%);
+  /* ★ 알약·배지가 가로로 짧아서 135deg 로는 분홍이 거의 안 보였다.
+     90deg 로 눕히고 분홍을 앞당겨 두 색이 다 읽히게 한다. */
+  --ev-gradient-cta:   linear-gradient(90deg, #a78bfa 0%, #d8a0f0 45%, #f472b6 100%);
+  --ev-accent-tag:     #f472b6;
+
+  --ev-bg:             #0d0821;
+  --ev-surface:        rgba(28, 19, 58, 0.72);
+  --ev-surface-subtle: rgba(45, 31, 86, 0.55);
+  --ev-border:         rgba(167, 139, 250, 0.26);
+
+  --ev-text-main:      #f4ecff;
+  --ev-text-muted:     #bcaede;
+  --ev-text-light:     #8b7cb8;
+
+  /* 이 테마 안에서만 쓰는 값 */
+  --aurora-glow:       0 0 22px rgba(167, 139, 250, 0.55), 0 0 56px rgba(244, 114, 182, 0.32);
+  --aurora-ring:       inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── ② 페이지 틀 ──────────────────────────────────────────────── */
+
+/* ★ :has() 를 쓰는 이유 — 테마 class 는 .ev-container 에 붙는데
+     배경은 body 에 깔려야 화면 끝까지 찬다. 미지원 브라우저는
+     아래 .theme-aurora 자체 배경이 받아 준다(이중으로 깔아 둔다). */
+body:has(.theme-aurora) {
+  background-color: #0d0821;
+  background-image:
+    radial-gradient(1.5px 1.5px at 18% 22%, rgba(255, 255, 255, 0.55), transparent 100%),
+    radial-gradient(1.5px 1.5px at 72% 14%, rgba(255, 255, 255, 0.40), transparent 100%),
+    radial-gradient(1px   1px   at 42% 64%, rgba(255, 255, 255, 0.45), transparent 100%),
+    radial-gradient(1px   1px   at 88% 78%, rgba(255, 255, 255, 0.35), transparent 100%),
+    radial-gradient(60% 45% at 50% 0%, rgba(124, 58, 237, 0.38), transparent 70%),
+    linear-gradient(180deg, #1a0f3d 0%, #0d0821 58%, #080515 100%);
+  background-size: 260px 260px, 340px 340px, 200px 200px, 420px 420px, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+}
+
+/* ★ 컨테이너를 "떠 있는 한 장" 으로. 섹션마다 카드를 씌우지 않는다 */
+.theme-aurora.ev-container,
+.theme-aurora .ev-container {
+  max-width: 760px;
+  margin: 40px auto;
+  min-height: auto;
+  padding: 0 0 8px;
+  /* ★ var(--ev-surface) 를 쓰지 않는다.
+       팔레트 파일(90-)이 테마 파일(20-)보다 뒤라 --ev-surface 는 팔레트가 이기는데,
+       --ev-text-main 은 팔레트가 거의 안 건드린다(night · esports 뿐).
+       그래서 밝은 팔레트를 고르면 카드만 밝아지고 글자는 밝은 채로 남아 사라진다.
+       theme-aurora + palette-autumn 을 실제로 렌더해 보고 소제목이 안 보이는 걸 봤다.
+       어두운 테마의 표면은 테마가 쥔다 — 팔레트는 강조색 · 그라데이션으로만 섞인다.
+       이 한 줄이 있어야 조합이 3 × 19 = 57 로 성립한다. */
+  background: rgba(28, 19, 58, 0.72);
+  border: 1px solid var(--ev-border);
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), var(--aurora-ring);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+/* ── ③ 섹션 리듬 — 카드가 아니라 선으로 나눈다 ─────────────────── */
+
+/* ★ 기본 폴백이 :where(...) 0,0,0 이라 0,2,0 으로 충분히 이긴다.
+     v-surface-* 를 고른 섹션은 0,3,1 이라 그대로 살아남는다 —
+     "한두 영역만 눈에 띄게" 가 그래서 성립한다. */
+.theme-aurora [data-block]:not(.ev-block) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  padding: 34px 30px;
+  border-top: 1px solid rgba(167, 139, 250, 0.14);
+}
+
+.theme-aurora [data-block="hero"]:not(.ev-block) { border-top: 0; }
+
+/* ── ④ hero — 제목이 페이지에서 제일 크다 ─────────────────────── */
+
+.theme-aurora [data-block="hero"]:not(.ev-block) {
+  padding: 62px 28px 54px;
+  text-align: center;
+  background: var(--ev-gradient-hero);
+}
+
+/* 0,2,1 — :where 폴백(0,0,0)은 이기고, 스스로 크기를 정한 변형(0,3,1)에는 진다 */
+.theme-aurora [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(2.6rem, 9vw, 4.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: var(--aurora-glow);
+  margin: 14px 0 12px;
+}
+
+.theme-aurora [data-block="hero"]:not(.ev-block) p {
+  color: #d9ccff;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+/* 기간 줄은 한 단계 더 조용하게 */
+.theme-aurora [data-block="hero"]:not(.ev-block) [data-slot="period"] {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.86rem;
+  color: #e9e0ff;
+}
+
+.theme-aurora [data-block="hero"]:not(.ev-block) .badge {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: var(--ev-gradient-cta);
+  border: 0;
+  color: #1a0f3d;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 20px rgba(244, 114, 182, 0.35);
+}
+
+
+/* ★ 표면 위에 앉는 글자에 #fff 를 박지 않는다.
+     팔레트가 --ev-surface 를 밝게 바꾸면(가을 · 봄 · 파스텔 …) 흰 글자가 그대로 사라진다.
+     실제로 theme-aurora + palette-autumn 을 렌더해 보고 소제목이 안 보이는 걸 봤다.
+     테마는 **구조**, 팔레트는 **색** — 색은 전부 var() 로 받아야 둘이 섞인다.
+     hero 는 자기 그라데이션 배경(--ev-gradient-hero)을 쓰므로 #fff 를 그대로 둔다. */
+
+/* ── ⑤ 소제목 — 그라데이션 알약 ───────────────────────────────── */
+
+/* .block-header .sub-label 이 0,2,0 이므로 0,3,0 으로 덮는다 */
+.theme-aurora .block-header {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.theme-aurora .block-header .sub-label {
+  display: inline-block;
+  padding: 7px 20px;
+  border-radius: 999px;
+  background: var(--ev-gradient-cta);
+  color: #1a0f3d;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+
+.theme-aurora .block-header .title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--ev-text-main);
+  letter-spacing: -0.01em;
+}
+
+/* ── ⑥ 항목 — 카드가 아니라 선 ────────────────────────────────── */
+
+.theme-aurora [data-block="benefits"]:not(.ev-block) ul,
+.theme-aurora [data-block="steps"]:not(.ev-block) ol {
+  display: grid;
+  gap: 0;
+  list-style: none;
+}
+
+/* ★ list-style 을 없앴으면 번호를 다시 넣어야 한다.
+     안 넣었더니 참여 방법이 "제목 + 설명" 만 남아 순서가 안 보였다.
+     v-steps-* 를 고른 경우엔 그 변형이 0,3,1 로 자기 번호를 그린다 —
+     여기 것은 변형을 안 고른 기본 상태를 받친다. */
+.theme-aurora [data-block="steps"]:not(.ev-block) ol { counter-reset: aurora-step; }
+
+.theme-aurora [data-block="steps"]:not(.ev-block) li {
+  counter-increment: aurora-step;
+  position: relative;
+}
+
+.theme-aurora [data-block="steps"]:not(.ev-block) li::before {
+  content: counter(aurora-step);
+  position: absolute;
+  left: 0;
+  top: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ev-gradient-cta);
+  color: #1a0f3d;
+  font-weight: 900;
+  font-size: 0.92rem;
+}
+
+.theme-aurora [data-block="benefits"]:not(.ev-block) li,
+.theme-aurora [data-block="steps"]:not(.ev-block) li {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 18px 2px;
+  border-bottom: 1px solid rgba(167, 139, 250, 0.13);
+}
+
+.theme-aurora [data-block="benefits"]:not(.ev-block) li:last-child,
+.theme-aurora [data-block="steps"]:not(.ev-block) li:last-child { border-bottom: 0; }
+
+/* ★ 번호 자리는 공통 li 규칙(padding: 18px 2px) **뒤에** 비워야 한다.
+     앞에 뒀더니 뒤엣것이 덮어서 번호가 제목 위에 올라앉았다.
+     특이도가 같으면 순서가 정한다 — 프롬프트에서 겪은 것과 같은 함정이다. */
+.theme-aurora [data-block="steps"]:not(.ev-block) li { padding-left: 52px; }
+
+.theme-aurora .benefit-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  background: var(--ev-primary-light);
+  border: 1px solid var(--ev-border);
+  margin-bottom: 12px;
+}
+
+.theme-aurora .benefit-name,
+.theme-aurora .step-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--ev-text-main);
+  margin-bottom: 5px;
+}
+
+.theme-aurora .benefit-desc,
+.theme-aurora .step-desc {
+  font-size: 0.9rem;
+  color: var(--ev-text-muted);
+  line-height: 1.65;
+}
+
+.theme-aurora .benefit-value {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #f472b6;
+}
+
+.theme-aurora .benefit-tag {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(244, 114, 182, 0.16);
+  border: 1px solid rgba(244, 114, 182, 0.36);
+  color: #f9a8d4;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* ── ⑦ stats — 숫자가 주인공 ──────────────────────────────────── */
+
+.theme-aurora [data-block="stats"]:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0;
+  list-style: none;
+}
+
+.theme-aurora [data-block="stats"]:not(.ev-block) li {
+  text-align: center;
+  padding: 10px 14px;
+  border: 0;
+  background: transparent;
+  border-left: 1px solid rgba(167, 139, 250, 0.16);
+}
+
+.theme-aurora [data-block="stats"]:not(.ev-block) li:first-child { border-left: 0; }
+
+.theme-aurora [data-block="stats"]:not(.ev-block) strong {
+  display: block;
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1.1;
+  background: var(--ev-gradient-cta);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 6px;
+}
+
+/* ── ⑧ 눈에 띄어야 하는 것만 칠한다 ───────────────────────────── */
+
+/* ★ prize · coupon 둘만 배경을 준다. 전부 칠하면 아무것도 안 띈다 */
+.theme-aurora [data-block="prize"]:not(.ev-block),
+.theme-aurora [data-block="coupon"]:not(.ev-block) {
+  margin: 8px 22px;
+  padding: 30px 26px;
+  border-radius: 22px;
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  background:
+    radial-gradient(120% 100% at 0% 0%, rgba(244, 114, 182, 0.22), transparent 60%),
+    rgba(56, 33, 94, 0.6);
+  border-top: 1px solid rgba(244, 114, 182, 0.3);
+}
+
+/* ★ 기본 쿠폰은 양옆이 파인 티켓 모양인데, 그걸 ::before 가 아니라
+     **CSS mask** 로 판다(radial-gradient 두 장을 좌우에 깔아 구멍을 낸다).
+     ::before 만 끄면 안 없어진다 — 눈으로 보고서야 알았다.
+     여기서는 둥근 카드라 그 구멍이 테두리를 물어뜯는다. */
+.theme-aurora [data-block="coupon"]:not(.ev-block) {
+  -webkit-mask: none;
+          mask: none;
+}
+
+.theme-aurora [data-block="prize"]:not(.ev-block) ul { list-style: none; display: grid; gap: 12px; }
+
+/* ★ 기본 CSS 가 li::before 로 🏆 · 🎁 를 left:14px 에 **절대 위치**로 놓는다.
+     padding-left 를 줄였더니 이모지가 <strong>1등</strong> 을 그대로 덮었다.
+     기본값(50px)만큼은 반드시 비워 둔다. */
+.theme-aurora [data-block="prize"]:not(.ev-block) li {
+  padding: 16px 18px 16px 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+  color: var(--ev-text-main);
+}
+
+.theme-aurora [data-block="prize"]:not(.ev-block) li strong { color: #fbbf24; margin-right: 8px; }
+
+.theme-aurora [data-block="coupon"]:not(.ev-block) p {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--ev-text-main);
+  text-align: center;
+  margin: 6px 0 16px;
+}
+
+.theme-aurora [data-block="coupon"]:not(.ev-block) ul { list-style: none; display: grid; gap: 8px; }
+
+.theme-aurora [data-block="coupon"]:not(.ev-block) li {
+  font-size: 0.88rem;
+  color: var(--ev-text-muted);
+  padding-left: 18px;
+  position: relative;
+}
+
+.theme-aurora [data-block="coupon"]:not(.ev-block) li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #f472b6;
+  font-weight: 800;
+}
+
+/* ── ⑨ schedule — 알약 라벨 ───────────────────────────────────── */
+
+.theme-aurora [data-block="schedule"]:not(.ev-block) ol { list-style: none; display: grid; gap: 10px; }
+
+/* ★ 기본은 왼쪽 세로선 + 점(li::before)으로 타임라인을 그린다.
+     여기서는 항목마다 카드를 쓰므로 그 둘이 카드 밖에 떠서 어긋난다. 끈다. */
+.theme-aurora [data-block="schedule"]:not(.ev-block) li::before { display: none; }
+
+.theme-aurora [data-block="schedule"]:not(.ev-block) li {
+  border-left: 0;
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(167, 139, 250, 0.16);
+  color: var(--ev-text-muted);
+  font-size: 0.92rem;
+}
+
+.theme-aurora [data-block="schedule"]:not(.ev-block) li strong {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--ev-primary-light);
+  border: 1px solid var(--ev-border);
+  color: #ddd0ff;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+/* ── ⑩ faq · notices ──────────────────────────────────────────── */
+
+.theme-aurora [data-block="faq"]:not(.ev-block) dt {
+  font-weight: 800;
+  color: var(--ev-text-main);
+  margin-top: 16px;
+  font-size: 0.98rem;
+}
+
+.theme-aurora [data-block="faq"]:not(.ev-block) dd {
+  color: var(--ev-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin: 6px 0 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(167, 139, 250, 0.12);
+}
+
+.theme-aurora [data-block="notices"]:not(.ev-block) {
+  background: rgba(0, 0, 0, 0.22);
+  padding: 26px 30px;
+}
+
+.theme-aurora [data-block="notices"]:not(.ev-block) ul { list-style: none; display: grid; gap: 7px; }
+
+.theme-aurora [data-block="notices"]:not(.ev-block) li {
+  font-size: 0.78rem;
+  color: var(--ev-text-light);
+  line-height: 1.65;
+  padding-left: 14px;
+  position: relative;
+}
+
+.theme-aurora [data-block="notices"]:not(.ev-block) li::before {
+  content: "·";
+  position: absolute;
+  left: 2px;
+  color: var(--ev-text-light);
+}
+
+/* ── ⑪ cta ────────────────────────────────────────────────────── */
+
+.theme-aurora [data-block="cta"]:not(.ev-block) {
+  padding: 34px 30px 44px;
+  text-align: center;
+  border-top: 1px solid rgba(167, 139, 250, 0.14);
+}
+
+.theme-aurora [data-block="cta"]:not(.ev-block) .btn,
+.theme-aurora [data-block="cta"]:not(.ev-block) .cta-btn {
+  display: inline-block;
+  padding: 18px 56px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--ev-gradient-cta);
+  color: #1a0f3d;
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 14px 38px rgba(167, 139, 250, 0.42);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.theme-aurora [data-block="cta"]:not(.ev-block) .btn:hover,
+.theme-aurora [data-block="cta"]:not(.ev-block) .cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 46px rgba(244, 114, 182, 0.5);
+}
+
+/* ── ⑫ 문구 꾸밈 — 어두운 바탕에 맞게 ─────────────────────────── */
+
+.theme-aurora .t-accent    { color: #c4b5fd; }
+.theme-aurora .t-highlight { background: linear-gradient(transparent 62%, rgba(244, 114, 182, 0.4) 0); color: #fff; }
+.theme-aurora .t-big       { color: #fbbf24; }
+.theme-aurora .t-strike    { color: var(--ev-text-light); }
+
+/* ── ⑬ 좁은 화면 ─────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .theme-aurora.ev-container,
+  .theme-aurora .ev-container { margin: 0; border-radius: 0; border-left: 0; border-right: 0; }
+  .theme-aurora [data-block]:not(.ev-block) { padding: 28px 20px; }
+  .theme-aurora [data-block="hero"]:not(.ev-block) { padding: 48px 20px 40px; }
+  .theme-aurora [data-block="prize"]:not(.ev-block),
+  .theme-aurora [data-block="coupon"]:not(.ev-block) { margin: 8px 14px; padding: 24px 20px; }
+}
+
+/* ── ⑭ 접근성 ────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-aurora [data-block="cta"]:not(.ev-block) .btn,
+  .theme-aurora [data-block="cta"]:not(.ev-block) .cta-btn { transition: none; }
+}
