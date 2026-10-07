@@ -78,6 +78,19 @@ API 는 양쪽 다 `/api` **상대경로**다. 환경별 분기가 없다.
 | `/admin/events/:id/versions` | 버전 이력 · 저장 지점 · 게시 | `views/versions.js` |
 | `/admin/login` | 관리자 로그인 (경로·쿠키가 사용자와 다름) | `views/login.js` |
 
+#### 서버 버전 되돌리기
+
+버전 이력의 **이 버전에서 이어서 작업** 버튼은
+`POST /api/admin/events/{eventId}/versions/{versionId}/restore`를 호출한다(요청 본문 없음).
+선택한 내용을 복사한 새 최신 버전이 생기며 기존 이력과 게시 버전은 유지된다.
+확인 후 미리보기·버전 이력·직접 편집 기준을 새로 읽는다. 저장하지 않은 직접 수정은 버린다.
+새 버전을 이력에 남기려면 **버전 저장**을 누른다.
+
+요청 중에는 중복 실행을 막는다. 생성 성공 후 조회만 실패한 경우에는
+되돌리기를 재요청하지 않고 **다시 불러오기**를 안내한다.
+
+회귀 테스트: `node --experimental-vm-modules --test tests/version-restore.test.mjs`
+
 #### 관리 목록은 탭마다 열도 버튼도 다르다
 
 | 탭 | 열 | 버튼 |
