@@ -303,6 +303,25 @@ export async function publishEvent(eventId, versionId) {
   return requireApi().post(`/api/admin/events/${eventId}/publish`, { versionId })
 }
 
+/**
+ * 게시 내리기 → 이벤트 상세 (status 가 DRAFT 로 돌아온다). 요청 본문은 없다.
+ *
+ * 게시 버전만 해제한다 — 저장된 버전 · 참여 기록 · 알림 표시는 그대로 둔다.
+ * 내린 뒤 publishEvent 로 다시 올릴 수 있다.
+ *
+ * ★ 게시 중(PUBLISHED)이 아니면 409 EVENT409-7 이다. DRAFT 도 ENDED 도 여기 걸린다.
+ * ★ 종료 시각은 지났는데 아직 ENDED 로 안 바뀐 이벤트는 409 EVENT409-1 이다.
+ *   화면이 "진행 중" 으로 보여주고 있어도 서버가 거절할 수 있다는 뜻이라,
+ *   누른 뒤 실패하면 목록을 다시 읽어 상태를 맞춘다 (main.js).
+ * ★ 없거나 삭제된 이벤트는 404 EVENT404-0.
+ *
+ * 목업 모드는 main.js 가 state 를 직접 바꾼다 — 여기로 오지 않는다.
+ */
+export async function unpublishEvent(eventId) {
+  if (!USE_SERVER) throw new Error('목업 모드에서는 main.js 가 직접 내린다')
+  return requireApi().post(`/api/admin/events/${eventId}/unpublish`)
+}
+
 export async function deleteEvent(eventId) {
   if (!USE_SERVER) {
     const e = findEvent(eventId)
