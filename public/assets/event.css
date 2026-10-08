@@ -1208,15 +1208,6 @@ body:has(.theme-bloom) {
 }
 
 /* ★ 반짝이 — 제목 옆에 하나 */
-.theme-bloom [data-block="hero"]:not(.ev-block)::after {
-  content: "✦";
-  position: absolute;
-  top: 54px;
-  right: 34px;
-  font-size: 1.5rem;
-  color: var(--bloom-pink);
-  text-shadow: 0 0 14px var(--ev-primary-glow);
-}
 
 /* ★★ hero 는 **배경과 글자색을 테마가 함께 쥔다.**
      bloom 의 얼굴이 "밝은 하늘 위 외곽선 제목" 이라 배경이 바뀌면 테마가 무너진다.
