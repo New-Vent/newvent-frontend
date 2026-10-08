@@ -29,6 +29,15 @@ const stamp = new Intl.DateTimeFormat('ko-KR', {
 })
 const when = (iso) => (iso ? stamp.format(new Date(iso)) : '')
 
+const validVersionId = (id) => (typeof id === 'number' || typeof id === 'string')
+  && String(id).trim() !== '' && Number.isSafeInteger(Number(id)) && Number(id) > 0
+const sameVersion = (a, b) => validVersionId(a?.versionId) && validVersionId(b?.versionId)
+  && Number(a.versionId) === Number(b.versionId)
+function canRestoreVersion(s, v) {
+  return !!s && !!v && validVersionId(v.versionId) && s.status === 'ready'
+    && !s.busy && !running(s) && s.event?.status !== 'ENDED' && !sameVersion(v, s.preview)
+}
+
 function serverVersionsView() {
   const s = ui.serverEditor
   const back = button('edit', icon('back') + '편집 화면으로', 'data-id="' + (s?.id ?? ui.activeId) + '"', 'backlink')
@@ -38,7 +47,7 @@ function serverVersionsView() {
   const list = s.versions
   const busy = running(s) || s.busy
   const ended = s.event?.status === 'ENDED'
-  const latestSaved = !!latest && (list || []).some((v) => v.versionId === latest.versionId)
+  const latestSaved = !!latest && (list || []).some((v) => sameVersion(v, latest))
 
   const current = latest
     ? '<div class="card" style="margin-bottom:16px"><div class="version-row"><div class="version-number">v' + latest.versionNo + '</div>'
@@ -52,7 +61,7 @@ function serverVersionsView() {
     : !list.length
       ? '<div class="empty"><strong>저장한 버전이 없어요</strong><p>편집 화면에서 "버전 저장" 을 누르면 여기에 남아요.</p></div>'
       : '<div class="card">' + list.map((v) => {
-        const isLatest = v.versionId === latest?.versionId
+        const isLatest = sameVersion(v, latest)
         return '<div class="version-row server-version-row"><div class="version-number">v' + v.versionNo + '</div><div class="version-text"><h3>'
           + esc(v.requestContent || (v.sourceVersionNo ? 'v' + v.sourceVersionNo + ' 에서 고친 버전' : '처음 만든 버전')) + ' '
           + (v.published ? '<span class="badge green">게시 중</span>' : '')
@@ -63,7 +72,7 @@ function serverVersionsView() {
           + button('server-version-publish', v.published ? '게시 중' : '이 버전 게시',
               'data-version="' + v.versionId + '" ' + ((v.published || busy || ended) ? 'disabled' : ''), 'btn sm ' + (v.published ? 'ghost' : 'soft'))
           + button('server-version-restore', '이 버전에서 이어서 작업', 'data-version="' + v.versionId + '" '
-              + ((busy || ended || isLatest) ? 'disabled' : ''), 'btn sm')
+              + (canRestoreVersion(s, v) ? '' : 'disabled'), 'btn sm')
           + button('server-version-template', '템플릿으로 등록', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm soft')
           + button('server-version-unsave', '저장 해제', 'data-version="' + v.versionId + '" ' + ((v.published || busy) ? 'disabled title="게시 중인 버전은 해제할 수 없어요"' : ''), 'btn sm ghost')
           + '</div></div>'
@@ -78,8 +87,8 @@ function serverVersionsView() {
 }
 
 async function restoreSaved(s, versionId, rerender) {
-  if (ui.serverEditor !== s || ui.route !== 'versions' || s.busy || running(s)
-      || s.status !== 'ready' || s.event?.status === 'ENDED') return
+  const v = s?.versions?.find((x) => validVersionId(x.versionId) && Number(x.versionId) === versionId)
+  if (ui.serverEditor !== s || ui.route !== 'versions' || !canRestoreVersion(s, v)) return
   s.busy = true
   rerender()
   let restored = null
@@ -155,9 +164,8 @@ function handleVersionsClick(a, b, rerender) {
         () => toggleSaved(id, false, rerender), '이력에서 빼기')
       return true
     case 'server-version-restore': {
-      const v = (s?.versions || []).find((x) => x.versionId === id)
-      if (!v || s.busy || running(s) || s.status !== 'ready'
-          || s.event?.status === 'ENDED' || id === s.preview?.versionId) return true
+      const v = (s?.versions || []).find((x) => validVersionId(x.versionId) && Number(x.versionId) === id)
+      if (!canRestoreVersion(s, v)) return true
       ask('v' + v.versionNo + ' 에서 이어서 작업할까요?',
         '선택한 버전의 내용으로 새 최신 버전을 만들어요. 저장하지 않은 직접 수정 내용은 사라지며, 기존 이력과 게시 중인 페이지는 그대로 유지돼요.',
         () => restoreSaved(s, id, rerender), '새 버전으로 이어서 작업')

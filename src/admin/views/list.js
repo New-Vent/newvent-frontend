@@ -16,8 +16,6 @@
  *
  * ★ 서버 모드에서 아직 없는 것
  *   버전 번호 · 게시 전 변경 개수 — 목록 API 가 버전 정보를 안 준다
- *   게시하기 · 게시 내리기 — 게시 API 가 501 이다. 버튼만 막아 둔다
- *   편집하기 · 버전 이력 — 그 화면이 아직 목업이다
  */
 
 import { published, rows } from '@shared/selectors.js'
@@ -226,8 +224,6 @@ function serverFiltered() {
 }
 
 const blocked = (why) => `disabled title="${why}"`
-// 게시 내리기 · 종료는 상태 변경 API(PATCH /status)가 아직 501 이다
-const SOON_STATUS = '게시 내리기 API 가 아직 준비되지 않았어요'
 
 /**
  * 목록의 게시 — 최신 버전을 게시한다 (다른 버전은 편집 화면 · 버전 이력에서 고른다).
@@ -268,7 +264,7 @@ function serverLive(es) {
     + `<td>${serverPeriod(e)}</td>`
     + '<td>' + badgeOf('live') + '</td>'
     + '<td><div class="row">'
-    + button('unpublish', '게시 내리기', `data-id="${e.id}" ${blocked(SOON_STATUS)}`, 'btn sm soft')
+    + button('unpublish', '게시 내리기', `data-id="${e.id}"`, 'btn sm soft')
     + '</div></td></tr>')
   return `<table class="admin-table"><thead><tr><th>이벤트</th><th>기간</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
     + rows.join('')

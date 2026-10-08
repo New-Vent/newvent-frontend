@@ -9,7 +9,7 @@ import './styles.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
-import { deleteEvent, loadPreview, publishEvent, purgeEvent, restoreEvent, useApi, USE_SERVER } from '@shared/repo.js'
+import { deleteEvent, loadPreview, publishEvent, purgeEvent, restoreEvent, unpublishEvent, useApi, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -163,8 +163,8 @@ document.addEventListener('click', (ev) => {
   if(USE_SERVER&&(handleServerClick(a,b,()=>render())||handleVersionsClick(a,b,()=>render())))return;
 
   // ── 서버 모드 목록 (VITE_API_AUTH=on) ─────────────────────────
-  //   목업 분기보다 먼저 본다. 게시 · 게시 내리기 · 복구 후 게시는 버튼이 막혀 있어 여기로 안 온다
-  if(USE_SERVER&&['delete-event','restore-event','purge-event','admin-reload','publish-latest'].includes(a)){
+  //   목업 분기보다 먼저 본다. 복구 후 게시는 버튼이 막혀 있어 여기로 안 온다
+  if(USE_SERVER&&['delete-event','restore-event','purge-event','admin-reload','publish-latest','unpublish'].includes(a)){
     const reload=()=>loadAdminServer(()=>render())
     if(a==='admin-reload'){reload();render();return}
     const e=serverItem(b.dataset.id); if(!e) return
@@ -177,6 +177,28 @@ document.addEventListener('click', (ev) => {
     if(a==='purge-event'){
       ask('영구 삭제할까요?',e.name+' 이벤트와 저장된 버전이 완전히 사라집니다. 되돌릴 수 없어요.',
         ()=>run(()=>purgeEvent(e.id),'영구 삭제했어요.','영구 삭제하지 못했어요.'),'영구 삭제')
+    }
+    // 게시 내리기 — PUBLISHED → DRAFT. 본문 없는 POST 다.
+    //
+    // ★ 서버가 거절하는 경우가 둘 있다 (둘 다 409):
+    //     EVENT409-7  게시 중이 아니다 (다른 탭에서 이미 내렸거나 종료됐다)
+    //     EVENT409-1  종료 시각은 지났는데 아직 ENDED 로 안 바뀌었다
+    //   화면이 "진행 중" 으로 보여주고 있어도 날 수 있다 — 목록이 그 사이 낡았기 때문이다.
+    //   그래서 실패해도 run() 의 finally 에서 목록을 다시 읽어 상태를 맞춘다.
+    //
+    // ★ 편집 화면을 같은 이벤트로 열어 뒀다면 그쪽 상태도 낡는다 — 다시 읽게 비운다.
+    if(a==='unpublish'){
+      ask('게시를 내릴까요?',
+        e.name+' 이벤트가 사용자 화면에서 사라집니다. 저장된 버전과 참여 기록은 그대로 남고, 다시 게시할 수 있어요.',
+        ()=>unpublishEvent(e.id).then(
+          ()=>{if(ui.serverEditor?.id===String(e.id))ui.serverEditor.status='idle';toast('게시를 내렸어요.')},
+          // EVENT409-1 의 서버 문구는 "종료된 이벤트는 수정할 수 없습니다" 다 —
+          // 게시 내리기 맥락에서는 무슨 말인지 알기 어려워 여기서만 바꿔 준다.
+          err=>toast(err?.code==='EVENT409-1'
+            ? '기간이 이미 끝난 이벤트예요. 목록을 새로 불러올게요.'
+            : err?.message||'게시를 내리지 못했어요.'),
+        ).finally(reload),
+        '내리기')
     }
     // 최신 버전 게시 — 목록 응답에 버전이 없어 미리보기로 최신 버전을 알아낸다
     if(a==='publish-latest'){

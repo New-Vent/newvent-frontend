@@ -10,11 +10,11 @@ async function setup({ restore, refresh } = {}) {
     direct: { values: { 0: '수정 중' } },
   }
   const ui = { serverEditor: s, route: 'versions' }
-  const calls = [], messages = []
+  const calls = [], messages = [], buttons = []
   let confirm
   const bindings = {
     esc: String, icon: () => '', serverFrame: () => '', ui,
-    button: () => '', modal: () => {},
+    button: (action, label, attrs) => { buttons.push({ action, attrs }); return '' }, modal: () => {},
     ask: (_title, _text, action) => { confirm = action },
     toast: (message) => messages.push(message),
     loadingView: () => '', openPublish: () => {}, running: () => false,
@@ -37,7 +37,7 @@ async function setup({ restore, refresh } = {}) {
   }))
   await module.evaluate()
   const click = () => module.namespace.handleVersionsClick('server-version-restore', { dataset: { version: '10' } }, () => {})
-  return { s, ui, calls, messages, click, confirm: () => confirm?.() }
+  return { s, ui, calls, messages, buttons, render: () => module.namespace.serverVersionsView(), click, confirm: () => confirm?.() }
 }
 
 test('확인 전에는 호출하지 않고 성공 후 새 버전과 직접 편집 기준을 갱신한다', async () => {
@@ -101,4 +101,35 @@ test('종료된 이벤트와 이미 최신인 버전은 실행하지 않는다',
     await h.confirm()
     assert.equal(h.calls.length, 0)
   }
+})
+
+test('v4만 비활성이고 v3 v2 v1은 렌더와 클릭에서 복원 가능하다', async () => {
+  const h = await setup()
+  h.s.preview = { versionId: 40, versionNo: 4 }
+  h.s.versions = [4, 3, 2, 1].map(n => ({ versionId: n * 10, versionNo: n }))
+  h.render()
+  const rows = h.buttons.filter(b => b.action === 'server-version-restore')
+  assert.deepEqual(rows.map(b => b.attrs.includes('disabled')), [true, false, false, false])
+  h.click(); await h.confirm(); assert.deepEqual(h.calls, [['7', 10]])
+})
+
+test('누락된 ID끼리는 최신으로 표시하지 않고 유효한 이전 버전은 활성화한다', async () => {
+  const h = await setup()
+  h.s.preview = { versionNo: 4 }
+  h.s.versions = [{ versionNo: 4 }, { versionId: 10, versionNo: 1 }]
+  const html = h.render()
+  assert.ok(!html.includes('badge pink'))
+  assert.deepEqual(h.buttons.filter(b => b.action === 'server-version-restore').map(b => b.attrs.includes('disabled')), [true, false])
+  h.click(); await h.confirm(); assert.equal(h.calls.length, 1)
+})
+
+test('문자열 ID도 최신으로 비교하며 확인 후 최신이 바뀌면 실행하지 않는다', async () => {
+  const h = await setup()
+  h.s.preview.versionId = '10'
+  h.render()
+  assert.ok(h.buttons.find(b => b.action === 'server-version-restore').attrs.includes('disabled'))
+  h.click(); await h.confirm(); assert.equal(h.calls.length, 0)
+  h.s.preview.versionId = 12
+  h.click(); h.s.preview.versionId = 10
+  await h.confirm(); assert.equal(h.calls.length, 0)
 })
