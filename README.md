@@ -3,7 +3,8 @@
 AI 기반 이벤트 페이지 제작·게시 관리 시스템의 프론트엔드.
 **Vite + 바닐라 JS 모듈** — 프레임워크 없이 ES 모듈로 나눠 쓴다.
 
-화면은 전부 구현돼 있고 **목업 데이터로 끝까지 돈다.** 백엔드 연동은 스위치로 켠다.
+화면은 전부 구현돼 있고 목업 데이터만으로도 끝까지 돈다. 다만 **이미 백엔드에 붙은 화면은
+서버 모드로 작업한다** — [「서버 모드로 개발하기」](#서버-모드로-개발하기-권장) 를 먼저 보자.
 
 ---
 
@@ -24,6 +25,9 @@ npm run dev:admin    # 관리자  → http://localhost:5174/admin/
 ```bash
 npm run build        # 두 벌 모두 → dist/user, dist/admin
 ```
+
+> 위 명령만으로는 **목업**으로 뜬다. 백엔드를 붙이려면
+> [「서버 모드로 개발하기」](#서버-모드로-개발하기-권장) 의 세 단계를 따른다.
 
 ---
 
@@ -165,9 +169,76 @@ frontend/
 
 ---
 
+## 서버 모드로 개발하기 (권장)
+
+목업은 **백엔드가 아직 없는 화면을 만들 때만** 쓴다. 이미 붙은 화면은 서버 모드로 봐야 한다 —
+목업으로 개발하면 "내 화면에서는 되는데" 로 끝나는 버그가 **머지한 뒤에** 드러난다.
+
+### 1. 로컬 DB · 백엔드 띄우기
+
+[newvent-backend](https://github.com/New-Vent/newvent-backend) 를 복제하고 그 저장소 최상단에서:
+
+```bash
+docker compose up -d      # Postgres 17 + pgvector
+./gradlew bootRun         # http://localhost:8080
+```
+
+자세한 것은 백엔드 [`docs/setup.md`](https://github.com/New-Vent/newvent-backend/blob/develop/docs/setup.md) §4 · §5.
+
+> **CORS 를 따로 설정할 필요가 없다.** 프로파일 기본값이 `dev` 이고,
+> `application-dev.yaml` 의 `allowed-origins` 에 **5173 · 5174 가 이미 들어 있다.**
+> vite 프록시를 거쳐도 브라우저가 보내는 `Origin` 은 이 주소라서 그대로 통과한다.
+
+### 2. 스위치 켜기
+
+이 저장소 최상위에 `.env.local` 을 만든다 (gitignore 대상이라 사람마다 따로 만들어야 한다).
+
+```
+VITE_API_AUTH=on
+```
+
+### 3. 두 앱 띄우기 — 터미널 2개
+
+```bash
+npm run dev          # 사용자   http://localhost:5173/
+npm run dev:admin    # 관리자   http://localhost:5174/admin/
+```
+
+관리자는 **`/admin/` 까지** 붙여야 한다. `base` 가 `/admin/` 이라 운영과 경로가 같다.
+`strictPort: true` 라서 포트가 이미 쓰이고 있으면 **다른 포트로 옮겨가지 않고 그냥 실패한다** —
+포트로 두 앱을 구분하기 때문이다. 남은 프로세스는 `lsof -ti tcp:5173 | xargs kill` 로 정리한다.
+
+### 로그인
+
+시드 계정은 백엔드 `V7__set_dummy_passwords.sql` 이 심는다.
+
+| | 아이디 |
+| --- | --- |
+| 관리자 | `admin` |
+| 사용자 | `user01` ~ `user28` (`user03` 은 `EXCELLENT` 등급) |
+
+비밀번호는 그 마이그레이션 파일에 적혀 있다. **로컬 전용 더미값이다.**
+
+### 배포 빌드는 항상 서버 모드다
+
+`.env.production` 이 `VITE_API_AUTH=on` 을 고정하고, CI 가 목업 번들이면 배포를 실패시킨다.
+그래서 **`npm run build` 를 로컬에서 돌리면 서버 모드로 빌드된다** — 백엔드가 떠 있지 않으면
+`npm run preview` 화면이 비어 보인다. 목업 번들을 만들어 보려면:
+
+```bash
+VITE_API_AUTH=off npm run build
+```
+
+> 예전에 이 값이 gitignore 되는 `.env.local` 에만 있어서, GitHub Actions 러너에는 없었다.
+> 그 결과 **배포본이 백엔드를 한 번도 부르지 않고 목업으로 돌았다** (로그인 없이 `/admin/` 이
+> 열리기까지 했다). `.env.production` 을 커밋해 두는 이유다.
+
+---
+
 ## 백엔드 연동 스위치
 
-기본은 **목업**이다. 스위치는 **하나**다 — 켜면 로그인 · 데이터 모두 서버, 끄면 전부 목업.
+설정하지 않으면 **목업**이다. 서버 모드는 위 「서버 모드로 개발하기」를 따른다.
+스위치는 **하나**다 — 켜면 로그인 · 데이터 모두 서버, 끄면 전부 목업.
 `.env.local` 에 넣거나 명령 앞에 붙인다.
 
 ```bash
@@ -266,6 +337,8 @@ snapshot ─ templateDocument() ─→ 문서 문자열 ─→ frame.srcdoc
 | iframe 안 `SyntaxError: Unexpected token '<'` | 템플릿 데이터의 `<\/script>` 이스케이프 |
 | `nginx -t` 실패 (`http2`) | Ubuntu 24.04 는 nginx 1.24.0. `http2 on;` 은 1.25.1+ |
 | 관리자 화면이 무스타일 | 공통 요소를 `user.css` 로 분류했었다 → `components.css` |
+| **배포본이 백엔드를 한 번도 안 불렀다** | `VITE_API_AUTH` 가 gitignore 되는 `.env.local` 에만 있어 러너에 없었다. 목업으로 빌드되면 `USE_SERVER` 가 상수 `false` 라 서버 경로가 트리셰이킹으로 통째로 날아간다. `.env.production` 을 커밋하고 CI 에 번들 검사를 넣어 막는다 |
+| 서버 모드인데 관리자 로그인이 403 (`AUTH403-0`) | 백엔드의 `allowed-origins` 에 5174 가 없다. `dev` 프로파일에는 들어 있으니 **프로파일이 `dev` 인지** 본다 (기본값이다) |
 
 ---
 
@@ -273,8 +346,16 @@ snapshot ─ templateDocument() ─→ 문서 문자열 ─→ frame.srcdoc
 
 | | |
 | --- | --- |
-| [`TODO.md`](TODO.md) | 진행 상황 · 다음 작업 |
 | [`docs/API.md`](docs/API.md) | 프론트가 제안한 API 계약 |
 | [`docs/백엔드-실측-현황.md`](docs/백엔드-실측-현황.md) | 실측과 계약의 차이 (A-1~A-9) |
 | [`docs/TEAM-SETUP.md`](docs/TEAM-SETUP.md) | 팀원 로컬 세팅 (AWS CLI · Bedrock · SSM) |
 | [`deploy/SETUP.md`](deploy/SETUP.md) | IAM · nginx · certbot 구축 절차 |
+
+백엔드 저장소 ([newvent-backend](https://github.com/New-Vent/newvent-backend))
+
+| | |
+| --- | --- |
+| [`docs/setup.md`](https://github.com/New-Vent/newvent-backend/blob/develop/docs/setup.md) | 로컬 DB·백엔드 띄우기 · 프로파일 · LLM 환경변수 |
+| **Swagger UI** (`http://localhost:8080/swagger-ui.html`) | 엔드포인트·요청·응답. **코드가 생성한다** — 배포 서버에는 없다 |
+| [`docs/error-codes.md`](https://github.com/New-Vent/newvent-backend/blob/develop/docs/error-codes.md) | 오류 코드 63개의 뜻. 클라이언트는 `code` 로 분기한다 |
+| [`docs/api-design.md`](https://github.com/New-Vent/newvent-backend/blob/develop/docs/api-design.md) | **왜** 그렇게 설계했나 (슬롯·404로 숨기기·멤버십 재계산) |
