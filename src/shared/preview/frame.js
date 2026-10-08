@@ -13,13 +13,24 @@ import { currentParticipation, eventById } from '@shared/selectors.js'
 import { state, ui } from '@shared/state.js'
 import { toast } from '@shared/ui/toast.js'
 
+// ResizeObserver delivery must finish before writing layout-affecting styles.
+function observeLayout(target, update) {
+ const view=target.ownerDocument.defaultView;
+ let pending=null;
+ const schedule=()=>{if(pending!==null)return;pending=view.requestAnimationFrame(()=>{pending=null;if(target.isConnected)update();});};
+ const observer=new view.ResizeObserver(schedule);
+ observer.observe(target);
+ schedule();
+ state.observers.push({disconnect(){observer.disconnect();if(pending!==null)view.cancelAnimationFrame(pending);pending=null;}});
+}
+
 function bindFrame(frame){
  const doc=frame.contentDocument,e=eventById(frame.dataset.event),mode=frame.dataset.mode;
  if(!doc?.querySelector('[data-block]')||doc.__newventBound)return;
  doc.__newventBound=true;
  const box=doc.querySelector('.ev-container')||doc.body;
  const resize=()=>{if(!frame.isConnected)return;const h=Math.ceil(box.getBoundingClientRect().height);if(h>100&&Math.abs(frame.offsetHeight-h)>3)frame.style.height=h+'px';};
- resize();const ro=new ResizeObserver(resize);ro.observe(box);state.observers.push(ro);
+ observeLayout(box,resize);
  if(mode==='editor'){
   doc.querySelectorAll('[data-block]').forEach(b=>{b.style.cursor=b.dataset.block==='notices'?'default':'pointer';b.title=BLOCK_LABELS[b.dataset.block]+' 영역';});
   // 스크립트를 살렸으므로 템플릿 자체 위임(.ev-container 의 데모 토스트)이
@@ -161,7 +172,7 @@ function hydrate(root=document){
   if(!frame)return;
   el.dataset.bound='true';
   const scale=()=>{if(el.isConnected)frame.style.transform='scale('+(el.clientWidth/720)+')';};
-  scale();const ro=new ResizeObserver(scale);ro.observe(el);state.observers.push(ro);
+  observeLayout(el,scale);
  });
  root.querySelectorAll('.event-frame').forEach(frame=>{frame.onload=()=>bindFrame(frame);bindFrame(frame);});
 }
