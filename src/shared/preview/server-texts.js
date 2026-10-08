@@ -14,8 +14,9 @@ const SKIP_SCOPE = '[data-block="notices"],[data-slot="period"]'
 // Jsoup 의 isBlank 는 이 다섯 글자만 공백으로 본다
 const NOT_BLANK = /[^ \t\n\f\r]/
 
-/** Jsoup TextNode.text().trim() 과 같게 — 연속 공백을 하나로 */
-export const normalize = (text) => text.replace(/[ \t\n\f\r ]+/g, ' ').trim()
+/** 직접 편집한 문구는 줄바꿈을 보존하고 CRLF만 LF로 통일한다. */
+export const normalize = (text) => text.replace(/\r\n?/g, '\n')
+const collapse = (text) => text.replace(/[ \t\n\f\r ]+/g, ' ').trim()
 
 /** @returns {{node: Text, block: string, text: string}[]} */
 export function collectTexts(root) {
@@ -24,9 +25,11 @@ export function collectTexts(root) {
     for (const c of el.childNodes) {
       if (c.nodeType === 1) {
         const b = c.hasAttribute('data-block') ? c.getAttribute('data-block') : block
+        if (c.matches('span[id^="nv-direct-text-"]') && !c.childNodes.length) c.appendChild(c.ownerDocument.createTextNode(''))
         walk(c, b, skip || c.matches(SKIP_SCOPE))
-      } else if (c.nodeType === 3 && block && !skip && !SKIP_PARENT.has(c.parentNode.nodeName) && NOT_BLANK.test(c.data)) {
-        out.push({ node: c, block, text: normalize(c.data) })
+      } else if (c.nodeType === 3 && block && !skip && !SKIP_PARENT.has(c.parentNode.nodeName)
+        && (NOT_BLANK.test(c.data) || c.parentNode.matches('span[id^="nv-direct-text-"]'))) {
+        out.push({ node: c, block, text: c.parentNode.matches('span[id^="nv-direct-text-"]') ? normalize(c.data) : collapse(c.data) })
       }
     }
   }
