@@ -60,6 +60,24 @@ jobs:
           done
           du -sh dist/user dist/admin
 
+      # ★ 목업 번들을 운영에 올리지 않는다.
+      #   VITE_API_AUTH 는 빌드 시점에 번들에 박히는 값이다(import.meta.env).
+      #   예전에는 gitignore 되는 .env.local 에만 있어서 러너에는 없었고,
+      #   그 결과 배포본이 백엔드를 한 번도 부르지 않고 목업으로 돌았다
+      #   (로그인 없이 /admin/ 이 열렸다). 지금은 .env.production 이 정한다.
+      #
+      #   목업으로 빌드되면 USE_SERVER 가 상수 false 라 서버 전용 경로가
+      #   통째로 날아간다. 그 경로가 번들에 남아 있는지로 확인한다.
+      - name: 목업 번들이 아닌지
+        run: |
+          for s in /api/admin/events/trash direct-edit /permanent; do
+            grep -rqF -- "$s" dist/admin/static/*.js || {
+              echo "::error::관리자 번들에 '$s' 가 없습니다 — 목업 모드로 빌드됐습니다. .env.production 의 VITE_API_AUTH 를 확인하세요"
+              exit 1
+            }
+          done
+          echo "서버 모드 번들 확인"
+
       # ★ 러너가 리눅스라 macOS 의 리소스 포크(._*) 문제가 없다.
       #   publish-via-ssm.sh 가 COPYFILE_DISABLE 로 막던 그 문제다.
       - name: 묶기
