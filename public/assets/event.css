@@ -269,6 +269,2248 @@
   --ev-accent-tag: #a855f7;
 }
 
+/* ── 20-themes/02-basic.css ── */
+/* ═══════════════════════════════════════════════════════════════════
+   theme-basic — 기본 테마. **어디에 붙어도 안 틀리면서, 공들인 티가 난다.**
+
+   ★ 어떤 자리인가
+     모델이 분위기를 안 골랐거나 지어냈을 때 서버가 박는 값이다
+     (PageShell.ensureRoot · Theme.DEFAULT). 법인 요금제 안내에도, 가을 축제에도
+     이게 붙는다. 그래서 **장식이 아니라 편집(editorial)으로** 만든다 —
+     큰 제목, 또렷한 소제목 선, 넉넉한 여백, 항목마다 가는 강조선.
+     구름이나 별가루 같은 "주제가 있는" 그림은 쓰지 않는다. 배경은 아주 작은 점 격자와
+     빛무리 두 개뿐이고, 색은 전부 팔레트에서 받는다.
+
+   ★★ 지켜야 할 두 가지 (둘 다 실제로 어겨서 화면이 깨진 적이 있다)
+
+     ① 테마가 표면을 **칠하면** 그 위 글자색도 테마가 **쥔다.**
+        표면을 var(--ev-surface) 로 받으면 글자도 var(--ev-text-main) 으로 받는다.
+        섞으면 palette-night·esports(이 둘만 --ev-text-main 을 밝게 바꾼다)에서
+        글자가 사라진다. 그래서 이 테마는 **아무 블록도 직접 칠하지 않는다** —
+        칠을 걷어내고 선과 여백으로만 나눈다. 색은 전부 컨테이너에서 상속된다.
+
+     ② base 가 공들여 만든 것을 **지우지 않는다.**
+        hero 의 그라데이션, 띠 배너, 쿠폰 티켓, 경품 아이콘, 일정 타임라인은
+        50-blocks 가 이미 잘 만들어 뒀다. 처음에 [data-block] 배경을 통째로
+        transparent 로 덮었다가 hero 그라데이션까지 날아가 테마 없는 쪽보다
+        못해졌다. 칠을 걷는 대상은 **내용 블록만** 이름으로 지목한다.
+
+   ★ 특이도
+       기본 폴백  :where(...)                              0,0,0  ← 이긴다
+       테마       .theme-basic [data-block="y"]:not(...)   0,3,0
+       변형       [data-block="y"].v-z:not(.ev-block)      0,3,0 + 뒤 파일 ← 진다
+     60-variants 가 20-themes 보다 뒤라 동점이면 변형이 이긴다. 관리자가 모양을
+     고르면 테마 기본값을 덮어야 하므로 이 순서가 맞다.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── ⓪ 2차색 ──────────────────────────────────────────────────── */
+
+/* ★★ 팔레트는 색을 **두 가지** 준다. --ev-primary 와 --ev-accent-tag 다.
+     spring 은 분홍 + 올리브(#db2777 / #65a30d), summer 는 파랑 + 호박색.
+     그런데 이 테마는 2차색을 **한 번도 안 썼다**(실측: primary 18회, accent 0회).
+     그래서 어떤 팔레트를 골라도 화면이 한 가지 색으로만 보였다 —
+     "색이 하나밖에 없어서 심심하다" 는 말을 들은 원인이 이것이다.
+
+   ★★ 2차색을 **글자색으로 쓰면 안 된다.** 호박색(#f59e0b)은 흰 바탕에서
+     2.15:1 이라 본문 기준(4.5:1)에 한참 못 미친다. 팔레트마다 밝기가 제각각이라
+     어느 한 벌에 맞추면 다른 벌에서 깨진다. 그래서 **선 · 테두리 · 옅은 틴트 ·
+     이모지 받침**에만 쓴다 — 전부 글자 대비와 무관한 자리다.
+
+   ★ 팔레트가 2차색을 안 주면 primary 로 떨어진다. 지금은 18개 전부 주지만
+     팔레트가 늘어날 때를 위해 폴백을 남긴다. */
+.theme-basic {
+  --nv-accent: var(--ev-accent-tag, var(--ev-primary));
+}
+
+/* ── ① 페이지 — 단색 틴트 + 한 장의 카드 ──────────────────────── */
+
+/* ★★ 팔레트 변수는 90-palettes 에서 body:has(.palette-*) 로도 선언된다.
+     그래서 여기서 var(--ev-bg) 를 읽으면 **요청문에 맞는 색**이 나온다 —
+     "가을 단풍" 이면 palette-autumn 이 와서 배경까지 주황빛이 된다.
+     (전에는 팔레트가 .ev-container 에만 붙어 body 가 :root 기본값을 읽었고,
+      어떤 요청이든 같은 연보라가 깔렸다. 세 테마 모두 같은 함정에 빠졌다.) */
+body:has(.theme-basic) {
+  background-color: var(--ev-bg, #eef0f6);
+  /* ① 아주 작은 점 격자 — 주제가 없는 무늬라 어떤 이벤트에 붙어도 안 튄다.
+       --ev-border 는 밝은 팔레트에서 연회색, 어두운 팔레트에서 남회색이라 양쪽 다 보인다.
+     ② ③ 큰 빛무리 두 개 — 팔레트 색에서 받는다. */
+  background-image:
+    radial-gradient(var(--ev-border, rgba(0, 0, 0, 0.09)) 1.1px, transparent 1.2px),
+    radial-gradient(900px 520px at 10% -8%, var(--ev-primary-glow, transparent) 0, transparent 70%),
+    radial-gradient(820px 460px at 94% 0%, var(--ev-primary-light, transparent) 0, transparent 72%);
+  background-size: 24px 24px, auto, auto;
+  background-attachment: fixed;
+}
+
+.theme-basic.ev-container,
+.theme-basic .ev-container {
+  max-width: 800px;
+  margin: 40px auto 56px;
+  padding: 0 0 8px;
+  /* ★ #fff 금지 — 머리말 ①. palette-night 에서 흰 글자가 흰 바탕에 앉는다 */
+  background: var(--ev-surface, #fff);
+  border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.07));
+  border-radius: 26px;
+  box-shadow: 0 24px 60px rgba(17, 17, 28, 0.1);
+}
+
+/* ── ② hero — base 그라데이션 위에 타이포만 키운다 ───────────── */
+
+/* ★ background 를 건드리지 않는다. base 의 --ev-gradient-hero 가 팔레트마다
+     다르게 깔리는데, 그게 이 페이지에서 제일 잘 만들어진 부분이다. */
+.theme-basic [data-block="hero"]:not(.ev-block) {
+  margin: 0;
+  padding: 78px 36px 66px;
+  /* ★ 컨테이너에 overflow:hidden 을 쓰지 않으므로 여기서 윗모서리를 둥글린다 */
+  border-radius: 25px 25px 0 0;
+}
+
+/* ★★ 아래쪽을 눌러 깊이를 주는 **검은 inset 그림자**는 hero 배경이 어두울 때만 맞다.
+     hero 변형 10개의 배경 밝기를 실제 픽셀로 재 보니 **세 개가 밝다** —
+       v-hero-minimal       밝기 0.48
+       v-hero-gradient-text 밝기 0.48
+       v-hero-outline       밝기 1.00
+     거기에 45% 검정을 깔면 아래쪽이 잿빛으로 뜬다. rgb(255,240,247) 이어야 할
+     자리가 **rgb(193,181,187)** 이 됐다 — 화면에서 "제목·소개가 허옇다" 로
+     보인 것이 바로 이것이다.
+     (v-hero-outline 만 멀쩡해 보였던 건 그 변형이 자기 box-shadow 로 이걸 통째로
+      덮어써서지, 테마가 맞아서가 아니다.)
+   ★ :where() 는 특이도 0 이라 0,3,0 이 유지된다. :not() 을 그냥 붙이면 0,6,0 이
+     되어 변형이 hero 에 건 다른 값까지 덮는다 — aurora 띠 배너에서 겪은 그 함정이다. */
+.theme-basic [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline)) {
+  /* ★ background 를 덮지 않으므로 팔레트별 그라데이션은 그대로다 */
+  box-shadow: inset 0 -90px 120px -70px rgba(0, 0, 0, 0.45);
+}
+
+/* ★★ 타이포 **단계**는 테마가 쥔다 — 클래스를 두 번 써서 0,4,1 로 올린다.
+     변형(v-hero-split · v-hero-left …)이 h1 에 2.2rem 을 박아 두는데, 그러면
+     테마를 걸든 안 걸든 제목이 본문의 1.4배로 돌아가 "밋밋하다" 가 재현된다.
+     변형이 정하는 건 **배치**(정렬 · 칸 나눔)이고, 글자 크기 단계는 테마의 일이다. */
+.theme-basic.theme-basic [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(2.4rem, 7.4vw, 3.6rem);
+  font-weight: 800;
+  line-height: 1.16;
+  letter-spacing: -0.035em;
+  margin: 0 0 18px;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.22);
+}
+
+/* ★★ 한국어 줄바꿈 — 제목 전체에 한 번만 건다.
+     기본값(word-break: normal)은 한국어를 **글자 단위**로 끊는다. 제목 칸을
+     좁히는 변형과 만나면 단어 중간이 갈라진다 — 실측한 것들:
+       v-hero-split(제목 칸 1.3fr)   "VIP 심야 라운지 초대 이 / 벤트"
+       v-intro-sidebar(제목 칸 140px) "요금제 개편 안 / 내"
+     keep-all 은 띄어쓰기에서만 끊으므로 "… 초대 / 이벤트" 가 된다.
+   ★ 변형은 font-size·칸 폭만 정하고 word-break 은 안 건드리므로 이 값이 살아남는다.
+     칸을 넓히는 건 변형의 일이라 테마가 못 고친다 — 끊는 **자리**만 바로잡는다.
+   ★ overflow-wrap: anywhere 는 안전망이다. 한 단어가 칸보다 길 때만
+     글자 단위로 돌아간다(안 넣으면 그 단어가 칸 밖으로 삐져나간다). */
+.theme-basic [data-block]:not(.ev-block) :is(
+  h1, h2, h3, .title, .benefit-name, .step-title,
+  /* ★ 쿠폰·띠 배너의 큰 문구는 제목처럼 쓰이지만 태그가 <p> 다.
+       빼놨더니 "할인 쿠 / 폰을 제공합니다" 로 끊겼다(실측). */
+  [data-block="coupon"] p, [data-block="highlight"] p
+) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.theme-basic [data-block="hero"]:not(.ev-block) p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin: 0 auto;
+  max-width: 32em;
+}
+
+/* ★ 기간은 테두리만 있는 알약으로. hero 그라데이션 위라 배경을 깔지 않는다 */
+.theme-basic [data-block="hero"]:not(.ev-block) [data-slot="period"] {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 7px 18px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  opacity: 0.82;
+}
+
+.theme-basic [data-block="hero"]:not(.ev-block) .badge {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 7px 17px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.17);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* ── ③ 내용 블록 — 칠을 걷고 선과 여백으로 나눈다 ────────────── */
+
+/* ★ 이름으로 **지목**한다. hero · highlight · prize · coupon · cta 는
+     base 가 색을 쥐고 있으므로 건드리지 않는다 — 그게 페이지의 강약이다.
+   ★ 칠을 걷기만 하므로 글자색은 컨테이너에서 상속된다. 머리말 ① 위반 없음. */
+.theme-basic :is(
+  [data-block="intro"],
+  [data-block="stats"],
+  [data-block="benefits"],
+  [data-block="audience"],
+  [data-block="steps"],
+  [data-block="schedule"],
+  [data-block="compare"],
+  [data-block="faq"]
+):not(.ev-block) {
+  margin: 0;
+  padding: 38px 36px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-top: 1px solid var(--ev-border, rgba(0, 0, 0, 0.07));
+}
+
+/* ★ 색을 쥔 블록들은 바깥 여백만 준다. 안쪽은 base 그대로 */
+.theme-basic :is(
+  [data-block="highlight"],
+  [data-block="prize"],
+  [data-block="coupon"]
+):not(.ev-block) {
+  margin: 22px 28px;
+}
+
+/* ★ 내용 블록을 한 칸 걸러 아주 옅게 깐다. 색이 아니라 **농도**로 나누므로
+     19개 팔레트 어디서도 안 튄다. 흰 종이 한 장처럼 흐르던 게 단락으로 보인다.
+   ★ 칠하는 게 아니라 4% 틴트라 글자색은 그대로 상속된다 — 머리말 ① 위반 아님. */
+.theme-basic :is(
+  [data-block="intro"],
+  [data-block="stats"],
+  [data-block="benefits"],
+  [data-block="audience"],
+  [data-block="steps"],
+  [data-block="schedule"],
+  [data-block="compare"],
+  [data-block="faq"]
+):not(.ev-block):nth-of-type(even) {
+  background: color-mix(in srgb, var(--ev-primary) 4%, transparent);
+}
+
+.theme-basic [data-block="notices"]:not(.ev-block) {
+  margin: 0;
+  padding: 28px 36px 30px;
+  border-top: 1px solid var(--ev-border, rgba(0, 0, 0, 0.07));
+}
+
+/* ★ 법적 고지다. 흐리게 하되 읽을 수 있어야 한다.
+     base 가 유의사항 배경을 #fef3c7 로 **리터럴**로 칠한다 — 팔레트가 어두워져도
+     그대로 밝다. 그런데 글자색은 --ev-text-muted 라 palette-night · esports 에서
+     밝아져 밝은 바탕에 밝은 글자가 된다(실측 2.26:1, 테마를 안 걸어도 같다).
+     칠이 고정이면 잉크도 고정이어야 한다 — 머리말 ①. */
+.theme-basic [data-block="notices"]:not(.ev-block) :is(p, li) {
+  font-size: 0.83rem;
+  line-height: 1.75;
+  color: #6b6252;
+}
+
+/* ── ④ 소제목 — 이 테마의 얼굴 ────────────────────────────────── */
+
+/* ★ 제목 왼쪽에 색 막대, 오른쪽에 가는 선. 편집물에서 쓰는 가장 흔한 꼴이고
+     장식이 아니라 구조라서 어떤 이벤트에 붙어도 안 튄다.
+   ★ flex 로 짜야 오른쪽 선이 남은 폭을 전부 먹는다. inline 로는 안 된다. */
+.theme-basic [data-block]:not(.ev-block) h2 {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0 0 22px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+/* ★ 소제목 앞에 **01 · 02** 번호 칩. 이 테마의 서명이다.
+     주제가 없는 기호라 법인 안내에도 가을 축제에도 안 튀면서,
+     "그냥 긴 문서" 로 보이던 흐름에 단락 감각을 준다. */
+.theme-basic .ev-container,
+.theme-basic.ev-container { counter-reset: nv-sec; }
+
+.theme-basic [data-block]:not(.ev-block) h2::before {
+  counter-increment: nv-sec;
+  content: counter(nv-sec, decimal-leading-zero);
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  min-width: 2.1em;
+  padding: 0.22em 0.5em;
+  border-radius: 8px;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 0.62em;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+/* ★ 소제목 오른쪽 선 — 2차색이 왼쪽에서 번지다 사라진다. 선이라 글자 대비와 무관하다.
+     회색 1px 이던 걸 2px 로 올려 색이 보이게 한다. */
+.theme-basic [data-block]:not(.ev-block) h2::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--nv-accent) 55%, transparent) 0,
+    var(--ev-border, rgba(0, 0, 0, 0.1)) 55%,
+    transparent 100%);
+}
+
+/* ★ hero 와 색을 쥔 블록에는 막대·선을 붙이지 않는다 —
+     그라데이션 위에서는 선이 때처럼 보인다. */
+.theme-basic :is(
+  [data-block="hero"],
+  [data-block="highlight"],
+  [data-block="coupon"]
+):not(.ev-block) h2 {
+  display: block;
+}
+
+.theme-basic :is(
+  [data-block="hero"],
+  [data-block="highlight"],
+  [data-block="coupon"]
+):not(.ev-block) h2::before,
+.theme-basic :is(
+  [data-block="hero"],
+  [data-block="highlight"],
+  [data-block="coupon"]
+):not(.ev-block) h2::after {
+  content: none;
+}
+
+/* ★ v-intro-sidebar 는 제목 칸을 140px 로 **고정**한다(60-variants/03-intro).
+     거기에 번호 칩(~34px) + gap(11px) + ::after 선(flex:1)이 들어가면
+     글자에 ~79px 밖에 안 남아 "요금제 / 개편 안 / 내" 로 쪼개진다 — 실측.
+     칸을 테마가 못 넓히므로(변형이 0,3,1 로 이긴다) 이 변형에선 칩과 선을 뺀다. */
+.theme-basic [data-block="intro"].v-intro-sidebar:not(.ev-block) h2 {
+  display: block;
+}
+
+.theme-basic [data-block="intro"].v-intro-sidebar:not(.ev-block) h2::before,
+.theme-basic [data-block="intro"].v-intro-sidebar:not(.ev-block) h2::after {
+  content: none;
+}
+
+/* ★★ .block-header 는 템플릿만 쓰는 줄 알고 번호칩과 선을 통째로 껐었다.
+     그런데 **백지 생성도 이 마크업을 쓴다** — PromptBuilder 가
+     block-header · sub-label · h2.title 을 시킨다. 그 결과 백지 화면에서
+     01 · 02 칩과 오른쪽 선이 통째로 사라져 테마의 얼굴이 없어졌다(실제 화면에서 확인).
+
+   ★ 끄지 않고 basic 의 꼴로 다시 그린다 — 눈썹(sub-label)은 칩 위 작은 글자로,
+     제목은 그대로 번호칩 + 선. h2 에 거는 규칙(④)이 .title 에도 그대로 걸린다
+     (.title 이 곧 <h2> 다). 여기서는 base 의 가운데 정렬만 되돌리면 된다.
+
+   ★ base(30-base/02-template-blocks)가 .block-header 에 text-align: center 와
+     margin-bottom: 28px 을 건다. 0,1,0 이라 아래 0,3,0 이 이긴다. */
+.theme-basic [data-block]:not(.ev-block) .block-header {
+  text-align: left;
+  margin-bottom: 22px;
+}
+
+/* ★★ 눈썹을 2차색 **글자**로 썼다가 되돌렸다. 12개 팔레트에서 재 보니
+     7개가 기준(4.5:1) 미달이었고 여름 · 어린이 · 노을은 1.97:1 이었다.
+     머리말 그대로다 — 2차색은 글자 뒤에도, 글자 자체로도 쓰지 않는다.
+   ★ 대신 앞에 짧은 막대로 넣는다. 선이라 대비와 무관하고,
+     번호칩(primary)과 색이 갈려 눈썹이 제목에 묻히지 않는다. */
+.theme-basic [data-block]:not(.ev-block) .block-header .sub-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--ev-primary-hover, var(--ev-primary));
+  margin: 0 0 7px;
+}
+
+.theme-basic [data-block]:not(.ev-block) .block-header .sub-label::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  margin: 0 7px 0.22em 0;
+  vertical-align: middle;
+  background: var(--nv-accent);
+}
+
+/* ★ 제목은 ④ 의 h2 규칙을 그대로 받는다. 아래 여백만 .block-header 가 쥔다 */
+.theme-basic [data-block]:not(.ev-block) .block-header h2 {
+  margin-bottom: 0;
+}
+
+/* ── ⑤ 혜택 — 아이콘 타일 + 값 알약 ─────────────────────────── */
+
+/* ★ bloom 수준의 밀도를 중립적인 키로 옮긴다. 구름·반짝이 같은 "주제" 는 안 쓰고,
+     아이콘 타일 · 번호 동그라미 · 라벨 표 · Q 칩처럼 **구조적인** 장치만 쓴다.
+     어떤 이벤트에 붙어도 안 튀면서 "그냥 긴 문서" 가 아니게 된다. */
+.theme-basic [data-block="benefits"]:not(.ev-block) ul {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.theme-basic [data-block="benefits"]:not(.ev-block) li {
+  position: relative;
+  padding: 20px 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px dashed var(--ev-border, rgba(0, 0, 0, 0.12));
+}
+
+.theme-basic [data-block="benefits"]:not(.ev-block) li:first-child { padding-top: 4px; }
+.theme-basic [data-block="benefits"]:not(.ev-block) li:last-child { border-bottom: 0; padding-bottom: 4px; }
+
+.theme-basic [data-block="benefits"]:not(.ev-block) .benefit-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  /* ★ 아이콘 받침은 2차색으로. 안에 들어가는 건 이모지라 글자 대비와 무관하다 —
+       색을 둘로 나누기에 가장 안전하면서 눈에 띄는 자리다. */
+  background: color-mix(in srgb, var(--nv-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--nv-accent) 38%, transparent);
+  margin-bottom: 12px;
+}
+
+.theme-basic [data-block="benefits"]:not(.ev-block) .benefit-name {
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  margin-bottom: 4px;
+}
+
+.theme-basic [data-block="benefits"]:not(.ev-block) .benefit-value {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ev-primary) 12%, transparent);
+  /* ★ primary 글자를 primary 12% 틴트 위에 올렸더니 2.86:1 이었다(summer 실측).
+       같은 색의 농담 차이는 대비가 안 나온다. 한 단계 진한 hover 색으로 바꾼다. */
+  color: var(--ev-primary-hover, var(--ev-primary));
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+.theme-basic [data-block="benefits"]:not(.ev-block) .benefit-tag {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+/* ── ⑥ 숫자 — 카드 격자 ───────────────────────────────────────── */
+
+.theme-basic [data-block="stats"]:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.theme-basic [data-block="stats"]:not(.ev-block) li {
+  text-align: center;
+  padding: 20px 12px;
+  border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.1));
+  /* ★ 카드 윗변만 2차색. 숫자(primary)와 색이 갈려 카드가 납작해 보이지 않는다 */
+  border-top: 3px solid var(--nv-accent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ev-primary) 5%, transparent);
+  font-size: 0.86rem;
+  color: var(--ev-text-muted);
+}
+
+.theme-basic [data-block="stats"]:not(.ev-block) strong {
+  display: block;
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--ev-primary);
+  margin-bottom: 4px;
+}
+
+/* ── ⑦ 참여 대상 — 칩 ─────────────────────────────────────────── */
+
+.theme-basic [data-block="audience"]:not(.ev-block) ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ── ⑧ 일정 — 왼쪽 라벨 표 ────────────────────────────────────── */
+
+/* ★ base 는 왼쪽 세로선 + 점으로 타임라인을 그린다. 라벨 표로 바꾸면
+     "1차 · 10월 1일" 이 한눈에 읽힌다. base 의 점은 꺼야 어긋나지 않는다. */
+.theme-basic [data-block="schedule"]:not(.ev-block) ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.12));
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.theme-basic [data-block="schedule"]:not(.ev-block) li::before { display: none; }
+
+.theme-basic [data-block="schedule"]:not(.ev-block) li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  padding: 0 16px 0 0;
+  border: 0;
+  border-top: 1px solid var(--ev-border, rgba(0, 0, 0, 0.12));
+  border-radius: 0;
+  background: transparent;
+  font-size: 0.95rem;
+}
+
+.theme-basic [data-block="schedule"]:not(.ev-block) li:first-child { border-top: 0; }
+
+.theme-basic [data-block="schedule"]:not(.ev-block) li strong {
+  flex: 0 0 136px;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  padding: 16px 10px;
+  margin: 0;
+  background: color-mix(in srgb, var(--ev-primary) 9%, transparent);
+  color: var(--ev-primary);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* ── 참여 방법 — 번호 동그라미 ────────────────────────────────── */
+
+/* ★ base 에는 steps 번호가 없다. 변형을 안 고르면 "1단계 · 2단계" 가 사라진다.
+   ★ list-style:none 을 빼면 브라우저 기본 번호와 동그라미가 둘 다 나와
+     "1. ① 이벤트 페이지" 가 된다 — 렌더해서 봤다.
+   ★ grid 로 "30px 1fr" 을 깔면 안 된다. <li> 자식이 .step-title + .step-desc
+     두 개라 ::before 까지 세 칸이 되고 세 번째가 30px 칸으로 떨어져
+     글자가 한 자씩 세로로 쌓인다. relative + absolute 로 짠다.
+   ★★ 변형이 걸리면 번호를 그리지 않는다 — 변형이 padding 을 덮으면
+     왼쪽 자리가 사라진 채 동그라미만 글자 위에 겹친다. */
+.theme-basic [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) ol {
+  counter-reset: nv-step;
+  display: grid;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.theme-basic [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) ol > li {
+  counter-increment: nv-step;
+  position: relative;
+  padding: 0 0 0 50px;
+  background: transparent;
+  border: 0;
+  min-height: 34px;
+}
+
+.theme-basic [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) ol > li::before {
+  content: counter(nv-step);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.theme-basic [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) .step-title {
+  font-size: 1.04rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+/* ── ⑨ 경품 — 띠 카드 ─────────────────────────────────────────── */
+
+/* ★ base 가 li::before 로 🏆 · 🎁 를 left:14px 에 절대 위치로 놓는다.
+     왼쪽 자리(50px)는 반드시 비워 둔다 — 줄였더니 이모지가 "1등" 을 덮었다. */
+.theme-basic [data-block="prize"]:not(.ev-block) li {
+  padding: 16px 16px 16px 52px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ev-primary) 6%, transparent);
+  border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.1));
+  /* ★ 등수마다 왼쪽에 2차색 막대. 이모지(🏆·🎁)가 left:14px 에 절대 위치로
+       놓이므로 막대는 그 뒤에 깔린다 — 자리를 안 뺏는다 */
+  border-left: 4px solid var(--nv-accent);
+  font-weight: 700;
+}
+
+/* ★ 경품 등수도 같은 함정 — primary 6% 틴트 위의 primary 는 4.02:1 이었다(spring 실측) */
+.theme-basic [data-block="prize"]:not(.ev-block) li strong { color: var(--ev-primary-hover, var(--ev-primary)); }
+
+/* ── ⑦ 자주 묻는 질문 ────────────────────────────────────────── */
+
+.theme-basic [data-block="faq"]:not(.ev-block) dt {
+  position: relative;
+  padding-left: 30px;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  margin-top: 20px;
+}
+
+/* ★ 질문 앞 Q 칩 — 질문과 답이 눈으로 갈린다 */
+.theme-basic [data-block="faq"]:not(.ev-block) dt::before {
+  content: "Q";
+  position: absolute;
+  left: 0;
+  top: 0.18em;
+  width: 21px;
+  height: 21px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.theme-basic [data-block="faq"]:not(.ev-block) dt:first-of-type {
+  margin-top: 0;
+}
+
+.theme-basic [data-block="faq"]:not(.ev-block) dd {
+  margin: 7px 0 0;
+  padding-left: 30px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ev-border, rgba(0, 0, 0, 0.07));
+  line-height: 1.75;
+}
+
+.theme-basic [data-block="faq"]:not(.ev-block) dd:last-of-type {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* ── ⑧ 참여 버튼 ──────────────────────────────────────────────── */
+
+.theme-basic [data-block="cta"]:not(.ev-block) {
+  margin: 0;
+  padding: 40px 36px 48px;
+  text-align: center;
+  border-top: 1px solid var(--ev-border, rgba(0, 0, 0, 0.07));
+}
+
+/* ★ 관리자가 미리보기에서 버튼 색을 고르면 그쪽이 style 태그에 !important 로
+     들어가 이 규칙을 이긴다. 의도된 순서다 — 사람이 고른 값이 우선이다. */
+.theme-basic [data-block="cta"]:not(.ev-block) :is(a, button) {
+  display: inline-block;
+  min-width: 240px;
+  padding: 18px 44px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ev-gradient-cta, var(--ev-primary));
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  box-shadow: 0 10px 26px var(--ev-primary-glow, rgba(0, 0, 0, 0.18));
+}
+
+/* ── ⑨ 본문 · 꼬리말 ─────────────────────────────────────────── */
+
+.theme-basic [data-block]:not(.ev-block) :is(p, li, dd) {
+  font-size: 1.01rem;
+  line-height: 1.78;
+}
+
+/* ★ <strong>1등</strong>제주도 여행권 처럼 공백 없이 붙여 쓰는 출력이 온다.
+     "strong + 텍스트" 는 인접 형제 선택자로 못 잡는다 — 텍스트 노드는 요소가
+     아니다. strong 쪽에 오른쪽 여백을 주는 게 유일하게 되는 방법이다. */
+.theme-basic [data-block]:not(.ev-block) li > strong:first-child {
+  margin-right: 5px;
+}
+
+/* ── 좁은 화면 ────────────────────────────────────────────────── */
+
+@media (max-width: 520px) {
+  .theme-basic.ev-container,
+  .theme-basic .ev-container {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .theme-basic [data-block="hero"]:not(.ev-block) {
+    padding: 48px 20px 40px;
+  }
+
+  .theme-basic :is(
+    [data-block="intro"],
+    [data-block="stats"],
+    [data-block="benefits"],
+    [data-block="audience"],
+    [data-block="steps"],
+    [data-block="schedule"],
+    [data-block="compare"],
+    [data-block="faq"]
+  ):not(.ev-block) {
+    padding: 30px 20px;
+  }
+
+  .theme-basic :is(
+    [data-block="highlight"],
+    [data-block="prize"],
+    [data-block="coupon"]
+  ):not(.ev-block) {
+    margin: 18px 16px;
+  }
+
+  .theme-basic [data-block="notices"]:not(.ev-block),
+  .theme-basic [data-block="cta"]:not(.ev-block) {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+/* ── 20-themes/03-bloom.css ── */
+/* ══════════════════════════════════════════════════════════════════
+   theme-bloom — 밝고 화려한 페이지 테마
+   src/event-css/90-themes/02-bloom.css
+
+   ★ aurora 는 "변형과 안 싸우기" 에만 신경 써서 얌전했다.
+     여기서는 **장식을 적극적으로 그린다** — 구름 · 반짝이 · 떠 있는 배지 ·
+     테두리 글자 · 라벨 표. 전부 가상요소(::before · ::after)로 그리므로
+     생성되는 HTML 은 한 글자도 안 바뀐다.
+
+   ★ position 을 마음껏 쓴다
+     "모델에게 position 을 열지 않는다" 와 "CSS 가 position 을 쓴다" 는 다른 말이다.
+     event.css 는 이미 77곳에서 쓴다. 장식은 사람이 쓰는 CSS 의 일이다.
+
+   ★ 특이도 — aurora 와 같은 규칙
+     기본 폴백은 :where(...) 0,0,0 이라 0,2,0 이면 이긴다.
+     변형(0,3,1)이 스스로 정한 값은 건드리지 않는다.
+   ══════════════════════════════════════════════════════════════════ */
+
+
+/* ──────────────────────────────────────────────────────────────────
+   ★ 왜 선택자마다 :not(.ev-block) 이 붙어 있나 — 실제 빌드로 돌려 보고 알았다.
+
+   event.css 의 블록 기본 규칙은 두 가지 꼴이 섞여 있다.
+     :where(...) :where([data-block="x"]:not(.ev-block))   → 0,0,0
+     :where(...) [data-block="x"]:not(.ev-block)           → 0,2,0   ← coupon 등
+
+   테마를 .theme-X [data-block="coupon"] (0,2,0) 으로 쓰면 뒤엣것과 **동점**이고,
+   테마는 20-themes/ · 블록은 50-blocks/ 라 **블록이 뒤에 와서 이긴다.**
+   단독 파일로 미리보기할 때는 내 파일이 마지막이라 멀쩡해 보였고,
+   node scripts/build-event-css.mjs 로 합쳐서 렌더하고서야 쿠폰이 틀어진 걸 봤다.
+
+   :not(.ev-block) 을 붙이면 0,3,0 이 되어 순서와 무관하게 이기고,
+   변형(0,3,1)에는 여전히 진다 — 그게 맞는 순서다.
+   ────────────────────────────────────────────────────────────────── */
+
+/* ── ① 변수 ────────────────────────────────────────────────────── */
+
+/* ★★ 여기서 --ev-* 를 덮지 않는다.
+     전에는 이 자리에서 민트색 한 벌을 통째로 박아 뒀다. 그랬더니
+     "가을 단풍 축제" 요청에 palette-autumn 이 와도 **hero 와 배경이 민트**로 나왔다.
+     내용은 주황인데 상단만 민트인 화면을 보고 알았다.
+
+     계약은 "테마 = 구조, 팔레트 = 색" 이다. 테마가 색을 쥐면 그 계약이 깨지고
+     테마×팔레트 조합이 전부 말이 안 되는 화면이 된다. 그래서 bloom 은
+     **모양만** 쥔다 — 구름, 외곽선 타이포, 알약 소제목, 두툼한 그림자.
+     색은 하나도 빠짐없이 팔레트에서 받는다.
+
+   ★ 이 테마 안에서만 쓰는 값도 팔레트에서 파생시킨다. */
+.theme-bloom {
+  --bloom-sky:    var(--ev-primary);
+  --bloom-pink:   var(--ev-accent-tag, var(--ev-primary));
+  --bloom-cream:  var(--ev-surface);
+  --bloom-shadow: 0 10px 0 color-mix(in srgb, var(--ev-text-main) 7%, transparent),
+                  0 18px 40px color-mix(in srgb, var(--ev-text-main) 11%, transparent);
+  /* 구름 · 외곽선에 쓰는 "종이색" — 표면색을 그대로 쓴다 */
+  --bloom-paper:  var(--ev-surface);
+}
+
+/* ── ② 페이지 배경 — 구름이 떠 있는 하늘 ──────────────────────── */
+
+/* ★★ 팔레트 변수는 90-palettes 에서 body:has(.palette-*) 로도 선언된다.
+     그래서 여기서 var(--ev-bg) 를 읽으면 **요청문에 맞는 색**이 나온다.
+     (전에는 팔레트가 .ev-container 에만 붙어 body 가 :root 기본값을 읽었고,
+      어떤 요청이든 같은 색이 깔렸다 — "가을 요청에 민트 배경" 의 원인.)
+   ★ 컨테이너의 ::before 로 깔면 안 된다 — 이 테마는 ::before·::after 를
+     구름에 쓰고 있어서 서로 덮는다. 실제로 배경이 사라졌다. */
+body:has(.theme-bloom) {
+  background-color: var(--ev-bg);
+  /* ★★ 하늘은 --ev-primary 를 **섞어서** 만든다. --ev-bg 와 --ev-surface 만 쓰면
+       밝은 팔레트에서 둘 다 거의 흰색이라(autumn: #fffaf3 vs #fffdf9)
+       구름이 배경에 묻혀 사라진다 — 실제로 "구름이 어디 갔냐" 는 말을 들었다.
+       하늘에 색을 섞어 두면 구름(= --ev-surface, 밝은 팔레트에선 거의 흰색,
+       어두운 팔레트에선 어두운 카드색)이 또렷하게 떠오른다. */
+  background-image:
+    radial-gradient(44% 26% at 14% 9%,  var(--ev-surface) 0, transparent 68%),
+    radial-gradient(30% 18% at 30% 15%, var(--ev-surface) 0, transparent 68%),
+    radial-gradient(36% 22% at 86% 22%, var(--ev-surface) 0, transparent 68%),
+    radial-gradient(26% 16% at 70% 30%, var(--ev-surface) 0, transparent 68%),
+    radial-gradient(60% 34% at 50% 102%, var(--ev-primary-glow), transparent 70%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--ev-primary) 24%, var(--ev-bg)) 0%,
+      color-mix(in srgb, var(--ev-primary) 10%, var(--ev-bg)) 46%,
+      var(--ev-bg) 100%);
+  background-attachment: fixed;
+}
+
+.theme-bloom.ev-container,
+.theme-bloom .ev-container {
+  position: relative;
+  max-width: 760px;
+  margin: 36px auto;
+  min-height: auto;
+  padding: 0 0 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+/* ★ 구름 — 컨테이너 가상요소로 그린다. HTML 은 그대로다 */
+.theme-bloom.ev-container::before,
+.theme-bloom .ev-container::before {
+  content: "";
+  position: absolute;
+  /* ★ 미리보기 iframe 은 컨테이너 폭에 맞춰 잘리므로 음수 좌표는 안 보인다.
+     안쪽으로 당겨서 카드 사이 여백에 걸치게 둔다 */
+  top: 104px;
+  left: -12px;
+  width: 190px;
+  height: 92px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bloom-paper) 92%, transparent);
+  box-shadow: 74px -30px 0 -12px color-mix(in srgb, var(--bloom-paper) 90%, transparent),
+              150px -4px 0 -24px color-mix(in srgb, var(--bloom-paper) 85%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.theme-bloom.ev-container::after,
+.theme-bloom .ev-container::after {
+  content: "";
+  position: absolute;
+  top: 300px;
+  right: -10px;
+  width: 150px;
+  height: 74px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bloom-paper) 80%, transparent);
+  box-shadow: -60px 26px 0 -14px color-mix(in srgb, var(--bloom-paper) 75%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── ③ 섹션 — 크림색 둥근 카드가 겹겹이 ───────────────────────── */
+
+/* ★ 잉크를 고정하지 않는다. 표면을 var(--ev-surface) 로 받으므로
+     팔레트가 어두워지면 표면과 글자가 **같이** 어두워진다 — 짝이 맞는다.
+     (전에는 크림색을 박아 두고 잉크만 팔레트에서 받아 palette-night 에서
+      소제목이 사라졌다. 표면을 팔레트에 돌려주면서 그 고정도 뺀다.) */
+
+/* ★ 카드를 **반투명**으로 둔다. 불투명한 흰 사각형을 색 있는 하늘 위에 얹으면
+     카드와 배경이 따로 놀아 "오려 붙인 것" 처럼 보인다 — 실제로 그런 지적을 받았다.
+     표면색을 86%만 쓰고 뒤를 흐리면 하늘색이 은은하게 배어 한 덩어리가 된다.
+     어두운 팔레트에서는 --ev-surface 가 어두우므로 그대로 어두운 유리가 된다. */
+.theme-bloom [data-block]:not(.ev-block) {
+  position: relative;
+  z-index: 1;
+  margin: 0 18px 18px;
+  padding: 32px 26px;
+  background: color-mix(in srgb, var(--bloom-cream) 86%, transparent);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  border: 1px solid color-mix(in srgb, var(--bloom-paper) 65%, transparent);
+  border-radius: 26px;
+  box-shadow: var(--bloom-shadow);
+}
+
+/* ★ 카드마다 같은 흰 사각형이라 단조롭다는 지적 — 한 칸 걸러 하늘색을 한 겹 더 섞어
+     리듬을 만든다. 색이 아니라 **농도**로 나누는 것이라 어떤 팔레트에서도 안 튄다. */
+.theme-bloom [data-block]:not(.ev-block):nth-of-type(even) {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ev-primary) 7%, transparent) 0, transparent 120px),
+    color-mix(in srgb, var(--bloom-cream) 86%, transparent);
+}
+
+/* ── ④ hero — 테두리 글자 + 떠 있는 장식 ──────────────────────── */
+
+.theme-bloom [data-block="hero"]:not(.ev-block) {
+  background: transparent;
+  box-shadow: none;
+  padding: 44px 26px 30px;
+  text-align: center;
+  overflow: visible;
+}
+
+/* ★ 테두리 글자 — paint-order 로 획을 글자 **뒤**에 깐다.
+     이게 없으면 획이 글자를 덮어 얇은 획만 보인다. */
+.theme-bloom [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(2.7rem, 10vw, 4.6rem);
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--bloom-sky);
+  -webkit-text-stroke: 9px var(--bloom-paper);
+  paint-order: stroke fill;
+  text-shadow: 0 8px 0 var(--ev-primary-glow), 0 16px 26px color-mix(in srgb, var(--ev-text-main) 14%, transparent);
+  margin: 10px 0 14px;
+}
+
+/* ★★ 한국어 줄바꿈 — 제목 전체에 한 번만 건다.
+     기본값(word-break: normal)은 한국어를 **글자 단위**로 끊는다. 제목 칸을
+     좁히는 변형과 만나면 단어 중간이 갈라진다 — 실측한 것들:
+       v-hero-split(제목 칸 1.3fr)   "가을 한가위 송편 쿠폰 이 / 벤트"
+       v-intro-sidebar(제목 칸 140px) "요금제 개편 안 / 내"
+     keep-all 은 띄어쓰기에서만 끊으므로 "… 쿠폰 / 이벤트" 가 된다.
+   ★ 변형은 font-size·칸 폭만 정하고 word-break 은 안 건드리므로 이 값이 살아남는다.
+   ★ overflow-wrap: anywhere 는 안전망 — 한 단어가 칸보다 길 때만 글자 단위로 돌아간다. */
+.theme-bloom [data-block]:not(.ev-block) :is(h1, h2, h3, .title, .benefit-name, .step-title) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* ★ 반짝이 — 제목 옆에 하나 */
+
+/* ★★ hero 는 **배경과 글자색을 테마가 함께 쥔다.**
+     bloom 의 얼굴이 "밝은 하늘 위 외곽선 제목" 이라 배경이 바뀌면 테마가 무너진다.
+     그런데 변형(v-hero-*)은 0,3,0 동점 + 뒤 파일이라 배경만 가져가고,
+     글자색은 base 의 color:#fff 가 남는다 → 어두운 변형 위에 어두운 글자,
+     밝은 변형 위에 흰 글자가 되어 설명문이 사라진다(palette-summer 에서 실측).
+     그래서 선택자를 .theme-bloom.theme-bloom 으로 한 단계(0,4,0) 올려
+     **배경과 글자색을 짝지어** 쥔다. 변형은 정렬 · 여백 · 크기를 그대로 가져간다. */
+.theme-bloom.theme-bloom [data-block="hero"]:not(.ev-block) {
+  background: transparent;
+  box-shadow: none;
+  /* ★ 카드 테두리도 같이 끈다. 안 끄면 hero 만 빈 네모가 그려진다 */
+  border: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.theme-bloom.theme-bloom [data-block="hero"]:not(.ev-block) p {
+  color: var(--ev-text-muted);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.theme-bloom.theme-bloom [data-block="hero"]:not(.ev-block) [data-slot="period"] {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--bloom-paper);
+  border: 2px solid var(--ev-border);
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ev-primary-hover);
+}
+
+.theme-bloom [data-block="hero"]:not(.ev-block) .badge {
+  display: inline-block;
+  padding: 9px 22px;
+  border-radius: 999px;
+  /* ★ #ff7fa8 에 흰 글자는 대비 2.3:1 로 모자랐다. 바탕을 한 단계 진하게 */
+  background: var(--bloom-pink);
+  border: 3px solid var(--bloom-paper);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.84rem;
+  box-shadow: 0 6px 0 var(--ev-primary-glow);
+}
+
+/* ── ⑤ 소제목 — 섹션 위에 걸터앉은 알약 ───────────────────────── */
+
+/* ★ 카드 **위쪽 테두리에 걸치게** 올린다. 참고 디자인의 그 모양이다 */
+/* ★ 알약을 가운데로 보내려면 **부모**가 text-align: center 여야 한다
+     (inline-flex 는 inline 수준이라 text-align 이 먹는다).
+     display: block 을 줬더니 알약이 꽉 찬 띠가 됐다 — 렌더해 보고 알았다.
+     대신 부모를 가운데로 하면 목록 글자까지 따라가므로 목록은 되돌린다. */
+.theme-bloom [data-block]:not(.ev-block) { text-align: center; }
+
+.theme-bloom [data-block]:not(.ev-block) > .block-header { margin: -54px 0 24px; }
+
+.theme-bloom [data-block]:not(.ev-block) ul,
+.theme-bloom [data-block]:not(.ev-block) ol,
+.theme-bloom [data-block]:not(.ev-block) dl { text-align: left; }
+
+/* ★ 알약은 .title 이 아니라 .block-header 가 된다 — sub-label 까지 같이 담아야 한다 */
+.theme-bloom .block-header {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 11px 32px 13px;
+  border-radius: 18px;
+  background: var(--ev-gradient-cta);
+  box-shadow: 0 7px 0 var(--ev-primary-glow);
+}
+
+.theme-bloom .block-header .title {
+  color: #fff;
+  font-size: 1.18rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+/* ★ 알약을 카드 위로 끌어올렸더니 sub-label 이 카드 밖 배경에 떠서 미아가 됐다.
+     렌더해 보고 알았다. 알약 **안쪽 윗줄**로 넣어 한 덩어리로 만든다. */
+.theme-bloom .block-header .sub-label {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 700;
+  margin: 0 0 2px;
+  order: -1;
+}
+
+.theme-bloom .block-header .title {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* hero 다음 첫 카드는 걸칠 데가 없으니 자기 자리에서 시작 */
+.theme-bloom [data-block="hero"]:not(.ev-block) + [data-block] { margin-top: 10px; }
+
+/* ── ⑥ 항목 — 번호 + 오른쪽 아이콘 ────────────────────────────── */
+
+/* ★★ 변형이 걸리면 테마는 번호를 그리지 않는다.
+     변형(.v-steps-*)은 0,3,0 동점 + 뒤 파일이라 테마의 padding-left 를 덮는다.
+     그런데 테마가 ::before 로 그린 번호는 absolute 라 그대로 남는다 →
+     왼쪽 자리가 사라진 채 동그라미만 글자 위에 겹친다.
+     실측 화면에서 "다운로드" 가 "운로드", "전 신청" 이 "신청" 으로 보였다.
+     :not([class*="v-steps-"]) 로 변형이 없을 때만 그리게 한다. */
+.theme-bloom [data-block="benefits"]:not(.ev-block) ul,
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) ol {
+  list-style: none;
+  display: grid;
+  gap: 0;
+}
+
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) ol { counter-reset: bloom-step; }
+
+.theme-bloom [data-block="benefits"]:not(.ev-block) li,
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li {
+  position: relative;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 17px 54px 17px 0;
+  border-bottom: 2px dotted var(--ev-border);
+}
+
+.theme-bloom [data-block="benefits"]:not(.ev-block) li:last-child,
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li:last-child { border-bottom: 0; }
+
+/* 번호 동그라미 */
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li {
+  counter-increment: bloom-step;
+  padding-left: 50px;
+}
+
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li::before {
+  content: counter(bloom-step);
+  position: absolute;
+  left: 0;
+  top: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 0 var(--ev-primary-glow);
+}
+
+/* ★ 오른쪽 아이콘 — 참고 디자인의 그 자리. 단계마다 다른 기호를 돌려 쓴다.
+     HTML 에 아이콘 자리가 없어도 가상요소로 넣을 수 있다. */
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li::after {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  background: var(--ev-primary-light);
+  color: var(--bloom-pink);
+  border: 2px solid var(--ev-border);
+}
+
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li:nth-child(3n+1)::after { content: "♥"; }
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li:nth-child(3n+2)::after { content: "◷"; background: #fff8e8; color: #e9a33b; border-color: #ffeccc; }
+.theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li:nth-child(3n)::after   { content: "✓"; background: #eafaf0; color: var(--ev-primary); border-color: #c9eeda; }
+
+/* ★★ 여기부터 --bloom-pink(= 팔레트 2차색)를 더 쓴다.
+     팔레트는 색을 두 가지 주는데(spring = 분홍 + 올리브, summer = 파랑 + 호박색)
+     이 테마는 ✦ 한 개와 배지 한 개에만 썼다. 나머지가 전부 primary 라
+     어떤 팔레트를 골라도 화면이 한 가지 색으로 보였다 — 지적받은 그대로다.
+   ★ 글자색으로는 안 쓴다. 2차색은 팔레트마다 밝기가 제각각이라
+     흰 글자를 올리면 어딘가에서 대비가 무너진다(호박색 = 2.15:1).
+     받침 · 테두리 · 틴트에만 쓴다. */
+.theme-bloom .benefit-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  background: color-mix(in srgb, var(--bloom-pink) 16%, var(--ev-surface));
+  border: 2px solid color-mix(in srgb, var(--bloom-pink) 34%, transparent);
+  margin-bottom: 11px;
+}
+
+.theme-bloom .benefit-name,
+.theme-bloom .step-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--ev-text-main);
+  margin-bottom: 4px;
+}
+
+.theme-bloom .benefit-desc,
+.theme-bloom .step-desc {
+  font-size: 0.89rem;
+  color: var(--ev-text-muted);
+  line-height: 1.6;
+}
+
+.theme-bloom .benefit-value {
+  display: inline-block;
+  margin-top: 9px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+.theme-bloom .benefit-tag {
+  display: inline-block;
+  margin-bottom: 9px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--bloom-pink);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+/* ── ⑦ stats ──────────────────────────────────────────────────── */
+
+.theme-bloom [data-block="stats"]:not(.ev-block) ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.theme-bloom [data-block="stats"]:not(.ev-block) li {
+  text-align: center;
+  padding: 18px 10px;
+  border: 0;
+  border-radius: 20px;
+  /* ★★ 2차색을 **배경에 깔았다가 되돌렸다.** 13% 틴트만으로도 숫자(primary-hover)
+       대비가 2.39:1 까지 떨어졌다(winter 실측, 큰 글자 기준 3:1 미달).
+       머리말 그대로다 — 2차색은 글자 뒤에 깔지 않는다. 테두리로 옮긴다. */
+  background: var(--ev-surface-subtle);
+  border: 2px solid color-mix(in srgb, var(--bloom-pink) 42%, transparent);
+  color: var(--ev-text-muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.theme-bloom [data-block="stats"]:not(.ev-block) strong {
+  display: block;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--ev-primary-hover);
+  margin-bottom: 4px;
+}
+
+/* ── ⑧ schedule — 왼쪽 라벨 표 ────────────────────────────────── */
+
+/* ★ 참고 디자인의 "이벤트 기간 | 10월 1일 ~ …" 표. 기본 타임라인은 끈다 */
+.theme-bloom [data-block="schedule"]:not(.ev-block) ol {
+  list-style: none;
+  display: grid;
+  gap: 0;
+  border: 2px solid var(--ev-border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.theme-bloom [data-block="schedule"]:not(.ev-block) li::before { display: none; }
+
+.theme-bloom [data-block="schedule"]:not(.ev-block) li {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 2px solid var(--ev-border);
+  color: var(--ev-text-main);
+  font-size: 0.92rem;
+}
+
+.theme-bloom [data-block="schedule"]:not(.ev-block) li:first-child { border-top: 0; }
+
+.theme-bloom [data-block="schedule"]:not(.ev-block) li strong {
+  flex: 0 0 132px;
+  display: grid;
+  place-items: center;
+  padding: 15px 10px;
+  background: var(--ev-primary-light);
+  color: var(--ev-primary-hover);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* ★ strong 뒤는 **텍스트 노드**라 strong + * 가 안 맞는다 (렌더해 보고 알았다).
+     flex 컨테이너 안의 텍스트 노드는 익명 flex 항목이 되므로 gap 이 먹는다. */
+.theme-bloom [data-block="schedule"]:not(.ev-block) li {
+  align-items: center;
+  gap: 16px;
+  padding-right: 16px;
+}
+
+/* ── ⑨ prize · coupon — 눈에 띄는 둘 ─────────────────────────── */
+
+.theme-bloom [data-block="prize"]:not(.ev-block) {
+  background: linear-gradient(135deg, var(--ev-primary-light) 0%, var(--ev-surface-subtle) 100%);
+}
+
+.theme-bloom [data-block="prize"]:not(.ev-block) ul { list-style: none; display: grid; gap: 10px; }
+
+.theme-bloom [data-block="prize"]:not(.ev-block) li {
+  padding: 15px 16px 15px 52px;
+  border-radius: 16px;
+  background: var(--bloom-paper);
+  border: 2px solid var(--ev-border);
+  font-weight: 700;
+  color: var(--ev-text-main);
+}
+
+/* ★ primary-hover — primary 는 밝은 종이색 위에서 4.10:1 이었다(summer 실측) */
+.theme-bloom [data-block="prize"]:not(.ev-block) li strong { color: var(--ev-primary-hover, var(--ev-primary)); margin-right: 8px; }
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) {
+  -webkit-mask: none;
+          mask: none;
+  background: linear-gradient(135deg, var(--ev-primary-light) 0%, var(--ev-surface-subtle) 100%);
+  /* ★ 쿠폰 점선 테두리를 2차색으로. 쿠폰은 페이지에서 제일 눈에 띄어야 하는데
+       primary 점선이면 배경에 묻힌다 */
+  border: 3px dashed color-mix(in srgb, var(--bloom-pink) 52%, transparent);
+  color: var(--ev-text-main);
+}
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) p {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--ev-primary-hover);
+  text-align: center;
+  margin: 6px 0 14px;
+}
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) ul { list-style: none; display: grid; gap: 7px; border: 0; }
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 0.88rem;
+  color: var(--ev-text-muted);
+}
+
+.theme-bloom [data-block="coupon"]:not(.ev-block) li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--ev-primary);
+  font-weight: 900;
+}
+
+/* ── ⑩ faq · notices ──────────────────────────────────────────── */
+
+.theme-bloom [data-block="faq"]:not(.ev-block) dt {
+  font-weight: 800;
+  color: var(--ev-text-main);
+  margin-top: 14px;
+  padding-left: 26px;
+  position: relative;
+}
+
+.theme-bloom [data-block="faq"]:not(.ev-block) dt::before {
+  content: "Q";
+  position: absolute;
+  left: 0;
+  width: 19px;
+  height: 19px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.theme-bloom [data-block="faq"]:not(.ev-block) dd {
+  color: var(--ev-text-muted);
+  font-size: 0.89rem;
+  line-height: 1.7;
+  margin: 7px 0 0;
+  padding: 0 0 14px 26px;
+  border-bottom: 2px dotted var(--ev-border);
+}
+
+.theme-bloom [data-block="notices"]:not(.ev-block) {
+  background: var(--ev-surface-subtle);
+  box-shadow: none;
+}
+
+.theme-bloom [data-block="notices"]:not(.ev-block) ul { list-style: none; display: grid; gap: 6px; }
+
+/* ★ 유의사항은 법적 고지다. 흐리게 하되 **읽을 수 있어야** 한다.
+     --ev-text-light + 0.77rem 은 대비가 2.3:1 이었다(실측). WCAG AA 는 4.5:1 이다. */
+.theme-bloom [data-block="notices"]:not(.ev-block) li {
+  position: relative;
+  padding-left: 13px;
+  font-size: 0.82rem;
+  color: var(--ev-text-muted);
+  line-height: 1.7;
+}
+
+.theme-bloom [data-block="notices"]:not(.ev-block) li::before {
+  content: "·";
+  position: absolute;
+  left: 2px;
+}
+
+/* ── ⑪ cta — 떠 있는 배지가 붙은 버튼 ─────────────────────────── */
+
+.theme-bloom [data-block="cta"]:not(.ev-block) {
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  text-align: center;
+  padding: 10px 26px 58px;
+  overflow: visible;
+}
+
+.theme-bloom [data-block="cta"]:not(.ev-block) .btn,
+.theme-bloom [data-block="cta"]:not(.ev-block) .cta-btn {
+  position: relative;
+  display: inline-block;
+  padding: 19px 58px;
+  border-radius: 999px;
+  border: 4px solid var(--bloom-paper);
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 9px 0 var(--ev-primary-glow), 0 18px 34px color-mix(in srgb, var(--ev-text-main) 16%, transparent);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.theme-bloom [data-block="cta"]:not(.ev-block) .btn:hover,
+.theme-bloom [data-block="cta"]:not(.ev-block) .cta-btn:hover {
+  transform: translateY(3px);
+  box-shadow: 0 5px 0 var(--ev-primary-glow), 0 12px 24px color-mix(in srgb, var(--ev-text-main) 16%, transparent);
+}
+
+/* ★ 버튼 옆 떠 있는 배지 — 참고 디자인의 "참여 인증 완료!" 자리 */
+.theme-bloom [data-block="cta"]:not(.ev-block)::after {
+  content: "✓ 지금 참여하세요";
+  position: absolute;
+  /* ★ bottom: 8px 로 뒀더니 버튼 위에 겹쳤다. 버튼 아래로 내린다 */
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%) rotate(-3deg);
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--bloom-pink);
+  border: 3px solid var(--bloom-paper);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  box-shadow: 0 5px 14px var(--ev-primary-glow);
+  white-space: nowrap;
+}
+
+/* ── ⑫ 문구 꾸밈 ─────────────────────────────────────────────── */
+
+.theme-bloom .t-accent    { color: var(--ev-primary-hover); }
+.theme-bloom .t-highlight { background: linear-gradient(transparent 62%, var(--ev-primary-light) 0); }
+.theme-bloom .t-big       { color: var(--ev-primary); }
+
+/* ── 띠 배너 ──────────────────────────────────────────────────── */
+
+/* ★ base(50-blocks/01-llm-blocks)가 color:#fff 를 **리터럴로** 박아 둔다.
+     bloom 이 배경만 크림으로 덮으면 흰 글자가 크림 위에 앉아 안 보인다 — 실측 1.02:1.
+     배너는 원래 튀어야 하는 자리이므로 배경을 돌려주고 흰 글자를 유지한다.
+
+   ★ 이 규칙은 위의 일반 블록 규칙(.theme-bloom [data-block]:not(.ev-block))과
+     특이도가 0,3,0 으로 **같다.** 그래서 반드시 **뒤에** 와야 이긴다 —
+     앞에 뒀다가 배너가 그대로 크림으로 남는 걸 렌더해서 봤다. */
+/* ★★ 클래스를 두 번 써서 0,4,0 으로 올린다.
+     0,3,0 으로 두면 v-highlight-* 변형(0,3,0 + 뒤 파일)이 **배경만** 가져가고
+     base 의 color:#fff 가 남아 밝은 배너에 흰 글자가 앉는다 — 실제 화면에서
+     "추첨을 통해 최대 5만원…" 줄이 통째로 안 보였다.
+     배너는 배경과 글자색이 한 짝이라 둘 다 테마가 쥐어야 한다. */
+.theme-bloom.theme-bloom [data-block="highlight"]:not(.ev-block) {
+  background: var(--ev-gradient-cta);
+  border: 0;
+  box-shadow: 0 8px 0 var(--ev-primary-glow);
+}
+
+.theme-bloom.theme-bloom [data-block="highlight"]:not(.ev-block),
+.theme-bloom.theme-bloom [data-block="highlight"]:not(.ev-block) :is(p, strong, span) {
+  color: #fff;
+}
+
+/* ── ⑬ 좁은 화면 ─────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .theme-bloom.ev-container::before,
+  .theme-bloom .ev-container::before,
+  .theme-bloom.ev-container::after,
+  .theme-bloom .ev-container::after { display: none; }
+
+  .theme-bloom [data-block]:not(.ev-block) { margin: 0 12px 14px; padding: 26px 18px; }
+  .theme-bloom [data-block="hero"]:not(.ev-block) h1 { -webkit-text-stroke-width: 6px; }
+  .theme-bloom [data-block="schedule"]:not(.ev-block) li strong { flex-basis: 96px; font-size: 0.78rem; }
+  .theme-bloom [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li { padding-right: 46px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-bloom [data-block="cta"]:not(.ev-block) .btn,
+  .theme-bloom [data-block="cta"]:not(.ev-block) .cta-btn { transition: none; }
+}
+
+/* ── 20-themes/04-aurora.css ── */
+/* ══════════════════════════════════════════════════════════════════
+   theme-aurora — 백지 생성용 페이지 테마
+   src/event-css/90-themes/01-aurora.css
+
+   ★ 설계 원칙 — 변형(v-*)과 싸우지 않는다
+     event.css 의 기본 폴백은 전부 :where(...) 라 특이도 0,0,0 이고
+     변형 규칙은 [data-block="x"].v-y:not(.ev-block) 로 0,3,1 이다.
+     테마가 같은 속성을 0,3,1 로 또 쓰면 파일 순서로 이기고 지는 싸움이 된다.
+
+     그래서 테마는 세 가지만 한다.
+       ① CSS 변수            변형이 var() 로 읽으므로 특이도 싸움이 없다
+       ② 페이지 틀           body 배경 · .ev-container — 경쟁자가 없다
+       ③ 변형이 안 건드리는 것  .block-header · 섹션 리듬 (0,2,0 으로 충분)
+
+     h1 크기만 0,2,1 로 올린다. v-hero-poster 처럼 **스스로 크기를 정한 변형**
+     (0,3,1)은 그대로 이기게 둔다 — 그게 맞다.
+
+   ★ 왜 "전부 같은 흰 카드" 를 깨야 하나
+     섹션마다 카드를 씌우면 폭·모서리·여백이 전부 같아 리듬이 사라진다.
+     여기서는 컨테이너 하나만 카드로 띄우고, 섹션은 선으로 나눈다.
+     눈에 띄어야 할 것(prize · coupon · cta)만 따로 칠한다.
+   ══════════════════════════════════════════════════════════════════ */
+
+
+/* ──────────────────────────────────────────────────────────────────
+   ★ 왜 선택자마다 :not(.ev-block) 이 붙어 있나 — 실제 빌드로 돌려 보고 알았다.
+
+   event.css 의 블록 기본 규칙은 두 가지 꼴이 섞여 있다.
+     :where(...) :where([data-block="x"]:not(.ev-block))   → 0,0,0
+     :where(...) [data-block="x"]:not(.ev-block)           → 0,2,0   ← coupon 등
+
+   테마를 .theme-X [data-block="coupon"] (0,2,0) 으로 쓰면 뒤엣것과 **동점**이고,
+   테마는 20-themes/ · 블록은 50-blocks/ 라 **블록이 뒤에 와서 이긴다.**
+   단독 파일로 미리보기할 때는 내 파일이 마지막이라 멀쩡해 보였고,
+   node scripts/build-event-css.mjs 로 합쳐서 렌더하고서야 쿠폰이 틀어진 걸 봤다.
+
+   :not(.ev-block) 을 붙이면 0,3,0 이 되어 순서와 무관하게 이기고,
+   변형(0,3,1)에는 여전히 진다 — 그게 맞는 순서다.
+   ────────────────────────────────────────────────────────────────── */
+
+/* ── ① 변수 ────────────────────────────────────────────────────── */
+
+/* ★★ 여기서 --ev-* 를 덮지 않는다.
+     전에는 보라색 한 벌을 통째로 박아 뒀다. 그러면 팔레트가 무엇이든 페이지가
+     보라색이 되어 "테마 = 구조, 팔레트 = 색" 계약이 깨진다. 요청문에 맞춰 색이
+     바뀌는 경로가 팔레트뿐인데 테마가 그걸 덮으면 조합이 전부 의미를 잃는다.
+
+     aurora 가 쥐는 것은 **모양**이다 — 떠 있는 한 장의 카드, 별가루, 번지는 빛,
+     선으로 나뉜 항목. 어두운 팔레트(night · esports)와 만나면 원래 의도대로
+     "밤" 이 되고, 밝은 팔레트와 만나면 같은 구조의 밝고 가벼운 페이지가 된다.
+
+   ★ 이 테마 안에서만 쓰는 값도 팔레트에서 파생시킨다. */
+.theme-aurora {
+  --aurora-glow: 0 0 22px var(--ev-primary-glow), 0 0 56px var(--ev-primary-glow);
+  --aurora-ring: inset 0 1px 0 color-mix(in srgb, var(--ev-text-main) 8%, transparent);
+  /* 별가루 — 글자색에서 파생시키면 밝은 팔레트에서는 어두운 점, 어두운 팔레트에서는
+     밝은 점이 된다. 흰색을 박으면 밝은 팔레트에서 안 보인다. */
+  --aurora-dust: color-mix(in srgb, var(--ev-text-main) 42%, transparent);
+
+  /* ★★ 오로라 커튼 — 이 테마의 이름값.
+       전에는 이름만 aurora 고 화면에는 **아무것도 없었다.** 별가루는 1px 점에
+       transparent 100% 라 뭉개져 안 보였고, 컨테이너가 불투명이라 body 배경까지
+       가려서 어두운 팔레트에서는 그냥 **검은 상자**가 나왔다.
+
+     ★ 커튼 색을 테마가 박으면 안 된다 — "테마 = 구조, 팔레트 = 색" 계약이 깨진다.
+       팔레트가 주는 **두 색**(primary · accent)을 그대로 쓴다. 그러면 night 는
+       금빛 커튼, esports 는 네온 초록 커튼, summer 는 하늘빛 커튼이 된다.
+       모양(비스듬히 드리운 두 겹 커튼 + 세로 결)만 테마가 쥔다. */
+  --aurora-veil-1: color-mix(in srgb, var(--ev-primary) 38%, transparent);
+  --aurora-veil-2: color-mix(in srgb, var(--ev-accent-tag, var(--ev-primary)) 30%, transparent);
+  /* 별 — transparent 를 **좁게** 끊어야 점으로 보인다. 100% 로 두면 번져서 사라진다 */
+  --aurora-star: color-mix(in srgb, var(--ev-text-main) 62%, transparent);
+}
+
+/* ── ② 페이지 틀 ──────────────────────────────────────────────── */
+
+/* ★★ 팔레트 변수는 90-palettes 에서 body:has(.palette-*) 로도 선언된다.
+     그래서 여기서 var(--ev-bg) 를 읽으면 **요청문에 맞는 색**이 나온다.
+     (전에는 팔레트가 .ev-container 에만 붙어 body 가 :root 기본값을 읽었고,
+      어떤 요청이든 같은 색이 깔렸다.)
+   ★ 컨테이너의 ::before 로 깔면 안 된다 — 이 테마는 ::before·::after 를
+     장식에 쓰고 있어서 서로 덮는다. */
+body:has(.theme-aurora) {
+  background-color: var(--ev-bg);
+  background-image:
+    /* ★ transparent 를 60% 에서 끊는다. 100% 로 두면 점이 번져 사라진다 — 실제로 안 보였다 */
+    radial-gradient(1.6px 1.6px at 18% 22%, var(--aurora-star), transparent 60%),
+    radial-gradient(1.6px 1.6px at 72% 14%, var(--aurora-star), transparent 60%),
+    radial-gradient(1.2px 1.2px at 42% 64%, var(--aurora-star), transparent 60%),
+    radial-gradient(1.2px 1.2px at 88% 78%, var(--aurora-star), transparent 60%),
+    radial-gradient(60% 45% at 50% 0%, var(--ev-primary-glow), transparent 70%),
+    linear-gradient(180deg, var(--ev-primary-light) 0%, var(--ev-bg) 58%, var(--ev-surface-subtle) 100%);
+  background-size: 260px 260px, 340px 340px, 200px 200px, 420px 420px, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+}
+
+
+/* ★ 컨테이너를 "떠 있는 한 장" 으로. 섹션마다 카드를 씌우지 않는다 */
+.theme-aurora.ev-container,
+.theme-aurora .ev-container {
+  max-width: 760px;
+  margin: 40px auto;
+  min-height: auto;
+  padding: 0 0 8px;
+  /* ★ 표면도 팔레트에서 받는다. 한때 여기에 어두운 보라를 박아 뒀는데,
+       그러면 밝은 팔레트를 골라도 카드만 어둡게 남아 테마가 팔레트를 이긴다.
+       표면과 글자를 **둘 다** 팔레트에서 받으면 짝이 맞아 어느 팔레트에서도 읽힌다.
+   ★★ 다만 --ev-surface 만 쓰면 어두운 팔레트(night · esports)에서 카드가 **새까맣다.**
+       hero 에만 오로라가 있고 그 아래는 검은 상자라 기운이 뚝 끊겼다.
+       팔레트 색을 아주 옅게(7%) 위에서 아래로 번지게 깔아 hero 와 잇는다.
+       **칠이 아니라 틴트**라 글자색은 그대로 상속된다 — "칠하면 잉크도 쥔다" 위반 아님.
+       밝은 팔레트에서는 거의 안 보일 만큼 옅다. */
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--ev-primary) 7%, transparent) 0,
+      transparent 340px),
+    var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 28px;
+  /* ★ 윗변에 팔레트 색 빛을 한 줄 — 오로라가 hero 에서 뚝 끊기지 않게 잇는다 */
+  box-shadow: 0 30px 80px color-mix(in srgb, var(--ev-text-main) 55%, transparent),
+              inset 0 2px 0 color-mix(in srgb, var(--ev-primary) 55%, transparent),
+              var(--aurora-ring);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+/* ── ③ 섹션 리듬 — 카드가 아니라 선으로 나눈다 ─────────────────── */
+
+/* ★ 기본 폴백이 :where(...) 0,0,0 이라 0,2,0 으로 충분히 이긴다.
+     v-surface-* 를 고른 섹션은 0,3,1 이라 그대로 살아남는다 —
+     "한두 영역만 눈에 띄게" 가 그래서 성립한다. */
+.theme-aurora [data-block]:not(.ev-block) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  padding: 34px 30px;
+  border-top: 1px solid color-mix(in srgb, var(--ev-primary) 14%, transparent);
+}
+
+.theme-aurora [data-block="hero"]:not(.ev-block) { border-top: 0; }
+
+/* ── ④ hero — 제목이 페이지에서 제일 크다 ─────────────────────── */
+
+.theme-aurora [data-block="hero"]:not(.ev-block) {
+  position: relative;
+  overflow: hidden;
+  padding: 72px 28px 62px;
+  text-align: center;
+  /* ★★ 어두운 막을 한 겹 깐다.
+       --ev-gradient-hero 는 19벌 다 "어둡다" 고 적어 뒀지만, **밝은 끝**은 꽤 밝다.
+       summer 는 #0ea5e9 로 끝나고 거기 흰 글자는 3.40:1 이다 — 설명문이 6벌에서
+       본문 기준에 못 미쳤다(실측). 글자를 밝혀서는 못 고친다. h1 도 이미 순백인데
+       3.81 이었다. **바탕을 눌러야** 한다.
+     ★ 아래로 갈수록 진하게. 설명문과 기간이 아래쪽에 앉는다.
+     ★ 색상(hue)은 그대로라 팔레트별 그라데이션은 살아 있고, 어두워진 만큼
+       그 위의 오로라 커튼이 더 또렷해진다 — 테마에도 맞다. */
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0%, rgba(0, 0, 0, 0.52) 100%),
+    var(--ev-gradient-hero);
+}
+
+/* ★★ 밝은 hero 변형에는 커튼을 안 그린다.
+     v-hero-minimal · v-hero-gradient-text · v-hero-outline 세 변형은 hero 배경을
+     **밝게** 바꾼다(실측 밝기 0.48 · 0.48 · 1.00). 거기에 커튼을 얹으면 파스텔로
+     물들면서 그 위 **어두운 글자**의 대비가 떨어진다 — 설명문이 4.3 → 3.8 이 됐다.
+     오로라는 어두운 하늘의 것이다. 밝은 하늘에는 안 뜬다.
+   ★ :where() 는 특이도 0 이라 0,3,0 이 유지된다. */
+
+/* ★★ 오로라 커튼 — 비스듬히 드리운 두 겹.
+     컨테이너가 불투명(--ev-surface)이라 body 배경이 통째로 가린다. 그래서 오로라를
+     보여 줄 수 있는 자리는 **hero 뿐**이다. 여기에 안 그리면 이름값이 없다.
+   ★ 두 색을 **다른 각도**로 겹친다. 한 색만 쓰면 그냥 빛무리고, 각도가 같으면
+     띠 하나로 보인다. 오로라는 결이 엇갈려야 커튼이 된다. */
+.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline))::before {
+  content: "";
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 150%;
+  /* ★ 타원을 **좁고 길게**(폭 22~34% · 높이 110~130%) 세워야 띠가 된다.
+       처음엔 60%×46% 처럼 둥글게 썼더니 커튼이 아니라 구석의 빛무리로 보였다. */
+  background:
+    radial-gradient(26% 120% at 14% 30%, var(--aurora-veil-1) 0, transparent 44%),
+    radial-gradient(22% 112% at 34% 12%, var(--aurora-veil-2) 0, transparent 44%),
+    radial-gradient(30% 128% at 58% 34%, var(--aurora-veil-1) 0, transparent 46%),
+    radial-gradient(20% 104% at 79% 10%, var(--aurora-veil-2) 0, transparent 44%),
+    radial-gradient(24% 116% at 94% 32%, var(--aurora-veil-1) 0, transparent 44%);
+  /* 기울여야 하늘에 드리운 꼴이 된다. 수직이면 커튼이 아니라 줄무늬다 */
+  transform: rotate(-13deg) scaleY(1.15);
+  /* ★★ 농도와 블러를 **둘 다** 낮춰야 띠가 갈린다.
+       처음에 62%/52% + blur 26px 으로 뒀더니 블러가 띠를 하나로 뭉쳐
+       hero 전체가 한 색으로 칠해졌다 — 커튼이 아니라 그냥 색면이었다.
+       38%/30% + blur 14px 이면 띠 사이에 **어둠이 남아** 커튼으로 읽힌다.
+       네 가지 조합을 렌더해 나란히 놓고 고른 값이다. */
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+/* ★ 세로 결 — 오로라는 위에서 아래로 빗살 무늬가 진다.
+     아주 옅게(6%) 깔아야 무늬가 아니라 **질감**으로 보인다. */
+.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline))::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(99deg,
+    color-mix(in srgb, var(--ev-text-main) 9%, transparent) 0 1.5px,
+    transparent 1.5px 11px);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 72%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 72%);
+  pointer-events: none;
+}
+
+/* ★★ 커튼은 글자 **뒤**로 보낸다.
+     가상요소는 absolute 라 흐름 속 형제보다 위에 그려진다 — 그냥 두면 제목을 덮는다.
+     z-index: -1 로 내리면 hero 의 **자기 배경 뒤**로 가서 아예 안 보인다.
+     그래서 hero 의 직계 자식을 전부 올린다. 마크업은 안 바뀐다. */
+.theme-aurora [data-block="hero"]:not(.ev-block) > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 0,2,1 — :where 폴백(0,0,0)은 이기고, 스스로 크기를 정한 변형(0,3,1)에는 진다 */
+.theme-aurora [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(2.6rem, 9vw, 4.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: var(--aurora-glow);
+  margin: 14px 0 12px;
+}
+
+/* ★ 한국어 줄바꿈 · 일정 타임라인 점 · 경품 이모지 자리 · 움직임 줄이기는
+     20-themes/09-common.css 와 99-a11y 가 처리한다. 여기서 또 쓰지 않는다. */
+
+/* ★ hero 배경은 --ev-gradient-hero 다. 팔레트 19개 전부 **어두운** 그라데이션이라
+     여기 글자는 늘 밝아야 한다. --ev-text-muted 를 쓰면 밝은 팔레트에서
+     어두운 글자가 어두운 그라데이션에 앉아 설명문이 사라진다 — 실측. */
+.theme-aurora [data-block="hero"]:not(.ev-block) p {
+  /* ★★ rgba(255,255,255,0.86) 으로 두면 밝은 팔레트의 그라데이션 **밝은 끝**에서
+       3.40:1 까지 떨어진다(summer · spring · sunset · pastel · kids · lavender 6벌 실측).
+       14% 를 깎아 얻는 "조용함" 보다 읽히는 쪽이 먼저다. 순백으로 올린다.
+     ★ 이건 커튼 때문에 생긴 게 아니다 — 커튼을 꺼도 같은 3.40 이 나왔다. 원래 있던 것이다. */
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+/* 기간 줄은 한 단계 더 조용하게 */
+.theme-aurora [data-block="hero"]:not(.ev-block) [data-slot="period"] {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  /* ★★ 흰 글자 + 흰 반투명 바탕을 **리터럴로** 박아 뒀었다. hero 배경이 늘 어두운
+       --ev-gradient-hero 라는 전제였는데, v-hero-minimal · v-hero-gradient-text ·
+       v-hero-outline 세 변형은 배경을 **밝게** 바꾼다. 거기서 실제 픽셀로 재니
+       **1.0:1** — 기간 줄이 통째로 안 보였다.
+     ★ currentColor 로 받으면 배경이 밝든 어둡든 글자색을 따라간다.
+       basic 이 같은 방법을 쓰고 있고 전 변형에서 13~18:1 이 나온다. */
+  background: transparent;
+  border: 1px solid currentColor;
+  font-size: 0.86rem;
+  color: inherit;
+  opacity: 0.95;
+}
+
+.theme-aurora [data-block="hero"]:not(.ev-block) .badge {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: var(--ev-gradient-cta);
+  border: 0;
+  color: var(--ev-surface);
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 20px var(--ev-primary-glow);
+}
+
+
+/* ── ⑤ 소제목 — 그라데이션 알약 ───────────────────────────────── */
+
+/* .block-header .sub-label 이 0,2,0 이므로 0,3,0 으로 덮는다 */
+.theme-aurora .block-header {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.theme-aurora .block-header .sub-label {
+  display: inline-block;
+  padding: 7px 20px;
+  border-radius: 999px;
+  background: var(--ev-gradient-cta);
+  color: var(--ev-surface);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+
+.theme-aurora .block-header .title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--ev-text-main);
+  letter-spacing: -0.01em;
+}
+
+/* ★★ 모델이 머리말 묶음 없이 **맨 <h2>** 만 내는 경우가 있다.
+     소제목을 .block-header 에만 걸어 뒀더니 그때 아무 꾸밈 없는 글자로 나왔다 —
+     VIP 화면에서 실제로 그랬다. 어느 마크업이 올지 보장할 수 없으므로 둘 다 받는다.
+   ★ hero · 띠 배너 · 쿠폰은 제외한다. 거기는 테마가 따로 칠하는 자리다. */
+.theme-aurora :is(
+  [data-block="intro"],
+  [data-block="stats"],
+  [data-block="benefits"],
+  [data-block="audience"],
+  [data-block="steps"],
+  [data-block="schedule"],
+  [data-block="compare"],
+  [data-block="prize"],
+  [data-block="faq"]
+):not(.ev-block) > h2 {
+  text-align: center;
+  margin: 0 0 26px;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--ev-text-main);
+  letter-spacing: -0.01em;
+}
+
+/* ── ⑥ 항목 — 카드가 아니라 선 ────────────────────────────────── */
+
+/* ★★ 변형이 걸리면 테마는 번호를 그리지 않는다.
+     변형(.v-steps-*)은 0,3,0 동점 + 뒤 파일이라 테마의 padding-left 를 덮는다.
+     그런데 테마가 ::before 로 그린 번호는 absolute 라 그대로 남는다 →
+     왼쪽 자리가 사라진 채 동그라미만 글자 위에 겹친다.
+     실측 화면에서 "다운로드" 가 "운로드", "전 신청" 이 "신청" 으로 보였다.
+     :not([class*="v-steps-"]) 로 변형이 없을 때만 그리게 한다. */
+.theme-aurora [data-block="benefits"]:not(.ev-block) ul,
+.theme-aurora [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) ol {
+  display: grid;
+  gap: 0;
+  list-style: none;
+}
+
+/* ★ list-style 을 없앴으면 번호를 다시 넣어야 한다.
+     안 넣었더니 참여 방법이 "제목 + 설명" 만 남아 순서가 안 보였다.
+     v-steps-* 를 고른 경우엔 그 변형이 0,3,1 로 자기 번호를 그린다 —
+     여기 것은 변형을 안 고른 기본 상태를 받친다. */
+.theme-aurora [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) ol { counter-reset: aurora-step; }
+
+.theme-aurora [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li {
+  counter-increment: aurora-step;
+  position: relative;
+}
+
+.theme-aurora [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li::before {
+  content: counter(aurora-step);
+  position: absolute;
+  left: 0;
+  top: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ev-gradient-cta);
+  color: var(--ev-surface);
+  font-weight: 900;
+  font-size: 0.92rem;
+}
+
+.theme-aurora [data-block="benefits"]:not(.ev-block) li,
+.theme-aurora [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 18px 2px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ev-primary) 13%, transparent);
+}
+
+.theme-aurora [data-block="benefits"]:not(.ev-block) li:last-child,
+.theme-aurora [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li:last-child { border-bottom: 0; }
+
+/* ★ 번호 자리는 공통 li 규칙(padding: 18px 2px) **뒤에** 비워야 한다.
+     앞에 뒀더니 뒤엣것이 덮어서 번호가 제목 위에 올라앉았다.
+     특이도가 같으면 순서가 정한다 — 프롬프트에서 겪은 것과 같은 함정이다. */
+.theme-aurora [data-block="steps"]:not(.ev-block):not([class*="v-steps-"]) li { padding-left: 52px; }
+
+.theme-aurora .benefit-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  background: var(--ev-primary-light);
+  border: 1px solid var(--ev-border);
+  margin-bottom: 12px;
+}
+
+.theme-aurora .benefit-name,
+.theme-aurora .step-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--ev-text-main);
+  margin-bottom: 5px;
+}
+
+.theme-aurora .benefit-desc,
+.theme-aurora .step-desc {
+  font-size: 0.9rem;
+  color: var(--ev-text-muted);
+  line-height: 1.65;
+}
+
+.theme-aurora .benefit-value {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--ev-accent-tag, var(--ev-primary));
+}
+
+.theme-aurora .benefit-tag {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--ev-primary-glow);
+  border: 1px solid var(--ev-primary-glow);
+  color: var(--ev-accent-tag, var(--ev-primary));
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* ── ⑦ stats — 숫자가 주인공 ──────────────────────────────────── */
+
+.theme-aurora [data-block="stats"]:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0;
+  list-style: none;
+}
+
+.theme-aurora [data-block="stats"]:not(.ev-block) li {
+  text-align: center;
+  padding: 10px 14px;
+  border: 0;
+  background: transparent;
+  border-left: 1px solid color-mix(in srgb, var(--ev-primary) 16%, transparent);
+}
+
+.theme-aurora [data-block="stats"]:not(.ev-block) li:first-child { border-left: 0; }
+
+.theme-aurora [data-block="stats"]:not(.ev-block) strong {
+  display: block;
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1.1;
+  background: var(--ev-gradient-cta);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 6px;
+}
+
+/* ── ⑧ 눈에 띄어야 하는 것만 칠한다 ───────────────────────────── */
+
+/* ★ prize · coupon 둘만 배경을 준다. 전부 칠하면 아무것도 안 띈다 */
+.theme-aurora [data-block="prize"]:not(.ev-block),
+.theme-aurora [data-block="coupon"]:not(.ev-block) {
+  margin: 8px 22px;
+  padding: 30px 26px;
+  border-radius: 22px;
+  border: 1px solid var(--ev-primary-glow);
+  background:
+    radial-gradient(120% 100% at 0% 0%, var(--ev-primary-glow), transparent 60%),
+    color-mix(in srgb, var(--ev-surface) 60%, transparent);
+  border-top: 1px solid var(--ev-primary-glow);
+}
+
+/* ★ 기본 쿠폰은 양옆이 파인 티켓 모양인데, 그걸 ::before 가 아니라
+     **CSS mask** 로 판다(radial-gradient 두 장을 좌우에 깔아 구멍을 낸다).
+     ::before 만 끄면 안 없어진다 — 눈으로 보고서야 알았다.
+     여기서는 둥근 카드라 그 구멍이 테두리를 물어뜯는다. */
+.theme-aurora [data-block="coupon"]:not(.ev-block) {
+  -webkit-mask: none;
+          mask: none;
+}
+
+.theme-aurora [data-block="prize"]:not(.ev-block) ul { list-style: none; display: grid; gap: 12px; }
+
+/* ★ 기본 CSS 가 li::before 로 🏆 · 🎁 를 left:14px 에 **절대 위치**로 놓는다.
+     padding-left 를 줄였더니 이모지가 <strong>1등</strong> 을 그대로 덮었다.
+     기본값(50px)만큼은 반드시 비워 둔다. */
+.theme-aurora [data-block="prize"]:not(.ev-block) li {
+  padding: 16px 18px 16px 52px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ev-text-main) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ev-text-main) 10%, transparent);
+  font-weight: 700;
+  color: var(--ev-text-main);
+}
+
+.theme-aurora [data-block="prize"]:not(.ev-block) li strong { color: var(--ev-primary); margin-right: 8px; }
+
+.theme-aurora [data-block="coupon"]:not(.ev-block) p {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--ev-text-main);
+  text-align: center;
+  margin: 6px 0 16px;
+}
+
+.theme-aurora [data-block="coupon"]:not(.ev-block) ul { list-style: none; display: grid; gap: 8px; }
+
+.theme-aurora [data-block="coupon"]:not(.ev-block) li {
+  font-size: 0.88rem;
+  color: var(--ev-text-muted);
+  padding-left: 18px;
+  position: relative;
+}
+
+.theme-aurora [data-block="coupon"]:not(.ev-block) li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--ev-accent-tag, var(--ev-primary));
+  font-weight: 800;
+}
+
+/* ── ⑨ schedule — 알약 라벨 ───────────────────────────────────── */
+
+.theme-aurora [data-block="schedule"]:not(.ev-block) ol { list-style: none; display: grid; gap: 10px; }
+
+/* ★ 기본은 왼쪽 세로선 + 점(li::before)으로 타임라인을 그린다.
+     여기서는 항목마다 카드를 쓰므로 그 둘이 카드 밖에 떠서 어긋난다. 끈다. */
+
+.theme-aurora [data-block="schedule"]:not(.ev-block) li {
+  border-left: 0;
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ev-text-main) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ev-primary) 16%, transparent);
+  color: var(--ev-text-muted);
+  font-size: 0.92rem;
+}
+
+.theme-aurora [data-block="schedule"]:not(.ev-block) li strong {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--ev-primary-light);
+  border: 1px solid var(--ev-border);
+  color: var(--ev-text-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+/* ── ⑩ faq · notices ──────────────────────────────────────────── */
+
+.theme-aurora [data-block="faq"]:not(.ev-block) dt {
+  font-weight: 800;
+  color: var(--ev-text-main);
+  margin-top: 16px;
+  font-size: 0.98rem;
+}
+
+.theme-aurora [data-block="faq"]:not(.ev-block) dd {
+  color: var(--ev-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin: 6px 0 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ev-primary) 12%, transparent);
+}
+
+.theme-aurora [data-block="notices"]:not(.ev-block) {
+  background: color-mix(in srgb, var(--ev-text-main) 22%, transparent);
+  padding: 26px 30px;
+}
+
+.theme-aurora [data-block="notices"]:not(.ev-block) ul { list-style: none; display: grid; gap: 7px; }
+
+.theme-aurora [data-block="notices"]:not(.ev-block) li {
+  font-size: 0.78rem;
+  color: var(--ev-text-light);
+  line-height: 1.65;
+  padding-left: 14px;
+  position: relative;
+}
+
+.theme-aurora [data-block="notices"]:not(.ev-block) li::before {
+  content: "·";
+  position: absolute;
+  left: 2px;
+  color: var(--ev-text-light);
+}
+
+/* ── ⑪ cta ────────────────────────────────────────────────────── */
+
+.theme-aurora [data-block="cta"]:not(.ev-block) {
+  padding: 34px 30px 44px;
+  text-align: center;
+  border-top: 1px solid color-mix(in srgb, var(--ev-primary) 14%, transparent);
+}
+
+.theme-aurora [data-block="cta"]:not(.ev-block) .btn,
+.theme-aurora [data-block="cta"]:not(.ev-block) .cta-btn {
+  display: inline-block;
+  padding: 18px 56px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--ev-gradient-cta);
+  color: var(--ev-surface);
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 14px 38px color-mix(in srgb, var(--ev-primary) 42%, transparent);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.theme-aurora [data-block="cta"]:not(.ev-block) .btn:hover,
+.theme-aurora [data-block="cta"]:not(.ev-block) .cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 46px var(--ev-primary-glow);
+}
+
+/* ── 띠 배너 ──────────────────────────────────────────────────── */
+
+/* ★ base(50-blocks/01-llm-blocks)가 띠 배너에 color:#fff 를 **리터럴로** 박아 둔다.
+     위의 일반 블록 규칙이 background 를 transparent 로 돌리면 흰 글자가
+     밝은 컨테이너 위에 앉아 사라진다 — 밝은 팔레트에서 실제로 그랬다.
+   ★ 이 규칙은 일반 블록 규칙과 특이도가 0,3,0 으로 **같다.** 반드시 뒤에 와야 이긴다.
+
+   ★★ v-highlight-alert · info · success(70-components/04-callout)는 **밝은 안내상자**다.
+     그쪽이 뒤 파일이라 동점으로 배경(#f0fdf4 등)과 color 를 블록에 가져간다.
+     그런데 아래 자식 규칙이 p·strong 에 흰 글자를 직접 박으면 **부모의 color 는
+     자식 선언을 못 이기므로** 민트 배경 위 흰 글자가 된다 — 실측 1.0:1,
+     VIP 화면에서 배너 두 줄이 통째로 안 보였다.
+     그래서 이 셋은 아예 매칭에서 뺀다. :where() 는 특이도 0 이라 0,3,0 이
+     그대로 유지된다 — :not() 을 그냥 붙이면 0,6,0 이 되어 v-highlight-badge 의
+     알약 모양까지 덮는다. */
+.theme-aurora [data-block="highlight"]:not(.ev-block):where(:not(.v-highlight-alert, .v-highlight-info, .v-highlight-success)) {
+  background: var(--ev-gradient-cta);
+  color: #fff;
+  margin: 16px 26px;
+  padding: 20px 24px;
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px var(--ev-primary-glow);
+}
+
+.theme-aurora [data-block="highlight"]:not(.ev-block):where(:not(.v-highlight-alert, .v-highlight-info, .v-highlight-success)) :is(p, strong) {
+  color: #fff;
+}
+
+/* ★ 쿠폰도 base 가 color:#fff 를 박아 둔다. 아래 .theme-aurora 쿠폰 규칙이
+     배경을 바꾸므로 글자색을 같이 쥔다 — 머리말의 "칠하면 잉크도 쥔다". */
+.theme-aurora [data-block="coupon"]:not(.ev-block),
+.theme-aurora [data-block="coupon"]:not(.ev-block) :is(h2, p, li, strong) {
+  color: #fff;
+}
+
+/* ── ⑬ 문구 꾸밈 ─────────────────────────────────────────────── */
+
+.theme-aurora .t-accent    { color: var(--ev-primary); }
+.theme-aurora .t-highlight { background: linear-gradient(transparent 62%, var(--ev-primary-glow) 0); color: #fff; }
+.theme-aurora .t-big       { color: var(--ev-primary); }
+.theme-aurora .t-strike    { color: var(--ev-text-light); }
+
+/* ── ⑭ 좁은 화면 ─────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .theme-aurora.ev-container,
+  .theme-aurora .ev-container { margin: 0; border-radius: 0; border-left: 0; border-right: 0; }
+  .theme-aurora [data-block]:not(.ev-block) { padding: 28px 20px; }
+  .theme-aurora [data-block="hero"]:not(.ev-block) { padding: 48px 20px 40px; }
+  .theme-aurora [data-block="prize"]:not(.ev-block),
+  .theme-aurora [data-block="coupon"]:not(.ev-block) { margin: 8px 14px; padding: 24px 20px; }
+}
+
+/* ── ⑮ 접근성 ────────────────────────────────────────────────── */
+
+/* ── 20-themes/09-common.css ── */
+/* ══════════════════════════════════════════════════════════════════
+   백지 테마 공통 — 테마마다 **또 풀 필요 없는 함정**만 모은다.
+   src/event-css/20-themes/09-common.css
+
+   ★ 왜 생겼나
+     basic · bloom · aurora 를 재 보니 세 테마가 **같은 자리 20곳**을 건드리는데
+     선언까지 똑같은 규칙은 **2개**뿐이었다. 같은 자리를 다르게 칠하는 게 테마의
+     정의이므로 당연하다 — 공유할 "모양" 은 거의 없다.
+
+     그런데 **함정**은 공유된다. 세 테마가 똑같이 풀어 둔 방어 코드가 7개였고,
+     3개는 어느 한 테마에서 빠져 있었다. 지금까지 깨진 화면은 거의 전부
+     이 목록에서 하나를 빠뜨려서 났다. 모양이 아니라 **함정**을 공통으로 뺀다.
+
+   ★ 파일 자리 — 09 이라 테마들(01~05) **뒤**, 변형(60-) **앞**이다.
+       테마 < 공통 < 변형
+     테마가 깜빡해도 공통이 덮고, 관리자가 고른 변형은 여전히 이긴다.
+     특이도를 맞추려고 :where() 가 아니라 :is() 를 쓴다 — :where() 는 0 이라
+     테마(0,3,0)에 져서 덮지 못한다. :is() 는 0,1,0 이라 0,3,0 이 되고,
+     같은 0,3,0 이면 **뒤엣것이 이긴다**. 그게 이 파일이다.
+
+   ★★ 새 테마를 쓸 때의 체크리스트 — 여기서 처리되는 것은 안 써도 된다.
+       ① 한국어 줄바꿈 keep-all              ← 여기서 처리
+       ② 일정 타임라인 점 끄기                ← 여기서 처리
+       ③ 경품 이모지 자리 비우기              ← 여기서 처리
+       ④ 움직임 줄이기                       ← 99-a11y 가 !important 로 이미 처리.
+                                               테마에 또 쓰면 죽은 코드다
+       ⑤ 특이도 방어 :not(.ev-block)         ← 테마가 직접. 선택자마다 붙인다
+       ⑥ 변형 방어 :not([class*="v-steps-"]) ← 테마가 직접. 번호를 ::before 로
+                                               그릴 때만 필요하다
+       ⑦ 팔레트 읽기 body:has(.theme-*)       ← 테마가 직접. 배경색을 팔레트에서 받는다
+       ⑧ 칠하면 잉크도 쥔다                   ← 테마가 직접. 배경을 바꾼 자리는
+                                               color 도 같이 정한다
+       ⑨ 띠 배너 글자색 되찾기                ← 테마가 직접. 배너 배경을 건드렸을 때만
+       ⑩ 좁은 화면 @media                    ← 테마가 직접
+   ══════════════════════════════════════════════════════════════════ */
+
+/* 백지 테마 전부. 새 테마를 만들면 여기에 이름을 추가한다 */
+
+/* ── ① 한국어 줄바꿈 ──────────────────────────────────────────────
+   기본값(word-break: normal)은 한국어를 **글자 단위**로 끊는다. 제목 칸을
+   좁히는 변형과 만나면 단어 중간이 갈라진다 — 실측한 것들:
+     v-hero-split(제목 칸 1.3fr)    "VIP 심야 라운지 초대 이 / 벤트"
+     v-intro-sidebar(제목 칸 140px)  "요금제 개편 안 / 내"
+   keep-all 은 띄어쓰기에서만 끊으므로 "… 초대 / 이벤트" 가 된다.
+   ★ 쿠폰·띠 배너의 큰 문구는 제목처럼 쓰이지만 태그가 <p> 다. 빼놨더니
+     "할인 쿠 / 폰을 제공합니다" 로 끊겼다(실측) — 그래서 둘을 따로 적는다.
+   ★ overflow-wrap: anywhere 는 안전망. 한 단어가 칸보다 길 때만 글자 단위로
+     돌아간다(안 넣으면 그 단어가 칸 밖으로 삐져나간다). */
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block]:not(.ev-block) :is(
+  h1, h2, h3, .title, .benefit-name, .step-title,
+  [data-block="coupon"] p, [data-block="highlight"] p
+) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* ── ② 일정 — base 의 타임라인 점을 끈다 ──────────────────────────
+   base(50-blocks)는 왼쪽 세로선 + 점(li::before)으로 타임라인을 그린다.
+   백지 테마 셋은 전부 일정을 **라벨 표**나 카드로 바꾸는데, 그러면 그 점이
+   카드 밖에 떠서 어긋난다. 세 테마가 똑같이 꺼 두고 있었다.
+   ★ 타임라인을 그대로 쓰고 싶은 테마는 자기 파일에서 display 를 되살리면 된다 —
+     같은 0,3,0 이라도 변형이 아니라 테마가 뒤에 오면 이긴다. */
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block="schedule"]:not(.ev-block) li::before {
+  display: none;
+}
+
+/* ── ③ 경품 — 이모지 자리를 비운다 ────────────────────────────────
+   base 가 li::before 로 🏆 · 🎁 를 left:14px 에 **절대 위치**로 놓는다.
+   padding-left 를 줄이면 이모지가 <strong>1등</strong> 을 그대로 덮는다 —
+   실제로 겪었다. 52px 은 테마가 바꿀 값이 아니라 base 가 정한 **제약**이라
+   여기서 못 박는다. 테마가 padding 단축속성을 쓰다 깜빡해도 이게 덮는다. */
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block="prize"]:not(.ev-block) li {
+  padding-left: 52px;
+}
+
 /* ── 30-base/01-reset.css ── */
 /* ==========================================================================
    CSS Reset & Base Structure
@@ -4544,9 +6786,17 @@ body {
 [data-block="compare"].v-compare-rounded:not(.ev-block) th { border-radius: 0 !important; }
 
 /* ── 90-palettes/01-base-set.css ── */
+/* ★★ 팔레트 변수를 body 에서도 읽을 수 있게 한다.
+     팔레트 class 는 .ev-container 에 붙는다(서버가 hero 에서 옮긴다 — PageShell.hoist).
+     그래서 body 에 배경을 깔면 var(--ev-bg) 가 :root 기본값으로 읽혀, 어떤 요청이든
+     같은 색이 깔렸다. 테마의 페이지 배경이 요청문을 못 따라가던 원인이 이것이다.
+     각 팔레트에 body:has(...) 를 같이 걸어 두면 같은 값 한 벌로 양쪽이 해결된다.
+     ★ 값은 한 곳에만 적는다. 선택자만 늘린다 — 두 벌이 되면 언젠가 갈라진다. */
+
 /* ── 팔레트 — 페이지 루트에 붙는다. 테마(theme-*)보다 뒤에 있어야 이긴다 ── */
 
-.palette-spring {
+.palette-spring,
+body:has(.palette-spring) {
   --ev-primary: #db2777; --ev-primary-hover: #be185d; --ev-primary-light: #fdf2f8;
   --ev-primary-glow: rgba(219, 39, 119, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #831843 0%, #be185d 55%, #f472b6 100%);
@@ -4555,7 +6805,8 @@ body {
   --ev-bg: #fff7fb; --ev-surface: #ffffff; --ev-surface-subtle: #fdf2f8; --ev-border: #fbcfe8;
 }
 
-.palette-summer {
+.palette-summer,
+body:has(.palette-summer) {
   --ev-primary: #0284c7; --ev-primary-hover: #0369a1; --ev-primary-light: #e0f2fe;
   --ev-primary-glow: rgba(2, 132, 199, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #0c4a6e 0%, #0369a1 55%, #06b6d4 100%);
@@ -4564,7 +6815,8 @@ body {
   --ev-bg: #f0f9ff; --ev-surface: #ffffff; --ev-surface-subtle: #f0f9ff; --ev-border: #bae6fd;
 }
 
-.palette-autumn {
+.palette-autumn,
+body:has(.palette-autumn) {
   --ev-primary: #c2410c; --ev-primary-hover: #9a3412; --ev-primary-light: #fff7ed;
   --ev-primary-glow: rgba(194, 65, 12, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #431407 0%, #7c2d12 50%, #c2410c 100%);
@@ -4573,7 +6825,8 @@ body {
   --ev-bg: #fffaf3; --ev-surface: #fffdf9; --ev-surface-subtle: #fff7ed; --ev-border: #fed7aa;
 }
 
-.palette-winter {
+.palette-winter,
+body:has(.palette-winter) {
   --ev-primary: #1d4ed8; --ev-primary-hover: #1e40af; --ev-primary-light: #eff6ff;
   --ev-primary-glow: rgba(29, 78, 216, 0.22);
   --ev-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #64748b 100%);
@@ -4582,7 +6835,8 @@ body {
   --ev-bg: #f8fafc; --ev-surface: #ffffff; --ev-surface-subtle: #f1f5f9; --ev-border: #cbd5e1;
 }
 
-.palette-forest {
+.palette-forest,
+body:has(.palette-forest) {
   --ev-primary: #15803d; --ev-primary-hover: #166534; --ev-primary-light: #f0fdf4;
   --ev-primary-glow: rgba(21, 128, 61, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #052e16 0%, #14532d 50%, #15803d 100%);
@@ -4591,7 +6845,8 @@ body {
   --ev-bg: #f7fdf8; --ev-surface: #ffffff; --ev-surface-subtle: #f0fdf4; --ev-border: #bbf7d0;
 }
 
-.palette-sunset {
+.palette-sunset,
+body:has(.palette-sunset) {
   --ev-primary: #e11d48; --ev-primary-hover: #be123c; --ev-primary-light: #fff1f2;
   --ev-primary-glow: rgba(225, 29, 72, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #4c1d95 0%, #be185d 55%, #fb7185 100%);
@@ -4600,7 +6855,8 @@ body {
   --ev-bg: #fff7f5; --ev-surface: #ffffff; --ev-surface-subtle: #fff1f2; --ev-border: #fecdd3;
 }
 
-.palette-night {
+.palette-night,
+body:has(.palette-night) {
   --ev-primary: #eab308; --ev-primary-hover: #ca8a04; --ev-primary-light: #2a2414;
   --ev-primary-glow: rgba(234, 179, 8, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #000000 0%, #1c1917 55%, #3f3f46 100%);
@@ -4610,7 +6866,8 @@ body {
   --ev-text-main: #f5f5f4; --ev-text-muted: #a8a29e; --ev-text-light: #78716c;
 }
 
-.palette-pastel {
+.palette-pastel,
+body:has(.palette-pastel) {
   --ev-primary: #8b5cf6; --ev-primary-hover: #7c3aed; --ev-primary-light: #f5f3ff;
   --ev-primary-glow: rgba(139, 92, 246, 0.2);
   --ev-gradient-hero: linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #14b8a6 100%);
@@ -4619,7 +6876,8 @@ body {
   --ev-bg: #faf8ff; --ev-surface: #ffffff; --ev-surface-subtle: #f5f3ff; --ev-border: #ddd6fe;
 }
 
-.palette-mono {
+.palette-mono,
+body:has(.palette-mono) {
   --ev-primary: #18181b; --ev-primary-hover: #000000; --ev-primary-light: #f4f4f5;
   --ev-primary-glow: rgba(0, 0, 0, 0.18);
   --ev-gradient-hero: linear-gradient(135deg, #09090b 0%, #27272a 55%, #52525b 100%);
@@ -4628,7 +6886,8 @@ body {
   --ev-bg: #fafafa; --ev-surface: #ffffff; --ev-surface-subtle: #f4f4f5; --ev-border: #e4e4e7;
 }
 
-.palette-festive {
+.palette-festive,
+body:has(.palette-festive) {
   --ev-primary: #b91c1c; --ev-primary-hover: #991b1b; --ev-primary-light: #fef2f2;
   --ev-primary-glow: rgba(185, 28, 28, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #450a0a 0%, #991b1b 50%, #b45309 100%);
@@ -4638,9 +6897,17 @@ body {
 }
 
 /* ── 90-palettes/02-extra-set.css ── */
+/* ★★ 팔레트 변수를 body 에서도 읽을 수 있게 한다.
+     팔레트 class 는 .ev-container 에 붙는다(서버가 hero 에서 옮긴다 — PageShell.hoist).
+     그래서 body 에 배경을 깔면 var(--ev-bg) 가 :root 기본값으로 읽혀, 어떤 요청이든
+     같은 색이 깔렸다. 테마의 페이지 배경이 요청문을 못 따라가던 원인이 이것이다.
+     각 팔레트에 body:has(...) 를 같이 걸어 두면 같은 값 한 벌로 양쪽이 해결된다.
+     ★ 값은 한 곳에만 적는다. 선택자만 늘린다 — 두 벌이 되면 언젠가 갈라진다. */
+
 /* 팔레트 추가 — registry/Palette.java 와 짝 */
 
-.palette-christmas {
+.palette-christmas,
+body:has(.palette-christmas) {
   --ev-primary: #166534; --ev-primary-hover: #14532d; --ev-primary-light: #f0fdf4;
   --ev-primary-glow: rgba(22, 101, 52, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #052e16 0%, #14532d 55%, #7f1d1d 100%);
@@ -4649,7 +6916,8 @@ body {
   --ev-bg: #fbfdf9; --ev-surface: #ffffff; --ev-surface-subtle: #f0fdf4; --ev-border: #d9f0de;
 }
 
-.palette-newyear {
+.palette-newyear,
+body:has(.palette-newyear) {
   --ev-primary: #1e3a8a; --ev-primary-hover: #172554; --ev-primary-light: #eef2ff;
   --ev-primary-glow: rgba(30, 58, 138, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #0b1437 0%, #1e3a8a 55%, #a16207 100%);
@@ -4658,7 +6926,8 @@ body {
   --ev-bg: #f8f9fd; --ev-surface: #ffffff; --ev-surface-subtle: #eef2ff; --ev-border: #dbe2f5;
 }
 
-.palette-valentine {
+.palette-valentine,
+body:has(.palette-valentine) {
   --ev-primary: #be185d; --ev-primary-hover: #9d174d; --ev-primary-light: #fdf2f8;
   --ev-primary-glow: rgba(190, 24, 93, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #4a044e 0%, #9d174d 55%, #f43f5e 100%);
@@ -4667,7 +6936,8 @@ body {
   --ev-bg: #fff7fa; --ev-surface: #ffffff; --ev-surface-subtle: #fdf2f8; --ev-border: #f9d0e3;
 }
 
-.palette-kids {
+.palette-kids,
+body:has(.palette-kids) {
   --ev-primary: #2563eb; --ev-primary-hover: #1d4ed8; --ev-primary-light: #fef9c3;
   --ev-primary-glow: rgba(37, 99, 235, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #2563eb 0%, #7c3aed 55%, #f59e0b 100%);
@@ -4676,7 +6946,8 @@ body {
   --ev-bg: #fffdf2; --ev-surface: #ffffff; --ev-surface-subtle: #fef9c3; --ev-border: #fde68a;
 }
 
-.palette-esports {
+.palette-esports,
+body:has(.palette-esports) {
   --ev-primary: #22c55e; --ev-primary-hover: #16a34a; --ev-primary-light: #0f2a1a;
   --ev-primary-glow: rgba(34, 197, 94, 0.35);
   --ev-gradient-hero: linear-gradient(135deg, #000000 0%, #0d1117 55%, #14532d 100%);
@@ -4686,7 +6957,8 @@ body {
   --ev-text-main: #e6edf3; --ev-text-muted: #9aa5b1; --ev-text-light: #6b7682;
 }
 
-.palette-lavender {
+.palette-lavender,
+body:has(.palette-lavender) {
   --ev-primary: #6d5bd0; --ev-primary-hover: #5b48bd; --ev-primary-light: #f3f0ff;
   --ev-primary-glow: rgba(109, 91, 208, 0.22);
   --ev-gradient-hero: linear-gradient(135deg, #3b2a7a 0%, #6d5bd0 55%, #a78bfa 100%);
@@ -4695,7 +6967,8 @@ body {
   --ev-bg: #faf9ff; --ev-surface: #ffffff; --ev-surface-subtle: #f3f0ff; --ev-border: #e4defc;
 }
 
-.palette-coffee {
+.palette-coffee,
+body:has(.palette-coffee) {
   --ev-primary: #92400e; --ev-primary-hover: #78350f; --ev-primary-light: #fdf4e7;
   --ev-primary-glow: rgba(146, 64, 14, 0.22);
   --ev-gradient-hero: linear-gradient(135deg, #2b1a10 0%, #5b3a24 55%, #92400e 100%);
@@ -4704,7 +6977,8 @@ body {
   --ev-bg: #fbf7f2; --ev-surface: #fffdf9; --ev-surface-subtle: #fdf4e7; --ev-border: #ead9c2;
 }
 
-.palette-brand {
+.palette-brand,
+body:has(.palette-brand) {
   --ev-primary: #d60076; --ev-primary-hover: #b00062; --ev-primary-light: #fff0f7;
   --ev-primary-glow: rgba(214, 0, 118, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #3b0a2a 0%, #8a0050 55%, #d60076 100%);

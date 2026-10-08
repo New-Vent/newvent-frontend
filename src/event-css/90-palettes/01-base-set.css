@@ -1,6 +1,14 @@
+/* ★★ 팔레트 변수를 body 에서도 읽을 수 있게 한다.
+     팔레트 class 는 .ev-container 에 붙는다(서버가 hero 에서 옮긴다 — PageShell.hoist).
+     그래서 body 에 배경을 깔면 var(--ev-bg) 가 :root 기본값으로 읽혀, 어떤 요청이든
+     같은 색이 깔렸다. 테마의 페이지 배경이 요청문을 못 따라가던 원인이 이것이다.
+     각 팔레트에 body:has(...) 를 같이 걸어 두면 같은 값 한 벌로 양쪽이 해결된다.
+     ★ 값은 한 곳에만 적는다. 선택자만 늘린다 — 두 벌이 되면 언젠가 갈라진다. */
+
 /* ── 팔레트 — 페이지 루트에 붙는다. 테마(theme-*)보다 뒤에 있어야 이긴다 ── */
 
-.palette-spring {
+.palette-spring,
+body:has(.palette-spring) {
   --ev-primary: #db2777; --ev-primary-hover: #be185d; --ev-primary-light: #fdf2f8;
   --ev-primary-glow: rgba(219, 39, 119, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #831843 0%, #be185d 55%, #f472b6 100%);
@@ -9,7 +17,8 @@
   --ev-bg: #fff7fb; --ev-surface: #ffffff; --ev-surface-subtle: #fdf2f8; --ev-border: #fbcfe8;
 }
 
-.palette-summer {
+.palette-summer,
+body:has(.palette-summer) {
   --ev-primary: #0284c7; --ev-primary-hover: #0369a1; --ev-primary-light: #e0f2fe;
   --ev-primary-glow: rgba(2, 132, 199, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #0c4a6e 0%, #0369a1 55%, #06b6d4 100%);
@@ -18,7 +27,8 @@
   --ev-bg: #f0f9ff; --ev-surface: #ffffff; --ev-surface-subtle: #f0f9ff; --ev-border: #bae6fd;
 }
 
-.palette-autumn {
+.palette-autumn,
+body:has(.palette-autumn) {
   --ev-primary: #c2410c; --ev-primary-hover: #9a3412; --ev-primary-light: #fff7ed;
   --ev-primary-glow: rgba(194, 65, 12, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #431407 0%, #7c2d12 50%, #c2410c 100%);
@@ -27,7 +37,8 @@
   --ev-bg: #fffaf3; --ev-surface: #fffdf9; --ev-surface-subtle: #fff7ed; --ev-border: #fed7aa;
 }
 
-.palette-winter {
+.palette-winter,
+body:has(.palette-winter) {
   --ev-primary: #1d4ed8; --ev-primary-hover: #1e40af; --ev-primary-light: #eff6ff;
   --ev-primary-glow: rgba(29, 78, 216, 0.22);
   --ev-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #64748b 100%);
@@ -36,7 +47,8 @@
   --ev-bg: #f8fafc; --ev-surface: #ffffff; --ev-surface-subtle: #f1f5f9; --ev-border: #cbd5e1;
 }
 
-.palette-forest {
+.palette-forest,
+body:has(.palette-forest) {
   --ev-primary: #15803d; --ev-primary-hover: #166534; --ev-primary-light: #f0fdf4;
   --ev-primary-glow: rgba(21, 128, 61, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #052e16 0%, #14532d 50%, #15803d 100%);
@@ -45,7 +57,8 @@
   --ev-bg: #f7fdf8; --ev-surface: #ffffff; --ev-surface-subtle: #f0fdf4; --ev-border: #bbf7d0;
 }
 
-.palette-sunset {
+.palette-sunset,
+body:has(.palette-sunset) {
   --ev-primary: #e11d48; --ev-primary-hover: #be123c; --ev-primary-light: #fff1f2;
   --ev-primary-glow: rgba(225, 29, 72, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #4c1d95 0%, #be185d 55%, #fb7185 100%);
@@ -54,7 +67,8 @@
   --ev-bg: #fff7f5; --ev-surface: #ffffff; --ev-surface-subtle: #fff1f2; --ev-border: #fecdd3;
 }
 
-.palette-night {
+.palette-night,
+body:has(.palette-night) {
   --ev-primary: #eab308; --ev-primary-hover: #ca8a04; --ev-primary-light: #2a2414;
   --ev-primary-glow: rgba(234, 179, 8, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #000000 0%, #1c1917 55%, #3f3f46 100%);
@@ -64,7 +78,8 @@
   --ev-text-main: #f5f5f4; --ev-text-muted: #a8a29e; --ev-text-light: #78716c;
 }
 
-.palette-pastel {
+.palette-pastel,
+body:has(.palette-pastel) {
   --ev-primary: #8b5cf6; --ev-primary-hover: #7c3aed; --ev-primary-light: #f5f3ff;
   --ev-primary-glow: rgba(139, 92, 246, 0.2);
   --ev-gradient-hero: linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #14b8a6 100%);
@@ -73,7 +88,8 @@
   --ev-bg: #faf8ff; --ev-surface: #ffffff; --ev-surface-subtle: #f5f3ff; --ev-border: #ddd6fe;
 }
 
-.palette-mono {
+.palette-mono,
+body:has(.palette-mono) {
   --ev-primary: #18181b; --ev-primary-hover: #000000; --ev-primary-light: #f4f4f5;
   --ev-primary-glow: rgba(0, 0, 0, 0.18);
   --ev-gradient-hero: linear-gradient(135deg, #09090b 0%, #27272a 55%, #52525b 100%);
@@ -82,7 +98,8 @@
   --ev-bg: #fafafa; --ev-surface: #ffffff; --ev-surface-subtle: #f4f4f5; --ev-border: #e4e4e7;
 }
 
-.palette-festive {
+.palette-festive,
+body:has(.palette-festive) {
   --ev-primary: #b91c1c; --ev-primary-hover: #991b1b; --ev-primary-light: #fef2f2;
   --ev-primary-glow: rgba(185, 28, 28, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #450a0a 0%, #991b1b 50%, #b45309 100%);
@@ -90,4 +107,3 @@
   --ev-accent-tag: #d97706;
   --ev-bg: #fffbf5; --ev-surface: #ffffff; --ev-surface-subtle: #fff7ed; --ev-border: #fde2c4;
 }
-
