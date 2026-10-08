@@ -57,18 +57,23 @@ const scopeOf = (s) => SCOPES.find((x) => x.key === s.scope) ?? SCOPES[0]
 /** 현재 필터로 다시 불러온다. 끝나면 onDone() — 보통 render */
 async function loadLibrary(onDone) {
   const s = lib()
+  const request = (s.request ?? 0) + 1
+  s.request = request
   s.status = 'loading'
   try {
-    s.data = await loadTemplateLibrary({
+    const data = await loadTemplateLibrary({
       keyword: s.keyword,
       builtin: scopeOf(s).builtin,
       includeInactive: s.includeInactive,
       page: s.page,
       size: PAGE_SIZE,
     })
+    if (ui.library !== s || s.request !== request) return
+    s.data = data
     s.status = 'ready'
     s.error = null
   } catch (e) {
+    if (ui.library !== s || s.request !== request) return
     s.status = 'error'
     s.error = e?.message || '템플릿을 불러오지 못했어요.'
   }
@@ -90,7 +95,7 @@ function resetLibrary() {
 function templateCard(t) {
   const mine = !t.builtin
   // 기본 제공본은 서버가 수정 · 비활성화를 403 으로 막는다 (EVENT403-0) — 버튼부터 막아 둔다.
-  const manage = !USE_SERVER ? SERVER_ONLY : t.builtin ? BUILTIN_FIXED : ''
+  const manage = !USE_SERVER ? SERVER_ONLY : t.builtin ? BUILTIN_FIXED : lib().busy ? 'disabled' : ''
   const code = esc(t.templateKey)
 
   return '<article class="card template-card' + (t.active ? '' : ' inactive') + '">'
@@ -237,6 +242,7 @@ function openRegister({ eventId, versionId, versionNo, eventName }) {
 }
 
 async function submitRegister(form) {
+  if (form.dataset.submitting === 'true') return
   const name = form.elements.name.value.trim()
   if (!name) return formError(form, '템플릿 이름을 입력해주세요.')
 
@@ -293,13 +299,18 @@ const formError = (form, text) => {
 
 /** 제출 중에는 버튼을 막는다 — 두 번 눌러 이벤트가 두 개 생기지 않게 */
 function lockForm(form, label) {
+  form.dataset.submitting = 'true'
   const btn = form.querySelector('button[type="submit"]')
   const was = btn?.textContent
   if (btn) { btn.disabled = true; btn.textContent = label }
-  return () => { if (btn) { btn.disabled = false; btn.textContent = was } }
+  return () => {
+    delete form.dataset.submitting
+    if (btn) { btn.disabled = false; btn.textContent = was }
+  }
 }
 
 async function submitEdit(form, rerender) {
+  if (form.dataset.submitting === 'true') return
   const code = form.dataset.code
   const name = form.elements.name.value.trim()
   if (!name) return formError(form, '템플릿 이름을 입력해주세요.')
@@ -321,6 +332,7 @@ async function submitEdit(form, rerender) {
  * ★ 첫 버전이 같은 트랜잭션에서 만들어지므로 generate 를 따로 부르지 않는다.
  */
 async function submitUse(form, { rerender, openEditor }) {
+  if (form.dataset.submitting === 'true') return
   const code = form.dataset.code
   const name = form.elements.name.value.trim()
   const start = form.elements.start.value
@@ -426,16 +438,22 @@ function handleLibraryClick(a, b, rerender) {
     case 'template-use': openUse(code); return true
     case 'template-deactivate': {
       const t = (s.data?.content || []).find((x) => x.templateKey === code)
+      if (!USE_SERVER || !t || t.builtin || !t.active || s.busy) return true
       ask('템플릿을 비활성화할까요?',
         (t?.name || code) + ' 템플릿을 새 이벤트에서 고를 수 없게 합니다. 이미 이 템플릿으로 만든 이벤트와 게시 상태는 그대로예요. 지우는 것은 아니라서 "비활성 템플릿도 보기"로 다시 찾을 수 있어요.',
         async () => {
+          if (ui.library !== s || s.busy) return
+          s.busy = true
+          rerender()
           try {
             await deactivateTemplate(code)
             toast('템플릿을 비활성화했어요.')
           } catch (e) {
             toast(e?.message || '비활성화하지 못했어요.')
+          } finally {
+            s.busy = false
           }
-          loadLibrary(rerender)
+          if (ui.library === s) loadLibrary(rerender)
         }, '비활성화')
       return true
     }
