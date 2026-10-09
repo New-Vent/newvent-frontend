@@ -12,6 +12,12 @@ const FIELD_BLOCK={title:'hero',intro:'hero',benefitHeading:'benefits',cta:'cta'
 
 const BLOCK_LABELS={hero:'제목·소개',highlight:'강조 배너',intro:'이벤트 소개',stats:'숫자로 보는 혜택',benefits:'혜택',prize:'경품',coupon:'쿠폰',compare:'비교표',audience:'참여 대상',steps:'참여 방법',schedule:'일정',faq:'자주 묻는 질문',notices:'유의사항',cta:'참여 버튼'};
 
+/**
+ * 순서를 못 옮기는 블록. 유의사항은 법적 고지, 참여 버튼은 전환 동선이라 늘 맨 끝이다.
+ * ★ 서버 Block.canMove() 와 같은 목록이다. 보내도 서버가 무시하지만, 끌 수 없게 하는 게 맞다
+ */
+const PINNED_BLOCKS = ['notices', 'cta']
+
 const CONTENT_FIELDS={title:'.hero-title',intro:'.hero-desc',benefitHeading:'[data-block="benefits"] h2',cta:'[data-slot="cta-link"]'};
 
-export { STORAGE_KEY, DEMO_DATE, USER_ID, LABELS, FIELD_BLOCK, BLOCK_LABELS, CONTENT_FIELDS }
+export { STORAGE_KEY, DEMO_DATE, USER_ID, LABELS, FIELD_BLOCK, BLOCK_LABELS, PINNED_BLOCKS, CONTENT_FIELDS }

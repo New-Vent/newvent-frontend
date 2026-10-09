@@ -153,3 +153,14 @@
 @media(max-width:800px){.workspace.chat-right .workspace-layout{display:flex;flex-direction:column}.workspace.chat-right .studio-preview-column{order:0}.workspace.chat-right .workspace-side{order:1}}
 @media(max-width:620px){.version-row{grid-template-columns:40px minmax(0,1fr);gap:10px 12px}.version-row .version-text{min-width:0}.version-row .btn{grid-column:2;width:100%}}
 .selection-context{display:block;margin:2px 0 0;padding:9px 11px;border:1px solid #f2cfdf;border-radius:8px;background:#fff7fb;color:#9d2565;font-size:11px;font-weight:700;line-height:1.5;overflow-wrap:anywhere}
+
+/* 블록 순서 — 끌어서 옮기는 목록 */
+.sorder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sorder-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:grab}
+.sorder-item:active{cursor:grabbing}
+.sorder-item.dragging{opacity:.4}
+.sorder-item.over{border-color:var(--brand,#d60076);box-shadow:inset 0 2px 0 var(--brand,#d60076)}
+.sorder-grip{color:var(--muted);font-size:14px;line-height:1;letter-spacing:-2px}
+.sorder-name{flex:1;font-size:13px;font-weight:600}
+.sorder-moves{display:flex;gap:4px}
+.sorder-moves .btn{padding:2px 7px;min-height:0;font-size:11px;line-height:1.6}

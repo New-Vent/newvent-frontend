@@ -27,7 +27,7 @@
  * ★ 직접 수정 입력은 다시 그리지 않고 미리보기 iframe 의 글자만 바꾼다 (포커스 유지 · 즉시 확인)
  */
 
-import { BLOCK_LABELS } from '@shared/constants.js'
+import { BLOCK_LABELS, PINNED_BLOCKS } from '@shared/constants.js'
 import { $, esc } from '@shared/dom.js'
 import { badgeOf, serverStatus } from '@shared/format.js'
 import { gradeLabel, REQUEST_MAX } from '@shared/grades.js'
@@ -53,7 +53,8 @@ const GREETING = '어떻게 고쳐볼까요? 예: "제목을 가을 대축제로
   + '요청 한 번이 새 버전 하나가 되고, 남기고 싶은 버전은 "버전 저장" 으로 이력에 올려요.'
 const chatOf = (id) => (CHATS[id] ||= [{ role: 'assistant', text: GREETING }])
 
-const freshDirect = () => ({ values: {}, style: {}, styleOn: {} })
+// order 는 null 로 시작한다 — 아직 안 건드렸다는 뜻이다. 미리보기 순서를 그대로 쓴다
+const freshDirect = () => ({ values: {}, style: {}, styleOn: {}, order: null })
 
 /** 새로 만든 직후처럼 진행 중인 작업을 들고 들어올 때 — 목록에서 열 때는 인자 없이 */
 function openServerEditor(id, { jobId = null, request = null, startError = null } = {}) {
@@ -273,14 +274,114 @@ function directChanges(s) {
   if (on.color && st.color) style.color = st.color
   if (st.size) style.size = st.size
   if (st.shape) style.shape = st.shape
-  return { edits, buttonStyle: Object.keys(style).length ? style : null }
+  return { edits, buttonStyle: Object.keys(style).length ? style : null, order: changedOrder(s) }
+}
+
+/* ── 블록 순서 ──────────────────────────────────────────────── */
+
+/** 미리보기 HTML 에 있는 블록을 보이는 순서대로 */
+function blocksInHtml(html) {
+  const out = []
+  for (const m of String(html || '').matchAll(/data-block="([a-z-]+)"/g)) {
+    if (BLOCK_LABELS[m[1]] && !out.includes(m[1])) out.push(m[1])
+  }
+  return out
+}
+
+/** 옮길 수 있는 블록만 — 지금 저장된 순서 */
+const movableBlocks = (s) => blocksInHtml(s.preview?.html).filter((k) => !PINNED_BLOCKS.includes(k))
+
+/** 화면에 보여 줄 순서. 아직 안 끌었으면 저장된 순서 그대로 */
+const currentOrder = (s) => s.direct.order || movableBlocks(s)
+
+/** 바꾼 게 있으면 보낼 목록, 없으면 null */
+function changedOrder(s) {
+  if (!s.direct.order) return null
+  const was = movableBlocks(s), now = currentOrder(s)
+  return now.length === was.length && now.every((k, i) => k === was[i]) ? null : now
+}
+
+/** 순서를 바꾸고 화면 세 곳을 맞춘다. 전체를 다시 그리지 않는다 — 입력 포커스가 날아간다 */
+function setOrder(s, next) {
+  s.direct.order = next
+  paintOrder(s)
+  previewOrder(s)
+  updateDirectCount(s)
+}
+
+/** key 를 target 앞자리로. 끌어 놓기가 쓴다 (target 이 없으면 맨 끝) */
+function moveBlock(s, key, target) {
+  const list = currentOrder(s).filter((k) => k !== key)
+  const at = list.indexOf(target)
+  list.splice(at < 0 ? list.length : at, 0, key)
+  setOrder(s, list)
+}
+
+/** 한 칸 위/아래 — 끌기를 못 쓰는 환경(모바일 · 키보드)의 길 */
+function nudgeBlock(s, key, step) {
+  const list = currentOrder(s)
+  const at = list.indexOf(key)
+  const to = at + step
+  if (at < 0 || to < 0 || to >= list.length) return
+  const next = [...list]
+  next.splice(at, 1)
+  next.splice(to, 0, key)
+  setOrder(s, next)
+}
+
+/**
+ * 미리보기 iframe 의 섹션을 실제로 옮긴다.
+ *
+ * ★ 서버 PageShell.orderBlocks 와 같은 방법이다 — 원래 블록이 있던 자리에
+ *   표식을 두고 거기에 다시 꽂는다. 그래야 블록 사이의 장식 · 스크립트가 제자리에 남는다.
+ * ★ 고정 블록(유의사항 · 참여 버튼)은 목록에 없으므로 건드리지 않는다.
+ */
+function previewOrder(s) {
+  const doc = $('.event-frame')?.contentDocument
+  const root = doc?.querySelector('.ev-container, .event-page')
+  if (!root) return
+  const order = currentOrder(s)
+  const slots = [...root.children].filter((el) =>
+    el.matches('section[data-block]') && order.includes(el.dataset.block))
+  const sorted = order.map((k) => slots.find((el) => el.dataset.block === k)).filter(Boolean)
+  if (sorted.length !== slots.length) return
+  const marks = slots.map((el) => { const m = doc.createElement('template'); el.before(m); return m })
+  slots.forEach((el) => el.remove())
+  marks.forEach((m, i) => m.replaceWith(sorted[i]))
+}
+
+/** 순서 묶음. 옮길 수 있는 블록이 둘 미만이면 아예 안 보여 준다 */
+function orderHTML(s, busy) {
+  if (movableBlocks(s).length < 2) return ''
+  return '<fieldset class="sedit-group"><legend>블록 순서</legend>'
+    + '<ol class="sorder" id="server-order">' + orderItems(s, busy) + '</ol>'
+    + '<p class="helper">끌어서 옮기거나 ▲▼ 를 누르세요. 유의사항 · 참여 버튼은 늘 맨 끝이에요.</p></fieldset>'
+}
+
+function orderItems(s, busy) {
+  const list = currentOrder(s)
+  return list.map((k, i) => '<li class="sorder-item" draggable="' + (busy ? 'false' : 'true')
+    + '" data-sorder="' + esc(k) + '">'
+    + '<span class="sorder-grip" aria-hidden="true">⠿</span>'
+    + '<span class="sorder-name">' + esc(labelOf(k)) + '</span><span class="sorder-moves">'
+    + button('server-order-up', '▲', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
+        + ' 위로" ' + (busy || i === 0 ? 'disabled' : ''), 'btn sm')
+    + button('server-order-down', '▼', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
+        + ' 아래로" ' + (busy || i === list.length - 1 ? 'disabled' : ''), 'btn sm')
+    + '</span></li>').join('')
+}
+
+/** 목록만 다시 그린다 — 전체를 그리면 고치던 문구 칸의 포커스가 날아간다 */
+function paintOrder(s) {
+  const ol = $('#server-order')
+  if (ol) ol.innerHTML = orderItems(s, running(s) || s.busy)
 }
 
 async function applyDirect(rerender) {
   const s = ui.serverEditor
   if (!s?.preview || running(s) || s.busy) return
-  const { edits, buttonStyle } = directChanges(s)
-  if (!edits.length && !buttonStyle) { toast('바꾼 내용이 없어요.'); return }
+  const { edits, buttonStyle, order } = directChanges(s)
+  if (!edits.length && !buttonStyle && !order) { toast('바꾼 내용이 없어요.'); return }
   s.busy = true
   rerender()
   try {
@@ -288,6 +389,7 @@ async function applyDirect(rerender) {
       sourceVersionId: s.preview.versionId,
       ...(edits.length ? { edits } : {}),
       ...(buttonStyle ? { buttonStyle } : {}),
+      ...(order ? { blockOrder: order } : {}),
     })
     await refreshPage(s)
     toast('v' + r.versionNo + ' 로 반영했어요. 이력에 남기려면 버전 저장을 눌러주세요.')
@@ -345,8 +447,8 @@ function previewButtonStyle(s) {
 }
 
 function updateDirectCount(s) {
-  const { edits, buttonStyle } = directChanges(s)
-  const n = edits.length + (buttonStyle ? 1 : 0)
+  const { edits, buttonStyle, order } = directChanges(s)
+  const n = edits.length + (buttonStyle ? 1 : 0) + (order ? 1 : 0)
   const el = $('#server-direct-count')
   if (el) el.textContent = n ? '바꾼 항목 ' + n + '개' : '바꾼 항목 없음'
   const apply = $('[data-act="server-direct-apply"]')
@@ -582,6 +684,7 @@ function directPanel(s) {
     + select('shape', '모양', [['square', '각지게'], ['round', '둥글게'], ['pill', '알약형']]) + '</div></fieldset>' : ''
   return '<div class="server-scroll" id="server-scroll">'
     + '<p class="workspace-tip">미리보기에서 문구를 누르면 해당 칸으로 이동해요. 기간 · 유의사항은 서버가 채우는 자리라 고칠 수 없어요.</p>'
+    + orderHTML(s, busy)
     + (grouped ? '' : '<p class="helper" style="margin-bottom:10px">영역 구분을 불러오지 못해 문구를 순서대로 보여줘요.</p>')
     + '<div id="server-direct">' + fields + styleForm + '</div></div>'
     + '<div class="server-foot"><div class="foot-row" style="margin-top:0"><span class="helper" id="server-direct-count"></span>'
@@ -670,8 +773,8 @@ function afterServerRender() {
   if (s.tab === 'direct') {
     updateDirectCount(s)
     const frame = $('.event-frame')
-    // 고치던 값이 남아 있으면 (탭 전환 · 기기 전환) 새 iframe 에도 다시 입힌다
-    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s) }, { once: true })
+    // 고치던 값 · 바꾼 순서가 남아 있으면 (탭 전환 · 기기 전환) 새 iframe 에도 다시 입힌다
+    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewOrder(s) }, { once: true })
   } else {
     // 고른 영역 외곽선 — 새 iframe(새 버전 · 기기 전환)에도 다시 입힌다
     const frame = $('.event-frame')
@@ -728,6 +831,8 @@ function handleServerClick(a, b, rerender) {
     case 'server-unselect-all':
       if (s && !running(s)) { s.selected = []; paintSelection(s) }
       return true
+    case 'server-order-up': if (s) nudgeBlock(s, b.dataset.block, -1); return true
+    case 'server-order-down': if (s) nudgeBlock(s, b.dataset.block, 1); return true
     case 'server-direct-apply': applyDirect(rerender); return true
     case 'server-direct-reset': resetDirect(rerender); return true
     case 'server-publish': openPublish(); return true
@@ -785,6 +890,51 @@ function handleServerInput(ev) {
   return false
 }
 
+/**
+ * 블록 순서 끌어 놓기 — main.js 의 dragstart · dragover · drop · dragend 위임에서 부른다.
+ *
+ * ★ 라이브러리를 안 쓴다. 목록이 열 줄 남짓이라 HTML5 끌기면 충분하다.
+ * ★ 끌기를 못 쓰는 환경(모바일 · 키보드)에는 ▲▼ 가 있다. 둘이 같은 함수로 들어간다.
+ */
+let draggingBlock = null
+
+function handleServerDrag(ev) {
+  const s = ui.serverEditor
+  if (!s || s.tab !== 'direct' || running(s) || s.busy) return
+  const item = ev.target.closest?.('[data-sorder]')
+
+  if (ev.type === 'dragstart') {
+    if (!item) return
+    draggingBlock = item.dataset.sorder
+    ev.dataTransfer.effectAllowed = 'move'
+    // ★ setData 가 없으면 Firefox 는 끌기를 시작조차 하지 않는다
+    try { ev.dataTransfer.setData('text/plain', draggingBlock) } catch { /* 일부 브라우저가 막는다 */ }
+    item.classList.add('dragging')
+    return
+  }
+  if (ev.type === 'dragend') {
+    draggingBlock = null
+    document.querySelectorAll('.sorder-item.dragging, .sorder-item.over')
+      .forEach((n) => n.classList.remove('dragging', 'over'))
+    return
+  }
+  if (!draggingBlock || !item) return
+
+  if (ev.type === 'dragover') {
+    // ★ preventDefault 를 해야 놓을 수 있다. 안 하면 브라우저가 거절한다
+    ev.preventDefault()
+    ev.dataTransfer.dropEffect = 'move'
+    document.querySelectorAll('.sorder-item.over').forEach((n) => n.classList.remove('over'))
+    if (item.dataset.sorder !== draggingBlock) item.classList.add('over')
+    return
+  }
+  if (ev.type === 'drop') {
+    ev.preventDefault()
+    if (item.dataset.sorder !== draggingBlock) moveBlock(s, draggingBlock, item.dataset.sorder)
+    draggingBlock = null
+  }
+}
+
 /** 대화 전송 — main.js 의 submit 위임에서 부른다 */
 function handleServerSubmit(ev, rerender) {
   if (ev.target.id !== 'server-chat-form') return false
@@ -835,4 +985,5 @@ export {
   openServerEditor, ensureServerEditor, serverEditorView, afterServerRender, loadingView, refreshPage, running, openPublish,
   regenerate, cancel as cancelServerGeneration, onServerPromptInput, reloadServerEditor,
   handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock,
+  handleServerDrag,
 }
