@@ -245,8 +245,12 @@ export async function startEdit(eventId, requestText, blocks = []) {
 /**
  * 직접 수정 → { versionId, versionNo } (새 버전)
  * @param {{sourceVersionId:number, edits?:{index:number,before:string,after:string}[],
- *          buttonStyle?:{background?:string,color?:string,size?:string,shape?:string}}} body
+ *          buttonStyle?:{background?:string,color?:string,size?:string,shape?:string},
+ *          blockOrder?:string[]}} body
  * ★ index · before 는 미리보기의 editableTexts 그대로. before 가 다르면 409 (화면이 최신이 아님)
+ * ★ blockOrder 는 블록을 세울 순서(data-block key). 셋 중 하나만 보내도 된다 —
+ *   셋 다 비면 400 (DIRECT_EDIT400-3). 모르는 이름이면 400 (DIRECT_EDIT400-4).
+ *   유의사항 · 참여 버튼은 보내도 서버가 무시하고 맨 끝에 둔다 (Block.canMove)
  */
 export async function directEdit(eventId, body) {
   return requireApi().post(`/api/admin/events/${eventId}/versions/direct-edit`, body)
