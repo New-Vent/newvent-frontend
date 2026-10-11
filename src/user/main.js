@@ -23,13 +23,6 @@ import { signupView } from './views/signup.js'
 import { accountView } from './views/account.js'
 import { showLoginPrompt, showResult } from './actions.js'
 
-const PLAN_FEES = {
-  BASIC: 35000,
-  STANDARD: 55000,
-  PREMIUM: 79000,
-  FAMILY: 99000,
-}
-
 /**
  * 사용자 앱 셸.
  *
@@ -194,16 +187,6 @@ document.addEventListener('click', (ev) => {
   if (b.disabled) return
   const a = b.dataset.act
 
-  if (a === 'signup-plan') {
-    ui.signup = { ...(ui.signup ?? {}), plan: b.dataset.plan }
-
-    document.querySelectorAll('[data-act="signup-plan"]').forEach((card) => {
-      const selected = card.dataset.plan === b.dataset.plan
-      card.classList.toggle('selected', selected)
-      card.setAttribute('aria-pressed', String(selected))
-    })
-    return
-  }
   if (a === 'change-plan') {
     const next = PLANS.find((p) => p.code === b.dataset.plan)
     if (!next) return
@@ -350,11 +333,12 @@ document.addEventListener('submit', async (ev) => {
     const name = val('name')
     const email = val('email')
     const phone = val('phone')
-    const plan = ui.signup?.plan ?? 'BASIC'
-    const planFee = PLAN_FEES[plan]
 
-    if (!loginId || loginId.length > 50) {
-      return fail('아이디는 1~50자로 입력해주세요.', 'loginId')
+    if (!/^[A-Za-z0-9_]{4,50}$/.test(loginId)) {
+      return fail(
+        '아이디는 영문, 숫자, 밑줄(_)만 사용해 4~50자로 입력해주세요.',
+        'loginId',
+      )
     }
 
     if (!password.trim() || password.length < 8 || password.length > 100) {
@@ -381,10 +365,6 @@ document.addEventListener('submit', async (ev) => {
       return fail('휴대폰 번호는 최대 20자까지 입력할 수 있어요.', 'phone')
     }
 
-    if (!planFee) {
-      return fail('요금제를 선택해주세요.')
-    }
-
     if (AUTH_ENABLED) {
       const submitButton = form.querySelector('button[type="submit"]')
 
@@ -402,7 +382,6 @@ document.addEventListener('submit', async (ev) => {
           name,
           email,
           phone: phone || null,
-          plan: planFee,
         })
 
         ui.signup = null
@@ -426,6 +405,7 @@ document.addEventListener('submit', async (ev) => {
     }
 
     // 서버 연동을 끈 경우에만 사용하는 목업 처리
+    const plan = 'BASIC'
     state.db.me = {
       ...state.db.me,
       loginId,
