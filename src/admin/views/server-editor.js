@@ -577,7 +577,7 @@ function directPanel(s) {
   const select = (k, label, opts) => '<span>' + label + '</span><select data-sstyle="' + k + '" ' + dis + ' aria-label="' + label + '"><option value="">그대로</option>'
     + opts.map(([v, t]) => '<option value="' + v + '" ' + (st[k] === v ? 'selected' : '') + '>' + t + '</option>').join('') + '</select>'
   const styleForm = hasCta ? '<fieldset class="sedit-group"><legend>참여 버튼 디자인</legend><div class="sedit-style">'
-    + color('background', '배경색', '#d60076') + color('color', '글자색', '#ffffff')
+    + color('background', '배경색', '#0284c7') + color('color', '글자색', '#ffffff')
     + select('size', '크기', [['small', '작게'], ['medium', '보통'], ['large', '크게']])
     + select('shape', '모양', [['square', '각지게'], ['round', '둥글게'], ['pill', '알약형']]) + '</div></fieldset>' : ''
   return '<div class="server-scroll" id="server-scroll">'
