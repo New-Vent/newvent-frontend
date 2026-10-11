@@ -3,7 +3,7 @@ import './styles.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
-import { loadEvent, loadEvents, loadParticipations, useApi, USE_SERVER } from '@shared/repo.js'
+import { loadEvent, loadEvents, loadParticipations, signUp, useApi, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -19,7 +19,7 @@ import { homeView, refreshResults } from './views/home.js'
 import { eventView } from './views/event.js'
 import { myView } from './views/my.js'
 import { loginView } from './views/login.js'
-import { signupView } from './views/signup.js'
+import { firstSignupError, signupView } from './views/signup.js'
 import { accountView } from './views/account.js'
 import { showLoginPrompt, showResult } from './actions.js'
 
@@ -280,10 +280,24 @@ document.addEventListener('click', (ev) => {
   }
 })
 
+/**
+ * 로그아웃 — 계정에 딸린 캐시를 **반드시 같이 비운다.**
+ *
+ * ★ 안 비우면 다음 사람이 앞사람 것을 본다.
+ *   ensureMy 는 `serverMyState === 'done'` 이면 다시 묻지 않는다. 그래서
+ *   A 가 로그아웃하고 B 가 로그인한 뒤 내 혜택에 들어가면, 참여 목록 API 를
+ *   한 번도 부르지 않고 A 의 참여 기록이 그대로 떠 있었다.
+ *
+ * 공개 이벤트 목록(serverEvents)은 계정과 무관하므로 그대로 둔다.
+ */
 async function logout() {
   if (AUTH_ENABLED) await api.logout()
   ui.logged = false
   ui.userName = null
+  ui.serverMy = null
+  ui.serverMyState = null
+  ui.serverMyFilter = null
+  ui.serverMyError = null
   navigate('home')
   toast('로그아웃했어요.')
 }
@@ -308,9 +322,41 @@ document.addEventListener('input', (ev) => {
 })
 
 /**
+ * 서버 회원가입 — 성공해도 **로그인되지 않는다.**
+ * 응답이 토큰이 아니라 만들어진 회원이라서, 아이디를 채워 둔 로그인 화면으로 보낸다.
+ *
+ * 중복만 코드로 구분된다 (대소문자만 달라도 중복이다).
+ *   USER409-0 아이디 · USER409-1 이메일
+ */
+async function serverSignup(form, values, fail) {
+  const submit = form.querySelector('button[type="submit"]')
+  if (submit?.disabled) return
+  if (submit) { submit.disabled = true; submit.textContent = '가입하는 중…' }
+
+  try {
+    const me = await signUp({
+      loginId: values.loginId,
+      password: values.password,
+      name: values.name,
+      email: values.email,
+      // 안 적었으면 아예 보내지 않는다 — 빈 문자열을 저장하지 않게.
+      ...(values.phone ? { phone: values.phone } : {}),
+    })
+    ui.signup = null
+    ui.loginHint = me.loginId
+    navigate('login')
+    toast(me.name + '님, 가입했어요. 이제 로그인해주세요.')
+  } catch (e) {
+    if (submit) { submit.disabled = false; submit.textContent = '가입하기' }
+    if (e?.code === 'USER409-0') return fail('이미 사용 중인 아이디예요. 대소문자만 다른 아이디도 쓸 수 없어요.', 'loginId')
+    if (e?.code === 'USER409-1') return fail('이미 사용 중인 이메일이에요. 대소문자만 다른 이메일도 쓸 수 없어요.', 'email')
+    fail(e?.message || '가입하지 못했어요. 입력한 내용을 다시 확인해주세요.', 'loginId')
+  }
+}
+
+/**
  * 회원가입 · 내 정보 저장.
- * 목업이라 state.db.me 를 직접 고친다. API 를 붙일 때 이 두 블록만
- * repo 호출로 바꾸면 화면은 그대로 쓴다.
+ * 내 정보 저장은 아직 목업이라 state.db.me 를 직접 고친다.
  */
 document.addEventListener('submit', (ev) => {
   const form = ev.target
@@ -325,24 +371,26 @@ document.addEventListener('submit', (ev) => {
       get(k)?.focus()
     }
 
-    const loginId = val('loginId')
-    if (!/^[A-Za-z0-9]{4,20}$/.test(loginId)) return fail('아이디는 영문·숫자 4~20자로 입력해주세요.', 'loginId')
-    const pw = val('password')
-    if (pw.length < 8 || !/[A-Za-z]/.test(pw) || !/\d/.test(pw))
-      return fail('비밀번호는 8자 이상이고 영문과 숫자를 섞어야 해요.', 'password')
-    if (pw !== val('password2')) return fail('비밀번호가 서로 다릅니다.', 'password2')
-    if (!val('name')) return fail('이름을 입력해주세요.', 'name')
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val('email'))) return fail('이메일 형식을 확인해주세요.', 'email')
-    if (!/^01[016789]\d{7,8}$/.test(val('phone').replace(/\D/g, '')))
-      return fail('휴대폰 번호 형식을 확인해주세요.', 'phone')
+    // ★ 비밀번호는 trim 하지 않는다 — 앞뒤 공백도 비밀번호의 일부다.
+    const values = {
+      loginId: val('loginId'), password: get('password')?.value ?? '',
+      password2: get('password2')?.value ?? '',
+      name: val('name'), email: val('email'), phone: val('phone'),
+    }
+
+    // 서버는 어느 칸이 틀렸는지 안 알려준다 (400 COMMON400-0 하나뿐). 화면이 먼저 본다.
+    const bad = firstSignupError(values)
+    if (bad) return fail(bad.message, bad.key)
+
+    if (USE_SERVER) return serverSignup(form, values, fail)
 
     const plan = ui.signup?.plan ?? 'BASIC'
     state.db.me = {
       ...state.db.me,
-      loginId,
-      name: val('name'),
-      email: val('email'),
-      phone: val('phone'),
+      loginId: values.loginId,
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
       plan,
       grade: gradeOfPlan(plan),
       marketingOptIn: Boolean(get('agree')?.checked),
