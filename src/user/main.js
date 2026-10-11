@@ -63,10 +63,17 @@ function displayName() {
 
 /** 로그인 · 새로고침 복구 뒤 내 정보를 읽는다. 실패해도 로그인 상태는 유지한다 (이름만 기본값) */
 async function loadMe() {
+  ui.serverMe = null
+  ui.serverMeError = null
+
   try {
-    ui.userName = (await api.get('/api/users/me')).name
-  } catch {
+    const me = await api.get('/api/users/me')
+    ui.serverMe = me
+    ui.userName = me.name
+  } catch (error) {
     ui.userName = null
+    ui.serverMeError =
+      error?.message || '내 정보를 불러오지 못했어요.'
   }
 }
 
@@ -186,6 +193,20 @@ document.addEventListener('click', (ev) => {
   if (b.disabled) return
   const a = b.dataset.act
 
+  if (a === 'reload-account') {
+    if (ui.accountReloading) return
+
+    ui.accountReloading = true
+    b.disabled = true
+
+    loadMe().then(() => {
+      ui.accountReloading = false
+      render()
+    })
+
+    return
+  }
+
   if (a === 'signup-plan') {
     ui.signup = { ...(ui.signup ?? {}), plan: b.dataset.plan }
     render()
@@ -284,6 +305,8 @@ async function logout() {
   if (AUTH_ENABLED) await api.logout()
   ui.logged = false
   ui.userName = null
+  ui.serverMe = null
+  ui.serverMeError = null
   navigate('home')
   toast('로그아웃했어요.')
 }
@@ -309,10 +332,10 @@ document.addEventListener('input', (ev) => {
 
 /**
  * 회원가입 · 내 정보 저장.
- * 목업이라 state.db.me 를 직접 고친다. API 를 붙일 때 이 두 블록만
- * repo 호출로 바꾸면 화면은 그대로 쓴다.
+ * 내 정보 저장은 서버 모드에서 PATCH /api/users/me를 호출한다.
+ * 서버 연동을 끈 경우에는 목업 정보를 수정한다.
  */
-document.addEventListener('submit', (ev) => {
+document.addEventListener('submit', async (ev) => {
   const form = ev.target
 
   if (form.id === 'signup-form') {
@@ -357,20 +380,102 @@ document.addEventListener('submit', (ev) => {
     return
   }
 
-  if (form.id === 'account-form') {
+    if (form.id === 'account-form') {
     ev.preventDefault()
-    const val = (k) => form.querySelector(`[data-account="${k}"]`)?.value.trim() ?? ''
-    const box = $('#account-error')
-    if (!val('name')) { if (box) box.textContent = '이름을 입력해주세요.'; return }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val('email'))) { if (box) box.textContent = '이메일 형식을 확인해주세요.'; return }
-    if (!/^01[016789]\d{7,8}$/.test(val('phone').replace(/\D/g, ''))) { if (box) box.textContent = '휴대폰 번호 형식을 확인해주세요.'; return }
 
+    if (form.dataset.submitting === 'true') return
+
+    const get = (key) => form.querySelector(`[data-account="${key}"]`)
+    const val = (key) => get(key)?.value.trim() ?? ''
+    const errorBox = form.querySelector('#account-error')
+
+    const fail = (message, key) => {
+      if (errorBox) errorBox.textContent = message
+      if (key) get(key)?.focus()
+    }
+
+    if (errorBox) errorBox.textContent = ''
+
+    const name = val('name')
+    const email = val('email')
+    const phone = val('phone')
+
+    if (!name || name.length > 50) {
+      return fail('이름은 1~50자로 입력해주세요.', 'name')
+    }
+
+    if (
+      !email ||
+      email.length > 100 ||
+      !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)
+    ) {
+      return fail('이메일 형식을 확인해주세요. 최대 100자까지 입력할 수 있어요.', 'email')
+    }
+
+    if (phone.length > 20) {
+      return fail('휴대폰 번호는 최대 20자까지 입력할 수 있어요.', 'phone')
+    }
+
+    if (AUTH_ENABLED) {
+      const current = ui.serverMe
+
+      if (!current) {
+        return fail('내 정보를 다시 불러온 뒤 저장해주세요.')
+      }
+
+      if (current.phone && !phone) {
+        return fail('등록된 휴대폰 번호는 비울 수 없어요.', 'phone')
+      }
+
+      const submitButton = form.querySelector('button[type="submit"]')
+      form.dataset.submitting = 'true'
+
+      if (submitButton) {
+        submitButton.disabled = true
+        submitButton.textContent = '저장 중…'
+      }
+
+      try {
+        const me = await api.patch('/api/users/me', {
+          name,
+          email,
+          ...(phone ? { phone } : {}),
+        })
+
+        ui.serverMe = me
+        ui.userName = me.name
+
+        if (ui.route === 'account') render()
+        else header()
+
+        toast('내 정보를 저장했어요.')
+      } catch (error) {
+        if (errorBox) {
+          errorBox.textContent =
+            error?.message || '내 정보 저장에 실패했어요.'
+        }
+      } finally {
+        delete form.dataset.submitting
+
+        if (submitButton) {
+          submitButton.disabled = false
+          submitButton.textContent = '변경 내용 저장'
+        }
+      }
+
+      return
+    }
+
+    // 서버 연동을 끈 경우의 목업 처리
     Object.assign(state.db.me, {
-      name: val('name'),
-      email: val('email'),
-      phone: val('phone'),
-      marketingOptIn: Boolean(form.querySelector('[data-account="marketingOptIn"]')?.checked),
+      name,
+      email,
+      phone,
+      marketingOptIn: Boolean(
+        form.querySelector('[data-account="marketingOptIn"]')?.checked,
+      ),
     })
+
     persist()
     render()
     toast('내 정보를 저장했어요.')
