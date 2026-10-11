@@ -228,8 +228,17 @@
 
 /* ── 템플릿 라이브러리 (views/templates.js) ── */
 .template-library-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.template-card{display:flex;flex-direction:column;gap:8px;padding:18px}
+.template-card{display:flex;flex-direction:column;gap:8px;padding:18px;overflow:hidden}
 .template-card.inactive{background:#fbfafc;border-style:dashed}
+/* 썸네일은 카드 안쪽 여백을 무시하고 위쪽을 꽉 채운다 (padding 을 음수 margin 으로 되돌린다) */
+.template-thumb{margin:-18px -18px 2px;border-bottom:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0}
+.template-thumb.loading{background:linear-gradient(90deg,#f3f0f7 25%,#ece8f2 37%,#f3f0f7 63%);background-size:400% 100%;animation:template-thumb-shimmer 1.3s ease-in-out infinite}
+@keyframes template-thumb-shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+.template-thumb.empty-thumb{display:flex;align-items:center;justify-content:center;color:#c6bed2}
+.template-thumb.empty-thumb svg{width:28px;height:28px}
+/* 비활성 템플릿은 썸네일도 흐리게 — 목록에서 바로 구분된다 */
+.template-card.inactive .template-thumb{opacity:.45;filter:grayscale(1)}
+@media(prefers-reduced-motion:reduce){.template-thumb.loading{animation:none}}
 .template-card.inactive .template-card-head h3{color:var(--muted)}
 .template-card-head{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
 .template-card-head h3{margin:0;font-size:14px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
