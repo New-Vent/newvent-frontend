@@ -438,6 +438,34 @@ export async function useTemplate(code, body) {
   return requireApi().post(`/api/admin/template-library/${encodeURIComponent(code)}/events`, body)
 }
 
+/* ────────────────────────── 회원가입 ────────────────────────── */
+
+/**
+ * 회원가입 — `POST /api/public/users/signup` (공개, 로그인 불필요)
+ *
+ * ★ **요금제(plan)는 보내지 않는다.** 서버가 일부러 받지 않는다 —
+ *   가입자가 요금제를 골라서 멤버십 등급을 올리는 것을 막으려는 것이다.
+ *   모두 서버 기본 요금제로 시작해 등급은 NORMAL 이고, 변경은 관리자만 한다.
+ *   (보내도 무시되지만, 화면에서 고르게 두면 거짓말이 되므로 입력 자체를 두지 않는다.)
+ *
+ * ★ 응답은 토큰이 아니라 **만들어진 회원**이다 — 가입해도 로그인 상태가 되지 않는다.
+ *   { id, loginId, name, email, phone, plan, membershipGrade, joinedAt }
+ *   그래서 성공하면 로그인 화면으로 보낸다.
+ *
+ * ★ 검증 실패는 400 COMMON400-0 "잘못된 입력값입니다" 하나로만 온다 —
+ *   **어느 칸이 틀렸는지 알려주지 않는다.** 그래서 화면이 먼저 검사한다 (views/signup.js).
+ *
+ * 중복은 409 로 구분된다. 대소문자만 달라도 중복이다 (user01 / USER01).
+ *   USER409-0  이미 사용 중인 로그인 ID
+ *   USER409-1  이미 사용 중인 이메일
+ *
+ * @param {{loginId:string,password:string,name:string,email:string,phone?:string}} form
+ */
+export async function signUp(form) {
+  if (!USE_SERVER) throw new Error('목업 모드에서는 user/main.js 가 직접 만든다')
+  return requireApi().post('/api/public/users/signup', form)
+}
+
 export async function participate(eventId, payload) {
   if (!USE_SERVER) throw new Error('목업 모드에서는 user/actions.js 가 직접 만든다')
   const p = await requireApi().post(`/api/users/me/events/${eventId}/participations`, payload)
