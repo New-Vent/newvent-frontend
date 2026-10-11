@@ -2,12 +2,21 @@
   * 회원가입 화면.
  * 서버 모드에서는 POST /api/public/users/signup으로 가입하고
  * 성공 후 로그인 화면으로 이동한다.
+<<<<<<< HEAD
  * 
 import { esc } from '@shared/dom.js'
 import { AUTH_ENABLED } from '@shared/api.js'
 import { button } from '@shared/ui/controls.js'
 import { PLANS } from '@shared/mock/fixtures.js'
 import { USE_SERVER } from '@shared/repo.js'
+=======
+ * 요금제와 멤버십 등급은 서버에서 결정한다.
+ */
+
+import { esc } from '@shared/dom.js'
+import { AUTH_ENABLED } from '@shared/api.js'
+import { button } from '@shared/ui/controls.js'
+>>>>>>> 89ca09c (fix: 변경된 회원가입 정책에 맞춰 요금제 선택 제거)
 import { ui } from '@shared/state.js'
 
 /**
@@ -128,7 +137,6 @@ export function signupView() {
     name: '',
     email: '',
     phone: '',
-    plan: 'BASIC',
     agree: false,
   })
 
@@ -143,9 +151,12 @@ export function signupView() {
       <form id="signup-form" class="panel" novalidate>
         <div class="panel-body fields">
           <label class="field">아이디
-            <span class="helper">최대 50자</span>
-            <input data-signup="loginId" name="loginId" required maxlength="50"
-                   autocomplete="username" placeholder="user01" value="${esc(f.loginId)}">
+            <span class="helper">영문·숫자·밑줄(_) 4~50자</span>
+            <input data-signup="loginId" name="loginId"
+                   required minlength="4" maxlength="50"
+                   pattern="[A-Za-z0-9_]{4,50}"
+                   autocomplete="username" placeholder="user01"
+                   value="${esc(f.loginId)}">
           </label>
 
           <label class="field">비밀번호
@@ -163,31 +174,23 @@ export function signupView() {
 
           <label class="field">이름
             <input data-signup="name" name="name" required maxlength="50"
-                   autocomplete="name" placeholder="홍길동" value="${esc(f.name)}">
+                   autocomplete="name" placeholder="홍길동"
+                   value="${esc(f.name)}">
           </label>
 
           <label class="field">이메일
             <input data-signup="email" name="email" type="email"
                    required maxlength="100"
-                   autocomplete="email" placeholder="name@example.com" value="${esc(f.email)}">
+                   autocomplete="email" placeholder="name@example.com"
+                   value="${esc(f.email)}">
           </label>
 
           <label class="field">휴대폰 번호 (선택)
             <span class="helper">최대 20자</span>
             <input data-signup="phone" name="phone" type="tel" maxlength="20"
-                   autocomplete="tel" placeholder="01012345678" value="${esc(f.phone)}">
+                   autocomplete="tel" placeholder="01012345678"
+                   value="${esc(f.phone)}">
           </label>
-
-          <div class="field">
-            <span>요금제</span>
-            <span class="helper">
-              가입 후에도 변경할 수 있습니다.
-              멤버십 등급은 요금제와 가입 기간에 따라 결정됩니다.
-            </span>
-            <div class="plan-grid">
-              ${PLANS.map((p) => planCard(p, f.plan)).join('')}
-            </div>
-          </div>
 
           ${!AUTH_ENABLED ? `
             <label class="field row" style="align-items:center;gap:8px">
@@ -209,22 +212,5 @@ export function signupView() {
         </div>
       </form>
     </div>
-  `
-}
-
-function planCard(p, selected) {
-  return `
-    <button type="button" class="plan-card ${p.code === selected ? 'selected' : ''}"
-            data-act="signup-plan" data-plan="${p.code}"
-            aria-pressed="${p.code === selected}">
-      <strong>${esc(p.name)}</strong>
-      <span class="plan-price">${esc(p.price)}</span>
-      <span class="plan-meta">
-        데이터 ${esc(p.data)}${AUTH_ENABLED ? '' : ' · ' + esc(p.grade) + ' 등급'}
-      </span>
-      <span class="plan-desc">
-        ${esc(AUTH_ENABLED ? p.name + ' 요금제' : p.desc)}
-      </span>
-    </button>
   `
 }
