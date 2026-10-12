@@ -40,7 +40,11 @@ export function accountView() {
     ? null
     : PLANS.find((p) => p.code === me.plan) ?? PLANS[0]
 
-  const grade = AUTH_ENABLED ? me.membershipGrade : me.grade
+  // membershipGrade 는 EXCELLENT 같은 영문 코드다. GET /api/membership-grades 로 받아 둔
+  // 한글 이름이 있으면 그걸 쓰고, 못 받아왔으면 코드라도 보여 준다.
+  const grade = AUTH_ENABLED
+    ? (ui.serverGrades || []).find((g) => g.grade === me.membershipGrade)?.name ?? me.membershipGrade
+    : me.grade
   const planLabel = AUTH_ENABLED
     ? '월 ' + Number(me.plan).toLocaleString('ko-KR') + '원'
     : current.name

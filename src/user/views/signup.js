@@ -1,14 +1,48 @@
 /**
  * 회원가입 화면.
- * 서버 모드에서는 POST /api/public/users/signup으로 가입하고
- * 성공 후 로그인 화면으로 이동한다.
- * 요금제와 멤버십 등급은 서버에서 결정한다.
+ *
+ * 서버 모드에서는 POST /api/public/users/signup 으로 가입하고 성공하면
+ * 로그인 화면으로 보낸다 — 응답이 토큰이 아니라 만들어진 회원이라서,
+ * 가입해도 로그인 상태가 되지 않는다.
+ *
+ * ★ 요금제는 받지 않는다. 서버가 일부러 안 받는다(보내도 무시) — 가입자가
+ *   요금제를 골라 멤버십 등급을 올리는 것을 막으려는 것이다. 모두 기본
+ *   요금제 · NORMAL 로 시작하고 변경은 관리자만 한다.
+ *
+ * ★ 서버 검증 실패는 400 COMMON400-0 하나로만 오고 **어느 칸이 틀렸는지
+ *   안 알려준다.** 그래서 아래 RULES 로 화면이 먼저 검사한다.
+ *   규칙은 백엔드 SignUpRequest 와 맞춰 둔 것이다.
  */
 
 import { esc } from '@shared/dom.js'
 import { AUTH_ENABLED } from '@shared/api.js'
 import { button } from '@shared/ui/controls.js'
 import { ui } from '@shared/state.js'
+
+/**
+ * 백엔드 `SignUpRequest` 와 1:1 로 맞춘 검사 규칙.
+ * 순서대로 보고 처음 걸리는 것을 알려준다.
+ */
+const RULES = [
+  { key: 'loginId', test: (v) => /^[A-Za-z0-9_]{4,50}$/.test(v),
+    message: '아이디는 영문·숫자·밑줄(_)만 써서 4~50자로 입력해주세요.' },
+  { key: 'password', test: (v) => v.length >= 8 && v.length <= 100,
+    message: '비밀번호는 8자 이상 100자 이하로 입력해주세요.' },
+  { key: 'password2', test: (v, all) => v === all.password,
+    message: '비밀번호가 서로 다릅니다.' },
+  { key: 'name', test: (v) => v.length >= 1 && v.length <= 50,
+    message: '이름을 50자 이내로 입력해주세요.' },
+  { key: 'email', test: (v) => v.length <= 100 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
+    message: '이메일 형식을 확인해주세요.' },
+  // 휴대폰은 선택이다 — 서버도 @NotBlank 가 없다. 적었을 때만 길이를 본다.
+  { key: 'phone', test: (v) => v.length <= 20, message: '휴대폰 번호는 20자 이내로 입력해주세요.' },
+]
+
+/** @returns {{key:string,message:string}|null} 처음 걸린 규칙 */
+export function firstSignupError(values) {
+  for (const r of RULES) if (!r.test(values[r.key] ?? '', values)) return r
+  return null
+}
 
 export function signupView() {
   const f = (ui.signup ??= {
