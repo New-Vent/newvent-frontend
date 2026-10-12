@@ -51,7 +51,18 @@ export function createRouter(routes, onChange) {
 
   function navigate(path, { replace = false } = {}) {
     const url = BASE.replace(/\/$/, '') + path
-    if (url === location.pathname) return
+
+    // 이미 그 주소면 **기록만 남기지 않는다.** 다시 그리기는 한다.
+    //
+    // ★ 예전에는 여기서 그냥 돌아갔다. 그래서 상태를 바꾸고 지금 화면으로
+    //   navigate 하면 화면이 안 바뀌었다 — 홈에서 로그아웃을 누르면
+    //   ui.logged 는 false 가 되고 토스트까지 떴는데 헤더에는 이름과
+    //   로그아웃 버튼이 그대로 남았다 (navigate('home') 이 /, 즉 제자리라서).
+    if (url === location.pathname) {
+      onChange(resolve())
+      return
+    }
+
     history[replace ? 'replaceState' : 'pushState']({}, '', url)
     onChange(resolve())
   }

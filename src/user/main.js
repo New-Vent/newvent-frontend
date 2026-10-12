@@ -3,7 +3,7 @@ import './styles.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
-import { loadEvent, loadEvents, loadParticipations, useApi, USE_SERVER } from '@shared/repo.js'
+import { loadEvent, loadEvents, loadMembershipGrades, loadMyProfile, loadParticipations, loadParticipationStatus, participate, participationBody, signUp, updateMyProfile, useApi, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -19,7 +19,7 @@ import { homeView, refreshResults } from './views/home.js'
 import { eventView } from './views/event.js'
 import { myView } from './views/my.js'
 import { loginView } from './views/login.js'
-import { signupView } from './views/signup.js'
+import { firstSignupError, signupView } from './views/signup.js'
 import { accountView } from './views/account.js'
 import { showLoginPrompt, showResult } from './actions.js'
 
@@ -67,9 +67,12 @@ async function loadMe() {
   ui.serverMeError = null
 
   try {
-    const me = await api.get('/api/users/me')
+    const me = await loadMyProfile()
     ui.serverMe = me
     ui.userName = me.name
+    // 등급 안내 — membershipGrade 는 EXCELLENT 같은 영문 코드라 화면에 그대로 쓸 수 없다.
+    // 곁들이는 정보라 실패해도 그냥 둔다 (그때는 코드가 보인다).
+    loadMembershipGrades().then((gs) => { ui.serverGrades = gs }, () => {})
   } catch (error) {
     ui.userName = null
     ui.serverMeError =
@@ -134,6 +137,31 @@ function ensureEvent(id, rerender) {
 
 
 /**
+ * 참여 가능 여부 — 상세 화면의 옆 패널이 쓴다.
+ *
+ * 공개 상세(loadEvent)에는 참여 정보가 없어서 따로 부른다. 로그인해야 하는
+ * 엔드포인트라 로그아웃 상태에서는 아예 묻지 않는다 (패널이 로그인 안내를 띄운다).
+ *
+ * ★ 이벤트가 바뀌면 다시 묻는다. 참여 직후에는 다시 묻지 않는다 —
+ *   result 를 들고 있는 동안은 그 결과를 보여줘야 하기 때문이다.
+ */
+function ensureParticipationStatus(id, rerender) {
+  if (!USE_SERVER || !id || !ui.logged) return
+  const s = ui.serverParticipation
+  if (s && s.eventId === String(id) && (s.state === 'loading' || s.state === 'done' || s.state === 'error')) return
+  ui.serverParticipation = { eventId: String(id), state: 'loading', data: null, error: null, busy: false, result: null }
+  loadParticipationStatus(id).then(
+    (d) => { const cur = ui.serverParticipation
+             if (cur?.eventId !== String(id)) return
+             cur.data = d; cur.state = 'done'; rerender() },
+    (err) => { const cur = ui.serverParticipation
+               if (cur?.eventId !== String(id)) return
+               cur.error = err?.message || '참여 가능 여부를 확인하지 못했어요.'
+               cur.state = 'error'; rerender() },
+  )
+}
+
+/**
  * 내 참여 목록 — 요약과 목록을 한 번에 받는다.
  * 필터(전체/받은 혜택)가 바뀌면 서버에 다시 묻는다. 서버가 거르는 쪽이
  * 요약 숫자와 어긋나지 않는다 — 페이지네이션이 있어 현재 페이지만으로는 셀 수 없다.
@@ -157,7 +185,10 @@ function render(scroll = false) {
   state.observers.forEach((x) => x.disconnect())
   state.observers = []
   if (ui.route === 'home') ensureEvents(() => render())
-  if (ui.route === 'event') ensureEvent(ui.activeId, () => render())
+  if (ui.route === 'event') {
+    ensureEvent(ui.activeId, () => render())
+    ensureParticipationStatus(ui.activeId, () => render())
+  }
   if (ui.route === 'my') ensureMy(() => render())
   header()
   $('#app').innerHTML = (VIEWS[ui.route] || homeView)()
@@ -250,6 +281,11 @@ document.addEventListener('click', (ev) => {
   if (a === 'event') return navigate('event', b.dataset.id)
   if (a === 'login-prompt') return showLoginPrompt()
   if (a === 'result') return ui.logged ? showResult(b.dataset.id) : showLoginPrompt()
+  if (a === 'participation-retry') {
+    ui.serverParticipation = null
+    render()
+    return
+  }
   if (a === 'logout') {
     logout()
     return
@@ -297,17 +333,117 @@ document.addEventListener('click', (ev) => {
   }
 })
 
+/**
+ * 서버 모드 참여 — 옆 패널의 폼.
+ *
+ * ★ 본문은 방식마다 하나만 보낸다 (participationBody). BASIC 은 아예 안 보낸다.
+ * ★ 성공하면 결과를 패널에 남기고, 내 참여 목록 캐시를 비워 다음에 다시 읽게 한다.
+ * ★ 409(이미 참여)는 화면이 낡은 것이다 — 상태를 다시 물어 버튼을 닫는다.
+ */
+async function submitParticipation(form) {
+  const s = ui.serverParticipation
+  if (!s || s.busy || s.state !== 'done') return
+  const err = (msg) => { const el = form.querySelector('.create-error'); if (el) el.textContent = msg }
+
+  const gameCode = s.data?.gameCode
+  const phone = form.querySelector('[data-participate="phoneNumber"]')?.value.trim() ?? ''
+  if (gameCode === 'PRE_REGISTRATION' && !/^01[016789](\d{7,8}|-\d{3,4}-\d{4})$/.test(phone)) {
+    return err('휴대폰 번호 형식을 확인해주세요.')
+  }
+
+  s.busy = true
+  render()
+  try {
+    const made = await participate(s.eventId, participationBody(gameCode, { phoneNumber: phone }))
+    s.busy = false
+    s.result = made.resultData || { status: 'PENDING' }
+    // 내 혜택은 다음에 들어갈 때 서버에서 다시 읽는다
+    ui.serverMy = null
+    ui.serverMyState = null
+    render()
+    toast(s.result.status === 'WON' ? '당첨되었어요!' : '참여가 접수되었어요.')
+  } catch (e) {
+    s.busy = false
+    if (e?.code === 'PARTICIPATION409-0') {
+      // 다른 탭에서 이미 참여했다 — 상태를 다시 물어 화면을 맞춘다
+      ui.serverParticipation = null
+      render()
+      toast('이미 참여한 이벤트예요.')
+      return
+    }
+    render()
+    const box = document.querySelector('#participate-form .create-error')
+    if (box) box.textContent = e?.message || '참여하지 못했어요.'
+    else toast(e?.message || '참여하지 못했어요.')
+  }
+}
+
+
+/**
+ * 서버 회원가입 — 성공해도 **로그인되지 않는다.**
+ * 응답이 토큰이 아니라 만들어진 회원이라서, 아이디를 채워 둔 로그인 화면으로 보낸다.
+ *
+ * 중복만 코드로 구분된다 (대소문자만 달라도 중복이다).
+ *   USER409-0 아이디 · USER409-1 이메일
+ */
+async function serverSignup(form, values, fail) {
+  const submit = form.querySelector('button[type="submit"]')
+  if (submit?.disabled) return
+  if (submit) { submit.disabled = true; submit.textContent = '가입하는 중…' }
+
+  try {
+    const me = await signUp({
+      loginId: values.loginId,
+      password: values.password,
+      name: values.name,
+      email: values.email,
+      // 안 적었으면 아예 보내지 않는다 — 빈 문자열을 저장하지 않게.
+      ...(values.phone ? { phone: values.phone } : {}),
+    })
+    ui.signup = null
+    ui.loginHint = me.loginId
+    navigate('login')
+    toast(me.name + '님, 가입했어요. 이제 로그인해주세요.')
+  } catch (e) {
+    if (submit) { submit.disabled = false; submit.textContent = '가입하기' }
+    if (e?.code === 'USER409-0') return fail('이미 사용 중인 아이디예요. 대소문자만 다른 아이디도 쓸 수 없어요.', 'loginId')
+    if (e?.code === 'USER409-1') return fail('이미 사용 중인 이메일이에요. 대소문자만 다른 이메일도 쓸 수 없어요.', 'email')
+    fail(e?.message || '가입하지 못했어요. 입력한 내용을 다시 확인해주세요.', 'loginId')
+  }
+}
+
+/**
+ * 로그아웃 — 계정에 딸린 캐시를 **전부 같이 비운다.**
+ *
+ * ★ 안 비우면 다음 사람이 앞사람 것을 본다.
+ *   ensureMy 는 `serverMyState === 'done'` 이면 다시 묻지 않는다. 그래서
+ *   A 가 로그아웃하고 B 가 로그인한 뒤 내 혜택에 들어가면, 참여 목록 API 를
+ *   한 번도 부르지 않고 A 의 참여 기록이 그대로 떠 있었다.
+ *
+ * 공개 이벤트 목록(serverEvents)은 계정과 무관하므로 그대로 둔다.
+ */
 async function logout() {
   if (AUTH_ENABLED) await api.logout()
   ui.logged = false
   ui.userName = null
   ui.serverMe = null
   ui.serverMeError = null
+  ui.serverMy = null
+  ui.serverMyState = null
+  ui.serverMyFilter = null
+  ui.serverMyError = null
+  ui.serverParticipation = null
+  ui.serverGrades = null
   navigate('home')
   toast('로그아웃했어요.')
 }
 
 document.addEventListener('submit', (ev) => {
+  if (ev.target.id === 'participate-form') {
+    ev.preventDefault()
+    submitParticipation(ev.target)
+    return
+  }
   if (ev.target.id !== 'login-form') return
   handleLoginSubmit(ev, api, async () => {
     ui.logged = true
@@ -400,7 +536,7 @@ document.addEventListener('submit', async (ev) => {
       }
 
       try {
-        await api.post('/api/public/users/signup', {
+        const me = await signUp({
           loginId,
           password,
           name,
@@ -409,10 +545,18 @@ document.addEventListener('submit', async (ev) => {
         })
 
         ui.signup = null
+        // 가입해도 로그인되지 않는다 — 응답이 토큰이 아니라 만들어진 회원이다.
+        // 방금 만든 아이디를 채워 둔 로그인 화면으로 보낸다 (views/login.js 가 읽고 버린다).
+        ui.loginHint = me?.loginId ?? loginId
         navigate('login')
-        toast('회원가입이 완료됐어요. 로그인해주세요.')
+        toast((me?.name ?? name) + '님, 가입했어요. 이제 로그인해주세요.')
       } catch (error) {
-        if (errorBox) {
+        // 중복만 코드로 갈린다. 대소문자만 달라도 중복이라 그 점까지 알려 준다.
+        if (error?.code === 'USER409-0') {
+          fail('이미 사용 중인 아이디예요. 대소문자만 다른 아이디도 쓸 수 없어요.', 'loginId')
+        } else if (error?.code === 'USER409-1') {
+          fail('이미 사용 중인 이메일이에요. 대소문자만 다른 이메일도 쓸 수 없어요.', 'email')
+        } else if (errorBox) {
           errorBox.textContent =
             error?.message || '회원가입에 실패했어요. 다시 시도해주세요.'
         }
@@ -509,7 +653,8 @@ document.addEventListener('submit', async (ev) => {
       }
 
       try {
-        const me = await api.patch('/api/users/me', {
+        // 요금제는 보내지 않는다 — 사용자가 못 바꾼다 (PATCH /api/users/me/plan 은 삭제됐다)
+        const me = await updateMyProfile({
           name,
           email,
           ...(phone ? { phone } : {}),
@@ -523,7 +668,10 @@ document.addEventListener('submit', async (ev) => {
 
         toast('내 정보를 저장했어요.')
       } catch (error) {
-        if (errorBox) {
+        // 이메일 중복만 코드로 갈린다. 대소문자만 달라도 중복이다
+        if (error?.code === 'USER409-1') {
+          fail('이미 사용 중인 이메일이에요. 대소문자만 다른 이메일도 쓸 수 없어요.', 'email')
+        } else if (errorBox) {
           errorBox.textContent =
             error?.message || '내 정보 저장에 실패했어요.'
         }

@@ -393,10 +393,18 @@ document.addEventListener('input',ev=>{
 
 document.addEventListener('input',editButton);
 
+/**
+ * 로그아웃 — 계정에 딸린 캐시를 **반드시 같이 비운다.**
+ *
+ * ★ serverEditor 에는 앞사람이 열어 둔 이벤트의 이름 · 미리보기 HTML ·
+ *   버전 이력 · 주고받던 대화가 들어 있다. 안 비우면 다음 사람이 그대로 본다.
+ *   ensureServerEditor 는 id 가 같으면 다시 읽지 않으므로 저절로 지워지지도 않는다.
+ */
 async function logout() {
   if (AUTH_ENABLED) await api.logout()
   resetAdminServer()
   resetLibrary()
+  ui.serverEditor = null
   ui.logged = false
   navigate('login')
   toast('로그아웃했어요.')
