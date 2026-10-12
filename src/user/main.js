@@ -465,7 +465,8 @@ document.addEventListener('input', (ev) => {
 /**
  * 회원가입 · 내 정보 저장.
  * 회원가입은 서버 모드에서 API를 호출하고, 성공 후 로그인 화면으로 이동한다.
- * 내 정보 저장은 아직 목업으로 처리한다.
+ * 내 정보 저장은 서버 모드에서 PATCH /api/users/me를 호출한다.
+ * 서버 연동을 끈 경우에는 목업으로 처리한다.
  */
 document.addEventListener('submit', async (ev) => {
   const form = ev.target
