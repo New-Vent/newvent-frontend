@@ -5,11 +5,11 @@
 .studio-side{min-width:0}
 .chat{display:flex;flex-direction:column;gap:10px;max-height:230px;overflow:auto;margin-bottom:14px}
 .bubble{font-size:11px;line-height:1.8;background:#f6f5f9;padding:11px 13px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
-.bubble.me{margin-left:20px;background:var(--tint);color:#7d315d}
+.bubble.me{margin-left:20px;background:var(--tint);color:#31657d}
 .bubble small{font-size:9px;display:block;opacity:.7;margin-bottom:4px}
 .preview-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;border-bottom:1px solid var(--line);font-size:11px}
 .device-controls{display:flex;gap:5px}
-.device-controls button.active{background:var(--tint);color:var(--pink)}
+.device-controls button.active{background:var(--tint);color:var(--sky)}
 .canvas{background:#efedf3;padding:18px;max-height:810px;overflow:auto}
 .canvas-frame{width:100%;max-width:720px;margin:auto;background:#fff;box-shadow:0 10px 25px #31213f12;transition:max-width .2s}
 .canvas-frame.mobile{max-width:390px}
@@ -23,7 +23,7 @@
 .change-item ins{display:block;background:#edf9f2;color:#247751;padding:7px 10px;border-radius:6px;margin-top:5px;text-decoration:none}
 .version-row{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px}
 .version-row:last-child{border:0}
-.version-number{height:40px;width:40px;border-radius:11px;background:var(--tint);color:var(--pink);font-weight:800;font-size:13px;display:grid;place-items:center;flex:none}
+.version-number{height:40px;width:40px;border-radius:11px;background:var(--tint);color:var(--sky);font-weight:800;font-size:13px;display:grid;place-items:center;flex:none}
 .version-row h3{font-size:13px;margin-bottom:6px}
 .version-row p{font-size:11px;color:var(--muted)}
 .version-row .btn{margin-left:auto}
@@ -32,7 +32,7 @@
 .studio-layout.chat-first{grid-template-columns:minmax(360px, .85fr) minmax(0,1.5fr);gap:22px}
 .studio-preview-column{min-width:0}
 .chat-panel .panel-head>.row{gap:8px}
-.chat-panel .panel-head svg{width:18px;height:18px;color:var(--pink)}
+.chat-panel .panel-head svg{width:18px;height:18px;color:var(--sky)}
 .chat-panel .panel-body{padding:18px}
 .chat-panel .chat{height:30vh;min-height:220px;max-height:330px;margin-bottom:16px;padding-right:4px;scrollbar-width:thin}
 .chat-panel .bubble{font-size:12px;padding:13px 14px}
@@ -53,13 +53,13 @@
 .manual-fields:disabled{opacity:.65}
 .preview-helper{padding:12px 15px 0;font-size:11px;line-height:1.7;color:var(--muted)}
 .request-idle{display:flex;align-items:flex-start;gap:8px;padding:12px;background:#f8f6fb;border-radius:9px;margin-bottom:16px;font-size:11px;line-height:1.7;color:#847888}
-.request-idle svg{width:16px;height:16px;color:var(--pink);margin-top:1px}
+.request-idle svg{width:16px;height:16px;color:var(--sky);margin-top:1px}
 .request-state{padding:14px;border:1px solid #e5e0ec;background:#f8f6fb;border-radius:11px;margin-bottom:16px}
 .request-state-head{display:flex;align-items:center;gap:7px;font-size:12px;color:#65527b;flex-wrap:wrap}
 .request-state-head svg{width:16px;height:16px}
 .request-state p{font-size:11px;line-height:1.85;color:#71667b;margin-top:8px;overflow-wrap:anywhere}
-.request-state.processing{background:#fff6fb;border-color:#f3d9e7}
-.request-state.processing .request-state-head{color:var(--pink)}
+.request-state.processing{background:#f6fcff;border-color:#d9ebf3}
+.request-state.processing .request-state-head{color:var(--sky)}
 .request-state.success{background:#f0faf5;border-color:#dceee2}
 .request-state.success .request-state-head{color:#247453}
 .request-state.error{background:#fff5f4;border-color:#f4d9d5}
@@ -68,13 +68,13 @@
 .request-state.clarify .request-state-head{color:#8d6b30}
 .request-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
 .request-actions .btn{padding:7px 10px;font-size:10px;min-height:32px}
-.request-spinner{height:14px;width:14px;border:2px solid #f2c4dc;border-top-color:var(--pink);border-radius:50%;animation:request-spin .85s linear infinite;flex:none}
+.request-spinner{height:14px;width:14px;border:2px solid #c4e3f2;border-top-color:var(--sky);border-radius:50%;animation:request-spin .85s linear infinite;flex:none}
 .scenario-lab{margin-top:15px;border-top:1px solid var(--line);padding-top:13px}
 .scenario-lab summary{cursor:pointer;color:var(--muted);font-size:10px}
 .scenario-lab p{font-size:10px;line-height:1.8;color:var(--muted);margin-top:9px}
 .scenario-buttons{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
 .scenario-buttons .chip{font-size:10px;padding:6px 8px;background:#fff;border-color:var(--line)}
-.scenario-buttons .chip.selected{background:var(--tint);border-color:#e4a6c8;color:var(--pink)}
+.scenario-buttons .chip.selected{background:var(--tint);border-color:#a6d0e4;color:var(--sky)}
 @keyframes request-spin{to{transform:rotate(360deg)}}
 @media(max-width:1000px){.studio-layout.chat-first{grid-template-columns:340px minmax(0,1fr);gap:16px}.chat-first .canvas{padding:10px}.chat-first .preview-controls{flex-wrap:wrap}.chat-first .preview-controls .row{gap:5px}}
 @media(max-width:800px){.studio-layout.chat-first{grid-template-columns:1fr}.chat-panel .chat{min-height:190px;max-height:260px;height:27vh}.chat-first .canvas{max-height:650px}.chat-panel .panel-body{padding:16px}.direct-edit summary{padding:16px}}
@@ -87,7 +87,7 @@
 #button-fields:disabled{opacity:.6}
 #content-editor[hidden]{display:none}
 #content-fields{border:0;padding:0;margin:16px 0;min-width:0;max-height:440px;overflow:auto}
-#content-fields textarea:focus{outline:2px solid #d60076;outline-offset:2px}
+#content-fields textarea:focus{outline:2px solid #0284c7;outline-offset:2px}
 #content-fields:disabled{opacity:.6}
 /* Full-height editor: large canvas and a single mode-switching side panel. */
 .editing-workspace main{padding:0;min-height:0}
@@ -112,7 +112,7 @@
 .workspace-side{display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .workspace-tabs{display:flex;padding:8px;gap:6px;border-bottom:1px solid var(--line);flex:none}
 .workspace-tabs button{flex:1;padding:12px;border-radius:8px;font-size:13px;font-weight:700;color:var(--muted)}
-.workspace-tabs button.active{background:var(--tint);color:var(--pink)}
+.workspace-tabs button.active{background:var(--tint);color:var(--sky)}
 #workspace-chat[hidden],#workspace-direct[hidden]{display:none}
 #workspace-chat{flex:1;min-height:0;display:flex;overflow:auto}
 .workspace #chat-panel-inner{display:flex;flex-direction:column;flex:1;min-height:0;padding:14px;gap:10px;overflow:auto}
@@ -143,7 +143,7 @@
 .chat-position{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:11px;font-weight:700;margin:0 0 3px 1px;flex:none}
 .chat-position>span{margin-right:7px}
 .chat-position button{padding:5px 12px;border:1px solid var(--line);border-radius:7px;font-size:11px;font-weight:700;color:var(--muted);background:#fff}
-.chat-position button.active{background:var(--tint);border-color:#efc0d9;color:var(--pink)}
+.chat-position button.active{background:var(--tint);border-color:#c0e0ef;color:var(--sky)}
 /* The action area has fixed columns so every version preview starts at the same position. */
 .version-row{display:grid;grid-template-columns:40px minmax(0,1fr) 112px 148px;gap:16px}
 .version-row .version-text{min-width:0}
@@ -152,7 +152,7 @@
 @media(max-width:1100px) and (min-width:801px){.workspace.chat-right .workspace-layout{grid-template-columns:minmax(0,1fr) 330px}}
 @media(max-width:800px){.workspace.chat-right .workspace-layout{display:flex;flex-direction:column}.workspace.chat-right .studio-preview-column{order:0}.workspace.chat-right .workspace-side{order:1}}
 @media(max-width:620px){.version-row{grid-template-columns:40px minmax(0,1fr);gap:10px 12px}.version-row .version-text{min-width:0}.version-row .btn{grid-column:2;width:100%}}
-.selection-context{display:block;margin:2px 0 0;padding:9px 11px;border:1px solid #f2cfdf;border-radius:8px;background:#fff7fb;color:#9d2565;font-size:11px;font-weight:700;line-height:1.5;overflow-wrap:anywhere}
+.selection-context{display:block;margin:2px 0 0;padding:9px 11px;border:1px solid #cfe7f2;border-radius:8px;background:#f7fcff;color:#25779d;font-size:11px;font-weight:700;line-height:1.5;overflow-wrap:anywhere}
 
 /* 블록 순서 — 끌어서 옮기는 목록 */
 .sorder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
