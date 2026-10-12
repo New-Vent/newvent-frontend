@@ -197,6 +197,11 @@ export async function loadAdminEvent(eventId) {
   return requireApi().get(`/api/admin/events/${eventId}`)
 }
 
+/** 관리자 이벤트 기본 정보 수정 — 보낸 필드만 변경한다. */
+export async function updateEventInfo(eventId, body) {
+  return requireApi().patch(`/api/admin/events/${eventId}`, body)
+}
+
 /**
  * 페이지 생성 시작 → { jobId, phase, percent }. 결과는 generationStatus 로 폴링한다.
  *   템플릿 이벤트           {}                              — 이벤트의 템플릿으로 (모델을 안 부른다)
