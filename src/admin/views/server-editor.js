@@ -30,13 +30,13 @@
 import { BLOCK_LABELS, PINNED_BLOCKS } from '@shared/constants.js'
 import { $, esc } from '@shared/dom.js'
 import { badgeOf, serverStatus } from '@shared/format.js'
-import { gradeLabel, REQUEST_MAX } from '@shared/grades.js'
+import { GRADES, gradeLabel, REQUEST_MAX } from '@shared/grades.js'
 import { icon } from '@shared/icons.js'
 import { serverFrame } from '@shared/preview/document.js'
 import { collectTexts, matches, normalize, textsOf } from '@shared/preview/server-texts.js'
 import {
   cancelGeneration, directEdit, generationStatus, loadAdminEvent, loadPreview, loadVersions,
-  publishEvent, saveCheckpoint, startEdit, startGenerate,
+  publishEvent, saveCheckpoint, startEdit, startGenerate, updateEventInfo,
 } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
@@ -738,6 +738,133 @@ function loadingView(s, back = backToList()) {
   return null
 }
 
+// 서버 시각 → 한국 시간의 datetime-local 입력값
+function infoDateValue(value) {
+  if (!value) return ''
+  const time = new Date(value).getTime()
+  if (!Number.isFinite(time)) return ''
+  return new Date(time + 9 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 19)
+}
+
+function openEventInfo() {
+  const s = ui.serverEditor
+  if (!s || s.status !== 'ready' || running(s) || s.busy) return
+  if (isEnded(s)) {
+    toast('종료된 이벤트는 수정할 수 없어요.')
+    return
+  }
+
+  const e = s.event
+  const options = GRADES.map((g) =>
+    '<option value="' + g.code + '" '
+    + (e.grade === g.code ? 'selected' : '') + '>'
+    + esc(g.label) + '</option>'
+  ).join('')
+
+  modal(
+    '이벤트 기본 정보 수정',
+    '<form id="server-info-form">'
+      + '<label class="field"><span>이벤트명</span>'
+      + '<input name="name" value="' + esc(e.name)
+      + '" required maxlength="100"></label>'
+      + '<label class="field"><span>시작 일시 · 한국 시간</span>'
+      + '<input name="startAt" type="datetime-local" step="1" value="'
+      + infoDateValue(e.startAt) + '" required></label>'
+      + '<label class="field"><span>종료 일시 · 한국 시간</span>'
+      + '<input name="endAt" type="datetime-local" step="1" value="'
+      + infoDateValue(e.endAt) + '" required></label>'
+      + '<label class="field"><span>참여 대상 등급</span>'
+      + '<select name="grade">' + options + '</select></label>'
+      + '<p id="server-info-error" role="alert"></p>'
+      + '</form>',
+    button('close', '취소')
+      + '<button type="submit" form="server-info-form" '
+      + 'class="btn primary">저장</button>'
+  )
+}
+
+async function saveEventInfo(form, rerender) {
+  const s = ui.serverEditor
+  if (!s || running(s) || s.busy || !form.reportValidity()) return
+
+  const data = new FormData(form)
+  const name = String(data.get('name') || '').trim()
+  const startValue = String(data.get('startAt') || '')
+  const endValue = String(data.get('endAt') || '')
+  const grade = String(data.get('grade') || '')
+  const error = form.querySelector('#server-info-error')
+  const showError = (message) => { error.textContent = message }
+
+  if (!name) {
+    showError('이벤트명을 입력해주세요.')
+    return
+  }
+
+  const startAt = new Date(startValue + '+09:00')
+  const endAt = new Date(endValue + '+09:00')
+
+  if (!Number.isFinite(startAt.getTime())
+      || !Number.isFinite(endAt.getTime())
+      || endAt <= startAt) {
+    showError('종료 일시는 시작 일시보다 늦어야 해요.')
+    return
+  }
+
+  const body = {}
+
+  if (name !== s.event.name) body.name = name
+
+  if (startAt.getTime() !==
+      Math.floor(new Date(s.event.startAt).getTime() / 1000) * 1000) {
+    body.startAt = startAt.toISOString()
+  }
+
+  if (endAt.getTime() !==
+      Math.floor(new Date(s.event.endAt).getTime() / 1000) * 1000) {
+    body.endAt = endAt.toISOString()
+  }
+
+  if (grade !== s.event.grade) body.grade = grade
+
+  if (!Object.keys(body).length) {
+    showError('변경한 내용이 없어요.')
+    return
+  }
+
+  const submit = document.querySelector(
+    'button[type="submit"][form="server-info-form"]'
+  )
+  s.busy = true
+  submit.disabled = true
+  submit.textContent = '저장 중…'
+  showError('')
+
+  try {
+    const updated = await updateEventInfo(s.id, body)
+    s.event = updated
+    resetAdminServer()
+    closeModal()
+    toast('이벤트 기본 정보를 수정했어요.')
+
+    try {
+      s.preview = await loadPreview(s.id)
+    } catch {
+      toast('저장은 완료됐지만 미리보기를 새로 불러오지 못했어요.')
+    }
+  } catch (e) {
+    showError(e?.message || '기본 정보를 수정하지 못했어요.')
+  } finally {
+    s.busy = false
+    if (submit.isConnected) {
+      submit.disabled = false
+      submit.textContent = '저장'
+    }
+    if (ui.serverEditor === s) rerender()
+  }
+}
+
 function serverEditorView() {
   const s = ui.serverEditor
   const pending = loadingView(s)
@@ -752,6 +879,7 @@ function serverEditorView() {
     + '<span class="badge">' + esc(gradeLabel(e.grade)) + '</span>'
     + '<span class="badge">ID ' + e.id + '</span></div>'
     + '<div class="row workspace-actions">'
+    + button('server-info', '기본 정보 수정', busy || isEnded(s) ? 'disabled' : '', 'btn sm')
     + button('versions', '버전 이력', 'data-id="' + e.id + '"', 'btn sm')
     + button('server-save', saved ? '저장됨' : '버전 저장', (!s.preview || saved || busy) ? 'disabled' : '', 'btn sm')
     + button('server-publish', isPublished(s) ? '재게시' : '게시하기',
@@ -837,6 +965,7 @@ function handleServerClick(a, b, rerender) {
     case 'server-direct-reset': resetDirect(rerender); return true
     case 'server-publish': openPublish(); return true
     case 'server-publish-confirm': confirmPublish(rerender); return true
+    case 'server-info': openEventInfo(); return true
   }
   return false
 }
@@ -937,6 +1066,12 @@ function handleServerDrag(ev) {
 
 /** 대화 전송 — main.js 의 submit 위임에서 부른다 */
 function handleServerSubmit(ev, rerender) {
+  if (ev.target.id === 'server-info-form') {
+    ev.preventDefault()
+    saveEventInfo(ev.target, rerender)
+    return true
+  }
+
   if (ev.target.id !== 'server-chat-form') return false
   ev.preventDefault()
   sendChat($('#server-chat')?.value, rerender)
