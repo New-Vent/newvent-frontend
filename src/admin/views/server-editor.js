@@ -35,7 +35,8 @@ import { icon } from '@shared/icons.js'
 import { serverFrame } from '@shared/preview/document.js'
 import { collectTexts, matches, normalize, textsOf } from '@shared/preview/server-texts.js'
 import {
-  cancelGeneration, directEdit, generationStatus, loadAdminEvent, loadPreview, loadVersions,
+  cancelGeneration, directEdit, endEvent, generationStatus,
+  loadAdminEvent, loadPreview, loadVersions,
   publishEvent, saveCheckpoint, startEdit, startGenerate, updateEventInfo,
 } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
@@ -738,6 +739,62 @@ function loadingView(s, back = backToList()) {
   return null
 }
 
+function canEndEvent(s) {
+  return s?.status === 'ready'
+    && s.event?.ownedByMe === true
+    && s.event.status === 'PUBLISHED'
+}
+
+function openEndEvent() {
+  const s = ui.serverEditor
+  if (!canEndEvent(s) || running(s) || s.busy) return
+
+  modal(
+    '이벤트 종료',
+    '<p><strong>' + esc(s.event.name) + '</strong> 이벤트를 종료할까요?</p>'
+      + '<p style="margin-top:12px">'
+      + '종료하면 사용자 참여가 중단되며, 다시 게시하거나 수정할 수 없습니다.'
+      + '</p>',
+    button('close', '취소')
+      + button(
+          'server-end-confirm',
+          '종료하기',
+          'data-id="' + esc(s.id) + '"',
+          'btn primary'
+        )
+  )
+}
+
+async function confirmEndEvent(eventId, rerender) {
+  const s = ui.serverEditor
+
+  // 확인창을 열었던 이벤트에만 요청한다.
+  if (!s || s.id !== String(eventId)
+      || !canEndEvent(s) || running(s) || s.busy) return
+
+  s.busy = true
+  closeModal()
+  rerender()
+
+  try {
+    const updated = await endEvent(s.id)
+    s.event = updated
+
+    // 종료된 이벤트는 현재 게시 중인 버전 표시를 해제한다.
+    if (s.versions) {
+      s.versions = s.versions.map((v) => ({ ...v, published: false }))
+    }
+
+    resetAdminServer()
+    toast('이벤트를 종료했어요.')
+  } catch (e) {
+    toast(e?.message || '이벤트를 종료하지 못했어요.')
+  } finally {
+    s.busy = false
+    if (ui.serverEditor === s) rerender()
+  }
+}
+
 // 서버 시각 → 한국 시간의 datetime-local 입력값
 function infoDateValue(value) {
   if (!value) return ''
@@ -879,6 +936,9 @@ function serverEditorView() {
     + '<span class="badge">' + esc(gradeLabel(e.grade)) + '</span>'
     + '<span class="badge">ID ' + e.id + '</span></div>'
     + '<div class="row workspace-actions">'
+    + (canEndEvent(s)
+        ? button('server-end', '이벤트 종료', busy ? 'disabled' : '', 'btn sm')
+        : '')
     + button('server-info', '기본 정보 수정', busy || isEnded(s) ? 'disabled' : '', 'btn sm')
     + button('versions', '버전 이력', 'data-id="' + e.id + '"', 'btn sm')
     + button('server-save', saved ? '저장됨' : '버전 저장', (!s.preview || saved || busy) ? 'disabled' : '', 'btn sm')
@@ -965,6 +1025,8 @@ function handleServerClick(a, b, rerender) {
     case 'server-direct-reset': resetDirect(rerender); return true
     case 'server-publish': openPublish(); return true
     case 'server-publish-confirm': confirmPublish(rerender); return true
+    case 'server-end': openEndEvent(); return true
+    case 'server-end-confirm': confirmEndEvent(b.dataset.id, rerender); return true
     case 'server-info': openEventInfo(); return true
   }
   return false
