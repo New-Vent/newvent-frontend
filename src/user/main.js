@@ -90,7 +90,8 @@ function header() {
     (ui.logged
       ? '<span class="avatar">' + icon('user') + '</span><span class="name">' + esc(displayName()) + '님</span>' +
         button('logout', '로그아웃', '', 'btn ghost sm')
-      : button('route', '로그인', 'data-route="login"', 'btn soft sm')) +
+      : button('route', '로그인', 'data-route="login"', 'btn soft sm') +
+        button('route', '회원가입', 'data-route="signup"', 'btn sm')) +
     '</div></div>'
 
   $('#footer').innerHTML =
@@ -207,11 +208,6 @@ document.addEventListener('click', (ev) => {
     return
   }
 
-  if (a === 'signup-plan') {
-    ui.signup = { ...(ui.signup ?? {}), plan: b.dataset.plan }
-    render()
-    return
-  }
   if (a === 'change-plan') {
     const next = PLANS.find((p) => p.code === b.dataset.plan)
     if (!next) return
@@ -332,45 +328,122 @@ document.addEventListener('input', (ev) => {
 
 /**
  * 회원가입 · 내 정보 저장.
+ * 회원가입은 서버 모드에서 API를 호출하고, 성공 후 로그인 화면으로 이동한다.
  * 내 정보 저장은 서버 모드에서 PATCH /api/users/me를 호출한다.
- * 서버 연동을 끈 경우에는 목업 정보를 수정한다.
+ * 서버 연동을 끈 경우에는 목업으로 처리한다.
  */
 document.addEventListener('submit', async (ev) => {
   const form = ev.target
 
-  if (form.id === 'signup-form') {
+    if (form.id === 'signup-form') {
     ev.preventDefault()
-    const get = (k) => form.querySelector(`[data-signup="${k}"]`)
-    const val = (k) => get(k)?.value.trim() ?? ''
-    const fail = (msg, k) => {
-      const box = $('#signup-error')
-      if (box) box.textContent = msg
-      get(k)?.focus()
+
+    if (form.dataset.submitting === 'true') return
+
+    const get = (key) => form.querySelector(`[data-signup="${key}"]`)
+    const val = (key) => get(key)?.value.trim() ?? ''
+    const errorBox = form.querySelector('#signup-error')
+
+    const fail = (message, key) => {
+      if (errorBox) errorBox.textContent = message
+      if (key) get(key)?.focus()
     }
 
-    const loginId = val('loginId')
-    if (!/^[A-Za-z0-9]{4,20}$/.test(loginId)) return fail('아이디는 영문·숫자 4~20자로 입력해주세요.', 'loginId')
-    const pw = val('password')
-    if (pw.length < 8 || !/[A-Za-z]/.test(pw) || !/\d/.test(pw))
-      return fail('비밀번호는 8자 이상이고 영문과 숫자를 섞어야 해요.', 'password')
-    if (pw !== val('password2')) return fail('비밀번호가 서로 다릅니다.', 'password2')
-    if (!val('name')) return fail('이름을 입력해주세요.', 'name')
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val('email'))) return fail('이메일 형식을 확인해주세요.', 'email')
-    if (!/^01[016789]\d{7,8}$/.test(val('phone').replace(/\D/g, '')))
-      return fail('휴대폰 번호 형식을 확인해주세요.', 'phone')
+    if (errorBox) errorBox.textContent = ''
 
-    const plan = ui.signup?.plan ?? 'BASIC'
+    const loginId = val('loginId')
+    const password = get('password')?.value ?? ''
+    const password2 = get('password2')?.value ?? ''
+    const name = val('name')
+    const email = val('email')
+    const phone = val('phone')
+
+    if (!/^[A-Za-z0-9_]{4,50}$/.test(loginId)) {
+      return fail(
+        '아이디는 영문, 숫자, 밑줄(_)만 사용해 4~50자로 입력해주세요.',
+        'loginId',
+      )
+    }
+
+    if (!password.trim() || password.length < 8 || password.length > 100) {
+      return fail('비밀번호는 8~100자로 입력해주세요.', 'password')
+    }
+
+    if (password !== password2) {
+      return fail('비밀번호가 서로 다릅니다.', 'password2')
+    }
+
+    if (!name || name.length > 50) {
+      return fail('이름은 1~50자로 입력해주세요.', 'name')
+    }
+
+    if (
+      !email ||
+      email.length > 100 ||
+      !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)
+    ) {
+      return fail('이메일 형식을 확인해주세요. 최대 100자까지 입력할 수 있어요.', 'email')
+    }
+
+    if (phone.length > 20) {
+      return fail('휴대폰 번호는 최대 20자까지 입력할 수 있어요.', 'phone')
+    }
+
+    if (AUTH_ENABLED) {
+      const submitButton = form.querySelector('button[type="submit"]')
+
+      form.dataset.submitting = 'true'
+
+      if (submitButton) {
+        submitButton.disabled = true
+        submitButton.textContent = '가입 중…'
+      }
+
+      try {
+        await api.post('/api/public/users/signup', {
+          loginId,
+          password,
+          name,
+          email,
+          phone: phone || null,
+        })
+
+        ui.signup = null
+        navigate('login')
+        toast('회원가입이 완료됐어요. 로그인해주세요.')
+      } catch (error) {
+        if (errorBox) {
+          errorBox.textContent =
+            error?.message || '회원가입에 실패했어요. 다시 시도해주세요.'
+        }
+      } finally {
+        delete form.dataset.submitting
+
+        if (submitButton) {
+          submitButton.disabled = false
+          submitButton.textContent = '가입하기'
+        }
+      }
+
+      return
+    }
+
+    // 서버 연동을 끈 경우에만 사용하는 목업 처리
+    const plan = 'BASIC'
     state.db.me = {
       ...state.db.me,
       loginId,
-      name: val('name'),
-      email: val('email'),
-      phone: val('phone'),
+      name,
+      email,
+      phone,
       plan,
       grade: gradeOfPlan(plan),
       marketingOptIn: Boolean(get('agree')?.checked),
-      joinedAt: new Date().toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' }).replace(/\.$/, ''),
+      joinedAt: new Date()
+        .toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })
+        .replace(/\.$/, ''),
     }
+
     ui.signup = null
     ui.logged = true
     ui.demoGrade = gradeOfPlan(plan) === '일반' ? '일반' : 'VIP · FAMILY'
