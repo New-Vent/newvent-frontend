@@ -281,7 +281,6 @@ async function applyDirect(rerender) {
   if (!s?.preview || running(s) || s.busy) return
   const { edits, buttonStyle } = directChanges(s)
   if (!edits.length && !buttonStyle) { toast('바꾼 내용이 없어요.'); return }
-  if (edits.some((x) => !x.after.trim())) { toast('빈 문구로는 바꿀 수 없어요.'); return }
   s.busy = true
   rerender()
   try {
@@ -561,11 +560,9 @@ function directPanel(s) {
     const v = s.direct.values[t.index] ?? t.before
     const changed = normalize(v) !== normalize(t.before)
     const attrs = 'class="sedit' + (changed ? ' changed' : '') + '" data-sedit="' + t.index + '" ' + (busy ? 'disabled' : '')
-      + ' aria-label="' + esc(t.before.slice(0, 30)) + '"'
-    // 짧은 문구는 한 줄 칸, 긴 문구는 내용 높이만큼 늘어나는 칸
-    const input = t.before.length <= 30 && !v.includes('\n')
-      ? '<input type="text" ' + attrs + ' value="' + esc(v) + '">'
-      : '<textarea rows="1" data-autogrow ' + attrs + '>' + esc(v) + '</textarea>'
+      + ' aria-label="' + esc(t.before.slice(0, 30) || '문구 ' + t.index) + '"'
+    // Enter 입력을 허용하고 내용 높이만큼 칸을 늘린다.
+    const input = '<textarea rows="1" data-autogrow ' + attrs + '>' + esc(v) + '</textarea>'
     // 번호 = 서버 editableTexts 의 index (직접 수정 요청에 그대로 실린다)
     return '<div class="sedit-item"><span class="sedit-no' + (changed ? ' changed' : '') + '" data-sedit-no="' + t.index
       + '" title="문구 번호 ' + t.index + '">' + t.index + '</span>' + input + '</div>'
@@ -691,7 +688,20 @@ function grow(el) {
 function replayDirect(s) {
   const live = liveTexts(s)
   if (!live) return
-  Object.entries(s.direct.values).forEach(([i, v]) => { if (live[i]) live[i].node.data = v })
+  Object.entries(s.direct.values).forEach(([i, v]) => { if (live[i]) setPreviewText(live[i].node, i, v) })
+}
+
+function setPreviewText(node, index, value) {
+  if (!node.parentElement.matches('span[id^="nv-direct-text-"]')) {
+    const holder = node.ownerDocument.createElement('span')
+    let id = 'nv-direct-text-' + index
+    while (node.ownerDocument.getElementById(id)) id += '-next'
+    holder.id = id
+    node.replaceWith(holder)
+    holder.appendChild(node)
+  }
+  node.parentElement.style.whiteSpace = 'pre-line'
+  node.data = normalize(value)
 }
 
 /* ───────────────────────── 입력 · 동작 ───────────────────────── */
@@ -745,7 +755,9 @@ function handleServerInput(ev) {
     const i = Number(t.dataset.sedit)
     s.direct.values[i] = t.value
     const live = liveTexts(s)
-    if (live?.[i]) live[i].node.data = t.value
+    if (live?.[i]) {
+      setPreviewText(live[i].node, i, t.value)
+    }
     const before = editable(s)[i]?.before ?? ''
     const changed = normalize(t.value) !== normalize(before)
     t.classList.toggle('changed', changed)
