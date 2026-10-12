@@ -307,6 +307,13 @@ export async function publishEvent(eventId, versionId) {
   return requireApi().post(`/api/admin/events/${eventId}/publish`, { versionId })
 }
 
+/** 게시 중인 이벤트를 종료한다. */
+export async function endEvent(eventId) {
+  return requireApi().patch(`/api/admin/events/${eventId}/status`, {
+    status: 'ENDED',
+  })
+}
+
 /**
  * 게시 내리기 → 이벤트 상세 (status 가 DRAFT 로 돌아온다). 요청 본문은 없다.
  *
