@@ -49,6 +49,8 @@ function lib() {
   return (ui.library ??= {
     status: 'idle', data: null, error: null, busy: false,
     keyword: '', scope: 'all', includeInactive: false, page: 0,
+    // 썸네일 HTML 캐시 — templateKey → html(성공) | null(실패). 아래 loadThumbs 참고
+    thumbs: {},
   })
 }
 
@@ -72,6 +74,8 @@ async function loadLibrary(onDone) {
     s.data = data
     s.status = 'ready'
     s.error = null
+    // 목록이 오면 바로 썸네일을 받아 온다. 다 받으면 한 번 더 그린다.
+    loadThumbs(onDone)
   } catch (e) {
     if (ui.library !== s || s.request !== request) return
     s.status = 'error'
@@ -80,9 +84,44 @@ async function loadLibrary(onDone) {
   onDone?.()
 }
 
+/**
+ * 카드 썸네일 — 목록 응답에는 HTML 이 없다.
+ *
+ * `thumbnailPath` 는 기본 제공본 · 등록본 **전부 null** 이다 (서버가 채우지 않는다).
+ * 그래서 카드마다 미리보기 조각(GET …/{code}/preview)을 받아 그린다.
+ *
+ * ★ templateKey 로 캐시한다 — 탭 · 페이지를 오가도 다시 받지 않는다.
+ *   미리보기 모달도 같은 캐시를 쓰므로, 썸네일이 떠 있으면 모달은 요청 없이 즉시 열린다.
+ * ★ 받아올 때마다 다시 그리지 않고 **다 끝나고 한 번** 그린다.
+ *   렌더가 iframe 을 전부 새로 만들기 때문에, 12번 그리면 12번 깜빡인다.
+ * ★ 실패는 null 로 기억한다. 자리표시자를 보여주고 다시 조르지 않는다.
+ */
+function loadThumbs(onDone) {
+  const s = lib()
+  // ★ 받는 중인 것을 pending 에 적어 둔다. 이 함수는 렌더마다 불리는데,
+  //   그게 없으면 응답이 오기 전의 렌더마다 같은 요청을 또 띄운다.
+  const pending = (s.thumbPending ??= new Set())
+  const want = (s.data?.content || [])
+    .map((t) => t.templateKey)
+    .filter((code) => !(code in s.thumbs) && !pending.has(code))
+  if (!want.length) return
+  want.forEach((code) => pending.add(code))
+
+  Promise.all(want.map((code) =>
+    loadTemplatePreview(code).then((p) => [code, p.html], () => [code, null]),
+  )).then((pairs) => {
+    // 그 사이 로그아웃 · 목록 초기화가 있었으면 버린다
+    if (ui.library !== s) return
+    pairs.forEach(([code, html]) => { s.thumbs[code] = html; pending.delete(code) })
+    onDone?.()
+  })
+}
+
 /** 아직 안 불렀으면 부른다. 렌더마다 불러도 한 번만 돈다 */
 function ensureLibrary(onDone) {
-  if (lib().status === 'idle') loadLibrary(onDone)
+  const s = lib()
+  if (s.status === 'idle') loadLibrary(onDone)
+  else if (s.status === 'ready') loadThumbs(onDone)
 }
 
 /** 로그아웃 · 템플릿 변경 후 다시 읽게 한다 */
@@ -92,6 +131,25 @@ function resetLibrary() {
 
 /* ───────────────────────── 목록 ───────────────────────── */
 
+/**
+ * 카드 위쪽 썸네일.
+ *
+ * `.thumb` 안의 iframe 은 hydrate() 가 카드 폭에 맞춰 축소한다 (frame.js).
+ * 자리표시자만 있고 iframe 이 없는 경우도 거기서 걸러 준다.
+ */
+function cardThumb(t) {
+  const s = lib()
+  const code = t.templateKey
+  if (!(code in s.thumbs)) {
+    return '<div class="thumb template-thumb loading" aria-hidden="true"></div>'
+  }
+  const html = s.thumbs[code]
+  if (!html) {
+    return '<div class="thumb template-thumb empty-thumb" aria-hidden="true">' + icon('grid') + '</div>'
+  }
+  return '<div class="thumb template-thumb">' + serverFrame(html, esc(t.name) + ' 미리보기') + '</div>'
+}
+
 function templateCard(t) {
   const mine = !t.builtin
   // 기본 제공본은 서버가 수정 · 비활성화를 403 으로 막는다 (EVENT403-0) — 버튼부터 막아 둔다.
@@ -99,6 +157,7 @@ function templateCard(t) {
   const code = esc(t.templateKey)
 
   return '<article class="card template-card' + (t.active ? '' : ' inactive') + '">'
+    + cardThumb(t)
     + '<div class="template-card-head"><h3>' + esc(t.name) + '</h3>'
     + '<span class="badge' + (mine ? ' pink' : '') + '">' + (mine ? '내 등록' : '기본 제공') + '</span>'
     + (t.active ? '' : '<span class="badge amber">비활성</span>')
@@ -194,10 +253,11 @@ async function openPreview(code) {
   const s = lib()
   const t = (s.data?.content || []).find((x) => x.templateKey === code)
   try {
-    const p = await loadTemplatePreview(code)
+    // 썸네일이 이미 받아 둔 같은 조각이다 — 있으면 요청 없이 바로 연다.
+    const html = s.thumbs[code] ?? (await loadTemplatePreview(code)).html
     modal((t?.name || code) + ' · 템플릿 미리보기',
       '<p class="helper">읽기 전용 · 기간과 참여 링크는 비어 있어요. 이벤트를 만들면 채워집니다.</p>'
-      + '<div class="version-preview-frame">' + serverFrame(p.html, (t?.name || code) + ' 미리보기') + '</div>',
+      + '<div class="version-preview-frame">' + serverFrame(html, (t?.name || code) + ' 미리보기') + '</div>',
       button('close', '닫기', '', 'btn primary'), true)
     document.querySelector('#overlay .modal')?.classList.add('version-preview-modal')
   } catch (e) {

@@ -197,6 +197,11 @@ export async function loadAdminEvent(eventId) {
   return requireApi().get(`/api/admin/events/${eventId}`)
 }
 
+/** 관리자 이벤트 기본 정보 수정 — 보낸 필드만 변경한다. */
+export async function updateEventInfo(eventId, body) {
+  return requireApi().patch(`/api/admin/events/${eventId}`, body)
+}
+
 /**
  * 페이지 생성 시작 → { jobId, phase, percent }. 결과는 generationStatus 로 폴링한다.
  *   템플릿 이벤트           {}                              — 이벤트의 템플릿으로 (모델을 안 부른다)
@@ -449,11 +454,110 @@ export async function useTemplate(code, body) {
   return requireApi().post(`/api/admin/template-library/${encodeURIComponent(code)}/events`, body)
 }
 
+/* ────────────────────────── 회원가입 ────────────────────────── */
+
+/**
+ * 회원가입 — `POST /api/public/users/signup` (공개, 로그인 불필요)
+ *
+ * ★ **요금제(plan)는 보내지 않는다.** 서버가 일부러 받지 않는다 —
+ *   가입자가 요금제를 골라서 멤버십 등급을 올리는 것을 막으려는 것이다.
+ *   모두 서버 기본 요금제로 시작해 등급은 NORMAL 이고, 변경은 관리자만 한다.
+ *   (보내도 무시되지만, 화면에서 고르게 두면 거짓말이 되므로 입력 자체를 두지 않는다.)
+ *
+ * ★ 응답은 토큰이 아니라 **만들어진 회원**이다 — 가입해도 로그인 상태가 되지 않는다.
+ *   { id, loginId, name, email, phone, plan, membershipGrade, joinedAt }
+ *   그래서 성공하면 로그인 화면으로 보낸다.
+ *
+ * ★ 검증 실패는 400 COMMON400-0 "잘못된 입력값입니다" 하나로만 온다 —
+ *   **어느 칸이 틀렸는지 알려주지 않는다.** 그래서 화면이 먼저 검사한다 (views/signup.js).
+ *
+ * 중복은 409 로 구분된다. 대소문자만 달라도 중복이다 (user01 / USER01).
+ *   USER409-0  이미 사용 중인 로그인 ID
+ *   USER409-1  이미 사용 중인 이메일
+ *
+ * @param {{loginId:string,password:string,name:string,email:string,phone?:string}} form
+ */
+export async function signUp(form) {
+  if (!USE_SERVER) throw new Error('목업 모드에서는 user/main.js 가 직접 만든다')
+  return requireApi().post('/api/public/users/signup', form)
+}
+
+/** 내 정보 — `GET /api/users/me` → { id, loginId, name, email, phone, plan, membershipGrade, joinedAt } */
+export async function loadMyProfile() {
+  if (!USE_SERVER) throw new Error('목업 모드에서는 state.db.me 를 쓴다')
+  return requireApi().get('/api/users/me')
+}
+
+/**
+ * 내 정보 수정 — `PATCH /api/users/me` (이름 · 이메일 · 휴대폰만)
+ *
+ * ★ 보낸 필드만 바뀐다. 요금제는 **사용자가 바꿀 수 없다** —
+ *   PATCH /api/users/me/plan 은 PR #180 에서 삭제됐다(404). 관리자만 바꾼다.
+ * ★ 이메일이 다른 회원과 대소문자만 달라도 중복이라 409 USER409-1.
+ */
+export async function updateMyProfile(patch) {
+  if (!USE_SERVER) throw new Error('목업 모드에서는 user/main.js 가 직접 고친다')
+  return requireApi().patch('/api/users/me', patch)
+}
+
+/**
+ * 멤버십 등급 안내 — `GET /api/membership-grades` → [{ grade, name, description }]
+ * ★ 로그인이 필요하다 (토큰 없으면 401).
+ * ★ 산정 기준(점수 · 금액 · 기간)은 일부러 안 내려준다.
+ */
+export async function loadMembershipGrades() {
+  if (!USE_SERVER) throw new Error('목업 모드에서는 등급 안내가 없다')
+  return requireApi().get('/api/membership-grades')
+}
+
+/* ────────────────────────── 참여 ────────────────────────── */
+
+/**
+ * 참여 가능 여부 — `GET /api/users/me/events/{id}/participation-status` (로그인 필요)
+ *
+ *   { participated, canParticipate, unavailableReason, gameCode }
+ *
+ * ★ `gameCode` 와 `unavailableReason: 'NOT_CONFIGURED'` 는 아직 develop 에 없다
+ *   (feat/participation-status-config 에 있다). 지금 서버는 세 필드만 준다.
+ *   그래서 화면은 **없을 때를 기본으로** 쓴다 — gameCode 가 없으면 BASIC 으로 본다.
+ *
+ * ★ unavailableReason 은 늘어날 수 있다. 모르는 값이 오면 일반 문구로 넘긴다.
+ */
+export async function loadParticipationStatus(eventId) {
+  if (!USE_SERVER) throw new Error('목업 모드에서는 participation.js 가 판단한다')
+  return requireApi().get(`/api/users/me/events/${eventId}/participation-status`)
+}
+
+/**
+ * 참여하기 — `POST /api/users/me/events/{id}/participations` → 201
+ *
+ *   { participationId, eventId, resultData }
+ *   resultData  { status: 'WON'|'LOST'|'PENDING', prizeName? }  — prizeName 은 WON 일 때만
+ *
+ * ★ **본문은 방식마다 하나만** 보낸다. 나머지를 같이 보내면 400 이다
+ *   (백엔드 ParticipationValidator 가 방식별로 거른다).
+ *   BASIC 은 아예 안 보낸다 — body 가 undefined 면 api.js 가 Content-Type 도 안 붙인다.
+ *
+ * ★ 중복 참여는 409 PARTICIPATION409-0, 설정 없음은 409 PARTICIPATION409-1.
+ * ★ state.db 에 넣지 않는다 — 내 참여 목록은 서버에서 다시 읽는다 (loadParticipations).
+ */
 export async function participate(eventId, payload) {
   if (!USE_SERVER) throw new Error('목업 모드에서는 user/actions.js 가 직접 만든다')
-  const p = await requireApi().post(`/api/users/me/events/${eventId}/participations`, payload)
-  state.db.participations.push({ ...p, userId: USER_ID })
-  return p
+  return requireApi().post(`/api/users/me/events/${eventId}/participations`, payload)
+}
+
+/**
+ * 방식별 요청 본문. 하나만 담고, BASIC 은 undefined 를 돌려준다.
+ * @param {string|null|undefined} gameCode 없으면 BASIC 으로 본다 (서버가 아직 안 준다)
+ * @param {{prediction?:string, phoneNumber?:string, pouchIndex?:number}} input
+ */
+export function participationBody(gameCode, input = {}) {
+  switch (gameCode) {
+    case 'SPORTS_PREDICTION': return { prediction: input.prediction }
+    case 'PRE_REGISTRATION': return { phoneNumber: input.phoneNumber }
+    case 'LUCKY_POUCH': return { pouchIndex: input.pouchIndex }
+    default: return undefined   // BASIC · gameCode 없음
+  }
 }
 
 /* ──────────────────── LLM 생성 (SSE) ──────────────────── */

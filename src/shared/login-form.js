@@ -4,12 +4,16 @@
  * 서버 인증(VITE_API_AUTH=on)일 때만 쓰인다. 목업 모드는 기존 "체험하기" 버튼 화면 그대로다.
  */
 
-import { $ } from './dom.js'
+import { $, esc } from './dom.js'
 
-/** 폼 마크업. 뷰(loginView)가 카드 안에 넣는다 */
-function loginForm() {
+/**
+ * 폼 마크업. 뷰(loginView)가 카드 안에 넣는다.
+ * @param {string} [loginId] 미리 채워 둘 아이디 — 가입 직후 넘어올 때 쓴다
+ */
+function loginForm(loginId = '') {
   return '<form id="login-form" class="fields login-form" novalidate>' +
-    '<label class="field">아이디<input name="loginId" autocomplete="username" maxlength="50" required autofocus></label>' +
+    '<label class="field">아이디<input name="loginId" autocomplete="username" maxlength="50" required' +
+    (loginId ? ' value="' + esc(loginId) + '"' : ' autofocus') + '></label>' +
     '<label class="field">비밀번호<input name="password" type="password" autocomplete="current-password" maxlength="100" required></label>' +
     '<p id="login-error" class="login-error" role="alert"></p>' +
     '<button type="submit" class="btn primary wide">로그인</button>' +
