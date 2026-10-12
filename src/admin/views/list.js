@@ -23,7 +23,7 @@ import { published, rows } from '@shared/selectors.js'
 import { esc } from '@shared/dom.js'
 import { badgeOf, eventStatus, serverStatus, shortDate, statusBadge } from '@shared/format.js'
 import { icon } from '@shared/icons.js'
-import { loadAdminEvents, USE_SERVER } from '@shared/repo.js'
+import { loadAdminEventCounts, loadAdminEvents, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { button, metric } from '@shared/ui/controls.js'
 
@@ -160,17 +160,31 @@ const TABLES = { mine: tableMine, live: tableLive, trash: tableTrash }
 
 /** 서버 목록 상태. idle → loading → ready | error. 로그아웃하면 idle 로 되돌린다 */
 function server() {
-  return (ui.adminServer ??= { status: 'idle', active: [], trash: [], error: null })
+  return (ui.adminServer ??= { status: 'idle', active: [], trash: [], counts: null, countsError: null, error: null })
 }
 
 /** 목록 · 휴지통을 한 번에 불러 온다. 끝나면 onDone() — 보통 render */
 async function loadAdminServer(onDone) {
   const s = server()
   s.status = 'loading'
+  s.counts = null
+  s.countsError = null
+
   try {
-    const [active, trash] = await Promise.all([loadAdminEvents(), loadAdminEvents({ deleted: true })])
-    Object.assign(s, { status: 'ready', active, trash, error: null })
+    const [active, trash, countsResult] = await Promise.all([
+      loadAdminEvents(), 
+      loadAdminEvents({ deleted: true }),
+      loadAdminEventCounts()
+        .then((counts) => ({ counts, error: null }))
+        .catch((e) => ({
+          counts: null,
+          error: e?.message || '상태별 개수를 불러오지 못했어요.',
+        })),
+    ])
+    if (ui.adminServer !== s) return
+    Object.assign(s, { status: 'ready', active, trash, counts: countsResult.counts, countsError: countsResult.error,error: null })
   } catch (e) {
+    if (ui.adminServer !== s) return
     Object.assign(s, { status: 'error', error: e?.message || '목록을 불러오지 못했어요.' })
   }
   onDone?.()
@@ -182,7 +196,7 @@ function ensureAdminServer(onDone) {
 }
 
 function resetAdminServer() {
-  ui.adminServer = { status: 'idle', active: [], trash: [], error: null }
+  ui.adminServer = { status: 'idle', active: [], trash: [], counts: null, countsError: null, error: null }
 }
 
 function serverItem(id) {
@@ -313,11 +327,14 @@ function metrics() {
       + metric('게시 전 변경', active.filter((e) => e.versions.at(-1).v !== e.publishedVersion).length,
           '최신 저장 버전과 게시 버전이 다른 이벤트', 'edit')
   }
-  const s = server()
-  const ready = s.status === 'ready'
-  return metric('전체 이벤트', ready ? s.active.length : '–', '모든 작업 공간', 'layers')
-    + metric('진행 중', ready ? s.active.filter((e) => serverStatus(e) === 'live').length : '–', '게시 상태와 기간 기준', 'bolt')
-    + metric('게시 전 변경', '–', '버전 정보 연동 전', 'edit')
+    const s = server()
+    const counts = s.counts
+    const description = (text) => s.countsError ? '개수 조회 실패' : text
+
+    return metric( '전체 이벤트', counts?.total ?? '–', description('휴지통을 제외한 모든 이벤트'), 'layers')
+      + metric('게시 중', counts?.published ?? '–', description('시작 전 예약 게시 포함'), 'bolt')
+      + metric('미게시', counts?.draft ?? '–', description('게시 전 또는 게시를 내린 이벤트'), 'edit')
+      + metric('종료', counts?.ended ?? '–', description('자동 종료 또는 관리자가 종료한 이벤트'), 'clock')
 }
 
 /* ───────────────────────── 화면 ───────────────────────── */
@@ -346,7 +363,12 @@ function adminView() {
     + '<h1>이벤트 관리</h1><p>아이디어를 다듬고, 준비된 이벤트를 게시하세요.</p></div>'
     + button('new', '새 이벤트 만들기 ' + icon('sparkle'), '', 'btn primary')
     + '</div>'
-    + '<div class="metrics">' + metrics() + '</div>'
+    + '<div class="metrics admin-status-metrics">' + metrics() + '</div>'
+    + (USE_SERVER && server().countsError
+    ? '<p role="alert">' + esc(server().countsError)
+      + ' ' + button('admin-reload', '다시 불러오기', '', 'btn sm')
+      + '</p>'
+    : '')
     + '<section class="admin-list-section">'
     + '<div class="section-title spread"><div class="admin-list-tabs">' + tabs + '</div>'
     + '<label class="search">' + icon('search')

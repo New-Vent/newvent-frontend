@@ -107,6 +107,11 @@ export async function loadAdminEvents({ deleted = false } = {}) {
   }
 }
 
+/** 전체 관리자 이벤트 상태별 개수 — 휴지통 제외 */
+export async function loadAdminEventCounts() {
+  return requireApi().get('/api/admin/events/counts')
+}
+
 /**
  * 내 참여 목록 — `GET /api/users/me/participations` (PR #128)
  *
