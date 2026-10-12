@@ -3,7 +3,7 @@ import './styles.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
-import { loadEvent, loadEvents, loadMembershipGrades, loadParticipations, loadParticipationStatus, participate, participationBody, signUp, useApi, USE_SERVER } from '@shared/repo.js'
+import { loadEvent, loadEvents, loadMembershipGrades, loadMyProfile, loadParticipations, loadParticipationStatus, participate, participationBody, signUp, updateMyProfile, useApi, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -67,7 +67,7 @@ async function loadMe() {
   ui.serverMeError = null
 
   try {
-    const me = await api.get('/api/users/me')
+    const me = await loadMyProfile()
     ui.serverMe = me
     ui.userName = me.name
     // 등급 안내 — membershipGrade 는 EXCELLENT 같은 영문 코드라 화면에 그대로 쓸 수 없다.
@@ -653,7 +653,8 @@ document.addEventListener('submit', async (ev) => {
       }
 
       try {
-        const me = await api.patch('/api/users/me', {
+        // 요금제는 보내지 않는다 — 사용자가 못 바꾼다 (PATCH /api/users/me/plan 은 삭제됐다)
+        const me = await updateMyProfile({
           name,
           email,
           ...(phone ? { phone } : {}),
@@ -667,7 +668,10 @@ document.addEventListener('submit', async (ev) => {
 
         toast('내 정보를 저장했어요.')
       } catch (error) {
-        if (errorBox) {
+        // 이메일 중복만 코드로 갈린다. 대소문자만 달라도 중복이다
+        if (error?.code === 'USER409-1') {
+          fail('이미 사용 중인 이메일이에요. 대소문자만 다른 이메일도 쓸 수 없어요.', 'email')
+        } else if (errorBox) {
           errorBox.textContent =
             error?.message || '내 정보 저장에 실패했어요.'
         }
