@@ -1,4 +1,3 @@
-
 import { CONTENT_FIELDS, LABELS } from '@shared/constants.js'
 import { showSelectedTarget } from '@shared/editor-state.js'
 import { validSnapshot } from '@shared/preview/document.js'
@@ -24,7 +23,7 @@ import { requestFor, requestPending, updateEditor } from '@shared/editor-state.j
 import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
 import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
-import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock } from './views/server-editor.js'
+import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag } from './views/server-editor.js'
 import { templatesView, ensureLibrary, resetLibrary, handleLibraryClick, handleLibrarySubmit, handleLibraryChange } from './views/templates.js'
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
@@ -417,6 +416,8 @@ document.addEventListener('change',editButton);
 document.addEventListener('focusin',ev=>{if(USE_SERVER){handleServerFocus(ev);return;}highlightEditingText(true);});
 
 // 서버 편집 화면 — 미리보기에서 누른 글자 (frame.js 의 server-edit 모드가 보낸다)
+// 블록 순서 끌어 놓기 — 네 가지가 한 함수로 들어간다 (server-editor.handleServerDrag)
+['dragstart','dragover','drop','dragend'].forEach(t=>document.addEventListener(t,ev=>{if(USE_SERVER)handleServerDrag(ev);}));
 document.addEventListener('nv-pick',handleServerPick);
 document.addEventListener('nv-block',handleServerBlock);
 
