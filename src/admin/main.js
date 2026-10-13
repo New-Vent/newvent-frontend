@@ -23,7 +23,7 @@ import { requestFor, requestPending, updateEditor } from '@shared/editor-state.j
 import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
 import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
-import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag } from './views/server-editor.js'
+import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag, handleServerChange } from './views/server-editor.js'
 import { templatesView, ensureLibrary, resetLibrary, handleLibraryClick, handleLibrarySubmit, handleLibraryChange } from './views/templates.js'
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
@@ -335,6 +335,8 @@ document.addEventListener('input',ev=>{
 });
 
 document.addEventListener('change',ev=>{
+ // 이미지 올리기 — AI 대화 입력칸의 +. 파일 고르기는 input 이벤트를 내지 않는다
+ if(USE_SERVER&&handleServerChange(ev,()=>render()))return;
  if(handleLibraryChange(ev,()=>render()))return;
  if(ev.target.id==='admin-from'||ev.target.id==='admin-to'){
   if(ev.target.id==='admin-from')ui.adminFrom=ev.target.value; else ui.adminTo=ev.target.value;

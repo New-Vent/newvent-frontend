@@ -35,8 +35,9 @@ import { icon } from '@shared/icons.js'
 import { serverFrame } from '@shared/preview/document.js'
 import { collectTexts, matches, normalize, textsOf } from '@shared/preview/server-texts.js'
 import {
-  cancelGeneration, directEdit, endEvent, generationStatus,
-  loadAdminEvent, loadPreview, loadVersions,
+  cancelGeneration, deleteAsset, directEdit, endEvent, generationStatus,
+  loadAdminEvent, loadAssets, loadPreview, loadVersions,
+  uploadAsset,
   publishEvent, saveCheckpoint, startEdit, startGenerate, updateEventInfo,
 } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
@@ -47,6 +48,15 @@ import { resetAdminServer } from './list.js'
 import { toast } from '@shared/ui/toast.js'
 
 const POLL_MS = 1000
+
+/* ── 올린 이미지 ──
+ * ★ 자리는 AI 대화 입력칸의 + 다. 직접 수정 탭이 아니다 —
+ *   올리는 것만으로는 아무 일도 안 난다. "배경으로 깔아줘" 를 모델에게 말해야 들어간다.
+ * ★ 서버 asset.max-bytes 와 같은 값이다. 여기서 먼저 걸러 주면 3MB 짜리를 올려 보고
+ *   기다린 뒤 거절당하는 일이 없다
+ */
+const ASSET_MAX_BYTES = 3 * 1024 * 1024
+const ASSET_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp'
 
 /** AI 대화 — 이벤트별. 편집 화면을 다시 열어도 탭이 살아 있는 동안은 남는다 */
 const CHATS = {}
@@ -72,6 +82,8 @@ function openServerEditor(id, { jobId = null, request = null, startError = null 
     tab: 'chat',                       // chat | direct
     selected: [],                      // AI 대화 — 미리보기에서 고른 영역(data-block). 최대 MAX_SELECTED
     direct: freshDirect(),
+    assets: [],                        // 올린 이미지 (서버 모드만. 목업은 늘 빈 배열)
+    assetBusy: false,                  // 올리기 · 지우기 중
     busy: false,                       // 직접 수정 적용 · 버전 저장 중
     notice: startError,                // 생성 시작 실패 문구
     error: null,
@@ -90,10 +102,14 @@ function ensureServerEditor(id, rerender) {
 async function load(s, rerender) {
   s.status = 'loading'
   try {
-    const [event, preview, versions] = await Promise.all([
+    // ★ 이미지 목록은 못 읽어도 편집은 열려야 한다 — 없으면 + 로 다시 올릴 수 있다
+    const [event, preview, versions, assets] = await Promise.all([
       loadAdminEvent(s.id), loadPreview(s.id), loadVersions(s.id).catch(() => null),
+      loadAssets(s.id).catch(() => []),
     ])
-    Object.assign(s, { event, preview, versions: versions?.versions ?? null, status: 'ready', error: null })
+    Object.assign(s, {
+      event, preview, versions: versions?.versions ?? null, assets, status: 'ready', error: null,
+    })
   } catch (e) {
     Object.assign(s, { status: 'error', error: e?.message || '이벤트를 불러오지 못했어요.' })
   }
@@ -641,9 +657,43 @@ function chatPanel(s) {
     + '<div id="server-selection">' + selectionHTML(s, busy) + '</div><label class="field">'
     + '<textarea id="server-chat" rows="3" aria-label="수정 요청" maxlength="' + REQUEST_MAX + '" placeholder="' + esc(chatPlaceholder(s)) + '" ' + (busy ? 'disabled' : '') + '>'
     + esc(s.chatInput || '') + '</textarea></label>'
+    + assetStrip(s)
     + '<div class="chips">' + EXAMPLES.map((t) => button('server-chat-example', t, 'data-prompt="' + esc(t) + '" ' + (busy ? 'disabled' : ''), 'chip')).join('') + '</div>'
-    + '<div class="foot-row"><span class="helper" id="server-chat-count">' + (s.chatInput || '').length + ' / ' + REQUEST_MAX + '자 · 최신 버전 기준</span>'
+    + '<div class="foot-row">' + assetAdd(s)
+    + '<span class="helper" id="server-chat-count">' + (s.chatInput || '').length + ' / ' + REQUEST_MAX + '자 · 최신 버전 기준</span>'
     + '<button class="btn primary sm" type="submit" ' + (busy ? 'disabled' : '') + '>' + icon('sparkle') + (busy ? '처리 중…' : '보내기') + '</button></div></form>'
+}
+
+/**
+ * 이미지 올리기 + — 입력칸 옆.
+ *
+ * ★ <label> 이 <input type=file> 을 품고 있다. 누르면 브라우저가 알아서 창을 띄운다 —
+ *   click() 을 부르는 자바스크립트가 필요 없고, 막힌 상태(disabled)도 저절로 먹는다.
+ */
+function assetAdd(s) {
+  const busy = running(s) || s.assetBusy
+  return '<label class="chat-add" aria-label="이미지 올리기" title="이미지 올리기 (PNG · JPG · GIF · WEBP, 3MB 까지)">'
+    + icon(s.assetBusy ? 'clock' : 'plus')
+    + '<input type="file" id="server-asset-file" accept="' + ASSET_ACCEPT + '" ' + (busy ? 'disabled' : '') + '></label>'
+}
+
+/**
+ * 올린 이미지 목록 — 입력칸 위.
+ *
+ * ★★ 번호가 핵심이다. 프롬프트에도 같은 번호로 실린다(Asset.promptLines) —
+ *   관리자가 "2번 이미지를 배경으로" 라고 쓸 수 있는 유일한 끈이다.
+ */
+function assetStrip(s) {
+  const list = s.assets || []
+  if (!list.length) return ''
+  const busy = running(s) || s.assetBusy
+  const thumbs = list.map((a, i) => '<span class="chat-asset">'
+    + '<img src="' + esc(a.url) + '" alt="">'
+    + '<b class="chat-asset-no">' + (i + 1) + '</b>'
+    + button('server-asset-delete', '×', 'data-id="' + esc(a.assetId) + '" aria-label="' + (i + 1) + '번 이미지 지우기" ' + (busy ? 'disabled' : ''), 'chat-asset-x')
+    + '</span>').join('')
+  return '<div class="chat-assets">' + thumbs
+    + '<span class="helper chat-assets-hint">올리기만 해서는 안 들어가요 — "1번 이미지를 배경으로 깔아줘" 처럼 말해 주세요</span></div>'
 }
 
 /** 직접 수정 — 문구 목록은 스크롤, 되돌리기 · 저장은 아래 고정 */
@@ -1021,6 +1071,7 @@ function handleServerClick(a, b, rerender) {
       return true
     case 'server-order-up': if (s) nudgeBlock(s, b.dataset.block, -1); return true
     case 'server-order-down': if (s) nudgeBlock(s, b.dataset.block, 1); return true
+    case 'server-asset-delete': if (s) removeAsset(s, b.dataset.id, rerender); return true
     case 'server-direct-apply': applyDirect(rerender); return true
     case 'server-direct-reset': resetDirect(rerender); return true
     case 'server-publish': openPublish(); return true
@@ -1079,6 +1130,54 @@ function handleServerInput(ev) {
     return true
   }
   return false
+}
+
+/**
+ * main.js 의 change 위임에서 부른다. 처리했으면 true
+ *
+ * ★ input 이 아니라 change 다 — 파일 고르기는 input 이벤트를 내지 않는다.
+ */
+function handleServerChange(ev, rerender) {
+  const s = ui.serverEditor
+  const t = ev.target
+  if (!s || t.id !== 'server-asset-file') return false
+  const file = t.files?.[0]
+  // ★ 비워야 같은 파일을 다시 고를 수 있다 — 안 비우면 두 번째 선택에서 change 가 안 난다
+  t.value = ''
+  if (file) uploadPicked(s, file, rerender)
+  return true
+}
+
+async function uploadPicked(s, file, rerender) {
+  // ★ 서버도 막지만 여기서 먼저 말해 준다. 3MB 를 다 올려 보낸 뒤 거절당하면 한참 기다린 셈이다
+  if (file.size > ASSET_MAX_BYTES) { toast('이미지는 3MB 까지 올릴 수 있어요.'); return }
+  s.assetBusy = true
+  rerender()
+  try {
+    const made = await uploadAsset(s.id, file)
+    s.assets = [...(s.assets || []), made]
+    toast((s.assets.length) + '번으로 올렸어요. "' + s.assets.length + '번 이미지를 배경으로 깔아줘" 처럼 말해 주세요.')
+  } catch (e) {
+    toast(e?.message || '이미지를 올리지 못했어요.')
+  } finally {
+    s.assetBusy = false
+    rerender()
+  }
+}
+
+/** ★ 이미 게시된 페이지가 이 이미지를 쓰고 있으면 그 자리가 깨진다. 서버가 막지 않는다 */
+async function removeAsset(s, assetId, rerender) {
+  s.assetBusy = true
+  rerender()
+  try {
+    await deleteAsset(s.id, assetId)
+    s.assets = (s.assets || []).filter((a) => String(a.assetId) !== String(assetId))
+  } catch (e) {
+    toast(e?.message || '이미지를 지우지 못했어요.')
+  } finally {
+    s.assetBusy = false
+    rerender()
+  }
 }
 
 /**
@@ -1182,5 +1281,5 @@ export {
   openServerEditor, ensureServerEditor, serverEditorView, afterServerRender, loadingView, refreshPage, running, openPublish,
   regenerate, cancel as cancelServerGeneration, onServerPromptInput, reloadServerEditor,
   handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock,
-  handleServerDrag,
+  handleServerDrag, handleServerChange,
 }

@@ -87,17 +87,21 @@ export function createApi({ authBase, skewMs = 60_000, pollMs = 30_000 }) {
   }
 
   async function raw(path, { method = 'GET', body, headers = {}, signal } = {}) {
+    // ★ FormData 는 JSON.stringify 하면 "[object FormData]" 가 되고,
+    //   Content-Type 을 우리가 적으면 boundary 가 빠져서 서버가 파트를 못 읽는다.
+    //   둘 다 브라우저에 맡긴다
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData
     return fetch(path, {
       method,
       signal,
       // 같은 오리진이지만 명시해 둔다. 나중에 도메인이 갈려도 동작이 안 바뀐다.
       credentials: 'same-origin',
       headers: {
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(body !== undefined && !isForm ? { 'Content-Type': 'application/json' } : {}),
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...headers,
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body === undefined ? undefined : (isForm ? body : JSON.stringify(body)),
     })
   }
 
@@ -234,6 +238,7 @@ export function createApi({ authBase, skewMs = 60_000, pollMs = 30_000 }) {
     remainingMs,
     get: (p, o) => request(p, { ...o, method: 'GET' }),
     post: (p, body, o) => request(p, { ...o, method: 'POST', body }),
+    postForm: (p, form, o) => request(p, { ...o, method: 'POST', body: form }),
     put: (p, body, o) => request(p, { ...o, method: 'PUT', body }),
     patch: (p, body, o) => request(p, { ...o, method: 'PATCH', body }),
     del: (p, o) => request(p, { ...o, method: 'DELETE' }),
