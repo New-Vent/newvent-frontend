@@ -96,7 +96,7 @@ function bindFrame(frame){
   if(record){showResult(record.id);return;}
   if(b.dataset.vote){
    ui.votes[e.id]=b.dataset.vote;
-   doc.querySelectorAll('[data-vote]').forEach(x=>{const chosen=x===b;x.setAttribute('aria-pressed',String(chosen));x.style.outline=chosen?'3px solid #e746a3':'';});
+   doc.querySelectorAll('[data-vote]').forEach(x=>{const chosen=x===b;x.setAttribute('aria-pressed',String(chosen));x.style.outline=chosen?'3px solid #46b4e7':'';});
    toast(b.textContent.trim()+'를 선택했어요. 하단 참여 버튼으로 접수해주세요.');return;
   }
   if(b.matches('.hl-share-btn,.lc-share-btn')){toast('공유 화면을 확인하는 체험 버튼입니다. 참여 횟수는 변경되지 않아요.');return;}

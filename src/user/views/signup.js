@@ -1,17 +1,57 @@
 /**
- * 회원가입. `POST /api/public/users/signup`
+ * 회원가입 화면.
  *
- * 지금은 목업이라 state.db.me 를 채우고 바로 로그인 상태로 넘어간다.
- * API 를 붙일 때 제출 처리만 repo 로 바꾸면 화면은 그대로 쓴다.
+ * 서버 모드에서는 POST /api/public/users/signup 으로 가입하고 성공하면
+ * 로그인 화면으로 보낸다 — 응답이 토큰이 아니라 만들어진 회원이라서,
+ * 가입해도 로그인 상태가 되지 않는다.
+ *
+ * ★ 요금제는 받지 않는다. 서버가 일부러 안 받는다(보내도 무시) — 가입자가
+ *   요금제를 골라 멤버십 등급을 올리는 것을 막으려는 것이다. 모두 기본
+ *   요금제 · NORMAL 로 시작하고 변경은 관리자만 한다.
+ *
+ * ★ 서버 검증 실패는 400 COMMON400-0 하나로만 오고 **어느 칸이 틀렸는지
+ *   안 알려준다.** 그래서 아래 RULES 로 화면이 먼저 검사한다.
+ *   규칙은 백엔드 SignUpRequest 와 맞춰 둔 것이다.
  */
 
 import { esc } from '@shared/dom.js'
+import { AUTH_ENABLED } from '@shared/api.js'
 import { button } from '@shared/ui/controls.js'
-import { PLANS } from '@shared/mock/fixtures.js'
 import { ui } from '@shared/state.js'
 
+/**
+ * 백엔드 `SignUpRequest` 와 1:1 로 맞춘 검사 규칙.
+ * 순서대로 보고 처음 걸리는 것을 알려준다.
+ */
+const RULES = [
+  { key: 'loginId', test: (v) => /^[A-Za-z0-9_]{4,50}$/.test(v),
+    message: '아이디는 영문·숫자·밑줄(_)만 써서 4~50자로 입력해주세요.' },
+  { key: 'password', test: (v) => v.length >= 8 && v.length <= 100,
+    message: '비밀번호는 8자 이상 100자 이하로 입력해주세요.' },
+  { key: 'password2', test: (v, all) => v === all.password,
+    message: '비밀번호가 서로 다릅니다.' },
+  { key: 'name', test: (v) => v.length >= 1 && v.length <= 50,
+    message: '이름을 50자 이내로 입력해주세요.' },
+  { key: 'email', test: (v) => v.length <= 100 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
+    message: '이메일 형식을 확인해주세요.' },
+  // 휴대폰은 선택이다 — 서버도 @NotBlank 가 없다. 적었을 때만 길이를 본다.
+  { key: 'phone', test: (v) => v.length <= 20, message: '휴대폰 번호는 20자 이내로 입력해주세요.' },
+]
+
+/** @returns {{key:string,message:string}|null} 처음 걸린 규칙 */
+export function firstSignupError(values) {
+  for (const r of RULES) if (!r.test(values[r.key] ?? '', values)) return r
+  return null
+}
+
 export function signupView() {
-  const f = (ui.signup ??= { loginId: '', name: '', email: '', phone: '', plan: 'BASIC', agree: false })
+  const f = (ui.signup ??= {
+    loginId: '',
+    name: '',
+    email: '',
+    phone: '',
+    agree: false,
+  })
 
   return `
     <div class="container narrow">
@@ -24,48 +64,57 @@ export function signupView() {
       <form id="signup-form" class="panel" novalidate>
         <div class="panel-body fields">
           <label class="field">아이디
-            <span class="helper">영문·숫자 4~20자</span>
-            <input data-signup="loginId" name="loginId" required minlength="4" maxlength="20"
-                   autocomplete="username" placeholder="user01" value="${esc(f.loginId)}">
+            <span class="helper">영문·숫자·밑줄(_) 4~50자</span>
+            <input data-signup="loginId" name="loginId"
+                   required minlength="4" maxlength="50"
+                   pattern="[A-Za-z0-9_]{4,50}"
+                   autocomplete="username" placeholder="user01"
+                   value="${esc(f.loginId)}">
           </label>
 
           <label class="field">비밀번호
-            <span class="helper">8자 이상, 영문과 숫자를 섞어주세요</span>
-            <input data-signup="password" name="password" type="password" required minlength="8"
+            <span class="helper">8~100자</span>
+            <input data-signup="password" name="password" type="password"
+                   required minlength="8" maxlength="100"
                    autocomplete="new-password" placeholder="••••••••">
           </label>
 
           <label class="field">비밀번호 확인
-            <input data-signup="password2" name="password2" type="password" required
+            <input data-signup="password2" name="password2" type="password"
+                   required maxlength="100"
                    autocomplete="new-password" placeholder="••••••••">
           </label>
 
           <label class="field">이름
-            <input data-signup="name" name="name" required maxlength="20"
-                   autocomplete="name" placeholder="홍길동" value="${esc(f.name)}">
+            <input data-signup="name" name="name" required maxlength="50"
+                   autocomplete="name" placeholder="홍길동"
+                   value="${esc(f.name)}">
           </label>
 
           <label class="field">이메일
-            <input data-signup="email" name="email" type="email" required
-                   autocomplete="email" placeholder="name@example.com" value="${esc(f.email)}">
+            <input data-signup="email" name="email" type="email"
+                   required maxlength="100"
+                   autocomplete="email" placeholder="name@example.com"
+                   value="${esc(f.email)}">
           </label>
 
-          <label class="field">휴대폰 번호
-            <span class="helper">'-' 없이 숫자만 입력해도 됩니다</span>
-            <input data-signup="phone" name="phone" required inputmode="numeric"
-                   autocomplete="tel" placeholder="01012345678" value="${esc(f.phone)}">
+          <label class="field">휴대폰 번호 (선택)
+            <span class="helper">최대 20자</span>
+            <input data-signup="phone" name="phone" type="tel" maxlength="20"
+                   autocomplete="tel" placeholder="01012345678"
+                   value="${esc(f.phone)}">
           </label>
 
-          <div class="field">
-            <span>요금제</span>
-            <span class="helper">요금제에 따라 참여할 수 있는 이벤트가 달라져요. 가입 후에도 바꿀 수 있습니다.</span>
-            <div class="plan-grid">${PLANS.map((p) => planCard(p, f.plan)).join('')}</div>
-          </div>
-
-          <label class="field row" style="align-items:center;gap:8px">
-            <input data-signup="agree" name="agree" type="checkbox" ${f.agree ? 'checked' : ''}>
-            <span>이벤트·혜택 안내 수신에 동의합니다 <span class="helper">(선택)</span></span>
-          </label>
+          ${!AUTH_ENABLED ? `
+            <label class="field row" style="align-items:center;gap:8px">
+              <input data-signup="agree" name="agree" type="checkbox"
+                     ${f.agree ? 'checked' : ''}>
+              <span>
+                이벤트·혜택 안내 수신에 동의합니다
+                <span class="helper">(선택)</span>
+              </span>
+            </label>
+          ` : ''}
 
           <p id="signup-error" class="create-error" role="alert"></p>
 
@@ -76,17 +125,5 @@ export function signupView() {
         </div>
       </form>
     </div>
-  `
-}
-
-function planCard(p, selected) {
-  return `
-    <button type="button" class="plan-card ${p.code === selected ? 'selected' : ''}"
-            data-act="signup-plan" data-plan="${p.code}" aria-pressed="${p.code === selected}">
-      <strong>${esc(p.name)}</strong>
-      <span class="plan-price">${esc(p.price)}</span>
-      <span class="plan-meta">데이터 ${esc(p.data)} · ${esc(p.grade)} 등급</span>
-      <span class="plan-desc">${esc(p.desc)}</span>
-    </button>
   `
 }

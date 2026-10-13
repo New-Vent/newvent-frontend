@@ -1,0 +1,26 @@
+/* 템플릿은 포인트색만 팔레트를 따른다 — 바탕·글자 같은 중성색은 템플릿 것을 유지한다.
+ *
+ * ★ 왜 필요한가
+ *   팔레트(01·02)는 --ev-bg · --ev-surface · --ev-surface-subtle · --ev-border 를 전부 밝은 값으로 덮는다.
+ *   글자색(--ev-text-main · --ev-text-muted)은 night · esports 만 같이 바꾼다.
+ *   어두운 템플릿(theme-sale)은 밝은 글자를 쓰므로, 나머지 16종을 붙이면 흰 카드 위에 밝은 글자가 된다
+ *   (소제목 대비 17.01 → 1.10).
+ *
+ * ★ 왜 이 선택자인가
+ *   .theme-sale 과 .palette-* 는 같은 루트에 붙고 특이도가 같아서, 파일 순서(90 이 40 보다 뒤)로 팔레트가 이긴다.
+ *   [class*="palette-"] 를 더해 특이도를 올리면 순서와 상관없이 이 규칙이 이긴다.
+ *
+ * ★ 값은 40-templates/04-sale.css · 07-refinements.css 의 .theme-sale 과 같아야 한다.
+ *   그쪽을 바꾸면 여기도 같이 바꾼다 (CSS 에는 값을 한 곳에서 가져오는 방법이 없다).
+ *
+ * 밝은 템플릿 넷(sports · holiday · vip · launch)은 :root 기본값을 쓰므로 여기서 되돌릴 게 없다.
+ * 단, 어두운 팔레트(night · esports)를 붙였을 때 생기는 문제는 이 파일의 범위가 아니다.
+ */
+.theme-sale[class*="palette-"] {
+  --ev-bg: #09090b;
+  --ev-surface: #121215;
+  --ev-surface-subtle: #18181b;
+  --ev-border: #27272a;
+  --ev-text-main: #f4f4f5;
+  --ev-text-muted: #a1a1aa;
+}

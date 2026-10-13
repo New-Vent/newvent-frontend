@@ -23,14 +23,108 @@ function participationControl(e){
  return '<div class="participation-access '+a.kind+'" role="status"><strong>'+esc(a.message)+'</strong>'+action+'</div>';
 }
 
+/* ───────────── 서버 모드 — 참여 ───────────── */
+
+/**
+ * 참여할 수 없는 사유 → 화면 문구.
+ *
+ * ★ NOT_CONFIGURED 는 **사용자가 고칠 수 없는** 사유다. 관리자가 참여 설정을
+ *   안 한 것이라, 등급 부족처럼 사용자 탓으로 읽히면 안 된다. "준비 중" 으로 둔다.
+ * ★ 사유는 앞으로 늘어난다. 모르는 값이면 일반 문구로 넘긴다 (화면이 안 깨지게).
+ */
+const UNAVAILABLE = {
+  ALREADY_PARTICIPATED: { tone: 'done', title: '이미 참여하셨어요', desc: '참여 결과는 내 혜택에서 볼 수 있어요.' },
+  INSUFFICIENT_GRADE: { tone: 'grade', title: '우수 등급부터 참여할 수 있어요', desc: '멤버십 등급은 이용 실적에 따라 정해져요.' },
+  NOT_CONFIGURED: { tone: 'soon', title: '준비 중이에요', desc: '참여 방식이 아직 설정되지 않았어요. 곧 열립니다.' },
+}
+const unavailableOf = (reason) =>
+  UNAVAILABLE[reason] ?? { tone: 'soon', title: '지금은 참여할 수 없어요', desc: '잠시 후 다시 확인해주세요.' }
+
+/**
+ * 방식별 추가 입력.
+ *
+ * ★ SPORTS_PREDICTION 의 선택지(predictionOptions)와 LUCKY_POUCH 의 개수(pouches)는
+ *   **이벤트 설정에 있는데 상태 API 가 안 준다.** 값을 지어내면 서버가 400 으로 막는다
+ *   (ParticipationValidator 가 config 와 대조한다). 그래서 버튼을 띄우지 않고
+ *   왜 못 하는지 밝힌다 — 늘 실패하는 버튼을 두지 않는다.
+ */
+function participationInput(gameCode) {
+  if (gameCode === 'PRE_REGISTRATION') {
+    return { ok: true, html:
+      '<label class="field">휴대폰 번호 <span class="helper">숫자만 또는 010-1234-5678</span>'
+      + '<input data-participate="phoneNumber" inputmode="tel" maxlength="13" placeholder="01012345678"></label>' }
+  }
+  if (gameCode === 'SPORTS_PREDICTION' || gameCode === 'LUCKY_POUCH') {
+    return { ok: false, html:
+      '<p class="helper">이 참여 방식은 선택지를 아직 받아올 수 없어요. '
+      + '(상태 API 가 이벤트 설정을 내려주면 열립니다)</p>' }
+  }
+  return { ok: true, html: '' }   // BASIC · gameCode 없음 — 추가 입력이 없다
+}
+
+/** 참여 결과 — WON 만 상품명이 온다 */
+function participationResult(r) {
+  const won = r.status === 'WON'
+  const pending = r.status === 'PENDING'
+  return '<div class="participation-access ' + (won ? 'ready' : pending ? 'login' : 'done') + '" role="status">'
+    + '<strong>' + (pending ? '참여가 접수되었어요' : won ? '당첨되었어요!' : '아쉽게 당첨되지 않았어요') + '</strong>'
+    + (won && r.prizeName ? '<p class="summary">' + esc(r.prizeName) + '</p>' : '')
+    + button('route', '내 혜택에서 보기', 'data-route="my"', 'btn sm wide') + '</div>'
+}
+
+/**
+ * 서버 모드 참여 패널 — **iframe 이 아니라 옆 패널에 둔다.**
+ * 게시된 HTML 안의 버튼은 `<a href="#">` 로 죽어 있고, 생성된 HTML 에 스크립트를
+ * 넣지 않는 것이 백엔드 설계 의도다. 그래서 참여는 호스트가 맡는다.
+ */
+function serverParticipation() {
+  if (!ui.logged) {
+    return '<div class="participation-access login" role="status"><strong>로그인하면 참여할 수 있어요</strong>'
+      + button('route', '로그인하고 참여하기', 'data-route="login"', 'btn primary wide') + '</div>'
+  }
+
+  const s = ui.serverParticipation
+  if (!s || s.state === 'loading') {
+    return '<div class="participation-access" role="status"><strong>참여 가능 여부를 확인하고 있어요</strong></div>'
+  }
+  if (s.state === 'error') {
+    return '<div class="participation-access" role="status"><strong>확인하지 못했어요</strong>'
+      + '<p class="helper">' + esc(s.error || '') + '</p>'
+      + button('participation-retry', '다시 확인', '', 'btn sm wide') + '</div>'
+  }
+  if (s.result) return participationResult(s.result)
+
+  const d = s.data || {}
+  if (d.participated || !d.canParticipate) {
+    const u = unavailableOf(d.participated && !d.unavailableReason ? 'ALREADY_PARTICIPATED' : d.unavailableReason)
+    return '<div class="participation-access ' + u.tone + '" role="status"><strong>' + esc(u.title) + '</strong>'
+      + '<p class="helper">' + esc(u.desc) + '</p>'
+      + (d.participated ? button('route', '내 혜택에서 보기', 'data-route="my"', 'btn sm wide') : '')
+      + '</div>'
+  }
+
+  // gameCode 가 없으면 BASIC 으로 본다 — 지금 서버가 안 준다
+  const input = participationInput(d.gameCode)
+  return '<form id="participate-form" class="participation-access ready" role="status">'
+    + '<strong>지금 참여할 수 있어요</strong>'
+    + input.html
+    + '<p class="create-error" role="alert"></p>'
+    + (input.ok
+      ? '<button type="submit" class="btn primary wide"' + (s.busy ? ' disabled' : '') + '>'
+        + (s.busy ? '참여하는 중…' : '이벤트 참여하기 ' + icon('arrow')) + '</button>'
+      : '')
+    + '</form>'
+}
+
 /* ───────────── 서버 모드 ───────────── */
 
 /**
  * 공개 이벤트 상세 — 서버가 준 publishedHtml 을 그대로 띄운다.
  *
- * 조립할 게 없다. 서버가 완전한 문서(head · event.css · 테마 · runtime.js)로 감싸서 준다.
- * ★ 'live' — 버튼을 막지 않는다. 동작(안내 · 스크롤 · 타이머 …)은 runtime.js 가 data-behavior 로 한다
- * 참여 · 등급 · 혜택 요약은 공개 응답에 없어서 빼뒀다 (제목 · 기간만).
+ * 조립할 게 없다. serverFrame() 이 doctype · head · /assets/event.css 를 씌운다.
+ *
+ * 등급 · 혜택 요약은 공개 응답에 없어서 제목 · 기간만 쓴다.
+ * 참여는 따로 상태 API 로 받아 옆 패널에 붙인다 (serverParticipation).
  */
 function serverEventView() {
   const e = ui.serverEvent
@@ -47,11 +141,10 @@ function serverEventView() {
       + button('route', '목록으로', 'data-route="home"', 'btn') + '</div>'
   }
 
-  const period = shortDate(e.startDate.slice(0, 10)) + ' ~ ' + shortDate(e.endDate.slice(0, 10))
   return '<div class="container">'
     + button('route', icon('back') + '이벤트 목록', 'data-route="home"', 'backlink')
     + '<div class="detail-layout"><div class="detail-frame">'
-    + serverFrame(e.publishedHtml, esc(e.title), 'live')
+    + serverFrame(e.publishedHtml, esc(e.title), 'readonly')
     + '</div><aside class="detail-side card">'
     + '<div class="spread"><span class="badge green">진행 중</span>'
     + (e.closingSoon ? '<span class="badge pink">마감 임박</span>' : '') + '</div>'
@@ -59,6 +152,7 @@ function serverEventView() {
     + '<dl class="facts"><div class="fact"><dt>이벤트 기간</dt><dd>'
     + shortDate(e.startDate.slice(0, 10)) + '<br>~ ' + shortDate(e.endDate.slice(0, 10))
     + '</dd></div></dl>'
+    + serverParticipation()
     + '<p class="small muted" style="margin-top:15px;line-height:1.8">'
     + '자세한 조건은 이벤트의 유의사항을 확인해주세요.</p>'
     + '</aside></div></div>'

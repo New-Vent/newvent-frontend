@@ -64,7 +64,7 @@ function applyBlocks(doc, blocks) {
 }
 
 /** 미리보기 iframe 공통 스타일 — 여백 · 글꼴 · 편집 하이라이트. thumb 면 목록 썸네일 크기로 자른다 */
-const frameCss=(thumb=false)=>'html,body{margin:0!important}body{overflow-x:hidden}.ev-container{margin:0 auto!important}.nv-text-active{background:#fff1a8!important;color:#292330!important;outline:2px solid #d60076!important;outline-offset:3px;border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}.newvent-selected{outline:3px solid #d60076!important;outline-offset:-4px}.nv-pick-hover:not(.newvent-selected){outline:2px dashed #e746a3!important;outline-offset:-4px;cursor:pointer}.nv-pick-tag{position:absolute;z-index:2147483647;pointer-events:none;padding:4px 10px;border-radius:999px;background:#292330;color:#fff;font-size:12px;font-weight:700;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,.2)}.nv-pick-tag.on{background:#d60076}.nv-pick-tag.own{background:#7a7484}button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:3px solid #da3990;outline-offset:4px}'+(thumb?'\nhtml,body{width:720px!important;height:440px!important;overflow:hidden!important}.ev-container{width:720px!important;max-width:720px!important;padding:0!important;box-shadow:none!important;border-radius:0!important}[data-block="hero"]{margin:0!important;border-radius:0!important}[data-block="hero"]{min-height:440px!important;max-height:440px;overflow:hidden;padding-top:30px!important}.hero-title{font-size:40px!important;line-height:1.2!important}.hero-desc{font-size:16px!important;line-height:1.6!important}':'');
+const frameCss=(thumb=false)=>'html,body{margin:0!important}body{overflow-x:hidden}.ev-container{margin:0 auto!important}.nv-text-active{background:#fff1a8!important;color:#292330!important;outline:2px solid #0284c7!important;outline-offset:3px;border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}.newvent-selected{outline:3px solid #0284c7!important;outline-offset:-4px}.nv-pick-hover:not(.newvent-selected){outline:2px dashed #46b4e7!important;outline-offset:-4px;cursor:pointer}.nv-pick-tag{position:absolute;z-index:2147483647;pointer-events:none;padding:4px 10px;border-radius:999px;background:#292330;color:#fff;font-size:12px;font-weight:700;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,.2)}.nv-pick-tag.on{background:#0284c7}.nv-pick-tag.own{background:#7a7484}button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:3px solid #39a7da;outline-offset:4px}'+(thumb?'\nhtml,body{width:720px!important;height:440px!important;overflow:hidden!important}.ev-container{width:720px!important;max-width:720px!important;padding:0!important;box-shadow:none!important;border-radius:0!important}[data-block="hero"]{margin:0!important;border-radius:0!important}[data-block="hero"]{min-height:440px!important;max-height:440px;overflow:hidden;padding-top:30px!important}.hero-title{font-size:40px!important;line-height:1.2!important}.hero-desc{font-size:16px!important;line-height:1.6!important}':'');
 
 function templateDocument(snapshot,thumb=false){
  const doc=new DOMParser().parseFromString(TEMPLATE_BODIES[snapshot.templateId],'text/html');
@@ -76,8 +76,8 @@ function templateDocument(snapshot,thumb=false){
  put('[data-block="benefits"] h2',snapshot.benefitHeading,'benefitHeading');put('[data-slot="cta-link"]',snapshot.cta,'cta');
  doc.querySelectorAll('[data-slot="period"]').forEach(n=>n.textContent=shortDate(snapshot.start)+' ~ '+shortDate(snapshot.end));
  // script 는 남긴다 — 템플릿의 window.newVentReinit 과 타이머가 여기 있다.
- // 서버가 Jsoup Safelist 로 정화한 HTML 만 온다는 전제이며,
- // 실질 방어선은 iframe sandbox 가 아니라 그 서버 정화다.
+ // 실제로 도는 모드는 editor 하나뿐이다 (sandboxFor 참고). user · thumb · readonly 로
+ // 띄우면 같은 문서라도 실행되지 않으니, 타이머는 HTML 에 적힌 값에서 멈춰 있다.
  doc.querySelectorAll('iframe').forEach(n=>n.remove());
  doc.querySelectorAll('*').forEach(n=>{Array.from(n.attributes).forEach(a=>{if(a.name.startsWith('on'))n.removeAttribute(a.name);});});
  doc.querySelectorAll('input[type="tel"]').forEach(n=>{n.value='';n.setAttribute('value','');});
@@ -122,40 +122,39 @@ function takeStagedDocument(id) {
 }
 
 /**
- * allow-scripts 를 준다 — 서버 문서의 /assets/event-runtime.js(data-behavior 실행)와,
- * 목업 템플릿의 window.newVentReinit · 타이머가 동작해야 한다 (AI_EDIT_RULES 2-2).
+ * 미리보기 iframe 의 sandbox — **모드마다 다르다.**
  *
- * ⚠ allow-scripts 와 allow-same-origin 을 함께 주면 sandbox 는 사실상
- *   무력해진다. 이 구성은 "서버가 Jsoup Safelist 로 정화한 HTML 만
- *   내려준다"는 팀 합의 위에 서 있고, 실질 방어선은 그 서버 정화다.
+ * allow-same-origin 은 전부 준다. bindFrame(frame.js)이 frame.contentDocument 로
+ * 이벤트 위임 · 높이 측정 · 블록 하이라이트를 하는데, 없으면 아무것도 못 한다.
+ * 앞으로 붙일 참여 위젯(룰렛 · 복주머니)도 이 경로를 쓴다 — iframe 안 마크업은
+ * "여기가 1번 칸" 이라고 선언만 하고, 클릭 처리와 API 호출은 호스트가 한다.
+ * 그래야 LLM 이 만든 HTML 에 스크립트를 넣지 않아도 된다.
+ *
+ * allow-scripts 는 **editor 한 모드에만** 준다.
+ *   editor         목업 편집기. 블록을 갈아 끼운 뒤 window.newVentReinit(key) 로
+ *                  타이머 · 참가자 카운터를 다시 연결해야 한다 (AI_EDIT_RULES 2-2)
+ *   그 외          server-edit · server-select · readonly · user · thumb —
+ *                  전부 호스트가 contentDocument 로 처리한다. 스크립트가 필요 없다.
+ *
+ * ⚠ allow-scripts 와 allow-same-origin 을 함께 주면 sandbox 는 사실상 무력해진다.
+ *   editor 는 목업 전용(TEMPLATE_BODIES — 우리가 쓴 HTML)이라 그 조합을 감수한다.
+ *   서버가 내려준 HTML 이 들어오는 모드에는 주지 않는다.
  */
-const SANDBOX = 'allow-same-origin allow-scripts'
+const SANDBOX_READ = 'allow-same-origin'                 // 스크립트 실행 안 됨
+const SANDBOX_EDIT = 'allow-same-origin allow-scripts'   // newVentReinit 이 필요하다
 
-/** 실행될 수 있는 것을 걷어낸다 — iframe · on* 핸들러. (서버 정화가 1차 방어선이고 이건 2차다) */
-function disarm(doc){
- doc.querySelectorAll('iframe').forEach(n=>n.remove());
- doc.querySelectorAll('*').forEach(n=>{Array.from(n.attributes).forEach(a=>{if(a.name.startsWith('on'))n.removeAttribute(a.name);});});
-}
+const sandboxFor = (mode) => (mode === 'editor' ? SANDBOX_EDIT : SANDBOX_READ)
 
 /**
- * 서버가 준 HTML 을 미리보기 문서로 만든다.
- *
- * ★ 완전한 문서(<!doctype …>)면 다시 감싸지 않는다 — GET …/preview 의 html, 공개 상세의 publishedHtml.
- *   서버가 head · /assets/event.css · 글꼴 · 테마 · /assets/event-runtime.js 를 이미 붙였다 (PageShell.standalone).
- *   여기서는 미리보기 iframe 용 스타일(frameCss)만 더한다.
- *   이름표(data-behavior) 페이지는 runtime.js 가, 이름표 이전 페이지는 남아 있는 옛 <script> 가 동작시킨다.
- * ★ 조각이면 예전처럼 감싼다 — 목록 썸네일(thumbnailHtml), 버전 상세(htmlContent).
+ * 서버가 준 조각(GET …/preview 의 html)을 미리보기 문서로 감싼다.
+ * ★ 조각에는 래퍼 · 테마 · 유의사항이 있고 스타일시트는 없다 — 여기서 /assets/event.css 를 붙인다
+ * ★ <script> 를 굳이 걷어내지 않는다. 서버 조각을 띄우는 모드(readonly · server-edit ·
+ *   server-select)는 sandbox 에 allow-scripts 가 없어서 **어차피 실행되지 않는다.**
+ *   원본을 그대로 둬야 나중에 editor 로 띄울 때도 같은 문서를 쓸 수 있다.
  */
 function serverDocument(html){
- const src=html||'';
- if(/^\s*<!doctype/i.test(src)){
-  const doc=new DOMParser().parseFromString(src,'text/html');
-  disarm(doc);
-  doc.head.insertAdjacentHTML('beforeend','<style>'+frameCss()+'</style>');
-  return '<!doctype html>'+doc.documentElement.outerHTML;
- }
- const doc=new DOMParser().parseFromString('<body>'+src+'</body>','text/html');
- disarm(doc);
+ const doc=new DOMParser().parseFromString('<body>'+(html||'')+'</body>','text/html');
+ doc.querySelectorAll('iframe').forEach(n=>n.remove());
  // 조각에 .ev-container 가 없으면 감싸준다.
  //   event.css 의 폭·여백·배경은 전부 .ev-container 기준이라, 없으면 본문이
  //   맨몸으로 붙어 읽기 어렵다. 템플릿으로 만든 페이지는 컨테이너를 들고 오지만
@@ -167,6 +166,7 @@ function serverDocument(html){
   while(doc.body.firstChild)wrap.appendChild(doc.body.firstChild);
   doc.body.appendChild(wrap);
  }
+ doc.querySelectorAll('*').forEach(n=>{Array.from(n.attributes).forEach(a=>{if(a.name.startsWith('on'))n.removeAttribute(a.name);});});
  return '<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+EVENT_STYLE_LINKS+'<style>'+frameCss()+'</style></head>'+doc.body.outerHTML+'</html>';
 }
 
@@ -176,15 +176,16 @@ function serverDocument(html){
  *       server-edit  직접 수정 — 누른 글자를 nv-pick 이벤트로 알린다
  */
 function serverFrame(html,title='서버 미리보기',mode='readonly'){
- return '<iframe class="event-frame" data-mode="'+mode+'" title="'+esc(title)+'" sandbox="'+SANDBOX+'" data-doc="'+stageDocument(serverDocument(html))+'"></iframe>';
+ return '<iframe class="event-frame" data-mode="'+mode+'" title="'+esc(title)+'" sandbox="'+sandboxFor(mode)+'" data-doc="'+stageDocument(serverDocument(html))+'"></iframe>';
 }
 
+// 썸네일은 모드가 없다 — 보여주기만 하므로 읽기 전용이다 (aria-hidden · tabindex="-1")
 function thumb(e,snap){
  const s=snap||published(e)||e.versions[0].snapshot;
- return '<div class="thumb" aria-hidden="true"><iframe tabindex="-1" loading="lazy" sandbox="'+SANDBOX+'" title="이벤트 상단 디자인" data-doc="'+stageDocument(templateDocument(s,true))+'"></iframe></div>';
+ return '<div class="thumb" aria-hidden="true"><iframe tabindex="-1" loading="lazy" sandbox="'+SANDBOX_READ+'" title="이벤트 상단 디자인" data-doc="'+stageDocument(templateDocument(s,true))+'"></iframe></div>';
 }
 
-function fullFrame(e,s,mode){return '<iframe class="event-frame" data-event="'+esc(e.id)+'" data-mode="'+mode+'" title="'+(mode==='editor'?'관리자 미리보기':mode==='readonly'?'저장된 버전 미리보기':'게시된 이벤트')+'" sandbox="'+SANDBOX+'" data-doc="'+stageDocument(templateDocument(s))+'"></iframe>';}
+function fullFrame(e,s,mode){return '<iframe class="event-frame" data-event="'+esc(e.id)+'" data-mode="'+mode+'" title="'+(mode==='editor'?'관리자 미리보기':mode==='readonly'?'저장된 버전 미리보기':'게시된 이벤트')+'" sandbox="'+sandboxFor(mode)+'" data-doc="'+stageDocument(templateDocument(s))+'"></iframe>';}
 
 function applySnapshot(doc,s){
  applyContentEdits(doc,s);
