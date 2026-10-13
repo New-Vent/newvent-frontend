@@ -6,7 +6,7 @@
 .theme-sports .sp-vote-wrap {
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px dashed rgba(220, 38, 38, 0.4);
+  border-top: 1px dashed color-mix(in srgb, var(--tpl-accent) 40%, transparent);
   text-align: center;
 }
 .theme-sports .sp-vote-title {
@@ -34,16 +34,16 @@
   white-space: nowrap;
 }
 .theme-sports .sp-vote-btn:hover {
-  background: rgba(220, 38, 38, 0.25);
-  border-color: #ef4444;
+  background: color-mix(in srgb, var(--tpl-accent) 25%, transparent);
+  border-color: var(--tpl-accent-bright);
   color: #fff;
   transform: translateY(-1px);
 }
 .theme-sports .sp-vote-btn.active {
-  background: #dc2626;
-  border-color: #ef4444;
+  background: var(--tpl-accent);
+  border-color: var(--tpl-accent-bright);
   color: #fff;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tpl-accent-bright) 50%, transparent);
 }
 
 /* Template 2: Holiday 3 Lucky Draw Songpyeon Boxes */
@@ -76,7 +76,7 @@
 }
 .theme-holiday .hl-pouch-card:hover {
   transform: translateY(-6px);
-  border-color: #ea580c;
+  border-color: var(--tpl-warm);
   box-shadow: 0 12px 24px rgba(180, 83, 9, 0.15);
 }
 .theme-holiday .hl-pouch-visual {
@@ -155,7 +155,7 @@
 .theme-holiday .hl-pouch-prize {
   font-size: 13px;
   font-weight: 800;
-  color: #ea580c;
+  color: var(--tpl-warm);
   margin-bottom: 6px;
 }
 .theme-holiday .hl-pouch-desc {
@@ -172,16 +172,16 @@
   font-size: 12px;
   font-weight: 800;
   color: #fff;
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  background: linear-gradient(135deg, var(--tpl-warm) 0%, var(--tpl-warm-deep) 100%);
   border: none;
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba(234, 88, 12, 0.3);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--tpl-warm) 30%, transparent);
   transition: all 0.2s ease;
 }
 .theme-holiday .hl-pouch-btn:hover {
   transform: scale(1.03);
-  box-shadow: 0 5px 12px rgba(234, 88, 12, 0.4);
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--tpl-warm) 40%, transparent);
 }
 .theme-holiday .hl-pouch-btn.opened {
   background: #15803d;
@@ -211,13 +211,13 @@
   font-weight: 700;
   color: #78350f;
   background: #fef3c7;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--tpl-accent-soft);
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .theme-holiday .hl-share-btn:hover {
-  background: #fde68a;
+  background: var(--tpl-accent-soft);
   color: #92400e;
 }
 .theme-holiday .hl-cta-btn.cta-completed {
@@ -233,8 +233,8 @@
   font-size: 12px;
   font-weight: 700;
   color: #854d0e;
-  background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
-  border: 1px solid #ca8a04;
+  background: linear-gradient(135deg, var(--tpl-accent-light) 0%, var(--tpl-gold) 100%);
+  border: 1px solid var(--tpl-gold-deep);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -242,7 +242,7 @@
 }
 .theme-vip .vp-coupon-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(202, 138, 4, 0.3);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--tpl-gold-deep) 30%, transparent);
   color: #713f12;
 }
 .theme-vip .vp-coupon-btn.downloaded {
@@ -259,7 +259,7 @@
   font-size: 12px;
   font-weight: 900;
   color: #000;
-  background: #ccff00;
+  background: var(--tpl-accent);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -269,8 +269,8 @@
   white-space: nowrap;
 }
 .theme-sale .fs-deal-btn:hover {
-  background: #e6ff66;
-  box-shadow: 0 0 12px rgba(204, 255, 0, 0.5);
+  background: var(--tpl-accent-soft);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--tpl-accent) 50%, transparent);
   transform: translateY(-1px);
 }
 
@@ -281,7 +281,7 @@
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.06);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--tpl-accent) 6%, transparent);
 }
 .theme-launch .lc-gauge-header {
   display: flex;
@@ -292,12 +292,12 @@
 .theme-launch .lc-gauge-title {
   font-size: 15px;
   font-weight: 800;
-  color: #1e3a8a;
+  color: var(--tpl-accent-ink);
 }
 .theme-launch .lc-gauge-percent {
   font-size: 15px;
   font-weight: 900;
-  color: #2563eb;
+  color: var(--tpl-accent);
 }
 .theme-launch .lc-progress-track {
   height: 10px;
@@ -309,7 +309,7 @@
 .theme-launch .lc-progress-fill {
   height: 100%;
   width: 74%;
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(90deg, var(--tpl-accent-light) 0%, var(--tpl-accent) 100%);
   border-radius: 999px;
   transition: width 0.5s ease;
 }
@@ -337,7 +337,7 @@
   border-radius: 999px;
   margin-bottom: 4px;
   background: #dbeafe;
-  color: #1d4ed8;
+  color: var(--tpl-accent-deep);
 }
 .theme-launch .lc-milestone-item.achieved .lc-ms-badge {
   background: #dcfce7;
@@ -391,14 +391,14 @@
   transition: border-color 0.2s;
 }
 .theme-launch .lc-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--tpl-accent-light);
 }
 .theme-launch .lc-form-btn {
   padding: 12px 16px;
   font-size: 13px;
   font-weight: 700;
   color: #fff;
-  background: #2563eb;
+  background: var(--tpl-accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -406,7 +406,7 @@
   transition: background 0.2s;
 }
 .theme-launch .lc-form-btn:hover {
-  background: #1d4ed8;
+  background: var(--tpl-accent-deep);
 }
 .theme-launch .lc-share-row {
   display: flex;
@@ -423,15 +423,15 @@
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 700;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--tpl-accent-bright);
+  background: color-mix(in srgb, var(--tpl-accent-bright) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tpl-accent-bright) 30%, transparent);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 .theme-launch .lc-share-btn:hover {
-  background: rgba(56, 189, 248, 0.2);
+  background: color-mix(in srgb, var(--tpl-accent-bright) 20%, transparent);
 }
 
 @media (max-width: 640px) {
