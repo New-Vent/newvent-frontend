@@ -85,3 +85,13 @@
   box-shadow: var(--ev-shadow-md);
 }
 [data-block="compare"].v-compare-rounded:not(.ev-block) th { border-radius: 0 !important; }
+
+/* 좁은 화면 — 표를 칸 안에 넣는다.
+ * ★ 기본 min-width: 360px 은 390px 화면의 칸(안쪽 310px 남짓)보다 넓다. 영역이 가로로 밀려(overflow-x: auto)
+ *   오른쪽 열을 보려면 옆으로 끌어야 했다 (기본 · 풀블리드 · 포커스 배치 — 390px 실측, 33~48px 넘침).
+ *   배치(layout-*)의 좁은 칸에는 같은 보정이 이미 있다 — 80-layouts 의 @container (max-width: 420px).
+ *   거기는 칸 폭을 보고, 여기는 화면 폭을 본다. 모양은 같게 맞춘다 */
+@media (max-width: 420px) {
+  :where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) table { min-width: 0; table-layout: fixed; font-size: 0.82rem; }
+  :where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) :is(th, td) { padding: 8px 6px; word-break: keep-all; overflow-wrap: anywhere; }
+}

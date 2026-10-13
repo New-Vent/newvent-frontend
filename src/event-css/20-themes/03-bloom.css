@@ -158,7 +158,8 @@ body:has(.theme-bloom) {
 
 /* ★ 카드마다 같은 흰 사각형이라 단조롭다는 지적 — 한 칸 걸러 하늘색을 한 겹 더 섞어
      리듬을 만든다. 색이 아니라 **농도**로 나누는 것이라 어떤 팔레트에서도 안 튄다. */
-.theme-bloom [data-block]:not(.ev-block):nth-of-type(even) {
+/* ★★ 배경 변형(v-surface-*)이 붙은 영역은 뺀다 — theme-basic 의 같은 규칙과 같은 이유다 (바탕만 덮고 글자색은 남는다) */
+.theme-bloom [data-block]:not(.ev-block):nth-of-type(even):where(:not([class*="v-surface-"])) {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--ev-primary) 7%, transparent) 0, transparent 120px),
     color-mix(in srgb, var(--bloom-cream) 86%, transparent);
@@ -299,6 +300,14 @@ body:has(.theme-bloom) {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
+}
+
+/* ★ 쿠폰의 소제목도 칩 안에서는 흰 글자다.
+     쿠폰 변형이 h2 를 --ev-primary 로 칠하는데(v-coupon-dashed — 특이도 0,3,1), 칩 바탕이 같은 색 그라데이션이라
+     "웰컴 쿠폰" 이 칩에 묻혀 안 보였다 (Bedrock 생성 페이지 실측). 다른 영역의 칩은 위 규칙(0,3,0)으로 흰 글자다 */
+.theme-bloom [data-block="coupon"]:not(.ev-block) > .block-header :is(h2, .title) {
+  color: #fff;
+  opacity: 1;
 }
 
 /* hero 다음 첫 카드는 걸칠 데가 없으니 자기 자리에서 시작 */
