@@ -566,6 +566,79 @@ export function participationBody(gameCode, input = {}) {
   }
 }
 
+/* ─────────────── 관리자 — 참여 설정 · 참여자 ─────────────── */
+
+/**
+ * 참여 설정 조회 — `GET /api/admin/events/{id}/participation-config`
+ *
+ * ★ 아직 설정하지 않았어도 404 가 아니라 `{ gameCode: null, config: {} }` 가 온다.
+ *   화면이 빈 폼으로 시작하면 되고 분기를 따로 만들 필요가 없다.
+ * ★ 남의 이벤트는 403 (COMMON403-0), 없거나 휴지통이면 404 (EVENT404-0).
+ */
+export async function loadParticipationConfig(eventId) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여 설정 화면이 없다')
+  return requireApi().get(`/api/admin/events/${eventId}/participation-config`)
+}
+
+/**
+ * 참여 설정 저장 — `PUT …/participation-config` (이벤트당 하나라 덮어쓴다)
+ *
+ * config 모양은 방식마다 다르다. 서버 ParticipationValidator 와 같은 규칙이다.
+ *   BASIC              resultMode 없으면 결과를 내지 않는다. 있으면
+ *                        IMMEDIATE   winProbability(0~100) + prizeName
+ *                        GUARANTEED  prizeName
+ *                        DELAYED     winnerCount(1↑) + prizeName + announcementAt(ISO)
+ *   SPORTS_PREDICTION  predictionOptions: string[] (비어 있으면 안 된다)
+ *   PRE_REGISTRATION   {} — 전화번호는 참여 입력이지 설정이 아니다
+ *   LUCKY_POUCH        pouches: [{ pouchIndex, winProbability, prizeName }]
+ *                        번호는 1부터 길이까지 빠짐없이
+ *
+ * ★ 참여 기록이 있으면 **결과를 뒤집는 값**은 잠긴다 (409 PARTICIPATION409-3).
+ *   바꿀 수 있는 것은 prizeName · announcementAt 뿐이다.
+ *   값이 실제로 달라진 키만 보므로, 폼 전체를 그대로 PUT 해도 통과한다.
+ * ★ 모양이 틀리면 409 PARTICIPATION409-1, 없는 방식이면 409 PARTICIPATION409-2.
+ */
+export async function saveParticipationConfig(eventId, { gameCode, config }) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여 설정 화면이 없다')
+  return requireApi().put(`/api/admin/events/${eventId}/participation-config`, { gameCode, config })
+}
+
+/**
+ * 참여자 목록 — `GET /api/admin/events/{id}/participations`
+ *
+ *   { summary:      { totalParticipationCount, rewardCount, pendingCount },
+ *     participants: { content[], page, size, totalElements, totalPages } }
+ *
+ * ★ **summary 는 필터와 무관하게 전체다.** resultStatus=WON 을 걸어도
+ *   summary.totalParticipationCount 는 전체 참여 수이고, 거른 수는
+ *   participants.totalElements 다. 둘을 섞으면 "전체 참여"가 거짓이 된다.
+ * ★ size 는 50 이 상한이다. 51 이상이면 400 — 전화번호가 들어 있는 응답이라 상한이 있다.
+ * ★ resultStatus 는 WON · LOST · PENDING 만. 그 외 값은 400.
+ * ★ 참여가 없어도 404 가 아니라 빈 목록과 0 집계를 준다.
+ *
+ * @param {{resultStatus?:'WON'|'LOST'|'PENDING'|null, page?:number, size?:number}} [opts]
+ */
+export async function loadParticipants(eventId, { resultStatus = null, page = 0, size = 20 } = {}) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여자 화면이 없다')
+  const q = new URLSearchParams({ page: String(page), size: String(size) })
+  if (resultStatus) q.set('resultStatus', resultStatus)
+  return requireApi().get(`/api/admin/events/${eventId}/participations?${q}`)
+}
+
+/**
+ * 당첨자 전체 — 페이지를 끝까지 모은다 (loadAdminEvents 와 같은 방식).
+ * ★ 서버에 CSV 엔드포인트가 아직 없어서 화면이 모아 만든다. size 상한이 50 이다.
+ */
+export async function loadAllParticipants(eventId, resultStatus = null) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여자 화면이 없다')
+  const out = []
+  for (let page = 0; ; page++) {
+    const d = await loadParticipants(eventId, { resultStatus, page, size: 50 })
+    out.push(...d.participants.content)
+    if (page + 1 >= d.participants.totalPages || d.participants.content.length === 0) return out
+  }
+}
+
 /* ──────────────────── LLM 생성 (SSE) ──────────────────── */
 
 /**
