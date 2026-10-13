@@ -1,0 +1,109 @@
+/* 팔레트를 템플릿 전용 포인트색(--tpl-*)에 연결한다 (#207)
+ *
+ * 팔레트는 포인트색을 --ev-primary 한 가지로 준다. 그런데 템플릿은 그 색을 세 곳에 쓴다.
+ * 한 값으로는 다 못 맞추므로 쓰임새별로 나눠서 연결한다.
+ *
+ *   밝은 바탕 위의 글자 · 흰 글자가 얹히는 채움   → --ev-primary-hover  (팔레트가 이미 진하게 골라 둔 값)
+ *   어두운 바탕 위의 글자 · 선                    → --ev-primary-on-dark (아래에서 만든다)
+ *   테두리 · 빛번짐 같은 장식                     → --ev-primary
+ *
+ * 왜 hover 인가: 밝은 팔레트 16종은 hover 위의 흰색 대비가 5.7 이상이다. 기본색은 summer(4.10) ·
+ * pastel(4.23) 처럼 흰색 위 글자 기준 4.5 에 못 미치는 것이 있다.
+ *
+ * 이 파일은 팔레트(01 · 02)와 템플릿(40) 뒤에 온다. 아래 규칙은 [class*="palette-"] 가 붙은 루트에만
+ * 걸리므로, 팔레트가 없으면 템플릿은 20-themes 의 지금 색 그대로다.
+ *
+ * ★ 새 템플릿 토큰(--tpl-*)을 만들면 여기 연결도 같이 추가한다.
+ *   안 하면 그 색만 팔레트를 안 따라간다 (tests/template-contrast.test.mjs 가 잡는다).
+ */
+
+/* ── 팔레트에서 파생하는 값 — 팔레트마다 따로 적지 않고 여기서 한 번에 만든다 ── */
+[class*="palette-"] {
+  /* 어두운 바탕용: 흰색과 섞어 밝힌다 (oklch 를 못 읽는 브라우저의 대체값) */
+  --ev-primary-on-dark: color-mix(in srgb, var(--ev-primary) 45%, white);
+  --ev-primary-on-dark-soft: color-mix(in oklab, var(--ev-primary-on-dark) 45%, white);
+  /* hover 보다 한 단계 더 진한 색 (버튼 그라데이션의 끝) */
+  --ev-primary-deep: color-mix(in oklab, var(--ev-primary-hover) 78%, black);
+}
+@supports (color: oklch(from red l c h)) {
+  [class*="palette-"] {
+    /* 색상 · 채도는 두고 밝기만 0.74 아래로 내려가지 않게 한다.
+       어두운 바탕 5곳(#121215 · #1e293b · #292524 · #3d1627 · #172554) 위에서 18종 모두 대비 4.95 이상.
+       night · esports 처럼 이미 밝은 기본색은 그대로 둔다 */
+    --ev-primary-on-dark: oklch(from var(--ev-primary) max(l, 0.74) c h);
+  }
+}
+
+/* ── 템플릿별 연결 ── */
+
+/* sports · launch: 어두운 히어로 위의 밝은 변종은 on-dark, 나머지는 진한 쪽 */
+.theme-sports[class*="palette-"],
+.theme-launch[class*="palette-"] {
+  --tpl-accent: var(--ev-primary-hover);
+  --tpl-accent-deep: var(--ev-primary-deep);
+  --tpl-accent-bright: var(--ev-primary-on-dark);
+  /* launch 의 --tpl-accent-ink(연한 바탕 위 짙은 글자)는 연결하지 않는다 — 쓰는 카드의 바탕이 안 바뀌기 때문 */
+}
+/* launch 의 진행 막대 · 입력창 포커스 테두리 (장식) */
+.theme-launch[class*="palette-"] { --tpl-accent-light: var(--ev-primary); }
+
+/* holiday: 히어로가 와인색(어두움)이라 연한 금색 둘은 on-dark 계열 */
+.theme-holiday[class*="palette-"] {
+  --tpl-accent: var(--ev-primary);
+  --tpl-accent-deep: var(--ev-primary-hover);
+  --tpl-accent-soft: var(--ev-primary-on-dark-soft);
+  --tpl-accent-light: var(--ev-primary-on-dark-soft);
+  --tpl-ribbon: var(--ev-primary-hover);
+  --tpl-step: var(--ev-primary-deep);
+  /* 복주머니 카드의 주황 (글자 · 버튼 · 호버 테두리) */
+  --tpl-warm: var(--ev-primary-hover);
+  --tpl-warm-deep: var(--ev-primary-deep);
+}
+/* 공유 .hero-title .highlight 는 --ev-accent-tag 를 쓰는데, 팔레트의 태그색은 밝은 바탕용이다
+   (valentine 의 #7f1d1d 는 와인색 히어로 위에서 대비 1.56) */
+.theme-holiday[class*="palette-"] .hl-hero { --ev-accent-tag: var(--ev-primary-on-dark); }
+
+/* vip: 포인트색 글자가 어두운 히어로 · 쿠폰 위에 있다. 밝은 단계 번호만 hover */
+.theme-vip[class*="palette-"] {
+  --tpl-accent: var(--ev-primary-on-dark);
+  --tpl-accent-light: var(--ev-primary-on-dark-soft);
+  --tpl-accent-deep: var(--ev-primary-hover);
+  /* 쿠폰 받기 버튼의 금색 그라데이션 끝 · 테두리 */
+  --tpl-gold: var(--ev-primary-on-dark);
+  --tpl-gold-deep: var(--ev-primary-hover);
+}
+/* 쿠폰 카드는 바탕이 밝은색(#fafaf9)으로 고정이다. 공유 .benefit-value 는 --ev-primary 를 쓰므로
+   night · esports 의 노랑 · 초록이 흰 바탕 위에 놓인다 (대비 1.8). 이 카드 안에서만 진하게 */
+.theme-vip[class*="palette-"] .vp-coupon .benefit-value { color: var(--ev-primary-deep); }
+
+/* sale: 전체가 어둡다 */
+.theme-sale[class*="palette-"] {
+  --tpl-accent: var(--ev-primary-on-dark);
+  --tpl-accent-hover: color-mix(in oklab, var(--ev-primary-on-dark) 85%, black);
+  --tpl-accent-soft: var(--ev-primary-on-dark-soft);
+}
+/* sale 안의 공유 블록(소제목 · 버튼)도 어두운 바탕 위에 있다.
+   같은 루트에서 --ev-primary 를 자기 값으로 다시 정의할 수는 없어(순환) 바로 아래 자식에 건다 */
+.theme-sale[class*="palette-"] > * {
+  --ev-primary: var(--ev-primary-on-dark);
+  --ev-primary-hover: var(--tpl-accent-hover);
+  --ev-gradient-cta: linear-gradient(var(--ev-primary-on-dark), var(--tpl-accent-hover));
+}
+
+/* ── 밝은 템플릿의 공유 블록 ──
+ * 소제목 · 혜택 값 · 태그 같은 공유 블록은 글자를 --ev-primary 로 칠한다. 밝은 팔레트의 기본색은 이 글자에 모자란 것이 있다
+ * (summer 4.10 · pastel 4.23). 템플릿 안에서는 밝은 바탕 위 글자 규칙(hover)을 따른다.
+ * sale 과 같은 이유로 루트가 아니라 바로 아래 자식에 건다. 템플릿 자신의 어두운 영역은 --tpl-* 를 쓰므로 영향이 없다.
+ * night · esports 는 기본색이 밝아서 제외한다. */
+:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports)) > * {
+  --ev-primary: var(--ev-primary-hover);
+}
+
+/* ── 공유 CTA 버튼 ──
+ * 팔레트의 CTA 그라데이션은 밝은 쪽 끝 때문에 18종 중 9종이 흰 글자 · 어두운 글자 어느 쪽도 4.5 에 못 미친다.
+ * 밝은 템플릿 4종은 hover → deep 의 진한 그라데이션과 흰 글자를 쓴다 (밝은 팔레트 한정 — night · esports 는 99 에서) */
+:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports)) {
+  --ev-gradient-cta: linear-gradient(135deg, var(--ev-primary-hover), var(--ev-primary-deep));
+}
+/* 40-templates/07-refinements.css 는 holiday · vip · launch 의 .cta-btn 글자를 템플릿 자기 그라데이션에 맞춰 어둡게 고정해 둔다 */
+:is(.theme-holiday, .theme-vip, .theme-launch)[class*="palette-"] .cta-btn { color: #ffffff; }
