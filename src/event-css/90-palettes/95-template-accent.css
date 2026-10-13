@@ -107,3 +107,14 @@
 }
 /* 40-templates/07-refinements.css 는 holiday · vip · launch 의 .cta-btn 글자를 템플릿 자기 그라데이션에 맞춰 어둡게 고정해 둔다 */
 :is(.theme-holiday, .theme-vip, .theme-launch)[class*="palette-"] .cta-btn { color: #ffffff; }
+
+/* holiday 고유 CTA도 흰 글자에 맞는 진한 팔레트 그라데이션을 사용한다. */
+.theme-holiday[class*="palette-"]:not(:is(.palette-night, .palette-esports)) [data-block="cta"] .cta-btn {
+  background: var(--ev-gradient-cta);
+  color: #ffffff;
+}
+
+/* 밝은·어두운 팔레트 사이에서도 글자색을 즉시 바꿔 대비를 유지한다. */
+.theme-holiday[class*="palette-"] [data-block="cta"] .cta-btn {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
