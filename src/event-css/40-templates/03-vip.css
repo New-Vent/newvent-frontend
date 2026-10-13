@@ -20,8 +20,8 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 2px;
-  color: #cca43b;
-  border: 1px solid #cca43b;
+  color: var(--tpl-accent);
+  border: 1px solid var(--tpl-accent);
   padding: 4px 12px;
   border-radius: 4px;
   margin-bottom: 14px;
@@ -44,7 +44,7 @@
 
 .theme-vip .vp-period {
   font-size: 12px;
-  color: #cca43b;
+  color: var(--tpl-accent);
   margin-top: 14px;
 }
 
@@ -73,7 +73,7 @@
 .theme-vip .vp-coupon-left {
   flex: 0 0 105px;
   background: #292524;
-  color: #cca43b;
+  color: var(--tpl-accent);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -91,7 +91,7 @@
   font-size: 22px;
   font-weight: 900;
   line-height: 1;
-  color: #fef08a;
+  color: var(--tpl-accent-light);
   letter-spacing: -0.5px;
 }
 
@@ -157,7 +157,7 @@
 .theme-vip .vp-step-num {
   font-size: 15px;
   font-weight: 800;
-  color: #b45309;
+  color: var(--tpl-accent-deep);
   font-family: serif, sans-serif;
   flex: 0 0 24px;
 }
@@ -170,7 +170,7 @@
 
 .theme-vip .vp-cta-btn {
   background: #1c1917;
-  color: #cca43b;
-  border: 1px solid #cca43b;
+  color: var(--tpl-accent);
+  border: 1px solid var(--tpl-accent);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }

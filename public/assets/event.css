@@ -223,6 +223,10 @@
   --ev-gradient-hero: linear-gradient(135deg, #090d16 0%, #1e293b 60%, #991b1b 100%);
   --ev-gradient-cta: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
   --ev-accent-tag: #f59e0b;
+  /* 템플릿 전용 포인트색 — 40-templates/01-sports.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  --tpl-accent: #dc2626;
+  --tpl-accent-bright: #ef4444;
+  --tpl-accent-deep: #991b1b;
 }
 
 /* 2. 명절 / 시즌 선물 (Warm Gold & Crimson) */
@@ -234,6 +238,13 @@
   --ev-gradient-hero: linear-gradient(135deg, #2b1055 0%, #591a3a 50%, #832729 100%);
   --ev-gradient-cta: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   --ev-accent-tag: #ef4444;
+  /* 템플릿 전용 포인트색 — 40-templates/02-holiday.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  --tpl-accent: #f59e0b;
+  --tpl-accent-deep: #d97706;
+  --tpl-accent-soft: #fde68a;
+  --tpl-accent-light: #fef08a;
+  --tpl-ribbon: #dc2626;
+  --tpl-step: #1b4332;
 }
 
 /* 3. 회원 감사 / VIP 프로모션 (Luxury Champagne Gold & Dark Indigo) */
@@ -245,6 +256,10 @@
   --ev-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%);
   --ev-gradient-cta: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
   --ev-accent-tag: #38bdf8;
+  /* 템플릿 전용 포인트색 — 40-templates/03-vip.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  --tpl-accent: #cca43b;
+  --tpl-accent-light: #fef08a;
+  --tpl-accent-deep: #b45309;
 }
 
 /* 4. 타임 세일 / 플래시 세일 (Vibrant Coral & Sunset Gradient) */
@@ -256,6 +271,9 @@
   --ev-gradient-hero: linear-gradient(135deg, #2f3542 0%, #ff4757 100%);
   --ev-gradient-cta: linear-gradient(135deg, #ff6b81 0%, #ff4757 100%);
   --ev-accent-tag: #ffa502;
+  /* 템플릿 전용 포인트색 — 40-templates/04-sale.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  --tpl-accent: #ccff00;
+  --tpl-accent-hover: #b8e600;
 }
 
 /* 5. 신규 런칭 / 사전예약 (Cyber Neon Cyan & Electric Violet) */
@@ -267,6 +285,11 @@
   --ev-gradient-hero: linear-gradient(135deg, #050515 0%, #1e1035 60%, #083344 100%);
   --ev-gradient-cta: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
   --ev-accent-tag: #a855f7;
+  /* 템플릿 전용 포인트색 — 40-templates/05-launch.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  --tpl-accent: #2563eb;
+  --tpl-accent-deep: #1d4ed8;
+  --tpl-accent-bright: #38bdf8;
+  --tpl-accent-ink: #1e3a8a;
 }
 
 /* ── 20-themes/02-basic.css ── */
@@ -3154,7 +3177,7 @@ body {
    ========================================================================== */
 .theme-sports .sp-hero {
   padding: 42px 24px;
-  background: radial-gradient(circle at 85% 20%, rgba(220, 38, 38, 0.22) 0%, transparent 60%),
+  background: radial-gradient(circle at 85% 20%, color-mix(in srgb, var(--tpl-accent) 22%, transparent) 0%, transparent 60%),
               linear-gradient(145deg, #090e17 0%, #111827 50%, #1e1b4b 100%);
 }
 
@@ -3181,8 +3204,8 @@ body {
 }
 
 .theme-sports .sp-title .highlight {
-  color: #ef4444;
-  text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  color: var(--tpl-accent-bright);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--tpl-accent-bright) 40%, transparent);
 }
 
 .theme-sports .sp-desc {
@@ -3195,10 +3218,10 @@ body {
 .theme-sports .sp-scoreboard {
   flex: 0 0 230px;
   background: rgba(15, 23, 42, 0.9);
-  border: 2px solid #dc2626;
+  border: 2px solid var(--tpl-accent);
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(220, 38, 38, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 15px color-mix(in srgb, var(--tpl-accent) 15%, transparent);
   backdrop-filter: blur(8px);
 }
 
@@ -3206,7 +3229,7 @@ body {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1px;
-  color: #ef4444;
+  color: var(--tpl-accent-bright);
   text-align: center;
   margin-bottom: 8px;
 }
@@ -3227,7 +3250,7 @@ body {
 
 .theme-sports .sp-sb-vs {
   font-size: 11px;
-  color: #ef4444;
+  color: var(--tpl-accent-bright);
   font-weight: 900;
 }
 
@@ -3255,7 +3278,7 @@ body {
   color: #94a3b8;
   text-align: center;
   margin-top: 8px;
-  background: rgba(220, 38, 38, 0.12);
+  background: color-mix(in srgb, var(--tpl-accent) 12%, transparent);
   padding: 4px 6px;
   border-radius: 4px;
 }
@@ -3263,11 +3286,11 @@ body {
 /* Featured Prize (Large 1st) */
 .theme-sports .sp-prize-main {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  border: 2px solid #ef4444;
+  border: 2px solid var(--tpl-accent-bright);
   border-radius: 16px;
   padding: 22px;
   margin-bottom: 14px;
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.12);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--tpl-accent) 12%, transparent);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -3285,8 +3308,8 @@ body {
   width: 64px;
   height: 64px;
   font-size: 34px;
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: color-mix(in srgb, var(--tpl-accent-bright) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tpl-accent-bright) 40%, transparent);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -3303,7 +3326,7 @@ body {
 .theme-sports .sp-value-lg {
   font-size: 17px;
   font-weight: 900;
-  color: #ef4444;
+  color: var(--tpl-accent-bright);
   margin-top: 4px;
 }
 
@@ -3334,7 +3357,7 @@ body {
 .theme-sports .sp-prize-sub:hover {
   transform: translateY(-4px);
   box-shadow: var(--ev-shadow-lg);
-  border-color: #ef4444;
+  border-color: var(--tpl-accent-bright);
 }
 
 /* Steps: Ticket Style */
@@ -3350,7 +3373,7 @@ body {
   gap: 16px;
   background: #ffffff;
   border: 2px dashed #cbd5e1;
-  border-left: 6px solid #dc2626;
+  border-left: 6px solid var(--tpl-accent);
   border-radius: 10px;
   padding: 16px 18px;
   position: relative;
@@ -3359,13 +3382,13 @@ body {
 
 .theme-sports .sp-ticket:hover {
   transform: translateX(4px);
-  border-color: #ef4444;
+  border-color: var(--tpl-accent-bright);
 }
 
 .theme-sports .sp-ticket-num {
   font-size: 20px;
   font-weight: 900;
-  color: #dc2626;
+  color: var(--tpl-accent);
   font-family: monospace, sans-serif;
   letter-spacing: -1px;
   flex: 0 0 32px;
@@ -3379,10 +3402,10 @@ body {
 }
 
 .theme-sports .sp-cta-btn {
-  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  background: linear-gradient(135deg, var(--tpl-accent) 0%, var(--tpl-accent-deep) 100%);
   font-weight: 900;
   letter-spacing: 0.5px;
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--tpl-accent) 40%, transparent);
 }
 
 /* ── 40-templates/02-holiday.css ── */
@@ -3397,7 +3420,7 @@ body {
 
 .theme-holiday .hl-hero {
   padding: 52px 24px 40px;
-  background: radial-gradient(circle at 50% 10%, rgba(245, 158, 11, 0.18) 0%, transparent 65%),
+  background: radial-gradient(circle at 50% 10%, color-mix(in srgb, var(--tpl-accent) 18%, transparent) 0%, transparent 65%),
               linear-gradient(180deg, #3d1627 0%, #2c1220 100%);
   position: relative;
   border-radius: 0 0 24px 24px;
@@ -3415,7 +3438,7 @@ body {
 
 .theme-holiday .hl-desc {
   font-size: 14px;
-  color: #fde68a;
+  color: var(--tpl-accent-soft);
   line-height: 1.6;
   word-break: keep-all;
 }
@@ -3423,25 +3446,25 @@ body {
 .theme-holiday .hl-period-ribbon {
   display: inline-block;
   margin-top: 16px;
-  background: rgba(253, 230, 138, 0.15);
-  border: 1px solid rgba(253, 230, 138, 0.35);
+  background: color-mix(in srgb, var(--tpl-accent-soft) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tpl-accent-soft) 35%, transparent);
   padding: 7px 18px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  color: #fef08a;
+  color: var(--tpl-accent-light);
 }
 
 /* Featured Gift Wide with Ribbon decoration */
 .theme-holiday .hl-gift-featured {
   background: #ffffff;
-  border: 2px solid #f59e0b;
+  border: 2px solid var(--tpl-accent);
   border-radius: 20px;
   padding: 22px;
   margin-bottom: 14px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(217, 119, 6, 0.08);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--tpl-accent-deep) 8%, transparent);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -3460,7 +3483,7 @@ body {
   right: 28px;
   width: 24px;
   height: 38px;
-  background: #dc2626;
+  background: var(--tpl-ribbon);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
 }
 
@@ -3469,7 +3492,7 @@ body {
   height: 64px;
   font-size: 32px;
   background: #fffbeb;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--tpl-accent-soft);
   border-radius: 16px;
 }
 
@@ -3519,14 +3542,14 @@ body {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #1b4332;
+  background: var(--tpl-step);
   color: #fff;
   font-weight: 800;
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(27, 67, 50, 0.25);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--tpl-step) 25%, transparent);
   flex-shrink: 0;
 }
 
@@ -3565,8 +3588,8 @@ body {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 2px;
-  color: #cca43b;
-  border: 1px solid #cca43b;
+  color: var(--tpl-accent);
+  border: 1px solid var(--tpl-accent);
   padding: 4px 12px;
   border-radius: 4px;
   margin-bottom: 14px;
@@ -3589,7 +3612,7 @@ body {
 
 .theme-vip .vp-period {
   font-size: 12px;
-  color: #cca43b;
+  color: var(--tpl-accent);
   margin-top: 14px;
 }
 
@@ -3618,7 +3641,7 @@ body {
 .theme-vip .vp-coupon-left {
   flex: 0 0 105px;
   background: #292524;
-  color: #cca43b;
+  color: var(--tpl-accent);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3636,7 +3659,7 @@ body {
   font-size: 22px;
   font-weight: 900;
   line-height: 1;
-  color: #fef08a;
+  color: var(--tpl-accent-light);
   letter-spacing: -0.5px;
 }
 
@@ -3702,7 +3725,7 @@ body {
 .theme-vip .vp-step-num {
   font-size: 15px;
   font-weight: 800;
-  color: #b45309;
+  color: var(--tpl-accent-deep);
   font-family: serif, sans-serif;
   flex: 0 0 24px;
 }
@@ -3715,8 +3738,8 @@ body {
 
 .theme-vip .vp-cta-btn {
   background: #1c1917;
-  color: #cca43b;
-  border: 1px solid #cca43b;
+  color: var(--tpl-accent);
+  border: 1px solid var(--tpl-accent);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
@@ -3735,7 +3758,7 @@ body {
 .theme-sale .fs-hero {
   padding: 36px 20px 28px;
   background: #000000;
-  border-bottom: 2px solid #ccff00;
+  border-bottom: 2px solid var(--tpl-accent);
   text-align: center;
 }
 
@@ -3748,7 +3771,7 @@ body {
 }
 
 .theme-sale .fs-deal-badge {
-  background: #ccff00;
+  background: var(--tpl-accent);
   color: #000000;
   font-size: 12px;
   font-weight: 900;
@@ -3766,7 +3789,7 @@ body {
 }
 
 .theme-sale .fs-title .highlight {
-  color: #ccff00;
+  color: var(--tpl-accent);
 }
 
 .theme-sale .fs-desc {
@@ -3812,7 +3835,7 @@ body {
   align-items: center;
   justify-content: center;
   background: #000000;
-  color: #ccff00;
+  color: var(--tpl-accent);
   font-family: monospace, sans-serif;
   font-size: 20px;
   font-weight: 900;
@@ -3824,7 +3847,7 @@ body {
 }
 
 .theme-sale .fs-timer-sep {
-  color: #ccff00;
+  color: var(--tpl-accent);
   font-weight: 900;
   font-size: 18px;
 }
@@ -3854,7 +3877,7 @@ body {
 }
 
 .theme-sale .fs-deal-item:hover {
-  border-color: #ccff00;
+  border-color: var(--tpl-accent);
 }
 
 .theme-sale .fs-deal-icon {
@@ -3893,7 +3916,7 @@ body {
 
 .theme-sale .fs-deal-tag {
   display: inline-block;
-  background: #ccff00;
+  background: var(--tpl-accent);
   color: #000;
   font-size: 10px;
   font-weight: 900;
@@ -3932,7 +3955,7 @@ body {
 .theme-sale .fs-step-compact-num {
   font-size: 11px;
   font-weight: 900;
-  color: #ccff00;
+  color: var(--tpl-accent);
   margin-bottom: 4px;
 }
 
@@ -3951,17 +3974,17 @@ body {
 
 /* Rectangular CTA */
 .theme-sale .fs-cta-btn {
-  background: #ccff00;
+  background: var(--tpl-accent);
   color: #000000;
   border-radius: 2px;
   font-weight: 900;
   letter-spacing: 0.5px;
   border: none;
-  box-shadow: 0 6px 20px rgba(204, 255, 0, 0.35);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--tpl-accent) 35%, transparent);
 }
 
 .theme-sale .fs-cta-btn:hover {
-  background: #b8e600;
+  background: var(--tpl-accent-hover);
 }
 
 /* ── 40-templates/05-launch.css ── */
@@ -4001,7 +4024,7 @@ body {
 }
 
 .theme-launch .lc-title .highlight {
-  color: #38bdf8;
+  color: var(--tpl-accent-bright);
 }
 
 .theme-launch .lc-desc {
@@ -4013,7 +4036,7 @@ body {
 
 .theme-launch .lc-period {
   font-size: 11px;
-  color: #38bdf8;
+  color: var(--tpl-accent-bright);
   font-weight: 600;
 }
 
@@ -4074,12 +4097,12 @@ body {
   border-radius: 4px;
   padding: 5px 8px;
   font-size: 9px;
-  color: #38bdf8;
+  color: var(--tpl-accent-bright);
 }
 
 .theme-launch .lc-mockup-preview-card {
   background: #0f172a;
-  border: 1px dashed #38bdf8;
+  border: 1px dashed var(--tpl-accent-bright);
   border-radius: 4px;
   padding: 8px;
   text-align: center;
@@ -4108,7 +4131,7 @@ body {
 /* Benefits: 1 Featured Wide + 2 Sub */
 .theme-launch .lc-prize-featured {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 2px solid #2563eb;
+  border: 2px solid var(--tpl-accent);
   border-radius: 16px;
   padding: 22px;
   margin-bottom: 14px;
@@ -4128,8 +4151,8 @@ body {
   width: 64px;
   height: 64px;
   font-size: 34px;
-  background: rgba(37, 99, 235, 0.15);
-  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: color-mix(in srgb, var(--tpl-accent) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tpl-accent) 35%, transparent);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -4140,13 +4163,13 @@ body {
 .theme-launch .lc-name-lg {
   font-size: 18px;
   font-weight: 800;
-  color: #1e3a8a;
+  color: var(--tpl-accent-ink);
 }
 
 .theme-launch .lc-value-lg {
   font-size: 17px;
   font-weight: 900;
-  color: #2563eb;
+  color: var(--tpl-accent);
   margin-top: 4px;
 }
 
@@ -4187,7 +4210,7 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #2563eb;
+  background: var(--tpl-accent);
   color: #fff;
   font-size: 12px;
   font-weight: 800;
@@ -4199,7 +4222,7 @@ body {
 .theme-launch .lc-timeline-phase {
   font-size: 11px;
   font-weight: 800;
-  color: #2563eb;
+  color: var(--tpl-accent);
 }
 
 .theme-launch .lc-timeline-title {
@@ -4216,8 +4239,8 @@ body {
 }
 
 .theme-launch .lc-cta-btn {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+  background: linear-gradient(135deg, var(--tpl-accent) 0%, var(--tpl-accent-deep) 100%);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--tpl-accent) 35%, transparent);
 }
 
 /* ── 40-templates/06-responsive.css ── */
