@@ -9,7 +9,7 @@
 
 .theme-holiday .hl-hero {
   padding: 52px 24px 40px;
-  background: radial-gradient(circle at 50% 10%, rgba(245, 158, 11, 0.18) 0%, transparent 65%),
+  background: radial-gradient(circle at 50% 10%, color-mix(in srgb, var(--tpl-accent) 18%, transparent) 0%, transparent 65%),
               linear-gradient(180deg, #3d1627 0%, #2c1220 100%);
   position: relative;
   border-radius: 0 0 24px 24px;
@@ -27,7 +27,7 @@
 
 .theme-holiday .hl-desc {
   font-size: 14px;
-  color: #fde68a;
+  color: var(--tpl-accent-soft);
   line-height: 1.6;
   word-break: keep-all;
 }
@@ -35,25 +35,25 @@
 .theme-holiday .hl-period-ribbon {
   display: inline-block;
   margin-top: 16px;
-  background: rgba(253, 230, 138, 0.15);
-  border: 1px solid rgba(253, 230, 138, 0.35);
+  background: color-mix(in srgb, var(--tpl-accent-soft) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tpl-accent-soft) 35%, transparent);
   padding: 7px 18px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  color: #fef08a;
+  color: var(--tpl-accent-light);
 }
 
 /* Featured Gift Wide with Ribbon decoration */
 .theme-holiday .hl-gift-featured {
   background: #ffffff;
-  border: 2px solid #f59e0b;
+  border: 2px solid var(--tpl-accent);
   border-radius: 20px;
   padding: 22px;
   margin-bottom: 14px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(217, 119, 6, 0.08);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--tpl-accent-deep) 8%, transparent);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -72,7 +72,7 @@
   right: 28px;
   width: 24px;
   height: 38px;
-  background: #dc2626;
+  background: var(--tpl-ribbon);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
 }
 
@@ -81,7 +81,7 @@
   height: 64px;
   font-size: 32px;
   background: #fffbeb;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--tpl-accent-soft);
   border-radius: 16px;
 }
 
@@ -131,14 +131,14 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #1b4332;
+  background: var(--tpl-step);
   color: #fff;
   font-weight: 800;
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(27, 67, 50, 0.25);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--tpl-step) 25%, transparent);
   flex-shrink: 0;
 }
 

@@ -34,7 +34,7 @@
 }
 
 .theme-launch .lc-title .highlight {
-  color: #38bdf8;
+  color: var(--tpl-accent-bright);
 }
 
 .theme-launch .lc-desc {
@@ -46,7 +46,7 @@
 
 .theme-launch .lc-period {
   font-size: 11px;
-  color: #38bdf8;
+  color: var(--tpl-accent-bright);
   font-weight: 600;
 }
 
@@ -107,12 +107,12 @@
   border-radius: 4px;
   padding: 5px 8px;
   font-size: 9px;
-  color: #38bdf8;
+  color: var(--tpl-accent-bright);
 }
 
 .theme-launch .lc-mockup-preview-card {
   background: #0f172a;
-  border: 1px dashed #38bdf8;
+  border: 1px dashed var(--tpl-accent-bright);
   border-radius: 4px;
   padding: 8px;
   text-align: center;
@@ -141,7 +141,7 @@
 /* Benefits: 1 Featured Wide + 2 Sub */
 .theme-launch .lc-prize-featured {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 2px solid #2563eb;
+  border: 2px solid var(--tpl-accent);
   border-radius: 16px;
   padding: 22px;
   margin-bottom: 14px;
@@ -161,8 +161,8 @@
   width: 64px;
   height: 64px;
   font-size: 34px;
-  background: rgba(37, 99, 235, 0.15);
-  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: color-mix(in srgb, var(--tpl-accent) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tpl-accent) 35%, transparent);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -173,13 +173,13 @@
 .theme-launch .lc-name-lg {
   font-size: 18px;
   font-weight: 800;
-  color: #1e3a8a;
+  color: var(--tpl-accent-ink);
 }
 
 .theme-launch .lc-value-lg {
   font-size: 17px;
   font-weight: 900;
-  color: #2563eb;
+  color: var(--tpl-accent);
   margin-top: 4px;
 }
 
@@ -220,7 +220,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #2563eb;
+  background: var(--tpl-accent);
   color: #fff;
   font-size: 12px;
   font-weight: 800;
@@ -232,7 +232,7 @@
 .theme-launch .lc-timeline-phase {
   font-size: 11px;
   font-weight: 800;
-  color: #2563eb;
+  color: var(--tpl-accent);
 }
 
 .theme-launch .lc-timeline-title {
@@ -249,6 +249,6 @@
 }
 
 .theme-launch .lc-cta-btn {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+  background: linear-gradient(135deg, var(--tpl-accent) 0%, var(--tpl-accent-deep) 100%);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--tpl-accent) 35%, transparent);
 }

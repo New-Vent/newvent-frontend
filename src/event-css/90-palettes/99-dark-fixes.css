@@ -16,3 +16,21 @@
 .palette-esports [data-block="faq"].v-faq-brutal:not(.ev-block) summary { color: #111; }
 .palette-esports [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #04130a; }
 /* 테두리형 버튼(outline · gradient-border)은 바탕이 어둡다 — 위의 어두운 글씨 보정에서 뺐다 */
+
+/* ★ 위 두 줄은 "머리글 바탕이 브랜드색(금색 · 네온)이라 글자를 어둡게" 다. 어두운 표(v-compare-dark)는
+     머리글 바탕이 #111827 이라 그 어두운 글자가 그대로 묻혔다 — 머리글이 통째로 안 보였다 (계산값 실측) */
+:is(.palette-night, .palette-esports) [data-block="compare"].v-compare-dark:not(.ev-block) th { color: #f9fafb; }
+
+/* 밝은 템플릿에 어두운 팔레트를 붙였을 때 — 글자와 배경 중 한쪽만 고정된 곳을 팔레트에 맞춘다 (#211)
+ * night · esports 는 글자색(--ev-text-main · --ev-text-muted)을 밝게 바꾼다.
+ * 그런데 일부 템플릿 카드는 배경이 #ffffff 로 고정돼 있어 흰 카드 위에 밝은 글자가 된다.
+ * 반대로 vip 의 단계 번호는 글자가 #b45309 로 고정돼 어두운 카드 위에서 흐려진다.
+ * 밝은 팔레트와 팔레트 없음일 때는 바뀌지 않는다 (이 규칙은 어두운 팔레트에만 걸린다). */
+.theme-sports:is(.palette-night, .palette-esports) :is(.sp-prize-sub, .sp-ticket) {
+  background: var(--ev-surface);
+  /* border-left 는 빨간 포인트 테두리라 그대로 둔다 — 세 변만 바꾼다 */
+  border-top-color: var(--ev-border);
+  border-right-color: var(--ev-border);
+  border-bottom-color: var(--ev-border);
+}
+.theme-vip:is(.palette-night, .palette-esports) .vp-step-num { color: var(--ev-primary); }

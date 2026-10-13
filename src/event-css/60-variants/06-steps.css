@@ -195,7 +195,10 @@
 
 [data-block="steps"].v-steps-bubble:not(.ev-block) ol { margin: 0; padding: 0; list-style: none; counter-reset: nv-step; }
 [data-block="steps"].v-steps-bubble:not(.ev-block) li {
+  /* ★ fit-content 만 두면 짧은 단계는 글자 폭만큼만 잡혀 왼쪽에 몰린다 — 영역의 3분의 2가 비었다 (화면 확인).
+       말풍선 모양은 지키되 최소 폭을 준다 */
   width: fit-content;
+  min-width: min(100%, 62%);
   max-width: 90%;
   margin: 0 0 14px;
   padding: 12px 16px;

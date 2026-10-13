@@ -3,7 +3,7 @@
    ========================================================================== */
 .theme-sports .sp-hero {
   padding: 42px 24px;
-  background: radial-gradient(circle at 85% 20%, rgba(220, 38, 38, 0.22) 0%, transparent 60%),
+  background: radial-gradient(circle at 85% 20%, color-mix(in srgb, var(--tpl-accent) 22%, transparent) 0%, transparent 60%),
               linear-gradient(145deg, #090e17 0%, #111827 50%, #1e1b4b 100%);
 }
 
@@ -30,8 +30,8 @@
 }
 
 .theme-sports .sp-title .highlight {
-  color: #ef4444;
-  text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  color: var(--tpl-accent-bright);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--tpl-accent-bright) 40%, transparent);
 }
 
 .theme-sports .sp-desc {
@@ -44,10 +44,10 @@
 .theme-sports .sp-scoreboard {
   flex: 0 0 230px;
   background: rgba(15, 23, 42, 0.9);
-  border: 2px solid #dc2626;
+  border: 2px solid var(--tpl-accent);
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(220, 38, 38, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 15px color-mix(in srgb, var(--tpl-accent) 15%, transparent);
   backdrop-filter: blur(8px);
 }
 
@@ -55,7 +55,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1px;
-  color: #ef4444;
+  color: var(--tpl-accent-bright);
   text-align: center;
   margin-bottom: 8px;
 }
@@ -76,7 +76,7 @@
 
 .theme-sports .sp-sb-vs {
   font-size: 11px;
-  color: #ef4444;
+  color: var(--tpl-accent-bright);
   font-weight: 900;
 }
 
@@ -104,7 +104,7 @@
   color: #94a3b8;
   text-align: center;
   margin-top: 8px;
-  background: rgba(220, 38, 38, 0.12);
+  background: color-mix(in srgb, var(--tpl-accent) 12%, transparent);
   padding: 4px 6px;
   border-radius: 4px;
 }
@@ -112,11 +112,11 @@
 /* Featured Prize (Large 1st) */
 .theme-sports .sp-prize-main {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  border: 2px solid #ef4444;
+  border: 2px solid var(--tpl-accent-bright);
   border-radius: 16px;
   padding: 22px;
   margin-bottom: 14px;
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.12);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--tpl-accent) 12%, transparent);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -134,8 +134,8 @@
   width: 64px;
   height: 64px;
   font-size: 34px;
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: color-mix(in srgb, var(--tpl-accent-bright) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tpl-accent-bright) 40%, transparent);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -152,7 +152,7 @@
 .theme-sports .sp-value-lg {
   font-size: 17px;
   font-weight: 900;
-  color: #ef4444;
+  color: var(--tpl-accent-bright);
   margin-top: 4px;
 }
 
@@ -183,7 +183,7 @@
 .theme-sports .sp-prize-sub:hover {
   transform: translateY(-4px);
   box-shadow: var(--ev-shadow-lg);
-  border-color: #ef4444;
+  border-color: var(--tpl-accent-bright);
 }
 
 /* Steps: Ticket Style */
@@ -199,7 +199,7 @@
   gap: 16px;
   background: #ffffff;
   border: 2px dashed #cbd5e1;
-  border-left: 6px solid #dc2626;
+  border-left: 6px solid var(--tpl-accent);
   border-radius: 10px;
   padding: 16px 18px;
   position: relative;
@@ -208,13 +208,13 @@
 
 .theme-sports .sp-ticket:hover {
   transform: translateX(4px);
-  border-color: #ef4444;
+  border-color: var(--tpl-accent-bright);
 }
 
 .theme-sports .sp-ticket-num {
   font-size: 20px;
   font-weight: 900;
-  color: #dc2626;
+  color: var(--tpl-accent);
   font-family: monospace, sans-serif;
   letter-spacing: -1px;
   flex: 0 0 32px;
@@ -228,8 +228,8 @@
 }
 
 .theme-sports .sp-cta-btn {
-  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  background: linear-gradient(135deg, var(--tpl-accent) 0%, var(--tpl-accent-deep) 100%);
   font-weight: 900;
   letter-spacing: 0.5px;
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--tpl-accent) 40%, transparent);
 }
