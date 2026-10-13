@@ -244,13 +244,35 @@ export async function loadPreview(eventId) {
 /**
  * AI 대화 수정 시작 → { jobId, phase, percent }. 결과는 generationStatus 로 폴링한다 (생성과 같은 작업 자리).
  * ★ 기준은 항상 **최신 버전** 이다 — 다른 버전에서 이어 가려면 restoreVersion 으로 먼저 최신으로 가져온다
- * ★ 채팅 내역은 서버에 남지 않는다 (ChatMessage 저장 미구현) — 화면이 세션 동안만 들고 있다
+ * ★ 채팅 내역은 서버에 저장하며 loadChatMessages로 조회한다.
  * @param {string[]} [blocks] 미리보기에서 고른 영역(data-block). 있으면 그 영역만 고친다 (최대 4).
  *                            비면 보내지 않는다 — 서버가 요청문으로 영역을 정한다. 유의사항 · 없는 영역은 400 (EDIT400-0)
  */
 export async function startEdit(eventId, requestText, blocks = []) {
   return requireApi().post(`/api/admin/events/${eventId}/edit`,
     blocks.length ? { requestText, blocks } : { requestText })
+}
+
+/** 이벤트의 저장된 AI 대화를 오래된 순서로 모두 조회한다. */
+export async function loadChatMessages(eventId) {
+  const messages = []
+
+  for (let page = 0; ; page++) {
+    const params = new URLSearchParams({
+      page: String(page),
+      size: '100',
+    })
+
+    const data = await requireApi().get(
+      `/api/admin/events/${eventId}/chat-messages?${params}`,
+    )
+
+    messages.push(...data.content)
+
+    if (data.content.length === 0 || page + 1 >= data.totalPages) {
+      return messages
+    }
+  }
 }
 
 /**

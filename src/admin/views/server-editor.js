@@ -17,7 +17,8 @@
  * ★ 수정 기준은 항상 최신 버전이다 (AI 수정 · 직접 수정 모두)
  *   이전 버전에서 이어 가려면 이력 화면의 "이 버전에서 이어서 작업" 이 그 버전을 최신으로 가져온다.
  *
- * ★ AI 대화 내역은 서버에 남지 않는다 (백엔드 ChatMessage 저장 미구현) — 이 탭이 열려 있는 동안만 보인다
+ * ★ AI 대화 내역은 서버에 저장된다.
+ *   편집 화면을 열 때 조회하고, 현재 작업의 대화는 화면에 즉시 추가한다.
  *
  * ★ 목업 편집 화면(editor.js)을 쓰지 않는 이유
  *   그 화면은 목업 스냅샷(제목 · 소개 · 혜택 제목 · 버튼 필드)으로 그리고 고친다.
@@ -36,7 +37,7 @@ import { serverFrame } from '@shared/preview/document.js'
 import { collectTexts, matches, normalize, textsOf } from '@shared/preview/server-texts.js'
 import {
   cancelGeneration, directEdit, endEvent, generationStatus,
-  loadAdminEvent, loadPreview, loadVersions,
+  loadAdminEvent, loadChatMessages, loadPreview, loadVersions,
   publishEvent, saveCheckpoint, startEdit, startGenerate, updateEventInfo,
 } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
@@ -69,6 +70,7 @@ function openServerEditor(id, { jobId = null, request = null, startError = null 
     request,                           // 이번에 보낸 생성 요청문 (AI 생성)
     prompt: request || '',             // 다시 만들기 입력칸
     chatInput: '',
+    chatError: null,
     tab: 'chat',                       // chat | direct
     selected: [],                      // AI 대화 — 미리보기에서 고른 영역(data-block). 최대 MAX_SELECTED
     direct: freshDirect(),
@@ -87,14 +89,49 @@ function ensureServerEditor(id, rerender) {
   else if (s.status === 'ready' && s.job && !s.job.done && !s.polling) poll(s, rerender)
 }
 
+async function restoreChatHistory(s) {
+  // 이전 접속의 화면 캐시 대신 서버 이력을 다시 읽는다.
+  CHATS[s.id] = [{ role: 'assistant', text: GREETING }]
+  s.chatError = null
+
+  try {
+    const messages = await loadChatMessages(s.id)
+
+    if (ui.serverEditor !== s) return
+
+    CHATS[s.id] = messages.length
+      ? messages.map((message) => ({
+          id: message.id,
+          role: message.role === 'ADMIN' ? 'user' : 'assistant',
+          text: message.content,
+          tone: message.status === 'COMPLETED'
+            ? 'DONE'
+            : message.status,
+          blocks: message.targetBlock
+            ? message.targetBlock.split(',').map((block) => block.trim())
+                .filter(Boolean)
+            : [],
+        }))
+      : [{ role: 'assistant', text: GREETING }]
+  } catch (error) {
+    s.chatError = error?.message || '이전 대화를 불러오지 못했어요.'
+  }
+}
+
 async function load(s, rerender) {
   s.status = 'loading'
   try {
     const [event, preview, versions] = await Promise.all([
-      loadAdminEvent(s.id), loadPreview(s.id), loadVersions(s.id).catch(() => null),
+      loadAdminEvent(s.id), loadPreview(s.id), loadVersions(s.id).catch(() => null), restoreChatHistory(s),
     ])
+
+    // 조회 도중 다른 이벤트로 이동했다면 화면을 갱신하지 않는다.
+    if (ui.serverEditor !== s) return
+
     Object.assign(s, { event, preview, versions: versions?.versions ?? null, status: 'ready', error: null })
   } catch (e) {
+    if (ui.serverEditor !== s) return
+
     Object.assign(s, { status: 'error', error: e?.message || '이벤트를 불러오지 못했어요.' })
   }
   rerender()
@@ -635,6 +672,11 @@ function chatPanel(s) {
     + (m.role === 'user' ? '관리자' : 'NewVent 어시스턴트' + (m.tone && m.tone !== 'DONE' ? ' · ' + (RESULT[m.tone]?.[1] || '') : ''))
     + '</small>' + tags(m) + esc(m.text) + '</div>').join('')
   return '<div class="server-scroll" id="server-scroll">'
+    + (s.chatError
+      ? '<p class="helper" role="alert">'
+        + esc(s.chatError)
+        + ' 편집 화면을 다시 열면 재조회합니다.</p>'
+      : '')
     + '<div class="chat" id="chat-log" role="log" aria-label="AI 대화" aria-live="polite">' + log + '</div>'
     + '<details class="server-regen"><summary>처음부터 다시 만들기</summary>' + generateForm(s) + '</details></div>'
     + '<form class="server-foot" id="server-chat-form" aria-busy="' + busy + '">'
