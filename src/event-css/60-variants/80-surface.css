@@ -129,3 +129,47 @@
 [data-block].v-surface-purple:not(.ev-block) { --sf-bg: #faf5ff; --sf-border: #e9d5ff; --sf-text: #1e293b; --sf-accent: #7e22ce; }
 [data-block].v-surface-pink:not(.ev-block)   { --sf-bg: #fdf2f8; --sf-border: #fbcfe8; --sf-text: #1e293b; --sf-accent: #be185d; }
 [data-block].v-surface-gray:not(.ev-block)   { --sf-bg: #f8fafc; --sf-border: #e2e8f0; --sf-text: #1e293b; --sf-accent: #334155; }
+
+/* ── 바탕을 바꾸면 잉크도 같이 바꾼다 ───────────────────────────────────────
+ *
+ * ★ 위 규칙들은 바탕과 p · li · dt · dd 의 글자색만 정했다. 그런데 제목 · 표 칸 · 단계 제목 · 혜택 이름은
+ *   테마가 var(--ev-text-main) 으로 직접 칠한다. 그래서
+ *     어두운 배경(v-surface-dark) + 밝은 색감   → 어두운 바탕 위 어두운 글자 (혜택 이름 · 단계 제목)
+ *     색 지정 배경(v-surface-blue …) + 어두운 색감 → 밝은 바탕 위 밝은 글자 (표 값 · 단계 제목)
+ *   가 됐다 (계산값 실측).
+ * ★ 요소를 하나씩 쫓지 않고 **변수를 영역 안에서 다시 정한다.** 테마가 무엇을 칠하든 같은 변수를 읽는다.
+ *   색감(90-palettes)은 페이지 루트에 변수를 걸므로, 영역에 건 값이 더 가까워서 이긴다
+ */
+[data-block].v-surface-dark:not(.ev-block) {
+  --ev-text-main: #f8fafc;
+  --ev-text-muted: rgba(248, 250, 252, 0.76);
+  --ev-text-light: rgba(248, 250, 252, 0.6);
+  --ev-surface: rgba(255, 255, 255, 0.06);
+  --ev-surface-subtle: rgba(255, 255, 255, 0.09);
+  --ev-border: rgba(255, 255, 255, 0.16);
+  --ev-primary-light: rgba(255, 255, 255, 0.14);
+}
+/* 어두운 바탕에서 브랜드색 글자(숫자 · 강조)는 밝게 섞는다 — 진한 파랑은 남색 바탕에 묻힌다 */
+[data-block].v-surface-dark:not(.ev-block) :is(strong, .t-accent, .benefit-value, .sub-label, td, th) { color: inherit; }
+[data-block].v-surface-dark:not(.ev-block) :is(.benefit-name, .step-title, .title, h2, td) { color: var(--ev-text-main); }
+
+[data-block]:is(.v-surface-blue, .v-surface-green, .v-surface-yellow, .v-surface-orange,
+                .v-surface-red, .v-surface-purple, .v-surface-pink, .v-surface-gray):not(.ev-block) {
+  --ev-text-main: #1e293b;
+  --ev-text-muted: #475569;
+  --ev-text-light: #64748b;
+  --ev-surface: #ffffff;
+  --ev-surface-subtle: rgba(255, 255, 255, 0.72);
+  --ev-border: var(--sf-border);
+  --ev-primary: var(--sf-accent);
+  --ev-primary-hover: var(--sf-accent);
+  --ev-primary-light: color-mix(in srgb, var(--sf-accent) 12%, #ffffff);
+}
+[data-block]:is(.v-surface-blue, .v-surface-green, .v-surface-yellow, .v-surface-orange,
+                .v-surface-red, .v-surface-purple, .v-surface-pink, .v-surface-gray):not(.ev-block) :is(.benefit-name, .step-title, .title, td) {
+  color: var(--ev-text-main);
+}
+[data-block]:is(.v-surface-blue, .v-surface-green, .v-surface-yellow, .v-surface-orange,
+                .v-surface-red, .v-surface-purple, .v-surface-pink, .v-surface-gray):not(.ev-block) :is(.benefit-desc, .step-desc, td:first-child) {
+  color: var(--ev-text-muted);
+}

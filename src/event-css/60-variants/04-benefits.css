@@ -202,3 +202,53 @@
   font-size: 0.92rem;
   text-align: center;
 }
+
+/* ── 벤토 — 크기가 다른 칸을 섞은 격자. 첫 항목이 큰 칸(2×2), 나머지는 작은 칸 ──
+ *
+ * ★ 칸 크기는 순서로 정한다. 모델은 class 이름만 고른다 (registry/Variant.java 의 v-benefits-bento)
+ * ★ 3개 미만이면 백엔드가 class 를 뗀다 (Variant.NEEDS_ITEMS) — 여기는 3개 이상만 온다
+ * ★ 카드 바탕은 primary 를 옅게 섞은 반투명이다. var(--ev-surface) 를 쓰지 않는다 —
+ *   어두운 테마(aurora)에서 카드만 밝아지고 글자는 밝은 채로 남는다
+ * ★ li:first-child · li:last-child 를 따로 적는 이유 — 테마가 같은 자리에 padding · border 를 건다
+ *   (.theme-basic … li:last-child). 특이도를 맞춰야 이긴다
+ */
+[data-block="benefits"].v-benefits-bento:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(112px, auto);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+[data-block="benefits"].v-benefits-bento:not(.ev-block) li,
+[data-block="benefits"].v-benefits-bento:not(.ev-block) li:last-child {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  margin: 0;
+  padding: 16px 14px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ev-primary) 6%, transparent);
+  box-shadow: none;
+}
+[data-block="benefits"].v-benefits-bento:not(.ev-block) li:first-child {
+  grid-column: span 2;
+  grid-row: span 2;
+  justify-content: flex-end;
+  padding: 24px 22px;
+  border-color: transparent;
+  background: color-mix(in srgb, var(--ev-primary) 16%, transparent);
+}
+/* 마지막 줄이 비지 않게 — 큰 칸 뒤 3칸씩 채우고, 남는 마지막 항목을 넓힌다 */
+@media (min-width: 561px) {
+  [data-block="benefits"].v-benefits-bento:not(.ev-block) li:last-child:nth-child(3n + 1):nth-child(n + 4) { grid-column: 1 / -1; }
+  [data-block="benefits"].v-benefits-bento:not(.ev-block) li:last-child:nth-child(3n + 2):nth-child(n + 4) { grid-column: span 2; }
+}
+[data-block="benefits"].v-benefits-bento:not(.ev-block) li:first-child .benefit-icon { width: 64px; height: 64px; font-size: 2rem; }
+[data-block="benefits"].v-benefits-bento:not(.ev-block) li:first-child .benefit-name { font-size: 1.3rem; }
+[data-block="benefits"].v-benefits-bento:not(.ev-block) li:first-child .benefit-desc { font-size: 0.95rem; }
+[data-block="benefits"].v-benefits-bento:not(.ev-block) li .benefit-value { margin-top: 10px; align-self: flex-start; }

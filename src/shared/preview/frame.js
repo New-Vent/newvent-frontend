@@ -70,6 +70,9 @@ function bindFrame(frame){
    // 칩 · 외곽선은 편집 화면이 바로 바꾼다 — 이름표도 그 상태로 다시 쓴다
    if(b===over)label(b);},true);return;
  }
+ // 공개 이벤트 상세 — 서버 문서의 runtime.js 가 data-behavior 로 동작한다. 막지 않는다
+ // 참여는 runtime 이 이 iframe 에서 nv-participate 를 올리고 사용자 앱(user/participation.js)이 받는다
+ if(mode==='live'){if(ui.participated?.[doc.body.dataset.eventId])markParticipated(frame);return;}
  if(mode==='readonly'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();},true);return;
@@ -177,4 +180,15 @@ function hydrate(root=document){
  root.querySelectorAll('.event-frame').forEach(frame=>{frame.onload=()=>bindFrame(frame);bindFrame(frame);});
 }
 
-export { bindFrame, hydrate, replaceBlock }
+/**
+ * 참여를 마친 페이지로 바꾼다 — 고르는 버튼 · 입력을 잠그고 참여 버튼 문구를 바꾼다.
+ * runtime 은 body[data-participated] 를 보고 다시 보내지 않는다
+ */
+function markParticipated(frame){
+ const doc=frame?.contentDocument;if(!doc?.body||doc.body.hasAttribute('data-participated'))return;
+ doc.body.setAttribute('data-participated','');
+ doc.querySelectorAll('.ev-game button,.ev-game input').forEach(el=>el.disabled=true);
+ doc.querySelectorAll('[data-behavior~="participate"]').forEach(el=>{el.textContent='참여 완료';el.setAttribute('aria-disabled','true');});
+}
+
+export { bindFrame, hydrate, markParticipated, replaceBlock }

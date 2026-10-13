@@ -219,7 +219,11 @@ body:has(.theme-basic) {
   [data-block="schedule"],
   [data-block="compare"],
   [data-block="faq"]
-):not(.ev-block):nth-of-type(even) {
+):not(.ev-block):nth-of-type(even):where(:not([class*="v-surface-"])) {
+  /* ★★ 배경 변형(v-surface-*)이 붙은 영역은 뺀다. 이 규칙이 0,4,0 이라 변형(0,3,0)의 바탕을 이겼는데
+       변형의 **글자색은 그대로** 남아서, 어두운 배경(흰 글자)을 고른 짝수 번째 영역은
+       옅은 바탕 위 흰 글자가 됐다 — 비교표 소제목과 값이 통째로 안 보였다 (계산값 실측).
+       :where() 라 특이도는 그대로다 */
   background: color-mix(in srgb, var(--ev-primary) 4%, transparent);
 }
 
@@ -730,3 +734,8 @@ body:has(.theme-basic) {
     padding-right: 20px;
   }
 }
+
+/* ★ Q 칩은 왼쪽 30px 을 비워 둔 질문(위 dt 규칙)에 맞춰 절대 위치로 놓는다. 카드형 · 대화형 · 막대형은
+     dt 에 자기 padding 을 다시 줘서 그 자리가 없어진다 — 칩이 질문 첫 글자를 덮었다 (화면 확인).
+     이 셋은 모양 자체가 질문을 구분해 주므로 칩을 뺀다 */
+.theme-basic [data-block="faq"]:is(.v-faq-cards, .v-faq-chat, .v-faq-leftbar):not(.ev-block) dt::before { content: none; }

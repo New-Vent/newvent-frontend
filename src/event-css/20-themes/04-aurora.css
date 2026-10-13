@@ -663,7 +663,10 @@ body:has(.theme-aurora) {
 }
 
 .theme-aurora [data-block="highlight"]:not(.ev-block):where(:not(.v-highlight-alert, .v-highlight-info, .v-highlight-success)) :is(p, strong) {
-  color: #fff;
+  /* ★★ #fff 를 박지 않고 물려받는다. 블록의 color 는 위 규칙이 #fff 로 주므로 기본은 그대로 흰 글자다.
+       자기 바탕과 글자색을 가진 변형(v-highlight-danger 연분홍 + 진빨강, v-highlight-quote 연파랑 + 진파랑)은
+       그 글자색이 살아난다 — 전에는 밝은 바탕 위 흰 글자였다 (계산값 실측) */
+  color: inherit;
 }
 
 /* ★ 쿠폰도 base 가 color:#fff 를 박아 둔다. 아래 .theme-aurora 쿠폰 규칙이
@@ -692,3 +695,7 @@ body:has(.theme-aurora) {
 }
 
 /* ── ⑮ 접근성 ────────────────────────────────────────────────── */
+
+/* ★ 점선 쿠폰(v-coupon-dashed)은 바탕을 --ev-surface 로 바꾼다. 위 쿠폰 규칙이 본문 · 조건에 준 글자색(#fff)이
+     남아서 밝은 색감에서는 흰 바탕 위 흰 글자였다 — 쿠폰 내용이 통째로 안 보였다 (계산값 실측) */
+.theme-aurora [data-block="coupon"].v-coupon-dashed:not(.ev-block) :is(p, li, strong) { color: var(--ev-text-main); }
