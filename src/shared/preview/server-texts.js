@@ -2,7 +2,7 @@
  * 직접 수정 대상 문구 — 백엔드 DirectEditor.collectTextNodes 와 **같은 순서**로 모은다.
  *
  *   [data-block] 안의 텍스트 노드를 문서 순서대로
- *   notices 블록 · [data-slot="period"] 안은 뺀다 (서버가 채우는 자리)
+ *   notices 문구도 포함하고 [data-slot="period"] 안은 뺀다 (서버가 채우는 자리)
  *   script · style · textarea · select 의 글자와 공백뿐인 노드도 뺀다
  *
  * ★ 서버가 주는 editableTexts 가 기준이다. 여기서 모은 건 "어느 영역의 문구인지" 와
@@ -10,7 +10,7 @@
  */
 
 const SKIP_PARENT = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'SELECT'])
-const SKIP_SCOPE = '[data-block="notices"],[data-slot="period"]'
+const SKIP_SCOPE = '[data-slot="period"]'
 // Jsoup 의 isBlank 는 이 다섯 글자만 공백으로 본다
 const NOT_BLANK = /[^ \t\n\f\r]/
 

@@ -54,12 +54,12 @@ function bindFrame(frame){
  // 서버 편집 화면의 AI 대화 — 누른 영역(data-block)을 편집 화면에 알린다. 유의사항은 서버 소유라 고를 수 없다
  if(mode==='server-select'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
-  doc.querySelectorAll('[data-block]').forEach(b=>{const own=b.dataset.block==='notices';b.style.cursor=own?'default':'pointer';b.title=own?'유의사항은 고칠 수 없어요':(BLOCK_LABELS[b.dataset.block]||b.dataset.block)+' 영역 — 눌러서 고르기';});
+  doc.querySelectorAll('[data-block]').forEach(b=>{const own=b.dataset.block==='notices';b.style.cursor=own?'default':'pointer';b.title=own?'유의사항은 직접 수정 탭에서 편집할 수 있어요':(BLOCK_LABELS[b.dataset.block]||b.dataset.block)+' 영역 — 눌러서 고르기';});
   // 올린 영역에 이름표 — "누르면 고를 수 있다"를 미리보기 안에서 바로 알린다
   const tag=doc.createElement('div');tag.className='nv-pick-tag';tag.hidden=true;doc.body.appendChild(tag);
   let over=null;
   const label=b=>{const own=b.dataset.block==='notices',name=BLOCK_LABELS[b.dataset.block]||b.dataset.block;
-   tag.textContent=own?name+' · 고칠 수 없어요':b.classList.contains('newvent-selected')?'✓ '+name+' 선택됨 · 눌러서 해제':name+' · 눌러서 고르기';
+   tag.textContent=own?name+' · 직접 수정 탭에서 편집':b.classList.contains('newvent-selected')?'✓ '+name+' 선택됨 · 눌러서 해제':name+' · 눌러서 고르기';
    tag.classList.toggle('own',own);tag.classList.toggle('on',!own&&b.classList.contains('newvent-selected'));};
   const place=b=>{const r=b.getBoundingClientRect(),w=doc.defaultView;tag.style.top=Math.max(0,r.top+w.scrollY-11)+'px';tag.style.left=(r.left+w.scrollX+12)+'px';};
   doc.addEventListener('mouseover',ev=>{const b=ev.target.closest('[data-block]');if(b===over)return;

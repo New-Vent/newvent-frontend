@@ -155,7 +155,7 @@ function paintSelection(s) {
 }
 
 function toggleBlock(s, key) {
-  if (key === 'notices') { toast('유의사항은 승인된 문구라 고칠 수 없어요.'); return }
+  if (key === 'notices') { toast('유의사항은 직접 수정 탭에서 문구를 편집할 수 있어요.'); return }
   if (s.selected.includes(key)) s.selected = s.selected.filter((k) => k !== key)
   else if (s.selected.length >= MAX_SELECTED) { toast('영역은 ' + MAX_SELECTED + '개까지 고를 수 있어요.'); return }
   else s.selected = ordered([...s.selected, key])
