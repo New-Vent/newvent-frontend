@@ -70,9 +70,34 @@ function bindFrame(frame){
    // 칩 · 외곽선은 편집 화면이 바로 바꾼다 — 이름표도 그 상태로 다시 쓴다
    if(b===over)label(b);},true);return;
  }
- // 공개 이벤트 상세 — 서버 문서의 runtime.js 가 data-behavior 로 동작한다. 막지 않는다
- // 참여는 runtime 이 이 iframe 에서 nv-participate 를 올리고 사용자 앱(user/participation.js)이 받는다
- if(mode==='live'){if(ui.participated?.[doc.body.dataset.eventId])markParticipated(frame);return;}
+ /**
+  * 공개 이벤트 상세 (사용자 화면) — 페이지 안의 「참여하기」만 통과시킨다.
+  *
+  * ★ iframe 안에서는 스크립트가 **돌지 않는다** (sandbox 에 allow-scripts 가 없다).
+  *   그래서 클릭 처리는 전부 호스트가 한다. 여기서는 nv-participate 만 올리고
+  *   실제 참여는 사용자 앱이 맡는다 (user/main.js) — 로그인 토큰이 거기에만 있다.
+  *
+  * ★ 조건을 좁게 잡는다. `[data-slot="cta-link"]` 하나만 본다 —
+  *   `.btn` 이나 `.cta-btn` 을 잡으면 sports_cheer 의 응원 투표 버튼까지 걸린다.
+  *   그건 페이지 안에서만 뜻이 있는 버튼이다.
+  *
+  * ★ 나머지 클릭은 readonly 와 똑같이 막는다. 링크를 따라가면 iframe 이 통째로 바뀐다.
+  */
+ if(mode==='live'){
+  doc.querySelectorAll('button,input,select,textarea').forEach(el=>{
+   if(!el.closest('[data-slot="cta-link"]'))el.disabled=true;
+  });
+  if(ui.participated?.[frame.dataset.event])markParticipated(frame);
+  doc.addEventListener('click',ev=>{
+   ev.preventDefault();ev.stopPropagation();
+   const cta=ev.target.closest('[data-slot="cta-link"]');
+   if(!cta||cta.getAttribute('aria-disabled')==='true')return;
+   // 목적지는 서버가 data-href(button) 또는 href(a)로 넣는다. 둘 다 /events/{id} 다
+   const href=cta.dataset.href||cta.getAttribute('href')||'';
+   frame.dispatchEvent(new CustomEvent('nv-participate',{bubbles:true,detail:{href,eventId:frame.dataset.event}}));
+  },true);
+  return;
+ }
  if(mode==='readonly'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();},true);return;
@@ -181,14 +206,18 @@ function hydrate(root=document){
 }
 
 /**
- * 참여를 마친 페이지로 바꾼다 — 고르는 버튼 · 입력을 잠그고 참여 버튼 문구를 바꾼다.
- * runtime 은 body[data-participated] 를 보고 다시 보내지 않는다
+ * 참여를 마친 페이지로 바꾼다 — 참여 버튼을 잠그고 문구를 바꾼다.
+ *
+ * ★ 참여 버튼은 `[data-slot="cta-link"]` 다. 서버가 거기에만 목적지(data-href · href)를 넣는다.
+ *   aria-disabled 로 잠근다 — <a> 는 disabled 가 없고, bindFrame 의 live 분기가 이 값을 본다.
  */
 function markParticipated(frame){
  const doc=frame?.contentDocument;if(!doc?.body||doc.body.hasAttribute('data-participated'))return;
  doc.body.setAttribute('data-participated','');
- doc.querySelectorAll('.ev-game button,.ev-game input').forEach(el=>el.disabled=true);
- doc.querySelectorAll('[data-behavior~="participate"]').forEach(el=>{el.textContent='참여 완료';el.setAttribute('aria-disabled','true');});
+ doc.querySelectorAll('[data-slot="cta-link"]').forEach(el=>{
+  el.textContent='참여 완료';el.setAttribute('aria-disabled','true');
+  if('disabled' in el)el.disabled=true;
+ });
 }
 
 export { bindFrame, hydrate, markParticipated, replaceBlock }
