@@ -16,12 +16,16 @@ import { icon } from '@shared/icons.js'
 import { AI_START, CONFIGS } from '@shared/mock/configs.js'
 import { baseSnapshot } from '@shared/mock/fixtures.js'
 import { persist } from '@shared/persist.js'
-import { thumb } from '@shared/preview/document.js'
+import { serverFrame, thumb } from '@shared/preview/document.js'
+import { collectTexts } from '@shared/preview/server-texts.js'
 import { state, ui } from '@shared/state.js'
 import { button, field } from '@shared/ui/controls.js'
 import { toast } from '@shared/ui/toast.js'
+import { modal } from '@shared/ui/modal.js'
 import { GRADES, REQUEST_MAX, TEMPLATE_KEYS, audienceOf, gradeLabel } from '@shared/grades.js'
-import { createEvent, startGenerate, USE_SERVER } from '@shared/repo.js'
+
+import { BLOCK_LABELS } from '@shared/constants.js'
+import { createEvent, loadAdminEvents, loadSimilarVersions, loadVersion, loadVersions, startGenerate, USE_SERVER } from '@shared/repo.js'
 import { resetAdminServer } from './list.js'
 import { openServerEditor } from './server-editor.js'
 
@@ -71,7 +75,7 @@ function creationView(){
    const selected=c.templateId===cfg.templateId;
    return '<button class="template-option '+(selected?'selected':'')+'" data-act="select-create-template" data-template="'+cfg.templateId+'" aria-pressed="'+selected+'" '+(restricted?'aria-disabled="true"':'')+'>'+thumb(cfg,baseSnapshot(cfg))+'<span class="name">'+esc(cfg.name)+(selected?' <span class="badge pink">선택됨</span>':'')+'</span><span class="create-template-detail">'+esc(cfg.kind)+' · '+policyLabel(cfg)+'</span>'+(restricted?'<span class="template-restriction">참여 대상을 우수 이상으로 설정해주세요.</span>':'')+'</button>';
   }).join('')+'</div>';
-  const ai='<div class="creation-section-title"><h3>어떤 이벤트를 만들고 싶으신가요?</h3><p>목적, 원하는 분위기, 확정된 혜택 등을 자유롭게 적어주세요.</p></div><label class="field">이벤트 기획<textarea data-create="prompt" maxlength="'+REQUEST_MAX+'" rows="6" placeholder="예: 가을맞이 고객 감사 이벤트를 만들고 싶어요. 흰색과 분홍색으로 따뜻하게 표현하고, 혜택은 아직 정해지지 않았으니 임의로 추가하지 말아주세요.">'+esc(c.prompt)+'</textarea></label><div class="review-note">'+(USE_SERVER?'<strong>AI 가 요청을 읽고 페이지를 만듭니다.</strong><br>수십 초 걸릴 수 있어요. 요청에 없는 혜택은 만들지 않으니 확정된 혜택을 적어주세요. 최대 '+REQUEST_MAX+'자.':'<strong>AI 생성 흐름을 확인하는 체험 모드입니다.</strong><br>입력한 기획은 대화창에 전달되고, 공통 구조의 예시 초안이 열립니다. 실제 AI가 요청을 해석해 HTML을 생성하지는 않습니다.<br>예시 참여 방식: 로그인 후 계정당 1회 응모.')+'</div>';
+  const ai='<div class="creation-section-title"><h3>어떤 이벤트를 만들고 싶으신가요?</h3><p>목적, 원하는 분위기, 확정된 혜택 등을 자유롭게 적어주세요.</p></div><label class="field">이벤트 기획<textarea data-create="prompt" maxlength="'+REQUEST_MAX+'" rows="6" placeholder="예: 가을맞이 고객 감사 이벤트를 만들고 싶어요. 흰색과 분홍색으로 따뜻하게 표현하고, 혜택은 아직 정해지지 않았으니 임의로 추가하지 말아주세요.">'+esc(c.prompt)+'</textarea></label>' + (USE_SERVER ? '<div class="chips">' + button('create-rag-drafts', '초안 보기', '', 'chip') + button('create-rag-similar', '유사 이벤트 찾기', '', 'chip') + '</div>' : '') + '<div class="review-note">'+(USE_SERVER?'<strong>AI 가 요청을 읽고 페이지를 만듭니다.</strong><br>수십 초 걸릴 수 있어요. 요청에 없는 혜택은 만들지 않으니 확정된 혜택을 적어주세요. 최대 '+REQUEST_MAX+'자.':'<strong>AI 생성 흐름을 확인하는 체험 모드입니다.</strong><br>입력한 기획은 대화창에 전달되고, 공통 구조의 예시 초안이 열립니다. 실제 AI가 요청을 해석해 HTML을 생성하지는 않습니다.<br>예시 참여 방식: 로그인 후 계정당 1회 응모.')+'</div>';
   content='<section class="panel"><div class="panel-head">어떤 방식으로 시작할까요?</div><div class="panel-body">'+modes+(c.mode==='template'?templates:ai)+'<p id="create-error" class="create-error" role="alert"></p><div class="create-actions">'+button('create-back',icon('back')+'기본 정보 수정')+button('finish-create',c.mode==='template'?'선택한 템플릿으로 시작 '+icon('arrow'):(USE_SERVER?'AI 로 만들기 ':'AI 초안 체험하기 ')+icon('sparkle'),'','btn primary')+'</div></div></section>';
  }
  return '<div class="container create-container">'+button('cancel-create',icon('back')+'이벤트 관리로','', 'backlink')+'<div class="page-heading"><span class="eyebrow">START SOMETHING NEW</span><h1>새 이벤트 만들기</h1><p>기본 정보를 정하고, 나에게 맞는 제작 방식으로 시작하세요.</p></div>'+progress+'<div class="create-layout"><div>'+content+'</div><aside id="creation-summary" class="card creation-summary">'+creationSummary()+'</aside></div></div>';
@@ -147,6 +151,222 @@ async function serverCreate(c,cfg){
  openServerEditor(event.id,{jobId,request,startError});
  navigate('editor',String(event.id));
  toast(startError?'이벤트를 만들었어요. 페이지 생성은 다시 시도해주세요.':'이벤트를 만들고 페이지를 생성하고 있어요.');
+}
+
+/* ── 만들기 화면 RAG (기획 단계 — eventId 없음, query 모드로만 부른다) ── */
+
+/** 기획 입력창 내용. 저장 전이라 DOM 값을 직접 읽는다 */
+function planningText() {
+  const ta = document.querySelector('[data-create="prompt"]')
+  return ((ta?.value ?? ui.creation?.prompt ?? '')).trim()
+}
+
+async function fillCreateBox(load) {
+  const box = document.getElementById('rag-result')
+  if (!box) return
+  box.innerHTML = '<p class="helper">불러오는 중…</p>'
+  try {
+    box.innerHTML = await load()
+  } catch (e) {
+    box.innerHTML = '<p>' + esc(e?.message || '불러오지 못했어요.') + '</p>'
+  }
+}
+
+let draftEvents = null
+
+/** 초안 보기 — 지난 이벤트 목록 (기획용). 임베딩이 아니라 목록 API로 가져와 제목으로 가린다 */
+async function openCreateDrafts() {
+  draftEvents = null
+  modal('초안 보기',
+    '<div class="rag-board-head"><p class="helper">지난 기획 목록이에요. [담기]를 누르면 기획 입력창에 참고 문구로 들어갑니다.</p>'
+    + '<div class="rag-board-search"><input id="rag-q" type="search" value="" placeholder="제목 검색" aria-label="지난 기획 검색어">'
+    + button('create-rag-drafts-run', icon('search'), 'aria-label="지난 기획 검색"', 'btn sm') + '</div></div>'
+    + '<div id="rag-result"><p class="helper">목록을 불러오는 중…</p></div>',
+    button('close', '닫기'), true)
+  document.getElementById('rag-q')?.addEventListener('input', runCreateDrafts)
+  document.getElementById('rag-q')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') runCreateDrafts() })
+  try {
+    draftEvents = await loadAdminEvents()
+  } catch (e) {
+    draftEvents = []
+    const box = document.getElementById('rag-result')
+    if (box) box.innerHTML = '<p>' + esc(e?.message || '불러오지 못했어요.') + '</p>'
+    return
+  }
+  runCreateDrafts()
+}
+
+function runCreateDrafts() {
+  const box = document.getElementById('rag-result')
+  if (!box) return
+  const q = (document.getElementById('rag-q')?.value ?? '').trim()
+  const items = (draftEvents ?? []).filter((e) => !q || String(e.title ?? e.name ?? '').includes(q))
+  if (!items.length) {
+    box.innerHTML = '<p>지난 기획이 없어요.' + (q ? ' 검색어를 바꿔보세요.' : '') + '</p>'
+    return
+  }
+  box.innerHTML = '<p class="helper">지난 기획 ' + items.length + '건</p>' + items.map((e) => {
+    const title = String(e.title ?? e.name ?? '').replace(/^SEED:\s*/, '')
+    const period = (String(e.startAt ?? e.start ?? '').slice(0, 10)) + '~' + (String(e.endAt ?? e.end ?? '').slice(0, 10))
+    return '<div class="rag-rec-row"><div class="rag-rec-text"><p class="rag-rec-title">' + esc(title) + '</p>'
+      + '<p class="rag-rec-desc">' + esc(period) + (e.latestVersionNo ? ' · v' + e.latestVersionNo : '') + '</p></div>'
+      + button('create-rag-preview', '미리보기', 'data-event="' + e.id + '" data-title="' + esc(title) + '"', 'btn sm ghost')
+      + button('create-rag-copy', '담기', 'data-event="' + e.id + '"', 'btn sm primary') + '</div>'
+  }).join('')
+}
+
+async function openCreateSimilar() {
+  const q0 = planningText()
+  modal('유사 이벤트 찾기',
+    '<div class="rag-board-head"><p class="helper">기획 내용과 비슷한 지난 버전들이에요. [보기]로 내용을 확인하세요.</p>'
+    + '<div class="rag-board-search"><input id="rag-q" type="search" value="' + esc(q0) + '" placeholder="키워드 입력" aria-label="사례 검색어">'
+    + button('create-rag-similar-run', icon('search'), 'aria-label="사례 검색"', 'btn sm') + '</div></div>'
+    + '<div id="rag-result"><p class="helper">기획 내용으로 찾는 중…</p></div>',
+    button('close', '닫기'), true)
+  document.getElementById('rag-q')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') runCreateSimilar() })
+  if (q0) runCreateSimilar()
+}
+
+async function runCreateSimilar() {
+  const q = document.getElementById('rag-q')?.value?.trim()
+  if (!q) { toast('검색어를 입력해주세요.'); return }
+  await fillCreateBox(async () => {
+    const items = await loadSimilarVersions(null, null, 5, q)
+    if (!Array.isArray(items) || !items.length) return '<p>비슷한 사례가 없어요. 검색어를 바꿔보세요.</p>'
+    return items.map((v) => {
+      const refs = (v.topChunks ?? []).map((c) => c.content).filter(Boolean).join(' / ')
+      return '<div class="rag-rec-row"><div class="rag-rec-text"><p class="rag-rec-title">'
+      + esc(v.eventTitle ?? '') + ' · v' + v.versionNo + '</p>'
+      + '<p class="rag-rec-desc">유사도 ' + Math.round((v.similarity ?? 0) * 100) + '%'
+      + (refs ? ' · ' + esc(refs) : '') + '</p></div>'
+      + button('create-rag-similar-view', '보기', 'data-event="' + v.eventId + '" data-version="' + v.versionId + '"', 'btn sm ghost')
+      + (refs ? button('create-rag-copy', '담기', 'data-text="' + esc('참고: ' + refs) + '"', 'btn sm primary') : '') + '</div>'
+    }).join('')
+  })
+}
+
+const draftLabelOf = (k) => BLOCK_LABELS[k] || k
+
+/** 최신 버전 HTML을 블록별 텍스트로 묶는다. 미리보기·담기가 공유한다 */
+async function loadDraftContent(eventId) {
+  const list = (await loadVersions(eventId)).versions ?? []
+  const latest = list.slice().sort((a, b) => a.versionNo - b.versionNo).at(-1)
+  if (!latest) return null
+  const v = await loadVersion(eventId, latest.versionId)
+  const byBlock = {}
+  for (const t of collectTexts(new DOMParser().parseFromString('<body>' + (v.htmlContent || '') + '</body>', 'text/html').body)) {
+    (byBlock[t.block] ||= []).push(t.text)
+  }
+  return { html: v.htmlContent, blocks: byBlock }
+}
+
+/** 지난 기획 미리보기 — 게시물명 + 렌더 미리보기. 블록 요약은 보여주지 않는다 */
+async function openCreateDraftPreview(eventId, title) {
+  try {
+    const d = await loadDraftContent(eventId)
+    if (!d) { toast('버전이 없어요.'); return }
+    // 템플릿 분위기 — theme-* 클래스 1개로 판별한다. 비전공자용 한 줄 설명 + 대표 색상
+    const MOOD = {
+      sports: ['열정적인 스포츠 응원 느낌', '#213f78'],
+      holiday: ['명절·시즌 축하 느낌', '#95500b'],
+      vip: ['차분하고 고급스러운 느낌', '#765240'],
+      sale: ['눈에 띄는 특가·할인 느낌', '#e24c28'],
+      launch: ['새로움을 알리는 출시 느낌', '#614ab8'],
+    }
+    const theme = (/theme-([a-z]+)/.exec(d.html || '') ?? [])[1]
+    const mood = MOOD[theme]
+    const moodLine = mood
+      ? '<p class="rag-rec-desc">[분위기] ' + esc(mood[0])
+        + ' <span class="mood-dot" style="background:' + mood[1] + '"></span>' + esc(mood[1]) + '</p>'
+      : ''
+    modal(esc(title) + ' 미리보기',
+      moodLine
+      + '<div class="version-preview-frame">' + serverFrame(d.html, '미리보기') + '</div>',
+      button('create-rag-copy', '담기', 'data-event="' + eventId + '"', 'btn sm primary')
+      + button('create-rag-drafts', '목록', '', 'btn sm')
+      + button('close', '닫기', '', 'btn sm ghost'), true)
+    document.querySelector('#overlay .modal')?.classList.add('version-preview-modal')
+  } catch (e) {
+    toast(e?.message || '미리보기를 불러오지 못했어요.')
+  }
+}
+
+function appendPlanning(ta, text) {
+  ta.value = (ta.value ? ta.value + '\n' : '') + text
+  if (ui.creation) ui.creation.prompt = ta.value
+}
+
+/** 지난 기획 담기 — 블록 내용을 기획창에 넣는다. 기획 길이 상한을 넘지 않게 자른다 */
+async function copyDraftBlocks(eventId) {
+  const ta = document.querySelector('[data-create="prompt"]')
+  if (!ta || !Number.isSafeInteger(eventId) || eventId <= 0) return
+  toast('담는 중…')
+  try {
+    const d = await loadDraftContent(eventId)
+    if (!d) { toast('버전이 없어요.'); return }
+    const lines = Object.entries(d.blocks)
+      .map(([k, ts]) => '[' + draftLabelOf(k) + '] ' + ts.join(' '))
+      .join('\n')
+    const room = REQUEST_MAX - ta.value.length
+    if (room <= 0) { toast('기획이 꽉 찼어요.'); return }
+    appendPlanning(ta, lines.slice(0, room))
+    toast('기획에 담았어요.')
+  } catch (e) {
+    toast(e?.message || '담지 못했어요.')
+  }
+}
+
+/** 비슷한 사례 미리보기 — 저장된 버전을 읽기 전용으로 연다 */
+async function openCreateSimilarVersion(eventId, versionId) {
+  try {
+    const v = await loadVersion(eventId, versionId)
+    modal('v' + v.versionNo + ' · 저장된 버전 미리보기',
+      '<div class="version-preview-frame">' + serverFrame(v.htmlContent, 'v' + v.versionNo + ' 미리보기') + '</div>',
+      button('close', '닫기', '', 'btn primary'), true)
+    document.querySelector('#overlay .modal')?.classList.add('version-preview-modal')
+  } catch (e) {
+    toast(e?.message || '버전을 불러오지 못했어요.')
+  }
+}
+
+/**
+ * 만들기 화면 RAG 버튼. 모달이라 화면을 다시 그리지 않는다.
+ * @returns {boolean} 처리했으면 true
+ */
+export function handleCreateRagClick(a, b) {
+  switch (a) {
+    case 'create-rag-drafts': openCreateDrafts(); return true
+    case 'create-rag-drafts-run': runCreateDrafts(); return true
+    case 'create-rag-similar': openCreateSimilar(); return true
+    case 'create-rag-similar-run': runCreateSimilar(); return true
+    case 'create-rag-copy': {
+      // 기획 입력창에 덧붙인다. 모달은 열어 둬서 여러 개를 고를 수 있다
+      if (b.dataset.event) {
+        copyDraftBlocks(Number(b.dataset.event))
+        return true
+      }
+      const ta = document.querySelector('[data-create="prompt"]')
+      const text = b.dataset.text || ''
+      if (ta && text) {
+        appendPlanning(ta, text)
+        toast('기획에 담았어요.')
+      }
+      return true
+    }
+    case 'create-rag-preview': {
+      const previewId = Number(b.dataset.event)
+      if (Number.isSafeInteger(previewId) && previewId > 0) openCreateDraftPreview(previewId, b.dataset.title || '')
+      return true
+    }
+    case 'create-rag-similar-view': {
+      const eventId = Number(b.dataset.event), versionId = Number(b.dataset.version)
+      if (Number.isSafeInteger(eventId) && eventId > 0 && Number.isSafeInteger(versionId) && versionId > 0) {
+        openCreateSimilarVersion(eventId, versionId)
+      }
+      return true
+    }
+  }
+  return false
 }
 
 export { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary }

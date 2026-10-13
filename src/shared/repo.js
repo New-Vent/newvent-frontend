@@ -329,14 +329,20 @@ export async function searchRagPreview(eventId, query, topK = 3) {
 /** 프롬프트 초안 목록 → [{ versionId, eventTitle, blockKey, draftText }] */
 export async function loadPromptDrafts(eventId, query, topK = 3) {
   if (!USE_SERVER) return _mockPromptDrafts()
-  const q = new URLSearchParams({ eventId, query, topK })
+  // eventId 없으면 기획 모드 — 만들기 화면에서 이벤트 생기기 전에 부른다
+  const q = new URLSearchParams({ query, topK })
+  if (eventId != null) q.set('eventId', eventId)
   return requireApi().get(`/api/admin/rag/recommend-prompts?${q}`)
 }
 
-/** 유사 버전 → 기준 버전 제외, 유사도 내림차순 */
-export async function loadSimilarVersions(eventId, versionId, topK = 3) {
+/** 유사 버전 → 기준 버전 제외, 유사도 내림차순.
+    query 주면 기획 모드 (eventId·versionId 없이 텍스트로 비교). 둘 중 하나만 보낸다 */
+export async function loadSimilarVersions(eventId, versionId, topK = 3, query = null) {
   if (!USE_SERVER) return _mockSimilarVersions()
-  const q = new URLSearchParams({ eventId, versionId, topK })
+  const q = new URLSearchParams({ topK })
+  if (eventId != null) q.set('eventId', eventId)
+  if (versionId != null) q.set('versionId', versionId)
+  if (query) q.set('query', query)
   return requireApi().get(`/api/admin/rag/similar-versions?${q}`)
 }
 

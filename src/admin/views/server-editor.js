@@ -38,7 +38,7 @@ import {
   cancelGeneration, directEdit, endEvent, generationStatus,
   loadAdminEvent, loadPreview, loadVersions,
   publishEvent, saveCheckpoint, startEdit, startGenerate, updateEventInfo,
-  searchRagPreview, loadPromptDrafts, loadSimilarVersions, loadVersion,
+  searchRagPreview, loadPromptDrafts,
 } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
@@ -642,9 +642,8 @@ function chatPanel(s) {
     + '<div id="server-selection">' + selectionHTML(s, busy) + '</div><label class="field">'
     + '<textarea id="server-chat" rows="3" aria-label="수정 요청" maxlength="' + REQUEST_MAX + '" placeholder="' + esc(chatPlaceholder(s)) + '" ' + (busy ? 'disabled' : '') + '>'
     + esc(s.chatInput || '') + '</textarea></label>'
-    + '<div class="chips">' + EXAMPLES.map((t) => button('server-chat-example', t, 'data-prompt="' + esc(t) + '" ' + (busy ? 'disabled' : ''), 'chip')).join('') + '</div>'
-    + '<div class="chips">' + button('server-rag-examples', '예시 찾기', busy ? 'disabled' : '', 'chip')
-    + button('server-rag-similar', '유사 버전 찾기', busy ? 'disabled' : '', 'chip') + '</div>'
+    + '<div class="chips">' + EXAMPLES.map((t) => button('server-chat-example', t, 'data-prompt="' + esc(t) + '" ' + (busy ? 'disabled' : ''), 'chip')).join('')
+    + button('server-rag-examples', '예시 찾기', busy ? 'disabled' : '', 'chip') + '</div>'
     + '<div class="foot-row"><span class="helper" id="server-chat-count">' + (s.chatInput || '').length + ' / ' + REQUEST_MAX + '자 · 최신 버전 기준</span>'
     + '<button class="btn primary sm" type="submit" ' + (busy ? 'disabled' : '') + '>' + icon('sparkle') + (busy ? '처리 중…' : '보내기') + '</button></div></form>'
 }
@@ -1001,15 +1000,15 @@ function setPreviewText(node, index, value) {
 /* ───────────────────────── 입력 · 동작 ───────────────────────── */
 
 /** main.js 의 click 위임에서 부른다. 처리했으면 true */
-/* ────────────────────── RAG 검색 · 추천 · 유사 버전 ────────────────────── */
+/* ────────────────────── RAG 예시 찾기 ────────────────────── */
 
 /** 예시 찾기 — 참고 예시(내 이벤트 문구) + 프롬프트 초안(다른 이벤트)을 한 모달에.
  * 두 API 는 따로 돌린다. 위는 그대로 담기, 아래는 추가 형태로 담기.
  */
-function ragRow(title, desc, copyText, primary) {
+function ragRow(title, desc, copyText) {
   return '<div class="rag-rec-row"><div class="rag-rec-text"><p class="rag-rec-title">' + esc(title) + '</p>'
     + '<p class="rag-rec-desc">' + esc(desc) + '</p></div>'
-    + button('server-rag-copy', '담기', 'data-text="' + esc(copyText) + '"', 'btn sm ' + (primary ? 'primary' : 'ghost')) + '</div>'
+    + button('server-rag-copy', '담기', 'data-text="' + esc(copyText) + '"', 'btn sm primary') + '</div>'
 }
 
 /** 결과 칸 — 모달 안에서 검색어만 바꿔 다시 부른다 */
@@ -1049,7 +1048,7 @@ async function runRagExamples() {
     const res = await searchRagPreview(s.id, q)
     const items = res?.results ?? []
     return items.length
-      ? items.map((c) => ragRow(labelOf(c.blockKey ?? ''), c.content ?? '', c.content ?? '', false)).join('')
+      ? items.map((c) => ragRow(labelOf(c.blockKey ?? ''), c.content ?? '', c.content ?? '')).join('')
       : '<p>비슷한 문구가 없어요.</p>'
   })
   fillBox('rag-others', async () => {
@@ -1058,41 +1057,10 @@ async function runRagExamples() {
     const rows = items.map((d) => {
       const label = labelOf(d.blockKey ?? '')
       const add = '‘' + label + '’ 영역에 추가해줘: ' + (d.prompt ?? '')
-      return ragRow(d.eventTitle ?? '', '[' + label + '] ' + (d.prompt ?? ''), add, true)
+      return ragRow(d.eventTitle ?? '', '[' + label + '] ' + (d.prompt ?? ''), add)
     }).join('')
     return '<p class="helper">초안 ' + items.length + '건</p>' + rows
   })
-}
-
-/** 유사 버전 — 현재 미리보기 버전과 비슷한 저장 버전을 보여준다 */
-async function openRagSimilar() {
-  const s = ui.serverEditor
-  const versionId = s?.preview?.versionId
-  if (!versionId) { toast('먼저 페이지를 만들어주세요.'); return }
-  modal('유사 버전', ragResultBox('rag-result', '비슷한 버전을 찾는 중…'), button('close', '닫기'), true)
-  await fillBox('rag-result', async () => {
-    const items = await loadSimilarVersions(s.id, versionId)
-    return (Array.isArray(items) && items.length)
-      ? items.map((v) => '<div class="version-row"><div class="version-text"><h3>v' + v.versionNo
-        + ' · 유사도 ' + Math.round((v.similarity ?? 0) * 100) + '%</h3></div><div class="version-actions">'
-        + button('server-rag-similar-view', '보기', 'data-version="' + v.versionId + '"', 'btn sm ghost') + '</div></div>').join('')
-      : '<p>비슷한 버전이 없어요.</p>'
-  })
-}
-
-/** 유사 버전 미리보기 — 저장된 버전을 읽기 전용으로 연다 */
-async function openSimilarVersion(versionId) {
-  const s = ui.serverEditor
-  if (!s) return
-  try {
-    const v = await loadVersion(s.id, versionId)
-    modal('v' + v.versionNo + ' · 저장된 버전 미리보기',
-      '<div class="version-preview-frame">' + serverFrame(v.htmlContent, 'v' + v.versionNo + ' 미리보기') + '</div>',
-      button('close', '닫기', '', 'btn primary'), true)
-    document.querySelector('#overlay .modal')?.classList.add('version-preview-modal')
-  } catch (e) {
-    toast(e?.message || '버전을 불러오지 못했어요.')
-  }
 }
 
 function handleServerClick(a, b, rerender) {
@@ -1100,10 +1068,6 @@ function handleServerClick(a, b, rerender) {
   switch (a) {
     case 'server-rag-examples': openRagExamples(); return true
     case 'server-rag-examples-run': runRagExamples(); return true
-    case 'server-rag-similar': openRagSimilar(); return true
-    case 'server-rag-similar-view':
-      if (Number(b.dataset.version) > 0) openSimilarVersion(Number(b.dataset.version))
-      return true
     case 'server-rag-copy': {
       // 예시 칩과 같은 길 — 복사한 문구를 채팅 입력창에 넣는다
       const input = $('#server-chat')
