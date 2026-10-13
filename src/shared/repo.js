@@ -516,6 +516,39 @@ export async function loadMembershipGrades() {
   return requireApi().get('/api/membership-grades')
 }
 
+/* ─────────────────── 관리자 회원 관리 ─────────────────── */
+
+/** 사용자 목록 — 검색 · 등급 필터 · 페이징 */
+export async function loadAdminUsers({
+  keyword = '',
+  grade = '',
+  page = 0,
+  size = 10,
+} = {}) {
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+  })
+
+  if (keyword.trim()) params.set('keyword', keyword.trim())
+  if (grade) params.set('grade', grade)
+
+  return requireApi().get(`/api/admin/users?${params}`)
+}
+
+/** 사용자 상세 */
+export async function loadAdminUser(userId) {
+  return requireApi().get(`/api/admin/users/${userId}`)
+}
+
+/** 사용자 요금제 변경 — 선택한 요금제의 월 금액 전달 */
+export async function changeAdminUserPlan(userId, plan) {
+  return requireApi().patch(
+    `/api/admin/users/${userId}/plan`,
+    { plan },
+  )
+}
+
 /* ────────────────────────── 참여 ────────────────────────── */
 
 /**
