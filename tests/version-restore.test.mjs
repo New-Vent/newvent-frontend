@@ -20,6 +20,8 @@ async function setup({ restore, refresh } = {}) {
     loadingView: () => '', openPublish: () => {}, running: () => false,
     openRegister: () => {}, resetAdminServer: () => {},
     loadVersion: () => {}, loadVersions: () => {}, removeCheckpoint: () => {}, saveCheckpoint: () => {},
+    reindexVersion: () => new Promise(() => {}), refreshRagPanel: () => new Promise(() => {}),
+    ensureRagPanel: () => {}, ragIndexBadge: () => '', ragPanel: () => '',
     restoreVersion: async (...args) => {
       calls.push(args)
       return restore ? restore() : { versionId: 13, versionNo: 4 }

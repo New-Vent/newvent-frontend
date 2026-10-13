@@ -26,6 +26,8 @@ import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, server
 import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag } from './views/server-editor.js'
 import { templatesView, ensureLibrary, resetLibrary, handleLibraryClick, handleLibrarySubmit, handleLibraryChange } from './views/templates.js'
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
+import { dashboardRagView, ensureDashboard } from './views/dashboard-rag.js'
+import { handleRagPanelClick } from './views/rag-panel.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
 import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary } from './views/create.js'
@@ -44,12 +46,13 @@ export const api = createApi({ authBase: '/api/admin/auth' })
 // repo 가 이 클라이언트로 서버를 부른다 (목업 모드면 안 쓰인다).
 useApi(api)
 
-const VIEWS = { admin: adminView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, login: loginView }
+const VIEWS = { admin: adminView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, login: loginView, rag: dashboardRagView }
 
 const ROUTES = [
   { path: '/', name: 'admin' },
   { path: '/login', name: 'login' },
   { path: '/templates', name: 'templates' },
+  { path: '/rag', name: 'rag' },
   { path: '/events/new', name: 'create' },
   { path: '/events/:id/edit', name: 'editor' },
   { path: '/events/:id/versions', name: 'versions' },
@@ -59,6 +62,7 @@ const PATH = {
   admin: () => '/',
   login: () => '/login',
   templates: () => '/templates',
+  rag: () => '/rag',
   create: () => '/events/new',
   editor: (id) => `/events/${id}/edit`,
   versions: (id) => `/events/${id}/versions`,
@@ -74,6 +78,8 @@ function header() {
       ['admin', 'editor', 'versions', 'create'].includes(ui.route) ? 'active' : '') +
     button('route', '템플릿 라이브러리', 'data-route="templates"',
       ui.route === 'templates' ? 'active' : '') +
+    button('route', 'RAG 품질', 'data-route="rag"',
+      ui.route === 'rag' ? 'active' : '') +
     '</nav><div class="account">' +
     (ui.logged
       ? '<span class="avatar">' + icon('layers') + '</span><span class="name">운영자님</span>' +
@@ -93,6 +99,7 @@ function render(scroll = false) {
   if (ui.route === 'admin') ensureAdminServer(() => render())
   // 템플릿 라이브러리는 목업 모드에서도 목록이 있다 (mock/library.js)
   if (ui.route === 'templates') ensureLibrary(() => render())
+  if (ui.route === 'rag') ensureDashboard(() => render())
   // 서버 모드 편집 · 버전 이력 화면은 목업 화면 대신 서버 화면이다 (views/server-editor.js · server-versions.js)
   const serverView = USE_SERVER && { editor: serverEditorView, versions: serverVersionsView }[ui.route]
   if (serverView) ensureServerEditor(ui.activeId, () => render())
@@ -101,7 +108,7 @@ function render(scroll = false) {
   $('#app').innerHTML = (serverView || VIEWS[ui.route] || adminView)()
   hydrate()
   if (serverView) afterServerRender()
-  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리' }[ui.route]
+  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리', rag: 'RAG 품질 추이' }[ui.route]
     ?? '이벤트 관리'
   document.title += ' | NewVent'
   if (scroll) window.scrollTo(0, 0)
@@ -157,6 +164,9 @@ document.addEventListener('click', (ev) => {
 
   // ── 템플릿 라이브러리 (PR #133) — 목업 · 서버 둘 다 쓴다 ────────
   if(handleLibraryClick(a,b,()=>render()))return;
+
+  // ── RAG 구역 (버전 이력) — 목업 · 서버 둘 다 쓴다 ──────────────
+  if(handleRagPanelClick(a,b,()=>render()))return;
 
   // ── 서버 모드 편집 화면 ─────────────────────────────────────────
   if(USE_SERVER&&(handleServerClick(a,b,()=>render())||handleVersionsClick(a,b,()=>render())))return;
@@ -427,6 +437,7 @@ document.addEventListener('focusin',ev=>{if(USE_SERVER){handleServerFocus(ev);re
 // 블록 순서 끌어 놓기 — 네 가지가 한 함수로 들어간다 (server-editor.handleServerDrag)
 ['dragstart','dragover','drop','dragend'].forEach(t=>document.addEventListener(t,ev=>{if(USE_SERVER)handleServerDrag(ev);}));
 document.addEventListener('nv-pick',handleServerPick);
+document.addEventListener('rag:refresh', () => render());
 document.addEventListener('nv-block',handleServerBlock);
 
 document.addEventListener('focusout',()=>queueMicrotask(()=>highlightEditingText()));

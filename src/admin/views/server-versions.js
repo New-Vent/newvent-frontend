@@ -15,6 +15,8 @@ import { esc } from '@shared/dom.js'
 import { icon } from '@shared/icons.js'
 import { serverFrame } from '@shared/preview/document.js'
 import { loadVersion, loadVersions, removeCheckpoint, restoreVersion, saveCheckpoint } from '@shared/repo.js'
+import { reindexVersion } from '@shared/repo.js'
+import { ensureRagPanel, ragIndexBadge, ragPanel, refreshRagPanel } from './rag-panel.js'
 import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
 import { ask, modal } from '@shared/ui/modal.js'
@@ -38,9 +40,25 @@ function canRestoreVersion(s, v) {
     && !s.busy && !running(s) && s.event?.status !== 'ENDED' && !sameVersion(v, s.preview)
 }
 
+
+async function reindexOne(eventId, versionId, rerender) {
+  const s = ui.serverEditor
+  try {
+    await reindexVersion(eventId, versionId)
+    await refreshRagPanel(eventId)
+    toast('다시 색인했어요.')
+  } catch (e) {
+    // 전체 재색인이 돌고 있으면 409 — 기다렸다가 다시 누르면 된다
+    toast(e?.status === 409 ? '전체 재색인이 돌고 있어요. 끝나고 다시 눌러주세요.' : (e?.message || '재색인하지 못했어요.'))
+  } finally {
+    if (ui.serverEditor === s) rerender()
+  }
+}
+
 function serverVersionsView() {
   const s = ui.serverEditor
   const back = button('edit', icon('back') + '편집 화면으로', 'data-id="' + (s?.id ?? ui.activeId) + '"', 'backlink')
+  ensureRagPanel(s.id)
   const pending = loadingView(s, back)
   if (pending) return pending
   const latest = s.preview
@@ -75,12 +93,13 @@ function serverVersionsView() {
               + (canRestoreVersion(s, v) ? '' : 'disabled'), 'btn sm')
           + button('server-version-template', '템플릿으로 등록', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm soft')
           + button('server-version-unsave', '저장 해제', 'data-version="' + v.versionId + '" ' + ((v.published || busy) ? 'disabled title="게시 중인 버전은 해제할 수 없어요"' : ''), 'btn sm ghost')
+          + button('server-rag-reindex-one', '재색인', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm')
           + '</div></div>'
       }).join('') + '</div>'
 
   return '<div class="container">' + back
-    + '<div class="page-heading"><span class="eyebrow">VERSION HISTORY</span><h1>버전 이력</h1><p>' + esc(s.event.name) + '</p></div>'
-    + current + rows
+    + '<div class="page-heading"><span class="eyebrow">VERSION HISTORY</span><h1>버전 이력</h1><p>' + esc(s.event.name) + ' ' + ragIndexBadge(s.id) + '</p></div>'
+    + current + rows + ragPanel(s.id)
     + '<p class="review-note">생성 · 수정할 때마다 버전이 자동으로 만들어지지만, 이력에는 "버전 저장" 한 버전만 남아요. '
     + '마음에 드는 버전은 <strong>템플릿으로 등록</strong>해 두면 다른 이벤트에서 다시 쓸 수 있어요. '
     + '이전 버전에서 이어서 작업하면 그 내용으로 새 최신 버전이 만들어져요. 기존 이력과 게시 중인 페이지는 유지돼요.</p></div>'
@@ -163,6 +182,10 @@ function handleVersionsClick(a, b, rerender) {
       ask('버전 이력에서 뺄까요?', '이력 목록에서만 사라지고 버전 내용은 서버에 남아요. 다시 저장하려면 그 버전이 최신일 때 버전 저장을 눌러야 해요.',
         () => toggleSaved(id, false, rerender), '이력에서 빼기')
       return true
+    case 'server-rag-reindex-one': {
+      if (validVersionId(id) && !s.busy) reindexOne(s.id, id, rerender)
+      return true
+    }
     case 'server-version-restore': {
       const v = (s?.versions || []).find((x) => validVersionId(x.versionId) && Number(x.versionId) === id)
       if (!canRestoreVersion(s, v)) return true
