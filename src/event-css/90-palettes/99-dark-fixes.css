@@ -17,6 +17,10 @@
 .palette-esports [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #04130a; }
 /* 테두리형 버튼(outline · gradient-border)은 바탕이 어둡다 — 위의 어두운 글씨 보정에서 뺐다 */
 
+/* ★ 위 두 줄은 "머리글 바탕이 브랜드색(금색 · 네온)이라 글자를 어둡게" 다. 어두운 표(v-compare-dark)는
+     머리글 바탕이 #111827 이라 그 어두운 글자가 그대로 묻혔다 — 머리글이 통째로 안 보였다 (계산값 실측) */
+:is(.palette-night, .palette-esports) [data-block="compare"].v-compare-dark:not(.ev-block) th { color: #f9fafb; }
+
 /* 밝은 템플릿에 어두운 팔레트를 붙였을 때 — 글자와 배경 중 한쪽만 고정된 곳을 팔레트에 맞춘다 (#211)
  * night · esports 는 글자색(--ev-text-main · --ev-text-muted)을 밝게 바꾼다.
  * 그런데 일부 템플릿 카드는 배경이 #ffffff 로 고정돼 있어 흰 카드 위에 밝은 글자가 된다.

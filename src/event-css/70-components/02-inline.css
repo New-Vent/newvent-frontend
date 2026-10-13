@@ -16,6 +16,12 @@
   white-space: nowrap;
   background: var(--ev-primary-light);
   color: var(--ev-primary-hover);
+  /* ★ 제목 효과를 물려받지 않는다 — 셋 다 상속 속성이다.
+       theme-bloom 의 hero h1 은 흰 획 9px + 그림자를 건다. 배지가 h1 안에 있으면
+       작은 배지 글자에 그 획이 그대로 그려져 번진다(가을 맞이 이벤트 v3 실측). */
+  -webkit-text-stroke: 0;
+  paint-order: normal;
+  text-shadow: none;
 }
 :where(.event-page, .ev-container) .t-badge.t-badge-solid   { background: var(--ev-primary); color: #fff; }
 :where(.event-page, .ev-container) .t-badge.t-badge-dark    { background: #18181b; color: #fff; }

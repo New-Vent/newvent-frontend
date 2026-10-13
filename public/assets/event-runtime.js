@@ -15,7 +15,11 @@
  * ★ HTML 은 "무엇을" 만 적는다. data-endpoint 같은 속성은 서버 정화가 지운다
  *
  * ★ 서버에 요청을 보내지 않는다 — 화면 동작(안내 · 스크롤 · 흔들기 · 열기 · 고르기 · 타이머)만 한다.
- *   참여 버튼(participate)도 지금은 안내만 한다. 실제 참여 연동은 참여 쪽 작업에서 붙인다
+ *   참여 버튼(participate)은 입력을 모아 **페이지를 띄운 사용자 앱에 알리기만** 한다(nv-participate).
+ *   로그인 토큰은 사용자 앱에만 있다. 요청 · 결과 표시는 거기서 한다 (src/user/participation.js)
+ *
+ * ★ 참여 방식은 서버가 body 에 적는다 — data-event-id · data-game (PageShell.standalone)
+ *   고르는 버튼 · 전화번호 칸(.ev-game)도 서버가 참여 설정대로 그려서 준다. 여기서는 읽기만 한다
  *
  * ★ 모르는 behavior · 핸들러 오류는 무시한다 — 버튼 하나 때문에 페이지가 멈추면 안 된다
  *
@@ -141,10 +145,75 @@
       })
     },
 
-    // 참여 버튼 — 지금은 안내만 한다. 실제 참여 연동은 참여 쪽 작업에서 붙인다
+    // 참여 버튼 — 입력을 모아 사용자 앱에 알린다. 참여 설정이 없는 이벤트는 안내만 한다
     participate: function (el) {
-      toast(el.getAttribute('data-demo-msg') || '참여 기능은 준비 중이에요.')
+      var game = body.getAttribute('data-game')
+      if (!game) { toast(el.getAttribute('data-demo-msg') || '참여 기능은 준비 중이에요.'); return }
+      if (body.hasAttribute('data-participated')) { toast('이미 참여한 이벤트예요.'); return }
+      var payload = collect(game)
+      if (!payload) return
+      if (!notifyHost({ eventId: Number(body.getAttribute('data-event-id')), game: game, payload: payload })) {
+        toast(inFrame() ? '미리보기에서는 참여가 접수되지 않아요.' : 'NewVent 에서 로그인한 뒤 참여할 수 있어요.')
+      }
     },
+  }
+
+  // ── 참여 ─────────────────────────────────────────────────────────
+
+  function inFrame() {
+    try { return !!window.frameElement } catch (e) { return false }
+  }
+
+  /** 고른 버튼 — vote 가 같은 묶음에서 하나에만 active 를 준다 */
+  function chosen(attr) {
+    var el = document.querySelector('.ev-game [' + attr + '].active')
+    return el ? el.getAttribute(attr) : null
+  }
+
+  /**
+   * 참여 방식에 맞는 요청 본문. 모자라면 안내하고 null.
+   *
+   * ★ 서버 ParticipationCreateRequest 와 짝이다 — 방식에 맞는 필드 하나만 보낸다. 다른 필드가 섞이면 서버가 거절한다
+   */
+  function collect(game) {
+    if (game === 'SPORTS_PREDICTION') {
+      var prediction = chosen('data-vote')
+      if (prediction === null) { toast('먼저 하나를 골라 주세요.'); return null }
+      return { prediction: prediction }
+    }
+    if (game === 'LUCKY_POUCH') {
+      var pouch = chosen('data-pouch')
+      if (pouch === null) { toast('먼저 복주머니를 하나 골라 주세요.'); return null }
+      return { pouchIndex: Number(pouch) }
+    }
+    if (game === 'PRE_REGISTRATION') {
+      var input = document.querySelector('.ev-game input[type="tel"]')
+      var digits = input ? input.value.replace(/\D/g, '') : ''
+      if (!/^01[016789]\d{7,8}$/.test(digits)) {
+        if (input) input.focus()
+        toast('휴대폰 번호를 확인해 주세요.')
+        return null
+      }
+      return { phoneNumber: digits }
+    }
+    return {}
+  }
+
+  /**
+   * 페이지를 띄운 앱에 알린다 — iframe 요소에서 nv-participate 가 올라간다.
+   *
+   * @returns 앱이 받았으면 true. 받은 쪽이 preventDefault 로 표시한다.
+   *          단독 페이지(/e/{id}) · 받는 쪽이 없는 화면(관리자 미리보기)이면 false
+   */
+  function notifyHost(detail) {
+    try {
+      var frame = window.frameElement
+      if (!frame) return false
+      var Event = frame.ownerDocument.defaultView.CustomEvent
+      return !frame.dispatchEvent(new Event('nv-participate', { bubbles: true, cancelable: true, detail: detail }))
+    } catch (e) {
+      return false
+    }
   }
 
   document.addEventListener('click', function (ev) {

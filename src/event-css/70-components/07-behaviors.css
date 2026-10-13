@@ -2,6 +2,7 @@
  * 짝: newvent-backend registry/BehaviorPlanter.java · public/assets/event-runtime.js
  *   .ev-countdown  hero — 마감까지 남은 시간 (countdown)
  *   .ev-jump       hero — 혜택 · 참여 방법으로 내려가는 버튼 (scroll-to)
+ *   .ev-game       참여 버튼 앞 — 참여 방식의 고르는 버튼 · 전화번호 칸. 저장본에는 없고 보여 줄 때 그린다 (bindGame)
  */
 
 :where(.event-page, .ev-container) .ev-countdown {
@@ -36,3 +37,65 @@
   text-decoration: none;
 }
 :where(.event-page, .ev-container) .ev-jump-btn:hover { background: rgba(255, 255, 255, 0.28); }
+
+/* ── 게임 UI — 참여 방식대로 서버가 그린다 (예측 선택지 · 복주머니 · 사전예약 전화번호) ── */
+:where(.event-page, .ev-container) .ev-game {
+  margin: 0 auto 18px;
+  max-width: 420px;
+  text-align: center;
+}
+:where(.event-page, .ev-container) .ev-game-title {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+:where(.event-page, .ev-container) .ev-game-choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+/* ★ :where 를 쓰지 않는다 — 테마가 cta 안의 모든 버튼을 참여 버튼 모양으로 칠한다
+     (.theme-basic [data-block="cta"]:not(.ev-block) :is(a, button)). 그 규칙을 이겨야 고르는 버튼이 참여 버튼과 구별된다 */
+:is(.event-page, .ev-container) .ev-game .ev-game-choices .ev-game-choice {
+  display: inline-block;
+  min-width: 72px;
+  padding: 10px 18px;
+  border: 2px solid var(--ev-primary, #4f46e5);
+  border-radius: var(--ev-radius-full, 999px);
+  background: transparent;
+  box-shadow: none;
+  color: var(--ev-primary, #4f46e5);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+:is(.event-page, .ev-container) .ev-game .ev-game-choices .ev-game-choice:hover {
+  background: var(--ev-primary-light, rgba(79, 70, 229, 0.1));
+}
+/* 고른 것 — runtime 의 vote 가 active 와 aria-pressed 를 같이 준다 */
+:is(.event-page, .ev-container) .ev-game .ev-game-choices .ev-game-choice.active {
+  background: var(--ev-primary, #4f46e5);
+  color: #fff;
+}
+:is(.event-page, .ev-container) .ev-game .ev-game-choices .ev-game-choice:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+:where(.event-page, .ev-container) .ev-game-phone { display: block; }
+:where(.event-page, .ev-container) .ev-game-phone-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(127, 127, 127, 0.5);
+  border-radius: var(--ev-radius-md, 12px);
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: 16px;
+  text-align: center;
+}
