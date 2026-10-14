@@ -48,6 +48,9 @@
 .theme-launch:is(.palette-night, .palette-esports) :is(.lc-timeline-phase, .lc-gauge-percent) { color: var(--ev-primary-deep); }
 /* 마일스톤 배지는 연한 파랑(#dbeafe) 바탕이 고정이라 포인트색 대신 짙은 남색 글자 */
 .theme-launch:is(.palette-night, .palette-esports) .lc-ms-badge { color: var(--tpl-accent-ink); }
+
+/* 인증 버튼의 진한 배경에서는 흰 글자를 유지한다. */
+.theme-launch:is(.palette-night, .palette-esports) .lc-form-btn { color: #ffffff; }
 /* holiday 의 복주머니 카드도 흰색 고정이다. 주황(글자 · 흰 글자 버튼)을 진한 쪽으로 */
 .theme-holiday:is(.palette-night, .palette-esports) {
   --tpl-warm: var(--ev-primary-deep);
