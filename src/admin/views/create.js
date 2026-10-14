@@ -247,6 +247,16 @@ async function runCreateSimilar() {
 
 const draftLabelOf = (k) => BLOCK_LABELS[k] || k
 
+/** 템플릿 theme-* → 분위기 설명. 미리보기 표시와 담기 프롬프트가 같은 말을 쓴다 */
+const DRAFT_MOOD = {
+  sports: '열정적인 스포츠 응원 느낌',
+  holiday: '명절·시즌 축하 느낌',
+  vip: '차분하고 고급스러운 느낌',
+  sale: '눈에 띄는 특가·할인 느낌',
+  launch: '새로움을 알리는 출시 느낌',
+}
+const draftTheme = (html) => (/theme-([a-z]+)/.exec(html || '') ?? [])[1]
+
 /** 최신 버전 HTML을 블록별 텍스트로 묶는다. 미리보기·담기가 공유한다 */
 async function loadDraftContent(eventId) {
   const list = (await loadVersions(eventId)).versions ?? []
@@ -257,7 +267,7 @@ async function loadDraftContent(eventId) {
   for (const t of collectTexts(new DOMParser().parseFromString('<body>' + (v.htmlContent || '') + '</body>', 'text/html').body)) {
     (byBlock[t.block] ||= []).push(t.text)
   }
-  return { html: v.htmlContent, blocks: byBlock }
+  return { html: v.htmlContent, blocks: byBlock, mood: DRAFT_MOOD[draftTheme(v.htmlContent)] }
 }
 
 /** 지난 기획 미리보기 — 게시물명 + 렌더 미리보기. 블록 요약은 보여주지 않는다 */
@@ -265,19 +275,8 @@ async function openCreateDraftPreview(eventId, title) {
   try {
     const d = await loadDraftContent(eventId)
     if (!d) { toast('버전이 없어요.'); return }
-    // 템플릿 분위기 — theme-* 클래스 1개로 판별한다. 비전공자용 한 줄 설명 + 대표 색상
-    const MOOD = {
-      sports: ['열정적인 스포츠 응원 느낌', '#213f78'],
-      holiday: ['명절·시즌 축하 느낌', '#95500b'],
-      vip: ['차분하고 고급스러운 느낌', '#765240'],
-      sale: ['눈에 띄는 특가·할인 느낌', '#e24c28'],
-      launch: ['새로움을 알리는 출시 느낌', '#614ab8'],
-    }
-    const theme = (/theme-([a-z]+)/.exec(d.html || '') ?? [])[1]
-    const mood = MOOD[theme]
-    const moodLine = mood
-      ? '<p class="rag-rec-desc">[분위기] ' + esc(mood[0])
-        + ' <span class="mood-dot" style="background:' + mood[1] + '"></span>' + esc(mood[1]) + '</p>'
+    const moodLine = d.mood
+      ? '<p class="rag-rec-desc">[분위기] ' + esc(d.mood) + '</p>'
       : ''
     modal(esc(title) + ' 미리보기',
       moodLine
@@ -307,9 +306,11 @@ async function copyDraftBlocks(eventId) {
     const lines = Object.entries(d.blocks)
       .map(([k, ts]) => '[' + draftLabelOf(k) + '] ' + ts.join(' '))
       .join('\n')
+    // 디자인(분위기)도 맨 위에 붙인다 — 미리보기에서 보는 것과 같은 문구
+    const payload = (d.mood ? '[디자인] ' + d.mood + '\n' : '') + lines
     const room = REQUEST_MAX - ta.value.length
     if (room <= 0) { toast('기획이 꽉 찼어요.'); return }
-    appendPlanning(ta, lines.slice(0, room))
+    appendPlanning(ta, payload.slice(0, room))
     toast('기획에 담았어요.')
   } catch (e) {
     toast(e?.message || '담지 못했어요.')
