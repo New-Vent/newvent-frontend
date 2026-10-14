@@ -588,7 +588,13 @@ export async function loadParticipationConfig(eventId) {
  *                        IMMEDIATE   winProbability(0~100) + prizeName
  *                        GUARANTEED  prizeName
  *                        DELAYED     winnerCount(1↑) + prizeName + announcementAt(ISO)
- *   SPORTS_PREDICTION  predictionOptions: string[] (비어 있으면 안 된다)
+ *   SPORTS_PREDICTION  predictionOptions: string[] (비어 있으면 안 되고 중복도 안 된다)
+ *                      announcementAt: ISO (★ **이벤트 종료 이후**여야 한다)
+ *                      rewards: [{ rewardId, target, selection, winnerCount?, prizeName }]
+ *                        target     ALL_PARTICIPANTS · CORRECT_PREDICTIONS
+ *                        selection  ALL (대상 전원) · DRAW (대상 중 추첨 → winnerCount 1↑)
+ *                        rewardId   이벤트 안에서 중복 금지. 참여 기록의 result_data.rewards 에
+ *                                   그대로 박히므로 **발표 뒤에 바꾸면 안 된다**
  *   PRE_REGISTRATION   {} — 전화번호는 참여 입력이지 설정이 아니다
  *   LUCKY_POUCH        pouches: [{ pouchIndex, winProbability, prizeName }]
  *                        번호는 1부터 길이까지 빠짐없이
@@ -597,10 +603,51 @@ export async function loadParticipationConfig(eventId) {
  *   바꿀 수 있는 것은 prizeName · announcementAt 뿐이다.
  *   값이 실제로 달라진 키만 보므로, 폼 전체를 그대로 PUT 해도 통과한다.
  * ★ 모양이 틀리면 409 PARTICIPATION409-1, 없는 방식이면 409 PARTICIPATION409-2.
+ *
+ * ★★ SPORTS_PREDICTION 은 **winningPrediction · drawnAt 을 보내면 거절한다**
+ *   (ParticipationConfigService.requireAnnouncementAfterEnd). 둘은 설정이 아니라
+ *   진행 상태다 — 정답은 registerSportsResult 가, drawnAt 은 발표 배치가 쓴다.
+ *   그래서 **읽은 설정을 그대로 되돌려 보내면 안 된다**. 화면이 두 키를 떼고 보낸다.
  */
 export async function saveParticipationConfig(eventId, { gameCode, config }) {
   if (!USE_SERVER) throw new Error('목업 모드에는 참여 설정 화면이 없다')
   return requireApi().put(`/api/admin/events/${eventId}/participation-config`, { gameCode, config })
+}
+
+/**
+ * 설정이 아니라 **진행 상태**인 키 — 설정을 저장할 때 떼고 보낸다.
+ *
+ *   winningPrediction  관리자가 등록한 실제 경기 결과 (registerSportsResult)
+ *   drawnAt            발표 배치가 끝난 시각 (SportsPredictionDrawJob)
+ *
+ * ★ 서버가 **이 키가 있으면 저장을 거절한다** (실측 409 PARTICIPATION409-1).
+ *   읽은 설정을 그대로 PUT 하는 화면이라 여기서 한 번 걸러야 한다.
+ * ★ 떼고 보내면 서버에 저장된 값도 **같이 지워진다** (설정을 통째로 덮어쓴다 —
+ *   실측: 정답 등록 후 재저장 → winningPrediction 이 null 이 된다).
+ *   그래서 정답이 등록된 뒤의 저장은 화면이 먼저 확인을 받는다.
+ */
+const PROGRESS_KEYS = ['winningPrediction', 'drawnAt']
+export function configWithoutProgress(config) {
+  const out = { ...(config || {}) }
+  PROGRESS_KEYS.forEach((k) => delete out[k])
+  return out
+}
+
+/**
+ * 실제 경기 결과 등록 · 정정 — `PUT /api/admin/events/{id}/sports-result`
+ *
+ * 승부 예측형만 쓴다. 참여자의 예측과 맞춰 발표 시각 이후 배치가 혜택별로 추첨한다.
+ *
+ * ★ 이것만은 **참여 기록이 있어도 통과한다** — 설정 API 를 거치지 않고 config 를
+ *   직접 고치므로 ParticipationConfigLock 을 타지 않는다 (실측 확인).
+ *   정답은 경기가 끝난 뒤에야 알기 때문에 그래야 맞다.
+ * ★ 선택지에 없는 값이면 400 PARTICIPATION400-1.
+ * ★ 발표 처리(drawnAt)가 끝난 뒤에는 409 PARTICIPATION409-4 — 확정된 당첨을 뒤집지 않는다.
+ * ★ 발표 시각이 이벤트 종료 이후가 아니면 409 PARTICIPATION409-1 (설정이 먼저 틀린 것이다).
+ */
+export async function registerSportsResult(eventId, winningPrediction) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여 설정 화면이 없다')
+  return requireApi().put(`/api/admin/events/${eventId}/sports-result`, { winningPrediction })
 }
 
 /**
