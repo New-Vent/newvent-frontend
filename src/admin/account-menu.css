@@ -1,0 +1,172 @@
+/* 헤더: 종 → 프로필·이름·화살표 */
+#header .account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#header .admin-account-menu {
+  position: relative;
+}
+
+#header .admin-account-menu,
+#header .admin-account-menu * {
+  box-sizing: border-box;
+}
+
+#header .admin-account-menu [hidden] {
+  display: none !important;
+}
+
+/* 프로필·이름·화살표 전체 클릭 */
+#header .admin-account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 7px 0 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #252d3c;
+  font: inherit;
+  cursor: pointer;
+}
+
+#header .admin-account-trigger:hover,
+#header .admin-account-trigger[aria-expanded="true"] {
+  background: #f1f4f7;
+}
+
+#header .admin-account-trigger .avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  border-radius: 50%;
+  background: #f1f3f6;
+  color: #748094;
+}
+
+#header .admin-account-trigger .name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #505b6b;
+  white-space: nowrap;
+}
+
+#header .admin-account-trigger .avatar svg,
+#header .admin-account-chevron svg,
+#header .admin-account-logout svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 아래 화살표 */
+#header .admin-account-chevron {
+  display: flex;
+  margin-left: 3px;
+  color: #748094;
+}
+
+#header .admin-account-chevron svg {
+  width: 15px;
+  height: 15px;
+  transform: rotate(90deg);
+}
+
+#header .admin-account-trigger[aria-expanded="true"]
+  .admin-account-chevron svg {
+  transform: rotate(-90deg);
+}
+
+/* 로그아웃 팝업 */
+#header .admin-account-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: auto;
+  z-index: 100;
+  width: 140px;
+  max-width: calc(100vw - 32px);
+  padding: 5px;
+  border: 1px solid #e9edf4;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgb(35 51 78 / 8%);
+}
+
+#header .admin-account-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #252d3c;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#header .admin-account-logout:hover {
+  background: #f1f4f7;
+}
+
+#header .admin-account-logout svg {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color: #748094;
+}
+
+@media (max-width: 640px) {
+  #header .admin-account-dropdown {
+    left: auto;
+    right: 0;
+  }
+
+  #header .account {
+    gap: 12px;
+  }
+
+  #header .admin-account-trigger {
+    gap: 6px;
+  }
+}
+
+@media (pointer: coarse) {
+  #header .admin-account-trigger,
+  #header .admin-account-logout {
+    min-height: 44px;
+  }
+}
+
+/* 두 버튼과 아이콘의 세로 중심 통일 */
+#header #admin-notifications,
+#header .admin-account-menu {
+  display: flex;
+  align-items: center;
+}
+
+#header .admin-notifications-bell svg,
+#header .admin-account-trigger .avatar svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
