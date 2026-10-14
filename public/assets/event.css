@@ -223,7 +223,7 @@
   --ev-gradient-hero: linear-gradient(135deg, #090d16 0%, #1e293b 60%, #991b1b 100%);
   --ev-gradient-cta: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
   --ev-accent-tag: #f59e0b;
-  /* 템플릿 전용 포인트색 — 40-templates/01-sports.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/01-sports.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #dc2626;
   --tpl-accent-bright: #ef4444;
   --tpl-accent-deep: #991b1b;
@@ -238,13 +238,15 @@
   --ev-gradient-hero: linear-gradient(135deg, #2b1055 0%, #591a3a 50%, #832729 100%);
   --ev-gradient-cta: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   --ev-accent-tag: #ef4444;
-  /* 템플릿 전용 포인트색 — 40-templates/02-holiday.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/02-holiday.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #f59e0b;
   --tpl-accent-deep: #d97706;
   --tpl-accent-soft: #fde68a;
   --tpl-accent-light: #fef08a;
   --tpl-ribbon: #dc2626;
   --tpl-step: #1b4332;
+  --tpl-warm: #ea580c;
+  --tpl-warm-deep: #c2410c;
 }
 
 /* 3. 회원 감사 / VIP 프로모션 (Luxury Champagne Gold & Dark Indigo) */
@@ -256,10 +258,12 @@
   --ev-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%);
   --ev-gradient-cta: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
   --ev-accent-tag: #38bdf8;
-  /* 템플릿 전용 포인트색 — 40-templates/03-vip.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/03-vip.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #cca43b;
   --tpl-accent-light: #fef08a;
   --tpl-accent-deep: #b45309;
+  --tpl-gold: #eab308;
+  --tpl-gold-deep: #ca8a04;
 }
 
 /* 4. 타임 세일 / 플래시 세일 (Vibrant Coral & Sunset Gradient) */
@@ -271,9 +275,10 @@
   --ev-gradient-hero: linear-gradient(135deg, #2f3542 0%, #ff4757 100%);
   --ev-gradient-cta: linear-gradient(135deg, #ff6b81 0%, #ff4757 100%);
   --ev-accent-tag: #ffa502;
-  /* 템플릿 전용 포인트색 — 40-templates/04-sale.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/04-sale.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #ccff00;
   --tpl-accent-hover: #b8e600;
+  --tpl-accent-soft: #e6ff66;
 }
 
 /* 5. 신규 런칭 / 사전예약 (Cyber Neon Cyan & Electric Violet) */
@@ -285,11 +290,12 @@
   --ev-gradient-hero: linear-gradient(135deg, #050515 0%, #1e1035 60%, #083344 100%);
   --ev-gradient-cta: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
   --ev-accent-tag: #a855f7;
-  /* 템플릿 전용 포인트색 — 40-templates/05-launch.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/05-launch.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #2563eb;
   --tpl-accent-deep: #1d4ed8;
   --tpl-accent-bright: #38bdf8;
   --tpl-accent-ink: #1e3a8a;
+  --tpl-accent-light: #3b82f6;
 }
 
 /* ── 20-themes/02-basic.css ── */
@@ -4420,7 +4426,7 @@ body {
 .theme-sports .sp-vote-wrap {
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px dashed rgba(220, 38, 38, 0.4);
+  border-top: 1px dashed color-mix(in srgb, var(--tpl-accent) 40%, transparent);
   text-align: center;
 }
 .theme-sports .sp-vote-title {
@@ -4448,16 +4454,16 @@ body {
   white-space: nowrap;
 }
 .theme-sports .sp-vote-btn:hover {
-  background: rgba(220, 38, 38, 0.25);
-  border-color: #ef4444;
+  background: color-mix(in srgb, var(--tpl-accent) 25%, transparent);
+  border-color: var(--tpl-accent-bright);
   color: #fff;
   transform: translateY(-1px);
 }
 .theme-sports .sp-vote-btn.active {
-  background: #dc2626;
-  border-color: #ef4444;
+  background: var(--tpl-accent);
+  border-color: var(--tpl-accent-bright);
   color: #fff;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tpl-accent-bright) 50%, transparent);
 }
 
 /* Template 2: Holiday 3 Lucky Draw Songpyeon Boxes */
@@ -4490,7 +4496,7 @@ body {
 }
 .theme-holiday .hl-pouch-card:hover {
   transform: translateY(-6px);
-  border-color: #ea580c;
+  border-color: var(--tpl-warm);
   box-shadow: 0 12px 24px rgba(180, 83, 9, 0.15);
 }
 .theme-holiday .hl-pouch-visual {
@@ -4569,7 +4575,7 @@ body {
 .theme-holiday .hl-pouch-prize {
   font-size: 13px;
   font-weight: 800;
-  color: #ea580c;
+  color: var(--tpl-warm);
   margin-bottom: 6px;
 }
 .theme-holiday .hl-pouch-desc {
@@ -4586,16 +4592,16 @@ body {
   font-size: 12px;
   font-weight: 800;
   color: #fff;
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  background: linear-gradient(135deg, var(--tpl-warm) 0%, var(--tpl-warm-deep) 100%);
   border: none;
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba(234, 88, 12, 0.3);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--tpl-warm) 30%, transparent);
   transition: all 0.2s ease;
 }
 .theme-holiday .hl-pouch-btn:hover {
   transform: scale(1.03);
-  box-shadow: 0 5px 12px rgba(234, 88, 12, 0.4);
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--tpl-warm) 40%, transparent);
 }
 .theme-holiday .hl-pouch-btn.opened {
   background: #15803d;
@@ -4625,13 +4631,13 @@ body {
   font-weight: 700;
   color: #78350f;
   background: #fef3c7;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--tpl-accent-soft);
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .theme-holiday .hl-share-btn:hover {
-  background: #fde68a;
+  background: var(--tpl-accent-soft);
   color: #92400e;
 }
 .theme-holiday .hl-cta-btn.cta-completed {
@@ -4647,8 +4653,8 @@ body {
   font-size: 12px;
   font-weight: 700;
   color: #854d0e;
-  background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
-  border: 1px solid #ca8a04;
+  background: linear-gradient(135deg, var(--tpl-accent-light) 0%, var(--tpl-gold) 100%);
+  border: 1px solid var(--tpl-gold-deep);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -4656,7 +4662,7 @@ body {
 }
 .theme-vip .vp-coupon-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(202, 138, 4, 0.3);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--tpl-gold-deep) 30%, transparent);
   color: #713f12;
 }
 .theme-vip .vp-coupon-btn.downloaded {
@@ -4673,7 +4679,7 @@ body {
   font-size: 12px;
   font-weight: 900;
   color: #000;
-  background: #ccff00;
+  background: var(--tpl-accent);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -4683,8 +4689,8 @@ body {
   white-space: nowrap;
 }
 .theme-sale .fs-deal-btn:hover {
-  background: #e6ff66;
-  box-shadow: 0 0 12px rgba(204, 255, 0, 0.5);
+  background: var(--tpl-accent-soft);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--tpl-accent) 50%, transparent);
   transform: translateY(-1px);
 }
 
@@ -4695,7 +4701,7 @@ body {
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.06);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--tpl-accent) 6%, transparent);
 }
 .theme-launch .lc-gauge-header {
   display: flex;
@@ -4706,12 +4712,12 @@ body {
 .theme-launch .lc-gauge-title {
   font-size: 15px;
   font-weight: 800;
-  color: #1e3a8a;
+  color: var(--tpl-accent-ink);
 }
 .theme-launch .lc-gauge-percent {
   font-size: 15px;
   font-weight: 900;
-  color: #2563eb;
+  color: var(--tpl-accent);
 }
 .theme-launch .lc-progress-track {
   height: 10px;
@@ -4723,7 +4729,7 @@ body {
 .theme-launch .lc-progress-fill {
   height: 100%;
   width: 74%;
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(90deg, var(--tpl-accent-light) 0%, var(--tpl-accent) 100%);
   border-radius: 999px;
   transition: width 0.5s ease;
 }
@@ -4751,7 +4757,7 @@ body {
   border-radius: 999px;
   margin-bottom: 4px;
   background: #dbeafe;
-  color: #1d4ed8;
+  color: var(--tpl-accent-deep);
 }
 .theme-launch .lc-milestone-item.achieved .lc-ms-badge {
   background: #dcfce7;
@@ -4805,14 +4811,14 @@ body {
   transition: border-color 0.2s;
 }
 .theme-launch .lc-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--tpl-accent-light);
 }
 .theme-launch .lc-form-btn {
   padding: 12px 16px;
   font-size: 13px;
   font-weight: 700;
   color: #fff;
-  background: #2563eb;
+  background: var(--tpl-accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -4820,7 +4826,7 @@ body {
   transition: background 0.2s;
 }
 .theme-launch .lc-form-btn:hover {
-  background: #1d4ed8;
+  background: var(--tpl-accent-deep);
 }
 .theme-launch .lc-share-row {
   display: flex;
@@ -4837,15 +4843,15 @@ body {
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 700;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--tpl-accent-bright);
+  background: color-mix(in srgb, var(--tpl-accent-bright) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tpl-accent-bright) 30%, transparent);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 .theme-launch .lc-share-btn:hover {
-  background: rgba(56, 189, 248, 0.2);
+  background: color-mix(in srgb, var(--tpl-accent-bright) 20%, transparent);
 }
 
 @media (max-width: 640px) {
@@ -4859,6 +4865,55 @@ body {
     flex-direction: column;
   }
 }
+
+/* ── 40-templates/09-default-contrast.css ── */
+/* 템플릿 기본 상태의 글자 대비 (#220)
+ *
+ * 팔레트 없이도 4.5(작은 글자 기준)에 못 미치던 글자를 4.5 이상으로 올린다.
+ * 색상과 채도는 그대로 두고 밝기만 조정했다 (oklch 에서 대비 4.6 이 되는 가장 가까운 값).
+ *
+ * ★ 범위를 둘로 나눈다
+ *   ① 포인트색 글자 — 팔레트가 붙으면 90-palettes/95 가 이미 처리한다. 팔레트 없을 때만 건다.
+ *   ② 중성색(회색) 글자 · 고정 색 — 팔레트와 무관하다. 팔레트가 붙어도 같이 바뀌어야 한다.
+ *      안 그러면 팔레트를 붙였을 때 오히려 기본 상태보다 흐려진다.
+ *      페이지 바탕을 따르는 글자(목록 · 단계 설명)는 어두운 팔레트(night · esports)를 뺀다 —
+ *      그쪽은 팔레트가 글자색을 밝게 바꾸므로 여기 값(어두운 회색)이 오히려 안 보인다.
+ *
+ * ★ 토큰(--tpl-*)이 아니라 값을 직접 적는다
+ *   --tpl-* 는 전부 팔레트에 연결돼야 한다 (tests/template-contrast.test.mjs 가 확인한다).
+ *   여기 값은 "팔레트가 없을 때의 보정"이라 연결할 대상이 없다.
+ *
+ * ★ 일부러 뺀 것: holiday 복주머니 일러스트 위의 福 (.hl-pouch-hanja, 대비 1.4 ~ 1.8).
+ *   금 · 파랑 몸통 그라데이션 위의 글자라 색 하나로 못 푼다. 일러스트를 손볼 때 같이 본다.
+ */
+
+/* ── ① 포인트색 글자 — 팔레트 없을 때 ── */
+
+/* 소제목 라벨 · 혜택 태그 · 혜택 값 */
+.theme-holiday:not([class*="palette-"]) :is(.block-header .sub-label, .benefit-tag) { color: #b25300; }
+.theme-holiday:not([class*="palette-"]) .hl-pouch-prize { color: #d34200; }
+
+.theme-vip:not([class*="palette-"]) :is(.block-header .sub-label, .benefit-tag, .vp-coupon .benefit-value) { color: #9e6000; }
+
+.theme-launch:not([class*="palette-"]) .block-header .sub-label { color: #007895; }
+
+.theme-sports:not([class*="palette-"]) :is(.block-header .sub-label, :is(.sp-prize-sub, .sp-prize-main) .benefit-tag) { color: #d71f22; }
+/* 어두운 남색 바탕 위의 밝은 빨강 */
+.theme-sports:not([class*="palette-"]) :is(.sp-sb-label, .sp-value-lg) { color: #ff5351; }
+
+/* ── ② 회색 · 고정 색 ── */
+
+/* 바탕이 고정인 곳(칩 · 카드)은 팔레트와 상관없이 */
+:is(.theme-launch, .theme-sale) :is(.demo-tag, .lc-ms-reward) { color: #58687e; }
+.theme-sports .sp-prize-main .benefit-desc,
+.theme-launch .lc-mockup-caption { color: #8192aa; }
+
+/* 흰 글자가 얹히는 초록 배지 — 배경을 진하게 (2.3 → 4.6). 색이 팔레트와 무관하게 고정이라 항상 */
+.theme-holiday .hero-badge.t-badge-green { background: #008820; }
+
+/* 페이지 바탕을 따르는 곳(유의사항 목록 · 단계 설명)은 어두운 팔레트만 뺀다 */
+:is(.theme-holiday, .theme-vip):not(:is(.palette-night, .palette-esports)) :is(.notice-list li, .step-desc),
+:is(.theme-launch, .theme-sports):not(:is(.palette-night, .palette-esports)) .notice-list li { color: #58687e; }
 
 /* ── 50-blocks/01-llm-blocks.css ── */
 /* ==========================================================================
@@ -7866,6 +7921,128 @@ body:has(.palette-brand) {
   --ev-bg: #fff8fb; --ev-surface: #ffffff; --ev-surface-subtle: #fff0f7; --ev-border: #f8d3e6;
 }
 
+/* ── 90-palettes/95-template-accent.css ── */
+/* 팔레트를 템플릿 전용 포인트색(--tpl-*)에 연결한다 (#207)
+ *
+ * 팔레트는 포인트색을 --ev-primary 한 가지로 준다. 그런데 템플릿은 그 색을 세 곳에 쓴다.
+ * 한 값으로는 다 못 맞추므로 쓰임새별로 나눠서 연결한다.
+ *
+ *   밝은 바탕 위의 글자 · 흰 글자가 얹히는 채움   → --ev-primary-hover  (팔레트가 이미 진하게 골라 둔 값)
+ *   어두운 바탕 위의 글자 · 선                    → --ev-primary-on-dark (아래에서 만든다)
+ *   테두리 · 빛번짐 같은 장식                     → --ev-primary
+ *
+ * 왜 hover 인가: 밝은 팔레트 16종은 hover 위의 흰색 대비가 5.7 이상이다. 기본색은 summer(4.10) ·
+ * pastel(4.23) 처럼 흰색 위 글자 기준 4.5 에 못 미치는 것이 있다.
+ *
+ * 이 파일은 팔레트(01 · 02)와 템플릿(40) 뒤에 온다. 아래 규칙은 [class*="palette-"] 가 붙은 루트에만
+ * 걸리므로, 팔레트가 없으면 템플릿은 20-themes 의 지금 색 그대로다.
+ *
+ * ★ 새 템플릿 토큰(--tpl-*)을 만들면 여기 연결도 같이 추가한다.
+ *   안 하면 그 색만 팔레트를 안 따라간다 (tests/template-contrast.test.mjs 가 잡는다).
+ */
+
+/* ── 팔레트에서 파생하는 값 — 팔레트마다 따로 적지 않고 여기서 한 번에 만든다 ── */
+[class*="palette-"] {
+  /* 어두운 바탕용: 흰색과 섞어 밝힌다 (oklch 를 못 읽는 브라우저의 대체값) */
+  --ev-primary-on-dark: color-mix(in srgb, var(--ev-primary) 45%, white);
+  --ev-primary-on-dark-soft: color-mix(in oklab, var(--ev-primary-on-dark) 45%, white);
+  /* hover 보다 한 단계 더 진한 색 (버튼 그라데이션의 끝) */
+  --ev-primary-deep: color-mix(in oklab, var(--ev-primary-hover) 78%, black);
+}
+@supports (color: oklch(from red l c h)) {
+  [class*="palette-"] {
+    /* 색상 · 채도는 두고 밝기만 0.74 아래로 내려가지 않게 한다.
+       어두운 바탕 5곳(#121215 · #1e293b · #292524 · #3d1627 · #172554) 위에서 18종 모두 대비 4.95 이상.
+       night · esports 처럼 이미 밝은 기본색은 그대로 둔다 */
+    --ev-primary-on-dark: oklch(from var(--ev-primary) max(l, 0.74) c h);
+  }
+}
+
+/* ── 템플릿별 연결 ── */
+
+/* sports · launch: 어두운 히어로 위의 밝은 변종은 on-dark, 나머지는 진한 쪽 */
+.theme-sports[class*="palette-"],
+.theme-launch[class*="palette-"] {
+  --tpl-accent: var(--ev-primary-hover);
+  --tpl-accent-deep: var(--ev-primary-deep);
+  --tpl-accent-bright: var(--ev-primary-on-dark);
+  /* launch 의 --tpl-accent-ink(연한 바탕 위 짙은 글자)는 연결하지 않는다 — 쓰는 카드의 바탕이 안 바뀌기 때문 */
+}
+/* launch 의 진행 막대 · 입력창 포커스 테두리 (장식) */
+.theme-launch[class*="palette-"] { --tpl-accent-light: var(--ev-primary); }
+
+/* holiday: 히어로가 와인색(어두움)이라 연한 금색 둘은 on-dark 계열 */
+.theme-holiday[class*="palette-"] {
+  --tpl-accent: var(--ev-primary);
+  --tpl-accent-deep: var(--ev-primary-hover);
+  --tpl-accent-soft: var(--ev-primary-on-dark-soft);
+  --tpl-accent-light: var(--ev-primary-on-dark-soft);
+  --tpl-ribbon: var(--ev-primary-hover);
+  --tpl-step: var(--ev-primary-deep);
+  /* 복주머니 카드의 주황 (글자 · 버튼 · 호버 테두리) */
+  --tpl-warm: var(--ev-primary-hover);
+  --tpl-warm-deep: var(--ev-primary-deep);
+}
+/* 공유 .hero-title .highlight 는 --ev-accent-tag 를 쓰는데, 팔레트의 태그색은 밝은 바탕용이다
+   (valentine 의 #7f1d1d 는 와인색 히어로 위에서 대비 1.56) */
+.theme-holiday[class*="palette-"] .hl-hero { --ev-accent-tag: var(--ev-primary-on-dark); }
+
+/* vip: 포인트색 글자가 어두운 히어로 · 쿠폰 위에 있다. 밝은 단계 번호만 hover */
+.theme-vip[class*="palette-"] {
+  --tpl-accent: var(--ev-primary-on-dark);
+  --tpl-accent-light: var(--ev-primary-on-dark-soft);
+  --tpl-accent-deep: var(--ev-primary-hover);
+  /* 쿠폰 받기 버튼의 금색 그라데이션 끝 · 테두리 */
+  --tpl-gold: var(--ev-primary-on-dark);
+  --tpl-gold-deep: var(--ev-primary-hover);
+}
+/* 쿠폰 카드는 바탕이 밝은색(#fafaf9)으로 고정이다. 공유 .benefit-value 는 --ev-primary 를 쓰므로
+   night · esports 의 노랑 · 초록이 흰 바탕 위에 놓인다 (대비 1.8). 이 카드 안에서만 진하게 */
+.theme-vip[class*="palette-"] .vp-coupon .benefit-value { color: var(--ev-primary-deep); }
+
+/* sale: 전체가 어둡다 */
+.theme-sale[class*="palette-"] {
+  --tpl-accent: var(--ev-primary-on-dark);
+  --tpl-accent-hover: color-mix(in oklab, var(--ev-primary-on-dark) 85%, black);
+  --tpl-accent-soft: var(--ev-primary-on-dark-soft);
+}
+/* sale 안의 공유 블록(소제목 · 버튼)도 어두운 바탕 위에 있다.
+   같은 루트에서 --ev-primary 를 자기 값으로 다시 정의할 수는 없어(순환) 바로 아래 자식에 건다 */
+.theme-sale[class*="palette-"] > * {
+  --ev-primary: var(--ev-primary-on-dark);
+  --ev-primary-hover: var(--tpl-accent-hover);
+  --ev-gradient-cta: linear-gradient(var(--ev-primary-on-dark), var(--tpl-accent-hover));
+}
+
+/* ── 밝은 템플릿의 공유 블록 ──
+ * 소제목 · 혜택 값 · 태그 같은 공유 블록은 글자를 --ev-primary 로 칠한다. 밝은 팔레트의 기본색은 이 글자에 모자란 것이 있다
+ * (summer 4.10 · pastel 4.23). 템플릿 안에서는 밝은 바탕 위 글자 규칙(hover)을 따른다.
+ * sale 과 같은 이유로 루트가 아니라 바로 아래 자식에 건다. 템플릿 자신의 어두운 영역은 --tpl-* 를 쓰므로 영향이 없다.
+ * night · esports 는 기본색이 밝아서 제외한다. */
+:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports)) > * {
+  --ev-primary: var(--ev-primary-hover);
+}
+
+/* ── 공유 CTA 버튼 ──
+ * 팔레트의 CTA 그라데이션은 밝은 쪽 끝 때문에 18종 중 9종이 흰 글자 · 어두운 글자 어느 쪽도 4.5 에 못 미친다.
+ * 밝은 템플릿 4종은 hover → deep 의 진한 그라데이션과 흰 글자를 쓴다 (밝은 팔레트 한정 — night · esports 는 99 에서) */
+:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports)) {
+  --ev-gradient-cta: linear-gradient(135deg, var(--ev-primary-hover), var(--ev-primary-deep));
+}
+/* 40-templates/07-refinements.css 는 holiday · vip · launch 의 .cta-btn 글자를 템플릿 자기 그라데이션에 맞춰 어둡게 고정해 둔다 */
+:is(.theme-holiday, .theme-vip, .theme-launch)[class*="palette-"] .cta-btn { color: #ffffff; }
+
+/* holiday 고유 CTA도 흰 글자에 맞는 진한 팔레트 그라데이션을 사용한다. */
+.theme-holiday[class*="palette-"]:not(:is(.palette-night, .palette-esports)) [data-block="cta"] .cta-btn {
+  background: var(--ev-gradient-cta);
+  color: #ffffff;
+}
+
+/* 밝은·어두운 팔레트 사이에서도 글자색을 즉시 바꿔 대비를 유지한다. */
+.theme-holiday[class*="palette-"] [data-block="cta"] .cta-btn {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
 /* ── 90-palettes/97-template-neutrals.css ── */
 /* 템플릿은 포인트색만 팔레트를 따른다 — 바탕·글자 같은 중성색은 템플릿 것을 유지한다.
  *
@@ -7931,6 +8108,375 @@ body:has(.palette-brand) {
   border-bottom-color: var(--ev-border);
 }
 .theme-vip:is(.palette-night, .palette-esports) .vp-step-num { color: var(--ev-primary); }
+
+/* 밝은 템플릿 × 어두운 팔레트 — 포인트색 위의 글자 (#207)
+ * night · esports 의 기본색은 밝은 노랑 · 초록이라, 흰 글자를 얹은 채움(버튼 · 번호 배지)이 안 읽힌다.
+ * 위의 #211 규칙과 같은 방식으로 이 두 팔레트에만 건다. */
+.theme-sports:is(.palette-night, .palette-esports) :is(.sp-cta-btn, .sp-vote-btn.active),
+.theme-launch:is(.palette-night, .palette-esports) :is(.lc-cta-btn, .lc-timeline-badge, .lc-form-btn),
+.theme-holiday:is(.palette-night, .palette-esports) :is(.hl-gift-ribbon, .hl-step-num),
+:is(.theme-holiday, .theme-vip, .theme-launch):is(.palette-night, .palette-esports) .cta-btn { color: #111111; }
+/* holiday 의 리본 · 단계 번호는 진한 채움(hover · deep)이 아니라 밝은 기본색 위에 어두운 글자로 */
+.theme-holiday:is(.palette-night, .palette-esports) { --tpl-ribbon: var(--ev-primary); --tpl-step: var(--ev-primary); }
+/* launch 의 타임라인 카드는 글자색까지 고정이라 흰 카드 그대로 둔다. 그 위의 포인트색 글자만 진하게 */
+.theme-launch:is(.palette-night, .palette-esports) :is(.lc-timeline-phase, .lc-gauge-percent) { color: var(--ev-primary-deep); }
+/* 마일스톤 배지는 연한 파랑(#dbeafe) 바탕이 고정이라 포인트색 대신 짙은 남색 글자 */
+.theme-launch:is(.palette-night, .palette-esports) .lc-ms-badge { color: var(--tpl-accent-ink); }
+
+/* 인증 버튼의 진한 배경에서는 흰 글자를 유지한다. */
+.theme-launch:is(.palette-night, .palette-esports) .lc-form-btn { color: #ffffff; }
+/* holiday 의 복주머니 카드도 흰색 고정이다. 주황(글자 · 흰 글자 버튼)을 진한 쪽으로 */
+.theme-holiday:is(.palette-night, .palette-esports) {
+  --tpl-warm: var(--ev-primary-deep);
+  --tpl-warm-deep: color-mix(in oklab, var(--ev-primary-deep) 80%, black);
+}
+
+/* ── 95-assets/01-assets.css ── */
+/* 95-assets — 관리자가 올린 이미지(.ev-asset)
+ *
+ * ★ 왜 폴더가 따로이고 90-palettes 보다 뒤인가
+ *   사진 위의 글자색을 여기서 **흰색으로 못 박는다**. 사진이 무슨 색인지 모르니
+ *   테마 · 팔레트가 정한 글자색을 그대로 쓸 수 없다. 덮개로 어둡게 깔고 흰 글씨로
+ *   못 박는 조합만이 올릴 때 미리 재 볼 수 있다. 그러려면 테마(20) · 변형(60) ·
+ *   팔레트(90) 가 건 글자색을 전부 이겨야 해서 그 뒤에 선다.
+ *
+ * ★ 모델은 배치 이름만 고른다. 자리 · 크기 · 잘림 · 덮개 · 글자색은 전부 여기가 쥔다.
+ *   변형 · 팔레트 · 장식과 같은 방식이다.
+ *
+ * ★ src 는 서버가 허용 목록으로 대조한다(BlockValidator). CSS 는 주소를 모른다.
+ *
+ * ★★ 변형(.v-*)과 달리 **템플릿 블록(.ev-block)도 가리지 않는다.**
+ *   변형을 가린 이유는 템플릿이 자기 디자인을 갖고 있어서 섞으면 둘 다 망가지기 때문인데,
+ *   올린 이미지는 모델이 고른 게 아니라 **관리자가 직접 올려서 넣어 달라고 한 것**이다.
+ *   여기서 가리면 프롬프트는 안내하는데 화면은 그대로인 조용한 실패가 된다.
+ */
+
+/* ── ① 배경 — 영역을 꽉 채우고 덮개를 얹는다 ────────────────────── */
+
+[data-block]:has(> .ev-asset-bg) { position: relative; overflow: hidden; }
+
+[data-block] > .ev-asset-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ★★ 글자색은 **올릴 때 재서** 정한다. 셋 중 하나가 <img> 에 class 로 박혀 온다.
+
+     ev-asset-on-light   밝은 그림   어두운 글씨 · 덮개 없음
+     ev-asset-on-dark    어두운 사진  흰 글씨   · 덮개 없음
+     ev-asset-on-mixed   섞인 사진   흰 글씨   · 덮개 (ev-asset-dim-35 · -55 · -68 이 농도)
+
+   ★ 왜 CSS 가 못 정하나 — CSS 는 사진이 무슨 색인지 모른다. 모델도 그림을 못 본다.
+     정할 수 있는 곳은 바이트가 손에 있는 업로드 순간뿐이다 (ImageProbe.toneOf).
+
+   ★ 덮개가 셋 중 하나에만 가는 게 핵심이다. 전에는 **모든** 사진에 55% 를 씌워서
+     밝은 일러스트가 갈색으로 뭉개졌다 — 보여 주려고 올린 사진을 덮어 버린 셈이었다.
+     위는 하늘 아래는 숲인 사진만 어느 글자색도 못 버텨서, 그때만 덮는다.
+
+   ★ 판정 경계 (회색 단색 실측): 120 → MIXED · 130 이상 → LIGHT.
+     어두운 글씨(#0f172a)가 4.5 를 넘는 가장 어두운 바탕이 그 사이다. */
+
+[data-block]:has(> .ev-asset-bg) > :not(.ev-asset) { position: relative; z-index: 1; }
+
+/* ★★ 사진을 깐 영역에서는 테마 · 변형의 **장식을 끈다.**
+     물결 자락(v-hero-wave) · 유리판(v-hero-glass) · 오로라 띠(theme-aurora)가
+     사진 위에 그대로 겹쳐 그려져서 떠다니는 얼룩이 된다 — 사진 없는 페이지를 꾸미려고
+     만든 그림이라 사진 위에서는 쓸 자리가 없다.
+
+   ★★ [data-block] 을 세 번 적은 건 특이도 때문이다. 장식 쪽이 (0,3,0) 이다 —
+       [data-block="hero"].v-hero-wave:not(.ev-block)::after
+       .theme-aurora [data-block="hero"]:not(.ev-block)…::before
+     (0,2,0) 으로는 파일이 뒤에 있어도 밀린다(실측: 4개 조합에서 장식이 그대로 남았다).
+
+   ★★ 아래 덮개도 같은 ::after 를 쓴다. **특이도를 맞추고 뒤에 둬야** 덮개가 이긴다 —
+     한쪽만 올리면 덮개가 같이 꺼진다. */
+[data-block][data-block][data-block]:has(> .ev-asset-bg)::before,
+[data-block][data-block][data-block]:has(> .ev-asset-bg)::after {
+  content: none;
+}
+
+/* ★ 구름은 영역이 아니라 **컨테이너**에 붙는다(theme-bloom). hero 에 사진을 깔면
+     그 위에 떠서 얼룩이 된다 — 구름 좌표가 104px · 300px 라 hero 와 겹친다.
+     페이지 전체 배경 쪽은 02-page-bg.css 가 따로 끈다. */
+.ev-container:has([data-block="hero"] > .ev-asset-bg)::before,
+.ev-container:has([data-block="hero"] > .ev-asset-bg)::after {
+  content: none;
+}
+
+/* 섞인 사진에만 덮개. 농도는 서버가 재서 class 로 박는다 */
+[data-block][data-block][data-block]:has(> .ev-asset-on-mixed)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: rgba(0, 0, 0, .55);
+}
+/* ★ 위 규칙과 특이도가 같다. **뒤에 있어서** 이긴다 — 순서를 바꾸면 안 먹는다 */
+[data-block][data-block][data-block]:has(> .ev-asset-dim-35)::after { background: rgba(0, 0, 0, .35); }
+[data-block][data-block][data-block]:has(> .ev-asset-dim-68)::after { background: rgba(0, 0, 0, .68); }
+
+/* ★ [data-block] 을 세 번 적은 건 오타가 아니다 — **특이도를 올리는 유일한 방법**이다.
+     테마가 제목 색을 0,3,1 로 집고 있어서(.theme-bloom [data-block="hero"]:not(.ev-block) h1)
+     파일이 뒤에 있어도 같은 특이도면 밀린다. :not(.ev-block) 을 뺀 순간 0,2,1 로 떨어져
+     제목이 테마 색으로 돌아갔다(실측). 테마가 쓰는 .theme-bloom.theme-bloom 과 같은 수법이다.
+   ★ **제목을 투명하게 만드는 둘**은 세 경우 모두에서 끈다. 글자색과 무관한 사고다.
+       theme-bloom          h1 에 9px 흰 획을 둘러 글자 속을 먹는다
+       v-hero-gradient-text color: transparent 로 두고 배경을 글자에 깎아 넣는다 */
+[data-block][data-block][data-block]:has(> .ev-asset-bg)
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  -webkit-text-stroke: 0;
+  background-image: none;
+}
+
+/* 밝은 그림 — 테마 글자색을 그대로 쓴다. 흰 그림자로 테두리만 살린다 */
+[data-block][data-block][data-block]:has(> .ev-asset-on-light)
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  -webkit-text-fill-color: currentColor;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, .55), 0 1px 6px rgba(0, 0, 0, .25);
+}
+
+/* 어두운 사진 · 섞인 사진 — 흰 글씨로 못 박는다 */
+[data-block][data-block][data-block]:has(> .ev-asset-on-dark)
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title),
+[data-block][data-block][data-block]:has(> .ev-asset-on-mixed)
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+}
+
+/* 페이지 전체 배경(ev-asset-page)은 02-page-bg.css 가 맡는다 —
+   여기와 자리가 달라서(루트의 직계 자식) 다룰 것이 통째로 다르다. */
+
+/* ── ② 제목 옆 그림 ───────────────────────────────────────────── */
+
+[data-block="hero"]:has(> .ev-asset-art) {
+  position: relative;
+  padding-right: 32%;
+  text-align: left;
+}
+
+[data-block="hero"] > .ev-asset-art {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26%;
+  max-width: 230px;
+  height: auto;
+  z-index: 1;
+}
+
+/* ★★ 왼쪽 자리. 관리자가 "왼쪽으로" 라고 말할 수 있어야 한다 —
+     전에는 오른쪽 하나뿐이라 왼쪽이라고 해도 **바꿀 이름이 없어서** 그대로 오른쪽에 붙었다.
+   ★ 자리를 옮기면 **글자 쪽 여백도 반대로** 가야 한다. 안 그러면 그림이 글자를 덮는다.
+   ★ 위 두 규칙과 같은 특이도(0,2,0 · 0,2,0)인데 **뒤에 있어서** 이긴다. 순서를 바꾸면 안 먹는다.
+   ★ 서버가 붙인다(AssetEdit) — 모델이 고르는 이름이 아니다. */
+[data-block="hero"]:has(> .ev-asset-art-left) { padding-right: 24px; padding-left: 32%; }
+
+[data-block="hero"] > .ev-asset-art-left { right: auto; left: 22px; }
+
+/* 좁은 화면에서는 옆이 아니라 아래로 — 글자 칸이 반으로 줄면 제목이 세로로 갈라진다 */
+@media (max-width: 640px) {
+  [data-block="hero"]:has(> .ev-asset-art) { padding-right: 24px; text-align: center; }
+  /* ★ 좁은 화면에서는 왼쪽 · 오른쪽이 의미가 없다 — 어차피 글자 아래로 내려간다 */
+  [data-block="hero"]:has(> .ev-asset-art-left) { padding-left: 24px; }
+  [data-block="hero"] > .ev-asset-art-left { left: auto; }
+  [data-block="hero"] > .ev-asset-art {
+    position: static;
+    transform: none;
+    width: 60%;
+    max-width: 200px;
+    margin: 14px auto 0;
+  }
+}
+
+/* ── ③ 항목 아이콘 — 지금 이모지가 들어가는 54x54 자리를 그대로 쓴다 ── */
+
+.benefit-icon > .ev-asset-icon,
+.step-icon > .ev-asset-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ── ④ 로고 ──────────────────────────────────────────────────── */
+
+[data-block="hero"] > .ev-asset-logo {
+  display: block;
+  height: 30px;
+  width: auto;
+  margin: 0 0 14px;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+}
+[data-block="hero"].v-hero-center > .ev-asset-logo { margin-inline: auto; }
+
+/* ── ⑤ 가로 띠 ───────────────────────────────────────────────── */
+
+[data-block] > .ev-asset-band {
+  display: block;
+  width: 100%;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0 0 14px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 95-assets/02-page-bg.css ── */
+/* 페이지 전체 배경 — 사진 한 장 위에 블록 카드가 떠 있는 모양.
+ *
+ * ★★ 영역 배경(ev-asset-bg)과 자리가 다르다.
+ *   영역 배경은 `<section>` 안에 있고, 이건 **루트(.ev-container)의 직계 자식**이다.
+ *   모델은 루트를 못 만진다 — hero 안에 쓰면 서버가 저장 직전에 루트로 옮긴다
+ *   (PageShell.hoist). 팔레트 · 테마가 가는 길과 **같은 길**이다.
+ *
+ * ★★ 카드를 하나씩 덮지 않는다. 토큰을 바꾼다.
+ *   블록 배경을 정하는 규칙이 30-base · 50-blocks · 70-components 에만 71개다.
+ *   그걸 선택자로 쫓아가면 새 블록이 생길 때마다 또 빠진다. 대신 **그 규칙들이
+ *   읽는 토큰**(--ev-surface 계열)을 반투명으로 바꾼다 — 실측으로 30-base 15/21,
+ *   50-blocks 10/10 이 토큰을 쓴다. 팔레트가 색을 바꾸는 방식과 똑같다.
+ *
+ * ★ 버튼 · 배지는 그대로 불투명하게 둔다(--ev-primary 계열을 안 건드린다).
+ *   누르는 것이 반투명하면 눌리는 것처럼 안 보인다.
+ *
+ * ★ 템플릿(.ev-block 이 들어간 40-templates)은 hex 를 직접 써서 안 바뀐다.
+ *   이미 알려진 구멍이고(팔레트 이슈와 같은 뿌리), 여기서 같이 풀지 않는다.
+ */
+
+.ev-container:has(> .ev-asset-page) {
+  position: relative;
+  /* 바탕이 비어야 사진이 보인다. 이게 없으면 --ev-bg 가 사진을 통째로 덮는다 */
+  --ev-bg: transparent;
+  background: transparent;
+
+  /* ★ .86 · .72 인 이유는 파일 끝 주석 참고 — 재서 고른 값이다 */
+  --ev-surface: rgba(255, 255, 255, .86);
+  --ev-surface-subtle: rgba(255, 255, 255, .72);
+}
+
+/* ★ fixed 다. absolute 로 두면 페이지가 길 때 사진이 위쪽에서 끝나고
+ *   아래는 빈 바탕이 된다. fixed 면 스크롤해도 늘 화면을 채운다. */
+.ev-container > .ev-asset-page {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* ★★ 테마 · 변형의 **장식을 끈다.**
+ *
+ *   사진을 깔면 그 위에 구름(theme-bloom) · 오로라 띠(theme-aurora) ·
+ *   물결 자락(v-hero-wave) · 유리판(v-hero-glass)이 그대로 겹쳐 그려진다.
+ *   사진 없는 페이지를 꾸미려고 만든 그림이라, 사진 위에서는 **떠다니는 얼룩**이 된다.
+ *   실제로 하늘 사진 위에 흰 구름 덩어리와 물결이 남아 "이게 뭐냐" 는 말을 들었다.
+ *
+ * ★ 선택자로 하나씩 쫓지 않고 **가상요소를 통째로 끈다.** 테마가 늘어도 같이 막힌다.
+ *   장식은 전부 ::before · ::after 로만 그린다 — HTML 은 안 건드린다는 규칙이 있어서다.
+ *
+ * ★★ 순서가 중요하다. 바로 아래 덮개가 같은 ::before 를 쓴다 —
+ *   이 규칙이 **먼저** 와야 덮개가 이긴다. 뒤로 보내면 덮개까지 같이 꺼진다.
+ */
+.ev-container:has(> .ev-asset-page)::before,
+.ev-container:has(> .ev-asset-page)::after,
+.ev-container:has(> .ev-asset-page) [data-block]::before,
+.ev-container:has(> .ev-asset-page) [data-block]::after {
+  content: none;
+}
+
+/* ★★ 덮개는 **섞인 사진에만** 깐다 (ev-asset-on-mixed).
+ *   올릴 때 ImageProbe 가 재서 셋 중 하나를 <img> 에 박아 준다 —
+ *   밝은 그림(on-light)과 어두운 사진(on-dark)은 덮지 않는다.
+ *   전에는 모든 사진에 씌워서 밝은 일러스트가 갈색으로 뭉개졌다.
+ * ★ ::before 다. ::after 는 영역 배경(01-assets.css)이 쓴다 — 한 요소에 하나씩이다. */
+.ev-container:has(> .ev-asset-on-mixed)::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: rgba(0, 0, 0, .55);
+}
+
+/* 농도도 서버가 재서 박는다. 01-assets.css 의 영역 배경과 **같은 class** 를 쓴다 */
+.ev-container:has(> .ev-asset-dim-35)::before { background: rgba(0, 0, 0, .35); }
+.ev-container:has(> .ev-asset-dim-68)::before { background: rgba(0, 0, 0, .68); }
+
+/* hero 는 자기 그라데이션을 갖고 있어서 사진을 통째로 가린다.
+ * ★ 페이지 배경이 있을 때만 비운다. 글자색은 10-fallback 이 이미 흰색으로 둔다. */
+.ev-container:has(> .ev-asset-page) [data-block="hero"]:not(:has(> .ev-asset-bg)) {
+  /* ★ .28 로 뒀다가 밝은 사진에서 흰 제목이 2.18 까지 떨어졌다(실측, 테마 4종 전부).
+     사진이 순백이어도 흰 글씨가 4.5 를 넘으려면 .55 는 돼야 한다 — 여유를 둬 .58.
+     사진을 가리는 값이지만, hero 는 어차피 자기 그라데이션으로 다 가리던 자리다. */
+  background: rgba(0, 0, 0, .58);
+  backdrop-filter: blur(2px);
+}
+
+/* ★★ 제목을 **투명하게 만드는 둘**을 끈다. 01-assets.css 가 영역 배경에서 하는 것과 같다.
+ *   theme-bloom          h1 에 9px 흰 획을 둘러 글자 속을 먹는다 → 실측 1.00
+ *   v-hero-gradient-text color: transparent 로 두고 배경을 글자에 깎아 넣는다
+ * ★ [data-block] 세 번은 특이도용이다 — 테마가 0,3,1 로 집고 있다. */
+.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block]
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  -webkit-text-stroke: 0;
+  background-image: none;
+}
+.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block="hero"]
+  :is(h1, h2, h3, p, .period, .ev-period, .sub-label) {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
+
+/* 카드 테두리가 흰 실선이면 사진 위에서 종이처럼 뜬다. 살짝 눌러 둔다 */
+.ev-container:has(> .ev-asset-page) {
+  --ev-border: rgba(255, 255, 255, .55);
+}
+
+/* ★★ 여기가 핵심이다 — 블록에 **판**을 깐다.
+ *
+ *   토큰(--ev-surface)만 바꿔서는 안 됐다. 실측해 보니 혜택 · 참여방법 · CTA 는
+ *   배경이 아예 `rgba(0,0,0,0)` 이다. 평소엔 페이지 바탕이 흰색이라 그 위에
+ *   검은 글씨를 얹으면 그만이었다. 사진을 깔면 **검은 글씨가 사진 위에 맨몸으로** 올라간다.
+ *
+ *   그래서 블록마다 반투명 흰 판을 준다. 글자색은 하나도 안 건드린다 —
+ *   판이 밝으면 원래 쓰던 검은 글씨가 그대로 읽힌다.
+ *
+ * ★ hero 는 뺀다. hero 는 흰 글씨가 기본이라(10-fallback) 밝은 판을 깔면 글자가 사라진다.
+ *   위에서 어두운 판을 따로 준다.
+ * ★ 유의사항도 뺀다. 자기 크림색 판을 이미 갖고 있고, 그게 "읽고 넘어가라" 는 신호다.
+ * ★ padding 은 안 건드린다. 블록마다 이미 있고, 여기서 덮으면 템플릿이 틀어진다.
+ */
+.ev-container:has(> .ev-asset-page) > [data-block]:not([data-block="hero"], [data-block="notices"]) {
+  background: rgba(255, 255, 255, .90);
+  backdrop-filter: blur(3px);
+  border-radius: var(--ev-radius-lg, 18px);
+  margin-bottom: 14px;
+}
+
+/* ★★ 판이 밝아졌으니 그 위의 글자도 어두워야 한다.
+ *   테마가 어두운 판을 전제로 **흰 글씨**를 쓰던 블록이 있다 —
+ *   theme-punch 의 참여 버튼 영역이 그랬다(실측 1.29, 흰 판에 흰 글씨).
+ *   판을 바꾼 쪽이 글자도 책임져야 한다.
+ * ★ 강조색(--ev-primary 로 칠한 숫자 · 배지)은 안 건드린다. :is 에 든 것만이다. */
+.ev-container:has(> .ev-asset-page)
+  > [data-block][data-block][data-block]:not([data-block="hero"], [data-block="notices"])
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  color: var(--ev-text-main, #0f172a);
+  -webkit-text-fill-color: var(--ev-text-main, #0f172a);
+}
 
 /* ── 99-a11y/01-reduced-motion.css ── */
 @media (prefers-reduced-motion: reduce) {

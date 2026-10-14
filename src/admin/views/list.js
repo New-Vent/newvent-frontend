@@ -261,6 +261,7 @@ function serverMine(es) {
     + `<br><small>${serverPeriod(e)}</small></td>`
     + '<td><div class="row">'
     + button('versions', '버전 이력', `data-id="${e.id}"`, 'btn sm')
+    + button('participants', '참여자', `data-id="${e.id}"`, 'btn sm')
     + button('edit', '편집하기', `data-id="${e.id}"`, 'btn sm soft')
     + publishButton(e)
     + button('delete-event', '삭제하기', `data-id="${e.id}"`, 'btn sm danger')

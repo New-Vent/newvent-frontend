@@ -1,0 +1,47 @@
+/* 템플릿 기본 상태의 글자 대비 (#220)
+ *
+ * 팔레트 없이도 4.5(작은 글자 기준)에 못 미치던 글자를 4.5 이상으로 올린다.
+ * 색상과 채도는 그대로 두고 밝기만 조정했다 (oklch 에서 대비 4.6 이 되는 가장 가까운 값).
+ *
+ * ★ 범위를 둘로 나눈다
+ *   ① 포인트색 글자 — 팔레트가 붙으면 90-palettes/95 가 이미 처리한다. 팔레트 없을 때만 건다.
+ *   ② 중성색(회색) 글자 · 고정 색 — 팔레트와 무관하다. 팔레트가 붙어도 같이 바뀌어야 한다.
+ *      안 그러면 팔레트를 붙였을 때 오히려 기본 상태보다 흐려진다.
+ *      페이지 바탕을 따르는 글자(목록 · 단계 설명)는 어두운 팔레트(night · esports)를 뺀다 —
+ *      그쪽은 팔레트가 글자색을 밝게 바꾸므로 여기 값(어두운 회색)이 오히려 안 보인다.
+ *
+ * ★ 토큰(--tpl-*)이 아니라 값을 직접 적는다
+ *   --tpl-* 는 전부 팔레트에 연결돼야 한다 (tests/template-contrast.test.mjs 가 확인한다).
+ *   여기 값은 "팔레트가 없을 때의 보정"이라 연결할 대상이 없다.
+ *
+ * ★ 일부러 뺀 것: holiday 복주머니 일러스트 위의 福 (.hl-pouch-hanja, 대비 1.4 ~ 1.8).
+ *   금 · 파랑 몸통 그라데이션 위의 글자라 색 하나로 못 푼다. 일러스트를 손볼 때 같이 본다.
+ */
+
+/* ── ① 포인트색 글자 — 팔레트 없을 때 ── */
+
+/* 소제목 라벨 · 혜택 태그 · 혜택 값 */
+.theme-holiday:not([class*="palette-"]) :is(.block-header .sub-label, .benefit-tag) { color: #b25300; }
+.theme-holiday:not([class*="palette-"]) .hl-pouch-prize { color: #d34200; }
+
+.theme-vip:not([class*="palette-"]) :is(.block-header .sub-label, .benefit-tag, .vp-coupon .benefit-value) { color: #9e6000; }
+
+.theme-launch:not([class*="palette-"]) .block-header .sub-label { color: #007895; }
+
+.theme-sports:not([class*="palette-"]) :is(.block-header .sub-label, :is(.sp-prize-sub, .sp-prize-main) .benefit-tag) { color: #d71f22; }
+/* 어두운 남색 바탕 위의 밝은 빨강 */
+.theme-sports:not([class*="palette-"]) :is(.sp-sb-label, .sp-value-lg) { color: #ff5351; }
+
+/* ── ② 회색 · 고정 색 ── */
+
+/* 바탕이 고정인 곳(칩 · 카드)은 팔레트와 상관없이 */
+:is(.theme-launch, .theme-sale) :is(.demo-tag, .lc-ms-reward) { color: #58687e; }
+.theme-sports .sp-prize-main .benefit-desc,
+.theme-launch .lc-mockup-caption { color: #8192aa; }
+
+/* 흰 글자가 얹히는 초록 배지 — 배경을 진하게 (2.3 → 4.6). 색이 팔레트와 무관하게 고정이라 항상 */
+.theme-holiday .hero-badge.t-badge-green { background: #008820; }
+
+/* 페이지 바탕을 따르는 곳(유의사항 목록 · 단계 설명)은 어두운 팔레트만 뺀다 */
+:is(.theme-holiday, .theme-vip):not(:is(.palette-night, .palette-esports)) :is(.notice-list li, .step-desc),
+:is(.theme-launch, .theme-sports):not(:is(.palette-night, .palette-esports)) .notice-list li { color: #58687e; }

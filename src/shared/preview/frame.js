@@ -24,6 +24,41 @@ function observeLayout(target, update) {
  state.observers.push({disconnect(){observer.disconnect();if(pending!==null)view.cancelAnimationFrame(pending);pending=null;}});
 }
 
+/**
+ * 직접 수정의 영역 도구줄 — 올린 영역의 오른쪽 위에 순서 · 모양을 띄운다.
+ *
+ * ★ 무엇을 띄울지는 편집 화면이 정한다. 올릴 때마다 frame.nvTools(block) 에 묻고,
+ *   누른 것은 nv-tool 이벤트로 올린다 — 여기는 그리고 알리기만 한다 (상태를 갖지 않는다).
+ * ★ 도구줄은 body 바로 아래에 둔다. [data-block] 밖이라 직접 수정 문구 목록(collectTexts)에 안 잡힌다.
+ * ★ iframe 에는 스크립트가 없다(sandbox). 이 리스너들은 호스트의 것이다.
+ */
+function bindTools(frame,doc){
+ const bar=doc.createElement('div');bar.className='nv-tools';bar.hidden=true;doc.body.appendChild(bar);
+ let over=null;
+ const safe=t=>String(t??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+ const emit=(tool,value)=>{if(over)frame.dispatchEvent(new CustomEvent('nv-tool',{bubbles:true,detail:{block:over.dataset.block,tool,value}}));};
+ const place=()=>{const r=over.getBoundingClientRect(),w=doc.defaultView,width=doc.documentElement.clientWidth;
+  bar.style.top=Math.max(4,r.top+w.scrollY-14)+'px';bar.style.right=Math.max(4,width-r.right+8)+'px';};
+ const draw=()=>{
+  doc.querySelectorAll('.nv-tool-hover').forEach(n=>n.classList.remove('nv-tool-hover'));
+  if(over&&!over.isConnected)over=null;
+  const info=over&&frame.nvTools?.(over.dataset.block);
+  bar.hidden=!info;if(!info)return;
+  over.classList.add('nv-tool-hover');
+  const btn=(tool,label,title,off,on,value)=>'<button type="button" data-tool="'+tool+'"'+(value?' data-value="'+value+'"':'')+' title="'+safe(title)+'"'+(off?' aria-disabled="true"':'')+(on?' class="on"':'')+'>'+label+'</button>';
+  bar.innerHTML='<b>'+safe(info.label)+'</b>'
+   +(info.move?'<i></i>'+btn('up','▲','위로',!info.move.up)+btn('down','▼','아래로',!info.move.down):'')
+   +(info.variants?'<i></i><select aria-label="'+safe(info.label)+' 모양"><option value="">기본 모양</option>'+info.variants.map(v=>'<option value="'+safe(v.cssClass)+'"'+(v.cssClass===info.variant?' selected':'')+(v.blocked?' disabled':'')+'>'+safe(v.desc)+(v.blocked?' (항목 부족)':'')+'</option>').join('')+'</select>':'');
+  place();
+ };
+ doc.addEventListener('mouseover',ev=>{if(ev.target.closest('.nv-tools'))return;const b=ev.target.closest('[data-block]');if(b===over)return;over=b;draw();});
+ doc.addEventListener('mouseleave',()=>{over=null;draw();});
+ doc.addEventListener('change',ev=>{const sel=ev.target.closest?.('.nv-tools select');if(sel)emit('variant',sel.value);});
+ // 편집 화면이 순서 · 배치 · 모양을 바꾼 뒤 부른다 — 옮겨진 영역을 따라가고 눌린 표시를 다시 그린다
+ frame.nvToolsRefresh=()=>{if(doc.activeElement?.closest?.('.nv-tools select'))place();else draw();};
+ return {click(ev){const b=ev.target.closest('.nv-tools button');if(!b)return;ev.preventDefault();ev.stopPropagation();if(b.getAttribute('aria-disabled')==='true')return;emit(b.dataset.tool,b.dataset.value);}};
+}
+
 function bindFrame(frame){
  const doc=frame.contentDocument,e=eventById(frame.dataset.event),mode=frame.dataset.mode;
  if(!doc?.querySelector('[data-block]')||doc.__newventBound)return;
@@ -49,17 +84,18 @@ function bindFrame(frame){
  // 서버 편집 화면의 직접 수정 — 누른 글자를 편집 화면(server-editor.js)에 알린다. 페이지 동작은 막는다
  if(mode==='server-edit'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
-  doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
+  const tools=bindTools(frame,doc);
+  doc.addEventListener('click',ev=>{if(ev.target.closest('.nv-tools')){tools.click(ev);return;}ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
  }
  // 서버 편집 화면의 AI 대화 — 누른 영역(data-block)을 편집 화면에 알린다. 유의사항은 서버 소유라 고를 수 없다
  if(mode==='server-select'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
-  doc.querySelectorAll('[data-block]').forEach(b=>{const own=b.dataset.block==='notices';b.style.cursor=own?'default':'pointer';b.title=own?'유의사항은 고칠 수 없어요':(BLOCK_LABELS[b.dataset.block]||b.dataset.block)+' 영역 — 눌러서 고르기';});
+  doc.querySelectorAll('[data-block]').forEach(b=>{const own=b.dataset.block==='notices';b.style.cursor=own?'default':'pointer';b.title=own?'유의사항은 직접 수정 탭에서 편집할 수 있어요':(BLOCK_LABELS[b.dataset.block]||b.dataset.block)+' 영역 — 눌러서 고르기';});
   // 올린 영역에 이름표 — "누르면 고를 수 있다"를 미리보기 안에서 바로 알린다
   const tag=doc.createElement('div');tag.className='nv-pick-tag';tag.hidden=true;doc.body.appendChild(tag);
   let over=null;
   const label=b=>{const own=b.dataset.block==='notices',name=BLOCK_LABELS[b.dataset.block]||b.dataset.block;
-   tag.textContent=own?name+' · 고칠 수 없어요':b.classList.contains('newvent-selected')?'✓ '+name+' 선택됨 · 눌러서 해제':name+' · 눌러서 고르기';
+   tag.textContent=own?name+' · 직접 수정 탭에서 편집':b.classList.contains('newvent-selected')?'✓ '+name+' 선택됨 · 눌러서 해제':name+' · 눌러서 고르기';
    tag.classList.toggle('own',own);tag.classList.toggle('on',!own&&b.classList.contains('newvent-selected'));};
   const place=b=>{const r=b.getBoundingClientRect(),w=doc.defaultView;tag.style.top=Math.max(0,r.top+w.scrollY-11)+'px';tag.style.left=(r.left+w.scrollX+12)+'px';};
   doc.addEventListener('mouseover',ev=>{const b=ev.target.closest('[data-block]');if(b===over)return;
@@ -70,9 +106,34 @@ function bindFrame(frame){
    // 칩 · 외곽선은 편집 화면이 바로 바꾼다 — 이름표도 그 상태로 다시 쓴다
    if(b===over)label(b);},true);return;
  }
- // 공개 이벤트 상세 — 서버 문서의 runtime.js 가 data-behavior 로 동작한다. 막지 않는다
- // 참여는 runtime 이 이 iframe 에서 nv-participate 를 올리고 사용자 앱(user/participation.js)이 받는다
- if(mode==='live'){if(ui.participated?.[doc.body.dataset.eventId])markParticipated(frame);return;}
+ /**
+  * 공개 이벤트 상세 (사용자 화면) — 페이지 안의 「참여하기」만 통과시킨다.
+  *
+  * ★ iframe 안에서는 스크립트가 **돌지 않는다** (sandbox 에 allow-scripts 가 없다).
+  *   그래서 클릭 처리는 전부 호스트가 한다. 여기서는 nv-participate 만 올리고
+  *   실제 참여는 사용자 앱이 맡는다 (user/main.js) — 로그인 토큰이 거기에만 있다.
+  *
+  * ★ 조건을 좁게 잡는다. `[data-slot="cta-link"]` 하나만 본다 —
+  *   `.btn` 이나 `.cta-btn` 을 잡으면 sports_cheer 의 응원 투표 버튼까지 걸린다.
+  *   그건 페이지 안에서만 뜻이 있는 버튼이다.
+  *
+  * ★ 나머지 클릭은 readonly 와 똑같이 막는다. 링크를 따라가면 iframe 이 통째로 바뀐다.
+  */
+ if(mode==='live'){
+  doc.querySelectorAll('button,input,select,textarea').forEach(el=>{
+   if(!el.closest('[data-slot="cta-link"]'))el.disabled=true;
+  });
+  if(ui.participated?.[frame.dataset.event])markParticipated(frame);
+  doc.addEventListener('click',ev=>{
+   ev.preventDefault();ev.stopPropagation();
+   const cta=ev.target.closest('[data-slot="cta-link"]');
+   if(!cta||cta.getAttribute('aria-disabled')==='true')return;
+   // 목적지는 서버가 data-href(button) 또는 href(a)로 넣는다. 둘 다 /events/{id} 다
+   const href=cta.dataset.href||cta.getAttribute('href')||'';
+   frame.dispatchEvent(new CustomEvent('nv-participate',{bubbles:true,detail:{href,eventId:frame.dataset.event}}));
+  },true);
+  return;
+ }
  if(mode==='readonly'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();},true);return;
@@ -181,14 +242,18 @@ function hydrate(root=document){
 }
 
 /**
- * 참여를 마친 페이지로 바꾼다 — 고르는 버튼 · 입력을 잠그고 참여 버튼 문구를 바꾼다.
- * runtime 은 body[data-participated] 를 보고 다시 보내지 않는다
+ * 참여를 마친 페이지로 바꾼다 — 참여 버튼을 잠그고 문구를 바꾼다.
+ *
+ * ★ 참여 버튼은 `[data-slot="cta-link"]` 다. 서버가 거기에만 목적지(data-href · href)를 넣는다.
+ *   aria-disabled 로 잠근다 — <a> 는 disabled 가 없고, bindFrame 의 live 분기가 이 값을 본다.
  */
 function markParticipated(frame){
  const doc=frame?.contentDocument;if(!doc?.body||doc.body.hasAttribute('data-participated'))return;
  doc.body.setAttribute('data-participated','');
- doc.querySelectorAll('.ev-game button,.ev-game input').forEach(el=>el.disabled=true);
- doc.querySelectorAll('[data-behavior~="participate"]').forEach(el=>{el.textContent='참여 완료';el.setAttribute('aria-disabled','true');});
+ doc.querySelectorAll('[data-slot="cta-link"]').forEach(el=>{
+  el.textContent='참여 완료';el.setAttribute('aria-disabled','true');
+  if('disabled' in el)el.disabled=true;
+ });
 }
 
 export { bindFrame, hydrate, markParticipated, replaceBlock }
