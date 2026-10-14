@@ -241,6 +241,35 @@ export async function loadPreview(eventId) {
   }
 }
 
+/* ── 올린 이미지 ─────────────────────────────────────────────── */
+
+/**
+ * 이 이벤트에 올라온 이미지 목록 → [{ assetId, url, caption, contentType, byteSize, scrim }]
+ * ★ 목업 모드에는 업로드가 없다. 빈 배열을 준다 — 화면이 분기하지 않게
+ */
+export async function loadAssets(eventId) {
+  if (!USE_SERVER) return []
+  const res = await requireApi().get(`/api/admin/events/${eventId}/assets`)
+  return res?.assets ?? res ?? []
+}
+
+/**
+ * 이미지 하나 올리기 → { assetId, url, … }
+ * ★ multipart 다. api.js 의 postForm 이 Content-Type 을 브라우저에 맡긴다 —
+ *   우리가 적으면 boundary 가 빠져서 서버가 파트를 못 읽는다
+ */
+export async function uploadAsset(eventId, file, caption) {
+  const form = new FormData()
+  form.append('file', file)
+  if (caption) form.append('caption', caption)
+  return requireApi().postForm(`/api/admin/events/${eventId}/assets`, form)
+}
+
+/** 올린 이미지 지우기. ★ 이미 게시된 페이지에 박혀 있으면 그 자리가 깨진다 */
+export async function deleteAsset(eventId, assetId) {
+  return requireApi().del(`/api/admin/events/${eventId}/assets/${assetId}`)
+}
+
 /**
  * AI 대화 수정 시작 → { jobId, phase, percent }. 결과는 generationStatus 로 폴링한다 (생성과 같은 작업 자리).
  * ★ 기준은 항상 **최신 버전** 이다 — 다른 버전에서 이어 가려면 restoreVersion 으로 먼저 최신으로 가져온다
