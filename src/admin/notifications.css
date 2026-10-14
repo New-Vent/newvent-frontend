@@ -1,0 +1,331 @@
+#admin-notifications {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#admin-notifications,
+#admin-notifications * {
+  box-sizing: border-box;
+}
+
+#admin-notifications [hidden] {
+  display: none !important;
+}
+
+#admin-notifications button {
+  font: inherit;
+  cursor: pointer;
+}
+
+#admin-notifications button:disabled {
+  cursor: default;
+}
+
+/* 회색 종 아이콘 */
+.admin-notifications-bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #748094;
+  box-shadow: none;
+  transition: background 150ms, box-shadow 150ms;
+}
+
+.admin-notifications-bell:hover {
+  background: #f0f3f6;
+}
+
+/* 팝업이 열렸을 때 클릭 표시 */
+.admin-notifications-bell[aria-expanded="true"] {
+  background: #edf2f6;
+  box-shadow: 0 2px 9px rgb(35 51 78 / 12%);
+}
+
+.admin-notifications-bell svg,
+.admin-notifications-close svg,
+.admin-notification-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 종 위의 빨간 점 */
+.admin-notifications-dot {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ed5353;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.admin-notifications-bell[aria-expanded="true"] .admin-notifications-dot {
+  box-shadow: 0 0 0 2px #edf2f6;
+}
+
+/* 알림 팝업 */
+.admin-notifications-panel {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+  z-index: 100;
+  width: 366px;
+  max-width: calc(100vw - 32px);
+  overflow: hidden;
+  border: 1px solid #e9edf4;
+  border-radius: 15px;
+  background: #fff;
+  color: #252d3c;
+  box-shadow: 0 12px 45px rgb(35 51 78 / 13%);
+}
+
+/* 제목과 안 읽은 개수를 한 줄로 표시 */
+.admin-notifications-heading {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 44px 12px 20px;
+  border-bottom: 1px solid #e9edf4;
+}
+
+.admin-notifications-title {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.admin-notifications-description {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: #748094;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* 기존 제목 옆 숫자 배지 숨김 */
+.admin-notifications-count {
+  display: none;
+}
+
+/* X 중심을 목록의 파란 점과 같은 가로 위치에 맞춤 */
+.admin-notifications-close {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #748094;
+}
+
+.admin-notifications-close:hover {
+  background: #f3f6fb;
+}
+
+/* 세로 스크롤만 표시 */
+.admin-notifications-list {
+  max-height: min(420px, 60vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* 읽은 알림 */
+.admin-notification-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 17px 38px 17px 20px;
+  border: 0;
+  border-bottom: 1px solid #e5e9ee;
+  background: #f6f7f9;
+  color: #737d8c;
+  text-align: left;
+  white-space: normal;
+}
+
+.admin-notification-item:last-child {
+  border-bottom: 0;
+}
+
+.admin-notification-item:hover {
+  background: #eff1f4;
+}
+
+.admin-notification-item:disabled {
+  opacity: 0.65;
+}
+
+/* 안 읽은 알림 */
+.admin-notification-item.is-unread {
+  background: #f8fbfd;
+  color: #252d3c;
+}
+
+.admin-notification-item.is-unread:hover {
+  background: #f0f7fb;
+}
+
+/* 안 읽은 알림의 오른쪽 파란 점 */
+.admin-notification-item.is-unread::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  right: 20px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0089ca;
+}
+
+/* 읽은 알림 아이콘 */
+.admin-notification-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #e3e7ec;
+  color: #8791a1;
+}
+
+/* 안 읽은 알림 아이콘 */
+.admin-notification-item.is-unread .admin-notification-icon {
+  background: #edf5fa;
+  color: #0089ca;
+}
+
+.admin-notification-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.admin-notification-content {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-notification-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 읽음 상태는 오른쪽 점으로 구분 */
+.admin-notification-read {
+  display: none;
+}
+
+/* 긴 문장은 여러 줄로 표시 */
+.admin-notification-message {
+  display: block;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.admin-notification-time {
+  display: block;
+  margin-top: 7px;
+  color: #748094;
+  font-size: 11px;
+}
+
+.admin-notifications-footer {
+  margin: 0;
+  padding: 12px 20px;
+  border-top: 1px solid #e9edf4;
+  color: #748094;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* 빈 목록·조회 실패 */
+.admin-notifications-empty {
+  padding: 32px 20px;
+  color: #748094;
+  font-size: 13px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.admin-notifications-empty p {
+  margin: 0 0 12px;
+}
+
+.admin-notifications-retry {
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 7px;
+  background: #eaf5fc;
+  color: #0089ca;
+}
+
+/* 모바일 */
+@media (max-width: 640px) {
+  .admin-notifications-panel {
+    position: fixed;
+    top: 76px;
+    right: 16px;
+  }
+}
+
+/* 터치 화면에서도 X와 점의 가로 위치 유지 */
+@media (pointer: coarse) {
+  .admin-notifications-bell,
+  .admin-notifications-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-notifications-heading {
+    padding-right: 52px;
+  }
+
+  .admin-notifications-close {
+    right: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-notifications-bell {
+    transition: none;
+  }
+}

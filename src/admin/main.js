@@ -1,3 +1,5 @@
+import './notifications.css'
+import { createAdminNotifications } from './notifications.js'
 import { CONTENT_FIELDS, LABELS } from '@shared/constants.js'
 import { showSelectedTarget } from '@shared/editor-state.js'
 import { validSnapshot } from '@shared/preview/document.js'
@@ -45,6 +47,8 @@ export const api = createApi({ authBase: '/api/admin/auth' })
 // repo 가 이 클라이언트로 서버를 부른다 (목업 모드면 안 쓰인다).
 useApi(api)
 
+const adminNotifications = createAdminNotifications(api, AUTH_ENABLED && USE_SERVER)
+
 const VIEWS = { admin: adminView, users: usersView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, login: loginView }
 
 const ROUTES = [
@@ -81,10 +85,13 @@ function header() {
       ui.route === 'users' ? 'active' : '') +
     '</nav><div class="account">' +
     (ui.logged
-      ? '<span class="avatar">' + icon('layers') + '</span><span class="name">운영자님</span>' +
+      ? '<div id="admin-notifications"></div>' +
+        '<span class="avatar">' + icon('layers') + '</span><span class="name">운영자님</span>' +
         button('logout', '로그아웃', '', 'btn ghost sm')
       : button('route', '로그인', 'data-route="login"', 'btn soft sm')) +
     '</div></div>'
+
+    adminNotifications.mount(ui.logged)
 }
 
 function render(scroll = false) {
@@ -412,6 +419,7 @@ document.addEventListener('input',editButton);
  *   ensureServerEditor 는 id 가 같으면 다시 읽지 않으므로 저절로 지워지지도 않는다.
  */
 async function logout() {
+  adminNotifications.reset()
   resetAdminUsers()
 
   if (AUTH_ENABLED) await api.logout()
