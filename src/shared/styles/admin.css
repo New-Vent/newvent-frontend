@@ -270,3 +270,14 @@
 @media(max-width:560px){.template-library-grid{grid-template-columns:1fr}}
 .metrics.admin-status-metrics {grid-template-columns: repeat(4, minmax(0, 1fr));}
 @media (max-width: 760px) {.metrics.admin-status-metrics {grid-template-columns: repeat(2, minmax(0, 1fr));}}
+
+/* ── 승부 예측형 혜택 줄 (2026-10-14) ──────────────────────────────
+   대상 · 선정 · 인원 · 경품명 · 삭제를 한 줄에 둔다. 줄이 곧 서버의 rewards 한 칸이다.
+   좁은 화면에서는 두 칸으로 접는다 — 입력이 다섯이라 한 줄로는 읽히지 않는다. */
+.reward-row{display:grid;grid-template-columns:1.1fr 1.1fr .7fr 1.6fr auto;gap:8px;align-items:end;
+  padding:12px;border:1px solid var(--line);border-radius:10px;background:#fcfcfd}
+.reward-row + .reward-row{margin-top:8px}
+.reward-row .icon-btn{align-self:end;margin-bottom:4px}
+.reward-row .field{font-size:10px}
+@media(max-width:760px){.reward-row{grid-template-columns:1fr 1fr}
+  .reward-row .icon-btn{justify-self:end}}
