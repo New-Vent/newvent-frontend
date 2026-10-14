@@ -33,9 +33,11 @@ import { participantsView, ensureParticipants, resetParticipants, handleParticip
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
-import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary } from './views/create.js'
+import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary, handleCreateRagClick } from './views/create.js'
 import { loginView } from './views/login.js'
 import { usersView, ensureAdminUsers, resetAdminUsers, handleUsersClick, handleUsersChange, handleUsersSubmit } from './views/user-management.js'
+import { dashboardRagView, ensureDashboard } from './views/dashboard-rag.js'
+import { handleRagPanelClick } from './views/rag-panel.js'
 
 /**
  * 관리자 앱 셸.
@@ -52,13 +54,14 @@ useApi(api)
 
 const adminNotifications = createAdminNotifications(api, AUTH_ENABLED && USE_SERVER)
 
-const VIEWS = { admin: adminView, users: usersView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, participants: participantsView, login: loginView }
+const VIEWS = { admin: adminView, users: usersView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, participants: participantsView, login: loginView, rag: dashboardRagView }
 
 const ROUTES = [
   { path: '/', name: 'admin' },
   { path: '/users', name: 'users' },
   { path: '/login', name: 'login' },
   { path: '/templates', name: 'templates' },
+  { path: '/rag', name: 'rag' },
   { path: '/events/new', name: 'create' },
   { path: '/events/:id/edit', name: 'editor' },
   { path: '/events/:id/versions', name: 'versions' },
@@ -70,6 +73,7 @@ const PATH = {
   login: () => '/login',
   users: () => '/users',
   templates: () => '/templates',
+  rag: () => '/rag',
   create: () => '/events/new',
   editor: (id) => `/events/${id}/edit`,
   versions: (id) => `/events/${id}/versions`,
@@ -88,6 +92,8 @@ function header() {
       ui.route === 'templates' ? 'active' : '') +
     button('route', '사용자 관리', 'data-route="users"',
       ui.route === 'users' ? 'active' : '') +
+    button('route', 'RAG 품질', 'data-route="rag"',
+      ui.route === 'rag' ? 'active' : '') +
     '</nav><div class="account">' +
     (ui.logged
       ? '<div id="admin-notifications"></div>' +
@@ -130,6 +136,7 @@ function render(scroll = false) {
   // 템플릿 라이브러리는 목업 모드에서도 목록이 있다 (mock/library.js)
   if (ui.route === 'templates') ensureLibrary(() => render())
   if (ui.route === 'users') ensureAdminUsers(() => render())
+  if (ui.route === 'rag') ensureDashboard(() => render())
   if (ui.route === 'participants') ensureParticipants(ui.activeId, () => render())
   // 서버 모드 편집 · 버전 이력 화면은 목업 화면 대신 서버 화면이다 (views/server-editor.js · server-versions.js)
   const serverView = USE_SERVER && { editor: serverEditorView, versions: serverVersionsView }[ui.route]
@@ -139,7 +146,7 @@ function render(scroll = false) {
   $('#app').innerHTML = (serverView || VIEWS[ui.route] || adminView)()
   hydrate()
   if (serverView) afterServerRender()
-  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리', users: '사용자 관리', participants: '참여 관리' }[ui.route]
+  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리', users: '사용자 관리', participants: '참여 관리', rag: 'RAG 품질 추이' }[ui.route]
     ?? '이벤트 관리'
   document.title += ' | NewVent'
   if (scroll) window.scrollTo(0, 0)
@@ -251,6 +258,8 @@ document.addEventListener('click', (ev) => {
 
   // ── 템플릿 라이브러리 (PR #133) — 목업 · 서버 둘 다 쓴다 ────────
   if(handleLibraryClick(a,b,()=>render()))return;
+  // ── RAG 구역 (버전 이력) — 목업 · 서버 둘 다 쓴다 ──────────────
+  if(handleRagPanelClick(a,b,()=>render()))return;
   if(handleParticipantsClick(a,b,()=>render()))return;
 
   // ── 서버 모드 편집 화면 ─────────────────────────────────────────
@@ -391,6 +400,8 @@ document.addEventListener('click', (ev) => {
   if(a==='create-mode'){ui.creation.mode=b.dataset.mode;render();document.querySelector('[data-act="create-mode"][data-mode="'+ui.creation.mode+'"]')?.focus({preventScroll:true});return;}
   if(a==='select-create-template'){   if(b.getAttribute('aria-disabled')==='true'){creationError('먼저 기본 정보에서 참여 대상을 우수 이상으로 바꿔주세요.');return;}   ui.creation.templateId=b.dataset.template;const y=window.scrollY;render();window.scrollTo(0,y);document.querySelector('[data-act="select-create-template"][data-template="'+ui.creation.templateId+'"]')?.focus({preventScroll:true});return;  }
   if(a==='finish-create'){finishCreation();return;}
+  // ── 만들기 화면 RAG (기획 단계) — 모달이라 다시 그리지 않는다 ──
+  if(handleCreateRagClick(a,b))return;
   if(a==='device'){ui.mobile=b.dataset.mode==='mobile';render();return;}
   if(a==='block'){   ui.block=b.dataset.block;showSelectedTarget(currentEvent());applySelection();refreshButtonEditor();refreshContentEditor();   const frame=$('.event-frame[data-mode="editor"]'),block=frame?.contentDocument?.querySelector('[data-block="'+ui.block+'"]');   const canvas=$('.canvas');if(block&&canvas)canvas.scrollTo({top:block.offsetTop,behavior:'smooth'});   if(ui.block==='notices')toast('유의사항은 수정 대상에서 제외돼요.');return;  }
   if(a==='reset-button-style'){if(!requestPending()){delete currentDraft().snapshot.buttonStyle;updateEditor();refreshButtonEditor();}return;}
@@ -535,6 +546,7 @@ document.addEventListener('focusin',ev=>{if(USE_SERVER){handleServerFocus(ev);re
 // 블록 순서 끌어 놓기 — 네 가지가 한 함수로 들어간다 (server-editor.handleServerDrag)
 ['dragstart','dragover','drop','dragend'].forEach(t=>document.addEventListener(t,ev=>{if(USE_SERVER)handleServerDrag(ev);}));
 document.addEventListener('nv-pick',handleServerPick);
+document.addEventListener('rag:refresh', () => render());
 document.addEventListener('nv-tool',handleServerTool);
 document.addEventListener('nv-block',handleServerBlock);
 

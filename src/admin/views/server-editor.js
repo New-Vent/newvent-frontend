@@ -43,6 +43,7 @@ import {
   loadAdminEvent, loadAssets, loadChatMessages, loadPreview, loadVersions,
   uploadAsset,
   publishEvent, saveCheckpoint, startEdit, startGenerate, updateEventInfo,
+  searchRagPreview, loadPromptDrafts,
 } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
@@ -910,7 +911,8 @@ function chatPanel(s) {
     + '<textarea id="server-chat" rows="3" aria-label="수정 요청" maxlength="' + REQUEST_MAX + '" placeholder="' + esc(chatPlaceholder(s)) + '" ' + (busy ? 'disabled' : '') + '>'
     + esc(s.chatInput || '') + '</textarea></label>'
     + assetStrip(s)
-    + '<div class="chips">' + EXAMPLES.map((t) => button('server-chat-example', t, 'data-prompt="' + esc(t) + '" ' + (busy ? 'disabled' : ''), 'chip')).join('') + '</div>'
+    + '<div class="chips">' + EXAMPLES.map((t) => button('server-chat-example', t, 'data-prompt="' + esc(t) + '" ' + (busy ? 'disabled' : ''), 'chip')).join('')
+    + button('server-rag-examples', '예시 찾기', busy ? 'disabled' : '', 'chip') + '</div>'
     + '<div class="foot-row">' + assetAdd(s)
     + '<span class="helper" id="server-chat-count">' + (s.chatInput || '').length + ' / ' + REQUEST_MAX + '자 · 최신 버전 기준</span>'
     + '<button class="btn primary sm" type="submit" ' + (busy ? 'disabled' : '') + '>' + icon('sparkle') + (busy ? '처리 중…' : '보내기') + '</button></div></form>'
@@ -1323,8 +1325,108 @@ function setPreviewText(node, index, value) {
 
 /** main.js 의 click 위임에서 부른다. 처리했으면 true */
 function handleServerClick(a, b, rerender) {
+/* ────────────────────── RAG 예시 찾기 ────────────────────── */
+
+/** 예시 찾기 — 참고 예시(내 이벤트 문구) + 프롬프트 초안(다른 이벤트)을 한 모달에.
+ * 두 API 는 따로 돌린다. 위는 그대로 담기, 아래는 추가 형태로 담기.
+ */
+function ragRow(title, desc, copyText) {
+  return '<div class="rag-rec-row"><div class="rag-rec-text"><p class="rag-rec-title">' + esc(title) + '</p>'
+    + '<p class="rag-rec-desc">' + esc(desc) + '</p></div>'
+    + button('server-rag-copy', '담기', 'data-text="' + esc(copyText) + '"', 'btn sm primary') + '</div>'
+}
+
+/** 초안에서 예시 내용만 뽑는다 — 앞의 작성 가이드는 버린다.
+    형식: "{가이드} {형태} (예시: {내용})" → "{내용}" */
+function ragExample(prompt) {
+  const s = String(prompt ?? '')
+  const i = s.indexOf('(예시:')
+  if (i < 0) return s
+  return s.slice(i + 4).replace(/\)\s*$/, '').trim()
+}
+
+/** 문구를 키워드로 축약 — 짧은 구·숫자·기호 강조구만 최대 3개 */
+function ragKeywords(text) {
+  return String(text ?? '').split(/[.。!?\n]+/)
+    .map((s) => s.trim())
+    .filter((s) => s && (s.length <= 25 || /[0-9%GB]/.test(s) || /[★♪🎉💯🎅▶]/.test(s)))
+    .slice(0, 3)
+    .join(' / ')
+}
+
+/** 결과 칸 — 모달 안에서 검색어만 바꿔 다시 부른다 */
+function ragResultBox(id, tip) {
+  return '<div id="' + id + '"><p class="helper">' + tip + '</p></div>'
+}
+
+async function fillBox(id, load) {
+  const box = document.getElementById(id)
+  if (!box) return
+  box.innerHTML = '<p class="helper">불러오는 중…</p>'
+  try {
+    box.innerHTML = await load()
+  } catch (e) {
+    box.innerHTML = '<p>' + esc(e?.message || '불러오지 못했어요.') + '</p>'
+  }
+}
+
+async function openRagExamples() {
+  const title = ui.serverEditor?.event?.name ?? ''
+  modal('예시 찾기',
+    '<div class="rag-board-head"><p class="helper">위에서 고른 문구는 그대로, 아래 초안은 추가 형태로 채팅창에 들어갑니다.</p>'
+    + '<div class="rag-board-search"><input id="rag-q" type="search" value="' + esc(title) + '" placeholder="키워드 입력" aria-label="예시 검색어">'
+    + button('server-rag-examples-run', icon('search'), 'aria-label="예시 검색"', 'btn sm') + '</div></div>'
+    + '<h4 class="rag-sec">내 이벤트 문구</h4>' + ragResultBox('rag-mine', '이벤트명으로 찾는 중…')
+    + '<h4 class="rag-sec">다른 이벤트 초안</h4>' + ragResultBox('rag-others', '이벤트명으로 찾는 중…'),
+    button('close', '닫기'), true)
+  document.getElementById('rag-q')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') runRagExamples() })
+  if (title.trim()) runRagExamples()
+}
+
+async function runRagExamples() {
+  const s = ui.serverEditor
+  const q = document.getElementById('rag-q')?.value?.trim()
+  if (!q) { toast('검색어를 입력해주세요.'); return }
+  fillBox('rag-mine', async () => {
+    const res = await searchRagPreview(s.id, q)
+    const items = res?.results ?? []
+    return items.length
+      ? items.map((c) => {
+        const kw = ragKeywords(c.content) || c.content
+        return ragRow(labelOf(c.blockKey ?? ''), kw, kw)
+      }).join('')
+      : '<p>비슷한 문구가 없어요.</p>'
+  })
+  fillBox('rag-others', async () => {
+    const items = await loadPromptDrafts(s.id, q, 10)
+    if (!Array.isArray(items) || !items.length) return '<p>초안이 없어요. 검색어를 바꿔보세요.</p>'
+    const rows = items.map((d) => {
+      const label = labelOf(d.blockKey ?? '')
+      const ex = ragExample(d.prompt)
+      const kw = ragKeywords(ex) || ex
+      const add = '‘' + label + '’ 영역에 추가해줘: ' + kw
+      return ragRow(d.eventTitle ?? '', '[' + label + '] ' + kw, add)
+    }).join('')
+    return '<p class="helper">초안 ' + items.length + '건</p>' + rows
+  })
+}
+
   const s = ui.serverEditor
   switch (a) {
+    case 'server-rag-examples': openRagExamples(); return true
+    case 'server-rag-examples-run': runRagExamples(); return true
+    case 'server-rag-copy': {
+      // 예시 칩과 같은 길 — 복사한 문구를 채팅 입력창에 넣는다
+      const input = $('#server-chat')
+      if (s && input && !input.disabled) {
+        const text = b.dataset.text || ''
+        s.chatInput = (input.value ? input.value + ' ' : '') + text
+        input.value = s.chatInput
+        input.focus()
+        onChatInput(s.chatInput)
+      }
+      return true
+    }
     case 'server-generate': regenerate(rerender); return true
     case 'server-cancel': cancel(); return true
     case 'server-reload': reloadServerEditor(rerender); return true

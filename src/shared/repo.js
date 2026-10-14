@@ -19,6 +19,16 @@ import { persist } from './persist.js'
 import { DEMO_DATE, USER_ID } from './constants.js'
 import { initialDatabase } from './mock/fixtures.js'
 import { mockLibraryPage, mockTemplatePreview } from './mock/library.js'
+import {
+  mockIndexStatus as _mockIndexStatus,
+  mockSearchPreview as _mockSearchPreview,
+  mockPromptDrafts as _mockPromptDrafts,
+  mockSimilarVersions as _mockSimilarVersions,
+  mockQualityTrend as _mockQualityTrend,
+  mockReindexAllStatus as _mockReindexAllStatus,
+  mockLlmCallLogs as _mockLlmCallLogs,
+  mockLlmCallLog as _mockLlmCallLog,
+} from './mock/rag-fixtures.js'
 
 /**
  * 서버를 쓸지 목업을 쓸지 — 인증과 같은 스위치(VITE_API_AUTH) 하나로 정한다.
@@ -349,6 +359,87 @@ export async function saveCheckpoint(eventId, versionId) {
 /** 버전 저장 해제 — 이력에서 뺀다 (게시 중인 버전은 서버가 막는다) */
 export async function removeCheckpoint(eventId, versionId) {
   return requireApi().del(`/api/admin/events/${eventId}/versions/${versionId}/checkpoint`)
+}
+
+/* ────────────────────────── RAG ────────────────────────── */
+
+/** 단건 재색인 → 색인 현황. versionId 필수. 전체 실행 중이면 409 */
+export async function reindexVersion(eventId, versionId) {
+  if (!USE_SERVER) return _mockIndexStatus(eventId)
+  return requireApi().post(`/api/admin/rag/reindex`, { eventId, versionId })
+}
+
+/** 색인 현황 → { totalVersions, indexedVersions, pendingVersions, chunkCount, lastIndexedAt } */
+export async function loadIndexStatus(eventId) {
+  if (!USE_SERVER) return _mockIndexStatus(eventId)
+  return requireApi().get(`/api/admin/rag/index-status?eventId=${eventId}`)
+}
+
+/** 검색 미리보기 → 상위 청크 + 거리. 한글 쿼리는 URLSearchParams 로 인코딩한다 */
+export async function searchRagPreview(eventId, query, topK = 3) {
+  if (!USE_SERVER) return _mockSearchPreview(eventId, query)
+  const q = new URLSearchParams({ eventId, query, topK })
+  return requireApi().get(`/api/admin/rag/search-preview?${q}`)
+}
+
+/** 프롬프트 초안 목록 → [{ versionId, eventTitle, blockKey, draftText }] */
+export async function loadPromptDrafts(eventId, query, topK = 3) {
+  if (!USE_SERVER) return _mockPromptDrafts()
+  // eventId 없으면 기획 모드 — 만들기 화면에서 이벤트 생기기 전에 부른다
+  const q = new URLSearchParams({ query, topK })
+  if (eventId != null) q.set('eventId', eventId)
+  return requireApi().get(`/api/admin/rag/recommend-prompts?${q}`)
+}
+
+/** 유사 버전 → 기준 버전 제외, 유사도 내림차순.
+    query 주면 기획 모드 (eventId·versionId 없이 텍스트로 비교). 둘 중 하나만 보낸다 */
+export async function loadSimilarVersions(eventId, versionId, topK = 3, query = null) {
+  if (!USE_SERVER) return _mockSimilarVersions()
+  const q = new URLSearchParams({ topK })
+  if (eventId != null) q.set('eventId', eventId)
+  if (versionId != null) q.set('versionId', versionId)
+  if (query) q.set('query', query)
+  return requireApi().get(`/api/admin/rag/similar-versions?${q}`)
+}
+
+/** 주간 품질 추이 → [{ weekStart, totalCalls, ragUsedCalls, chunkCount }] */
+export async function loadQualityTrend(weeks = 4) {
+  if (!USE_SERVER) return _mockQualityTrend()
+  return requireApi().get(`/api/admin/rag/quality-trend?weeks=${weeks}`)
+}
+
+/**
+ * 전체 재색인 시작 → 202 Accepted + { running, startedAt }.
+ * 이미 돌고 있으면 409 + 진행 상태가 본문에 담겨 온다 (에러 아님).
+ */
+export async function startReindexAll() {
+  if (!USE_SERVER) return _mockReindexAllStatus(true)
+  return requireApi().post(`/api/admin/rag/reindex/all`)
+}
+
+/** 전체 재색인 상태 → { running, startedAt, finishedAt, lastResult } */
+export async function pollReindexStatus() {
+  if (!USE_SERVER) return _mockReindexAllStatus(false)
+  return requireApi().get(`/api/admin/rag/reindex/all/status`)
+}
+
+/* ───────────────────── LLM 호출 로그 ───────────────────── */
+
+/** 로그 목록 → 페이지네이션. eventId 주면 그 이벤트만 (없으면 전체) */
+export async function loadLlmCallLogs({ eventId = null, callOk = null, from = null, to = null, page = 0, size = 10 } = {}) {
+  if (!USE_SERVER) return _mockLlmCallLogs()
+  const q = new URLSearchParams({ page, size })
+  if (eventId != null) q.set('eventId', eventId)
+  if (callOk != null) q.set('callOk', callOk)
+  if (from) q.set('from', from)
+  if (to) q.set('to', to)
+  return requireApi().get(`/api/admin/llm-calls?${q}`)
+}
+
+/** 로그 상세 1건 → 실패 분류·RAG 청크 ID 포함. 없으면 404 */
+export async function loadLlmCallLog(id) {
+  if (!USE_SERVER) return _mockLlmCallLog(id)
+  return requireApi().get(`/api/admin/llm-calls/${id}`)
 }
 
 export async function saveVersion(eventId, { source, summary, snapshot }) {

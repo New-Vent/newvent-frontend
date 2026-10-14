@@ -1,0 +1,168 @@
+/**
+ * 버전 이력 화면의 RAG 구역 — 색인 배지 · 전체 재색인 카드 · LLM 호출 로그 카드.
+ *
+ * 서버 화면(server-versions.js)과 목업 화면(versions.js)이 같이 쓴다.
+ * 백엔드가 없어도 보이도록 repo.js 함수가 목업 분기를 한다(템플릿 라이브러리와 같은 방식).
+ *
+ * 상태는 이 모듈이 이벤트별로 들고 있다(화면 객체에 물지 않는다 — 두 화면이 번갈아 열려도
+ * 값이 남아 있어 다시 불러오지 않는다).
+ */
+
+import { esc } from '@shared/dom.js'
+import {
+  loadIndexStatus, loadLlmCallLogs, loadLlmCallLog,
+  pollReindexStatus, startReindexAll,
+} from '@shared/repo.js'
+import { ui } from '@shared/state.js'
+import { button } from '@shared/ui/controls.js'
+import { toast } from '@shared/ui/toast.js'
+
+const stamp = new Intl.DateTimeFormat('ko-KR', {
+  timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
+})
+const when = (iso) => (iso ? stamp.format(new Date(iso)) : '')
+
+/** 이벤트별 패널 상태. index·logs 는 undefined 면 아직 안 불러봤다는 뜻 */
+const PANELS = {}
+const panelOf = (eventId) => (PANELS[eventId] ||= { index: undefined, logs: undefined, job: null, timer: null, loading: false })
+
+/** 화면을 그릴 때 한 번 불러온다. 다 오면 'rag:refresh' 이벤트로 다시 그리게 한다 */
+export function ensureRagPanel(eventId) {
+  if (eventId == null || eventId === '') return
+  const p = panelOf(eventId)
+  if (p.loading || p.index !== undefined) return
+  p.loading = true
+  Promise.all([
+    loadIndexStatus(eventId).catch(() => null),
+    loadLlmCallLogs({ eventId }).catch(() => null),
+  ]).then(async ([index, logs]) => {
+    p.loading = false
+    p.index = index
+    p.logs = logs
+    // 목록에는 실패원인·청크ID가 없다 — 인라인 표시용으로 필요한 행만 상세를 붙인다
+    await attachDetails(p)
+    refresh(eventId)
+  })
+}
+
+/** 상세 붙이기 + 다시 그리기. 목록만으로 그릴 때와 같은 경로를 쓴다 */
+async function attachDetails(p) {
+  const rows = normalizeLogs(p.logs).filter((l) => !l.validOk || l.ragUsed)
+  await Promise.all(rows.map(async (l) => {
+    try {
+      const d = await loadLlmCallLog(l.id)
+      l.failureType = d?.failureType
+      l.failureMessage = d?.failureMessage
+      l.chunkIds = d?.chunkIds
+    } catch {
+      // 상세 실패는 무시 — 목록 정보만 보여준다
+    }
+  }))
+}
+
+function refresh(eventId) {
+  // 버전 이력 화면을 벗어난 뒤면 다시 그리지 않는다
+  if (ui.route === 'versions') document.dispatchEvent(new Event('rag:refresh', { bubbles: true }))
+}
+
+/** 단건 재색인 뒤 배지를 갱신하게 한다 (server-versions.js 의 버전 행 버튼이 쓴다) */
+export async function refreshRagPanel(eventId) {
+  const p = panelOf(eventId)
+  p.index = await loadIndexStatus(eventId).catch(() => p.index)
+}
+
+export function ragIndexBadge(eventId) {
+  const st = panelOf(eventId).index
+  if (!st) return ''
+  return st.pendingVersions === 0
+    ? '<span class="badge green">색인 ' + st.indexedVersions + '/' + st.totalVersions + '</span>'
+    : '<span class="badge amber">미색인 ' + st.pendingVersions + '건</span>'
+}
+
+/** 재색인 카드 + 호출 로그 카드 */
+export function ragPanel(eventId) {
+  const p = eventId == null ? null : panelOf(eventId)
+  const job = p?.job
+  const status = job
+    ? (job.running
+      ? '<p class="rag-desc">전체 재색인 진행 중… 2초 간격으로 상태를 확인해요.</p>'
+      : '<p class="rag-desc">완료 — 성공 ' + (job.lastResult?.succeeded ?? 0) + '/' + (job.lastResult?.totalEvents ?? 0)
+        + ', 청크 ' + (job.lastResult?.totalChunks ?? 0) + '개</p>')
+    : '<p class="rag-desc">버튼을 누르면 삭제된 이벤트·시드를 빼고 전부 다시 색인해요.<br>버전 하나만 고치려면 버전 행의 [재색인]을 쓰세요.</p>'
+  const logs = normalizeLogs(p?.logs)
+  const rows = logs.length
+    ? logs.slice(0, 5).map((l) =>
+      '<div class="rag-log-row">'
+      + '<p class="rag-log-title"><span class="badge ' + (l.validOk ? 'green' : 'amber') + '">#' + l.id + ' ' + (l.validOk ? '성공' : '실패') + '</span>'
+      + '<span>' + esc(l.modelName ?? '') + '</span></p>'
+      + '<p class="rag-log-meta">' + when(l.createdAt) + ' · 입력 ' + (l.inputTokens ?? '-') + ' · 출력 ' + (l.outputTokens ?? '-')
+      + '토큰 · ' + ms(l.responseTimeMs) + (l.ragUsed ? ' · RAG 사용' : '') + '</p>'
+      + (!l.validOk && (l.failureType || l.failureMessage)
+        ? '<p class="rag-log-fail">실패: ' + esc([l.failureType, l.failureMessage].filter(Boolean).join(' — ')) + '</p>' : '')
+      + (l.ragUsed && l.chunkIds
+        ? '<p class="rag-log-meta">참고 청크: ' + esc(l.chunkIds) + '</p>' : '')
+      + '</div>').join('')
+    : '<p class="rag-desc">아직 호출 기록이 없어요.</p>'
+  return '<div class="card rag-card rag-reindex">'
+    + '<div class="rag-reindex-text"><h3>RAG 전체 재색인</h3>' + status + '</div>'
+    + button('rag-reindex-all', job?.running ? '진행 중…' : '전체 재색인', job?.running ? 'disabled' : '', 'btn sm')
+    + '</div>'
+    + '<div class="card rag-card"><h3>LLM 호출 로그</h3>' + rows + '</div>'
+}
+
+/** 목록은 페이지 객체로 오고 상세는 단건으로 온다 — 둘 다 배열로 맞춘다 */
+const normalizeLogs = (raw) => (Array.isArray(raw) ? raw : (raw?.content ?? []))
+
+/** 1400 → '1.4초', 800 → '800ms'. 없으면 '-' */
+const ms = (v) => (v == null ? '-' : (v >= 1000 ? (Math.round(v / 100) / 10) + '초' : v + 'ms'))
+
+/**
+ * 패널 안 버튼. 목업 · 서버 모드 둘 다 여기로 온다 (main.js 가 분기한다).
+ * @returns {boolean} 처리했으면 true
+ */
+export function handleRagPanelClick(a, b, rerender) {
+  switch (a) {
+    case 'rag-reindex-all': {
+      const eventId = currentEventId()
+      if (eventId == null) return true
+      reindexAll(eventId, rerender)
+      return true
+    }
+  }
+  return false
+}
+
+/** 현재 열린 이벤트 — 서버 모드는 편집 상태, 목업 모드는 목업 상태에서 읽는다 */
+function currentEventId() {
+  return ui.serverEditor?.id ?? ui.activeId
+}
+
+async function reindexAll(eventId, rerender) {
+  const p = panelOf(eventId)
+  try {
+    await startReindexAll()  // 202. 이미 돌고 있으면 409 — 그래도 상태 폴링으로 간다
+  } catch (e) {
+    if (e?.status !== 409) {
+      toast(e?.message || '전체 재색인을 시작하지 못했어요.')
+      return
+    }
+  }
+  if (p.timer) clearInterval(p.timer)
+  p.timer = setInterval(async () => {
+    try {
+      const st = await pollReindexStatus()
+      p.job = st
+      if (!st.running) {
+        clearInterval(p.timer)
+        p.timer = null
+        p.index = await loadIndexStatus(eventId).catch(() => p.index)
+      }
+      rerender()
+    } catch {
+      clearInterval(p.timer)
+      p.timer = null
+      rerender()
+    }
+  }, 2000)
+}
+
