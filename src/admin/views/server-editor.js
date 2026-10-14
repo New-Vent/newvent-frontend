@@ -171,7 +171,7 @@ function paintSelection(s) {
 }
 
 function toggleBlock(s, key) {
-  if (key === 'notices') { toast('유의사항은 승인된 문구라 고칠 수 없어요.'); return }
+  if (key === 'notices') { toast('유의사항은 직접 수정 탭에서 문구를 편집할 수 있어요.'); return }
   if (s.selected.includes(key)) s.selected = s.selected.filter((k) => k !== key)
   else if (s.selected.length >= MAX_SELECTED) { toast('영역은 ' + MAX_SELECTED + '개까지 고를 수 있어요.'); return }
   else s.selected = ordered([...s.selected, key])
@@ -354,6 +354,8 @@ function nudgeBlock(s, key, step) {
  * ★ 고정 블록(유의사항 · 참여 버튼)은 목록에 없으므로 건드리지 않는다.
  */
 function previewOrder(s) {
+  // 섹션을 옮기기 전에 서버 인덱스와 문구 노드의 연결을 보관한다.
+  liveTexts(s)
   const doc = $('.event-frame')?.contentDocument
   const root = doc?.querySelector('.ev-container, .event-page')
   if (!root) return
@@ -398,6 +400,10 @@ async function applyDirect(rerender) {
   const s = ui.serverEditor
   if (!s?.preview || running(s) || s.busy) return
   const { edits, buttonStyle, order } = directChanges(s)
+  if (hasEmptyNoticeEdit(s, edits)) {
+    toast('유의사항은 빈칸으로 저장할 수 없어요. 내용을 입력해주세요.')
+    return
+  }
   if (!edits.length && !buttonStyle && !order) { toast('바꾼 내용이 없어요.'); return }
   s.busy = true
   rerender()
@@ -425,11 +431,23 @@ function resetDirect(rerender) {
   rerender()
 }
 
-/** 미리보기 iframe 의 문구 노드 — 템플릿 스크립트가 글자를 바꿀 수 있어 개수만 맞춰 본다 */
+function hasEmptyNoticeEdit(s, edits) {
+  const collected = textsOf(s.preview.html)
+  return edits.some((edit) => collected[edit.index]?.block === 'notices' && !edit.after.trim())
+}
+
+const previewTextNodes = new WeakMap()
+
+/** 서버 순서로 한 번 연결한 노드는 블록 위치가 바뀌어도 그대로 사용한다. */
 function liveTexts(s) {
   const doc = $('.event-frame')?.contentDocument
+  if (!doc) return null
+  const cached = previewTextNodes.get(doc)
+  if (cached?.versionId === s.preview.versionId && cached.list.every((t) => t.node.isConnected)) return cached.list
   const list = doc ? collectTexts(doc.body) : []
-  return list.length === editable(s).length ? list : null
+  if (list.length !== editable(s).length) return null
+  previewTextNodes.set(doc, { versionId: s.preview.versionId, list })
+  return list
 }
 
 function highlight(s, index, scroll) {
@@ -687,13 +705,26 @@ function assetStrip(s) {
   const list = s.assets || []
   if (!list.length) return ''
   const busy = running(s) || s.assetBusy
-  const thumbs = list.map((a, i) => '<span class="chat-asset">'
+  // ★ 페이지에 이미 들어간 것인지. 미리보기 HTML 에 그 주소가 박혀 있으면 쓰인 것이다.
+  //   번호는 그대로 둔다 — 목록에서 빼면 "2번" 이 가리키는 게 달라져서 다음 요청이 어긋난다
+  const html = s.preview?.html || ''
+  const used = (a) => html.includes(a.url)
+
+  const thumbs = list.map((a, i) => '<span class="chat-asset' + (used(a) ? ' is-used' : '') + '">'
     + '<img src="' + esc(a.url) + '" alt="">'
     + '<b class="chat-asset-no">' + (i + 1) + '</b>'
+    + (used(a) ? '<b class="chat-asset-used" title="페이지에 들어가 있어요">' + icon('check') + '</b>' : '')
     + button('server-asset-delete', '×', 'data-id="' + esc(a.assetId) + '" aria-label="' + (i + 1) + '번 이미지 지우기" ' + (busy ? 'disabled' : ''), 'chat-asset-x')
     + '</span>').join('')
+
+  // ★ 안내는 **아직 안 쓴 게 있을 때만**. 다 넣고 나서도 계속 "넣으세요" 가 떠 있으면
+  //   안 들어간 줄 알고 같은 말을 또 하게 된다
+  const left = list.filter((a) => !used(a))
+  const hint = left.length
+    ? '올리기만 해서는 안 들어가요 — "' + (list.indexOf(left[0]) + 1) + '번 이미지를 배경으로 깔아줘" 처럼 말해 주세요'
+    : '모두 페이지에 들어갔어요. 빼려면 "배경에 이미지 없애줘" 처럼 말해 주세요'
   return '<div class="chat-assets">' + thumbs
-    + '<span class="helper chat-assets-hint">올리기만 해서는 안 들어가요 — "1번 이미지를 배경으로 깔아줘" 처럼 말해 주세요</span></div>'
+    + '<span class="helper chat-assets-hint">' + hint + '</span></div>'
 }
 
 /** 직접 수정 — 문구 목록은 스크롤, 되돌리기 · 저장은 아래 고정 */
@@ -715,7 +746,7 @@ function directPanel(s) {
     const attrs = 'class="sedit' + (changed ? ' changed' : '') + '" data-sedit="' + t.index + '" ' + (busy ? 'disabled' : '')
       + ' aria-label="' + esc(t.before.slice(0, 30) || '문구 ' + t.index) + '"'
     // Enter 입력을 허용하고 내용 높이만큼 칸을 늘린다.
-    const input = '<textarea rows="1" data-autogrow ' + attrs + '>' + esc(v) + '</textarea>'
+    const input = '<textarea rows="1" data-autogrow ' + attrs + '></textarea>'
     // 번호 = 서버 editableTexts 의 index (직접 수정 요청에 그대로 실린다)
     return '<div class="sedit-item"><span class="sedit-no' + (changed ? ' changed' : '') + '" data-sedit-no="' + t.index
       + '" title="문구 번호 ' + t.index + '">' + t.index + '</span>' + input + '</div>'
@@ -1007,7 +1038,13 @@ function afterServerRender() {
   // 대화는 최신 말이 보이게 맨 아래로
   const scroller = $('#server-scroll')
   if (scroller && s.tab === 'chat') scroller.scrollTop = scroller.scrollHeight
-  document.querySelectorAll('textarea[data-autogrow]').forEach(grow)
+  document.querySelectorAll('textarea[data-autogrow]').forEach((el) => {
+    if (el.dataset.sedit !== undefined) {
+      const index = Number(el.dataset.sedit)
+      el.value = s.direct.values[index] ?? editable(s)[index]?.before ?? ''
+    }
+    grow(el)
+  })
   if (s.tab === 'direct') {
     updateDirectCount(s)
     const frame = $('.event-frame')
