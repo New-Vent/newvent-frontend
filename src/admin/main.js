@@ -1,4 +1,5 @@
 import './notifications.css'
+import './account-menu.css'
 import { createAdminNotifications } from './notifications.js'
 import { CONTENT_FIELDS, LABELS } from '@shared/constants.js'
 import { showSelectedTarget } from '@shared/editor-state.js'
@@ -86,8 +87,27 @@ function header() {
     '</nav><div class="account">' +
     (ui.logged
       ? '<div id="admin-notifications"></div>' +
-        '<span class="avatar">' + icon('layers') + '</span><span class="name">운영자님</span>' +
-        button('logout', '로그아웃', '', 'btn ghost sm')
+        '<div class="admin-account-menu">' +
+          '<button type="button" class="admin-account-trigger" ' +
+            'data-account-toggle ' +
+            'aria-label="운영자님 계정 메뉴" ' +
+            'aria-expanded="false" ' +
+            'aria-controls="admin-account-dropdown">' +
+            '<span class="avatar">' + icon('user') + '</span>' +
+            '<span class="name">운영자님</span>' +
+            '<span class="admin-account-chevron">' +
+              icon('chevron') +
+            '</span>' +
+          '</button>' +
+          '<div id="admin-account-dropdown" ' +
+            'class="admin-account-dropdown" hidden>' +
+            '<button type="button" class="admin-account-logout" ' +
+              'data-act="logout">' +
+              icon('logout') +
+              '<span>로그아웃</span>' +
+            '</button>' +
+          '</div>' +
+        '</div>'
       : button('route', '로그인', 'data-route="login"', 'btn soft sm')) +
     '</div></div>'
 
@@ -135,6 +155,56 @@ function navigate(route, id) {
 
 // 이식한 뷰들이 @shared/navigate.js 를 통해 이걸 부른다.
 setNavigate(navigate)
+
+// 관리자 계정 드롭다운
+function closeAccountMenu(restoreFocus = false) {
+  const trigger = document.querySelector('[data-account-toggle]')
+  const dropdown = document.getElementById('admin-account-dropdown')
+
+  if (!trigger || !dropdown || dropdown.hidden) return
+
+  dropdown.hidden = true
+  trigger.setAttribute('aria-expanded', 'false')
+
+  if (restoreFocus) trigger.focus()
+}
+
+document.addEventListener('click', (event) => {
+  const account = document.querySelector('.admin-account-menu')
+  if (!account) return
+
+  const trigger = event.target.closest('[data-account-toggle]')
+
+  if (trigger && account.contains(trigger)) {
+    const dropdown = document.getElementById('admin-account-dropdown')
+    if (!dropdown) return
+
+    const open = dropdown.hidden
+    dropdown.hidden = !open
+    trigger.setAttribute('aria-expanded', String(open))
+    return
+  }
+
+  // 바깥 클릭 또는 로그아웃 선택 시 닫는다.
+  if (
+    !account.contains(event.target) ||
+    event.target.closest('[data-act="logout"]')
+  ) {
+    closeAccountMenu()
+  }
+})
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeAccountMenu(true)
+})
+
+// Tab으로 계정 영역을 벗어나면 닫는다.
+document.addEventListener('focusin', (event) => {
+  const account = document.querySelector('.admin-account-menu')
+  if (account && !account.contains(event.target)) {
+    closeAccountMenu()
+  }
+})
 
 /**
  * 템플릿으로 만든 이벤트의 편집 화면을 연다 (views/templates.js 가 부른다).
