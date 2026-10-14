@@ -164,3 +164,23 @@
 .sorder-name{flex:1;font-size:13px;font-weight:600}
 .sorder-moves{display:flex;gap:4px}
 .sorder-moves .btn{padding:2px 7px;min-height:0;font-size:11px;line-height:1.6}
+
+/* 페이지 배치 고르기 — 아이콘 버튼 줄 (편집 화면 · 생성 화면). 흐린 것은 지금 못 고르는 배치다 */
+.lay-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px}
+.lay-pick{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 4px 7px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--muted);font-size:10px;font-weight:700;line-height:1.3;min-width:0;cursor:pointer}
+.lay-pick>svg{width:30px;height:30px;flex:none}
+.lay-pick>span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lay-pick:hover{border-color:#c5e1ee;color:var(--sky)}
+.lay-pick.active{border-color:var(--sky);background:var(--tint);color:var(--sky);box-shadow:inset 0 0 0 1px var(--sky)}
+.lay-pick.blocked{opacity:.38}
+.lay-pick:disabled{cursor:default;opacity:.5}
+.lay-field{font-size:12px;gap:9px;margin-top:16px}
+.lay-field .helper{font-weight:500}
+/* 영역 모양 — 영역 한 줄에 이름 · 모양 */
+.look-rows{display:flex;flex-direction:column;gap:8px}
+/* 아이콘으로 고르는 영역 — 이름 아래에 아이콘 줄 */
+.look-block{display:flex;flex-direction:column;gap:6px;font-size:12px;margin-bottom:6px}
+.var-picks{grid-template-columns:repeat(auto-fill,minmax(62px,1fr))}
+.look-row{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:8px;font-size:12px}
+.look-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.look-row select{width:100%;min-width:0;border:1px solid #e5e2ea;border-radius:8px;padding:6px 8px;font-size:12px;background:#fff}

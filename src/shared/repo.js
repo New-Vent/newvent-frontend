@@ -212,6 +212,8 @@ export async function updateEventInfo(eventId, body) {
  *   템플릿 이벤트           {}                              — 이벤트의 템플릿으로 (모델을 안 부른다)
  *   백지                    { requestText }                 — 모델이 만든다 (≤ 500자)
  *   템플릿 이벤트를 백지로  { templateCode: '', requestText }
+ *   배치를 골라서           { requestText, layout: 'layout-bento' } — 생략하면 AI 가 고른다.
+ *                           모르는 이름은 400 (GEN400-4). 영역이 모자라 못 거는 배치는 기본 배치로 만들어진다
  */
 export async function startGenerate(eventId, body) {
   return requireApi().post(`/api/admin/events/${eventId}/generate`, body)
@@ -228,7 +230,7 @@ export async function cancelGeneration(eventId, jobId) {
 }
 
 /**
- * 최신 버전 미리보기 → { html, versionId, versionNo, editableTexts }. 페이지가 아직 없으면 null.
+ * 최신 버전 미리보기 → { html, versionId, versionNo, editableTexts, looks }. 페이지가 아직 없으면 null.
  * ★ html 은 완전한 문서다 — head(/assets/event.css) · 테마 · /assets/event-runtime.js.
  *   editableTexts 의 index 는 문서가 아니라 저장된 조각 기준이다 (서버가 조각에서 뽑는다)
  */
@@ -286,11 +288,14 @@ export async function startEdit(eventId, requestText, blocks = []) {
  * 직접 수정 → { versionId, versionNo } (새 버전)
  * @param {{sourceVersionId:number, edits?:{index:number,before:string,after:string}[],
  *          buttonStyle?:{background?:string,color?:string,size?:string,shape?:string},
- *          blockOrder?:string[]}} body
+ *          blockOrder?:string[], layout?:string,
+ *          variants?:Record<string,string>}} body
  * ★ index · before 는 미리보기의 editableTexts 그대로. before 가 다르면 409 (화면이 최신이 아님)
  * ★ blockOrder 는 블록을 세울 순서(data-block key). 셋 중 하나만 보내도 된다 —
  *   셋 다 비면 400 (DIRECT_EDIT400-3). 모르는 이름이면 400 (DIRECT_EDIT400-4).
  *   유의사항 · 참여 버튼은 보내도 서버가 무시하고 맨 끝에 둔다 (Block.canMove)
+ * ★ layout(페이지 배치) · variants(영역 → 모양, '' 는 모양 떼기) 는 미리보기의 looks 에 있는 이름을 보낸다.
+ *   모델을 부르지 않는다. 모르는 이름은 400, 지금 페이지에 못 거는 것은 409 (DIRECT_EDIT409-1 — message 가 그 이유다)
  */
 export async function directEdit(eventId, body) {
   return requireApi().post(`/api/admin/events/${eventId}/versions/direct-edit`, body)

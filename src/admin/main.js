@@ -23,7 +23,8 @@ import { requestFor, requestPending, updateEditor } from '@shared/editor-state.j
 import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
 import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
-import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag, handleServerChange } from './views/server-editor.js'
+import { markPick } from '@shared/layouts.js'
+import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag, handleServerTool, handleServerChange } from './views/server-editor.js'
 import { templatesView, ensureLibrary, resetLibrary, handleLibraryClick, handleLibrarySubmit, handleLibraryChange } from './views/templates.js'
 import { participantsView, ensureParticipants, resetParticipants, handleParticipantsClick, handleParticipantsSubmit, handleParticipantsChange } from './views/participants.js'
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
@@ -309,6 +310,7 @@ document.addEventListener('click', (ev) => {
   if(a==='new'){startCreation();return;}
   if(a==='cancel-create'){ui.creation=null;navigate('admin');return;}
   if(a==='create-back'){ui.creation.step=1;render(true);return;}
+  if(a==='create-layout'){ui.creation.layout=b.dataset.layout||'';markPick(document.querySelector('#create-layouts'),ui.creation.layout);return;}
   if(a==='create-mode'){ui.creation.mode=b.dataset.mode;render();document.querySelector('[data-act="create-mode"][data-mode="'+ui.creation.mode+'"]')?.focus({preventScroll:true});return;}
   if(a==='select-create-template'){   if(b.getAttribute('aria-disabled')==='true'){creationError('먼저 기본 정보에서 참여 대상을 우수 이상으로 바꿔주세요.');return;}   ui.creation.templateId=b.dataset.template;const y=window.scrollY;render();window.scrollTo(0,y);document.querySelector('[data-act="select-create-template"][data-template="'+ui.creation.templateId+'"]')?.focus({preventScroll:true});return;  }
   if(a==='finish-create'){finishCreation();return;}
@@ -455,6 +457,7 @@ document.addEventListener('focusin',ev=>{if(USE_SERVER){handleServerFocus(ev);re
 // 블록 순서 끌어 놓기 — 네 가지가 한 함수로 들어간다 (server-editor.handleServerDrag)
 ['dragstart','dragover','drop','dragend'].forEach(t=>document.addEventListener(t,ev=>{if(USE_SERVER)handleServerDrag(ev);}));
 document.addEventListener('nv-pick',handleServerPick);
+document.addEventListener('nv-tool',handleServerTool);
 document.addEventListener('nv-block',handleServerBlock);
 
 document.addEventListener('focusout',()=>queueMicrotask(()=>highlightEditingText()));
