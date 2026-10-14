@@ -280,7 +280,7 @@ document.addEventListener('click', (ev) => {
   if (a === 'route') return navigate(b.dataset.route)
   if (a === 'event') return navigate('event', b.dataset.id)
   if (a === 'login-prompt') return showLoginPrompt()
-  if (a === 'result') return ui.logged ? showResult(b.dataset.id) : showLoginPrompt()
+  if (a === 'result') return ui.logged ? showResult(b.dataset.id, b.dataset.eventId) : showLoginPrompt()
   if (a === 'participation-retry') {
     ui.serverParticipation = null
     render()

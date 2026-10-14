@@ -567,6 +567,27 @@ export async function loadParticipationStatus(eventId) {
   return requireApi().get(`/api/users/me/events/${eventId}/participation-status`)
 }
 
+/** 내 참여 상세 */
+export async function loadParticipationDetail(participationId) {
+  return requireApi().get(`/api/users/me/participations/${participationId}`)
+}
+
+/** 이벤트 ID로 내 참여 기록 ID를 찾는다. */
+export async function findMyParticipationId(eventId) {
+  for (let page = 0; ; page++) {
+    const data = await loadParticipations({ filter: 'ALL', page, size: 50 })
+
+    const found = data.items.find(
+      (item) => String(item.eventId) === String(eventId),
+    )
+
+    if (found) return found.id
+
+    if (!data.items.length || page + 1 >= data.totalPages) {
+      return null
+    }
+  }
+}
 /**
  * 참여하기 — `POST /api/users/me/events/{id}/participations` → 201
  *
