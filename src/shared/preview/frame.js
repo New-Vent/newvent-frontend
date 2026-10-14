@@ -24,6 +24,41 @@ function observeLayout(target, update) {
  state.observers.push({disconnect(){observer.disconnect();if(pending!==null)view.cancelAnimationFrame(pending);pending=null;}});
 }
 
+/**
+ * 직접 수정의 영역 도구줄 — 올린 영역의 오른쪽 위에 순서 · 모양을 띄운다.
+ *
+ * ★ 무엇을 띄울지는 편집 화면이 정한다. 올릴 때마다 frame.nvTools(block) 에 묻고,
+ *   누른 것은 nv-tool 이벤트로 올린다 — 여기는 그리고 알리기만 한다 (상태를 갖지 않는다).
+ * ★ 도구줄은 body 바로 아래에 둔다. [data-block] 밖이라 직접 수정 문구 목록(collectTexts)에 안 잡힌다.
+ * ★ iframe 에는 스크립트가 없다(sandbox). 이 리스너들은 호스트의 것이다.
+ */
+function bindTools(frame,doc){
+ const bar=doc.createElement('div');bar.className='nv-tools';bar.hidden=true;doc.body.appendChild(bar);
+ let over=null;
+ const safe=t=>String(t??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+ const emit=(tool,value)=>{if(over)frame.dispatchEvent(new CustomEvent('nv-tool',{bubbles:true,detail:{block:over.dataset.block,tool,value}}));};
+ const place=()=>{const r=over.getBoundingClientRect(),w=doc.defaultView,width=doc.documentElement.clientWidth;
+  bar.style.top=Math.max(4,r.top+w.scrollY-14)+'px';bar.style.right=Math.max(4,width-r.right+8)+'px';};
+ const draw=()=>{
+  doc.querySelectorAll('.nv-tool-hover').forEach(n=>n.classList.remove('nv-tool-hover'));
+  if(over&&!over.isConnected)over=null;
+  const info=over&&frame.nvTools?.(over.dataset.block);
+  bar.hidden=!info;if(!info)return;
+  over.classList.add('nv-tool-hover');
+  const btn=(tool,label,title,off,on,value)=>'<button type="button" data-tool="'+tool+'"'+(value?' data-value="'+value+'"':'')+' title="'+safe(title)+'"'+(off?' aria-disabled="true"':'')+(on?' class="on"':'')+'>'+label+'</button>';
+  bar.innerHTML='<b>'+safe(info.label)+'</b>'
+   +(info.move?'<i></i>'+btn('up','▲','위로',!info.move.up)+btn('down','▼','아래로',!info.move.down):'')
+   +(info.variants?'<i></i><select aria-label="'+safe(info.label)+' 모양"><option value="">기본 모양</option>'+info.variants.map(v=>'<option value="'+safe(v.cssClass)+'"'+(v.cssClass===info.variant?' selected':'')+(v.blocked?' disabled':'')+'>'+safe(v.desc)+(v.blocked?' (항목 부족)':'')+'</option>').join('')+'</select>':'');
+  place();
+ };
+ doc.addEventListener('mouseover',ev=>{if(ev.target.closest('.nv-tools'))return;const b=ev.target.closest('[data-block]');if(b===over)return;over=b;draw();});
+ doc.addEventListener('mouseleave',()=>{over=null;draw();});
+ doc.addEventListener('change',ev=>{const sel=ev.target.closest?.('.nv-tools select');if(sel)emit('variant',sel.value);});
+ // 편집 화면이 순서 · 배치 · 모양을 바꾼 뒤 부른다 — 옮겨진 영역을 따라가고 눌린 표시를 다시 그린다
+ frame.nvToolsRefresh=()=>{if(doc.activeElement?.closest?.('.nv-tools select'))place();else draw();};
+ return {click(ev){const b=ev.target.closest('.nv-tools button');if(!b)return;ev.preventDefault();ev.stopPropagation();if(b.getAttribute('aria-disabled')==='true')return;emit(b.dataset.tool,b.dataset.value);}};
+}
+
 function bindFrame(frame){
  const doc=frame.contentDocument,e=eventById(frame.dataset.event),mode=frame.dataset.mode;
  if(!doc?.querySelector('[data-block]')||doc.__newventBound)return;
@@ -49,7 +84,8 @@ function bindFrame(frame){
  // 서버 편집 화면의 직접 수정 — 누른 글자를 편집 화면(server-editor.js)에 알린다. 페이지 동작은 막는다
  if(mode==='server-edit'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
-  doc.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
+  const tools=bindTools(frame,doc);
+  doc.addEventListener('click',ev=>{if(ev.target.closest('.nv-tools')){tools.click(ev);return;}ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
  }
  // 서버 편집 화면의 AI 대화 — 누른 영역(data-block)을 편집 화면에 알린다. 유의사항은 서버 소유라 고를 수 없다
  if(mode==='server-select'){
