@@ -103,7 +103,8 @@ function serverParticipation() {
       + '</div>'
   }
 
-  // gameCode 가 없으면 BASIC 으로 본다 — 지금 서버가 안 준다
+  // gameCode 는 서버가 준다(백엔드 #199~). 옛 이벤트처럼 없으면 BASIC 으로 본다 —
+  // 추가 입력이 없는 방식이라 그대로 참여하면 된다
   const input = participationInput(d.gameCode)
   return '<form id="participate-form" class="participation-access ready" role="status">'
     + '<strong>지금 참여할 수 있어요</strong>'
@@ -144,7 +145,9 @@ function serverEventView() {
   return '<div class="container">'
     + button('route', icon('back') + '이벤트 목록', 'data-route="home"', 'backlink')
     + '<div class="detail-layout"><div class="detail-frame">'
-    + serverFrame(e.publishedHtml, esc(e.title), 'readonly')
+    // live — 페이지 안의 「참여하기」(data-slot="cta-link")를 호스트가 받는다.
+    // 그 밖의 클릭은 readonly 와 똑같이 막는다 (frame.js 의 bindFrame 참고)
+    + serverFrame(e.publishedHtml, esc(e.title), 'live', e.id)
     + '</div><aside class="detail-side card">'
     + '<div class="spread"><span class="badge green">진행 중</span>'
     + (e.closingSoon ? '<span class="badge pink">마감 임박</span>' : '') + '</div>'

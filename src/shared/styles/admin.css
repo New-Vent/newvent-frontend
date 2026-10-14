@@ -174,6 +174,22 @@
 .bubble .bubble-tags span{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:#f0faff;color:#0377ad}
 .server-foot .foot-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
 .server-foot .foot-row .helper{font-weight:500}
+/* 이미지 올리기 — 입력칸의 + 와 올린 그림 목록
+   ★ input[type=file] 을 display:none 으로 숨기지 않는다 — 그러면 일부 브라우저에서
+     label 로 창이 안 열리고, 화면 낭독기에도 안 잡힌다. 크기를 0 으로 만든다 */
+.server-foot .chat-add{display:inline-flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;border:1px solid var(--line,#e2dee8);border-radius:999px;background:#fff;color:var(--muted);cursor:pointer}
+.server-foot .chat-add:hover{background:#f0faff;border-color:#bce3f5;color:#0377ad}
+.server-foot .chat-add svg{width:15px;height:15px}
+.server-foot .chat-add input{width:0;height:0;opacity:0;position:absolute;pointer-events:none}
+.server-foot .chat-add:has(input:disabled){opacity:.4;cursor:default}
+.server-foot .chat-assets{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px}
+.server-foot .chat-asset{position:relative;display:inline-block;width:46px;height:46px;border-radius:8px;overflow:hidden;border:1px solid var(--line,#e2dee8);background:#f4f2f6}
+.server-foot .chat-asset img{width:100%;height:100%;object-fit:cover;display:block}
+.server-foot .chat-asset-no{position:absolute;left:2px;top:2px;min-width:14px;padding:0 3px;border-radius:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;line-height:14px;text-align:center;font-weight:700}
+.server-foot .chat-asset-x{position:absolute;right:0;top:0;border:0;padding:0;width:16px;height:16px;line-height:16px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;cursor:pointer;border-radius:0 0 0 6px}
+.server-foot .chat-asset-x:hover{background:#b91c1c}
+.server-foot .chat-asset-x:disabled{opacity:.5;cursor:default}
+.server-foot .chat-assets-hint{flex:1 1 160px;min-width:0;font-weight:500}
 .server-regen{margin-top:14px}
 .server-regen summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)}
 .server-regen[open] summary{margin-bottom:10px}
@@ -254,3 +270,14 @@
 @media(max-width:560px){.template-library-grid{grid-template-columns:1fr}}
 .metrics.admin-status-metrics {grid-template-columns: repeat(4, minmax(0, 1fr));}
 @media (max-width: 760px) {.metrics.admin-status-metrics {grid-template-columns: repeat(2, minmax(0, 1fr));}}
+
+/* ── 승부 예측형 혜택 줄 (2026-10-14) ──────────────────────────────
+   대상 · 선정 · 인원 · 경품명 · 삭제를 한 줄에 둔다. 줄이 곧 서버의 rewards 한 칸이다.
+   좁은 화면에서는 두 칸으로 접는다 — 입력이 다섯이라 한 줄로는 읽히지 않는다. */
+.reward-row{display:grid;grid-template-columns:1.1fr 1.1fr .7fr 1.6fr auto;gap:8px;align-items:end;
+  padding:12px;border:1px solid var(--line);border-radius:10px;background:#fcfcfd}
+.reward-row + .reward-row{margin-top:8px}
+.reward-row .icon-btn{align-self:end;margin-bottom:4px}
+.reward-row .field{font-size:10px}
+@media(max-width:760px){.reward-row{grid-template-columns:1fr 1fr}
+  .reward-row .icon-btn{justify-self:end}}

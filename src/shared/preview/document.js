@@ -174,9 +174,14 @@ function serverDocument(html){
  * 서버 조각을 미리보기 iframe 으로 — 버튼 · 링크는 bindFrame 이 막는다
  * mode  readonly     보기만
  *       server-edit  직접 수정 — 누른 글자를 nv-pick 이벤트로 알린다
+ *       live         사용자 공개 상세 — 페이지의 「참여하기」가 nv-participate 를 올린다
+ *
+ * @param {string|number} [eventId] live 모드에서 어느 이벤트인지 (bindFrame 이 읽는다)
  */
-function serverFrame(html,title='서버 미리보기',mode='readonly'){
- return '<iframe class="event-frame" data-mode="'+mode+'" title="'+esc(title)+'" sandbox="'+sandboxFor(mode)+'" data-doc="'+stageDocument(serverDocument(html))+'"></iframe>';
+function serverFrame(html,title='서버 미리보기',mode='readonly',eventId){
+ return '<iframe class="event-frame" data-mode="'+mode+'"'
+  +(eventId!==undefined?' data-event="'+esc(String(eventId))+'"':'')
+  +' title="'+esc(title)+'" sandbox="'+sandboxFor(mode)+'" data-doc="'+stageDocument(serverDocument(html))+'"></iframe>';
 }
 
 // 썸네일은 모드가 없다 — 보여주기만 하므로 읽기 전용이다 (aria-hidden · tabindex="-1")

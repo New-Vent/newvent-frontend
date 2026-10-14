@@ -1,15 +1,41 @@
 /**
- * 서버 모드의 참여 — 이벤트 페이지(iframe)가 올린 nv-participate 를 받아 참여 API 를 부른다.
+ * ⚠️ 지금 쓰이지 않는 모듈이다. 그대로 두되, 쓰려면 아래 세 가지를 먼저 손봐야 한다.
  *
- * ★ 요청은 여기서 보낸다. 페이지 안(event-runtime.js)은 입력을 모아 알리기만 한다 —
- *   로그인 토큰이 이 앱에만 있고, 페이지 HTML 은 LLM 이 만든 것이라 토큰을 넘기지 않는다
- * ★ 받았다는 표시로 preventDefault 를 부른다. 안 부르면 runtime 이 "미리보기" 안내를 띄운다
- * ★ 목업 모드는 src/shared/preview/frame.js · actions.js 의 예전 흐름을 그대로 쓴다
+ *   1. 아무도 부르지 않는다 — bindParticipation() 호출처가 0곳이다.
+ *   2. 지금 import 하면 **깨진다** — repo.js 에 `participationStatus` 라는 이름이 없다.
+ *      (있는 것은 `loadParticipationStatus` 다. 이름이 갈린 채로 남았다)
+ *   3. 전제가 더 이상 맞지 않는다 — 아래 "원래 설계" 참고.
+ *
+ * ── 원래 설계 (서버 runtime 방식) ─────────────────────────────
+ * 이벤트 페이지 안의 스크립트(event-runtime.js)가 data-behavior 를 보고 입력을 모아
+ * nv-participate 를 올리면, 토큰을 쥔 이 앱이 받아서 참여 API 를 부르는 구조였다.
+ * 페이지 HTML 은 LLM 이 만든 것이라 토큰을 넘기지 않으려는 의도였고, 그 자체는 맞다.
+ *
+ * 그런데 지금은 그 전제가 둘 다 성립하지 않는다.
+ *   · 미리보기 iframe 의 sandbox 에 allow-scripts 가 없다 (document.js 의 sandboxFor —
+ *     editor 모드에만 준다). 그래서 페이지 안 스크립트가 아예 실행되지 않는다.
+ *   · 서버가 내려주는 publishedHtml 에 runtime 스크립트도 data-behavior 도 없다.
+ *     대신 참여 버튼에 `[data-slot="cta-link"]` 와 목적지(data-href · href)를 넣어 준다.
+ *
+ * ── 지금 도는 길 ─────────────────────────────────────────────
+ * 클릭 처리는 전부 호스트가 한다. iframe 안에는 스크립트를 넣지 않는다.
+ *
+ *   frame.js  bindFrame 의 `live` 분기
+ *             → [data-slot="cta-link"] 클릭만 통과시켜 nv-participate 를 올린다
+ *   main.js   participateFromPage()
+ *             → 옆 패널의 #participate-form 을 그대로 제출한다 (검증 · 중복 방지 ·
+ *               결과 표시가 거기 모여 있다. 길을 둘로 만들면 둘이 갈라진다)
+ *
+ * 그래서 이 파일의 onParticipate · showServerResult 는 그 흐름과 역할이 겹친다.
+ * 서버가 다시 runtime 방식으로 돌아가고 live 모드에 allow-scripts 를 주게 되면
+ * 이 파일을 되살리는 쪽이 맞고, 그때까지는 참고용으로만 둔다.
  */
 
 import { esc } from '@shared/dom.js'
 import { icon } from '@shared/icons.js'
 import { markParticipated } from '@shared/preview/frame.js'
+// ⚠️ `participationStatus` 는 repo.js 에 없다 — 이름이 `loadParticipationStatus` 로 갈렸다.
+//    이 파일을 어딘가에서 import 하는 순간 여기서 깨진다 (지금은 아무도 안 불러서 드러나지 않는다)
 import { participate, participationStatus, USE_SERVER } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
