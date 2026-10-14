@@ -210,8 +210,8 @@ function runCreateDrafts() {
     const period = (String(e.startAt ?? e.start ?? '').slice(0, 10)) + '~' + (String(e.endAt ?? e.end ?? '').slice(0, 10))
     return '<div class="rag-rec-row"><div class="rag-rec-text"><p class="rag-rec-title">' + esc(title) + '</p>'
       + '<p class="rag-rec-desc">' + esc(period) + (e.latestVersionNo ? ' · v' + e.latestVersionNo : '') + '</p></div>'
-      + button('create-rag-preview', '미리보기', 'data-event="' + e.id + '" data-title="' + esc(title) + '"', 'btn sm ghost')
-      + button('create-rag-copy', '담기', 'data-event="' + e.id + '"', 'btn sm primary') + '</div>'
+      + button('create-rag-preview', '미리보기', 'data-event="' + e.id + '" data-title="' + esc(title) + '" data-template="' + esc(e.template ?? '') + '"', 'btn sm ghost')
+      + button('create-rag-copy', '담기', 'data-event="' + e.id + '" data-template="' + esc(e.template ?? '') + '"', 'btn sm primary') + '</div>'
   }).join('')
 }
 
@@ -247,18 +247,68 @@ async function runCreateSimilar() {
 
 const draftLabelOf = (k) => BLOCK_LABELS[k] || k
 
-/** 템플릿 theme-* → 분위기 설명. 미리보기 표시와 담기 프롬프트가 같은 말을 쓴다 */
+/** 템플릿 키 → [분위기 설명, 주 색상]. 저장 HTML엔 색이 없어(클래스만 있음) 키로 판별한다 */
 const DRAFT_MOOD = {
-  sports: '열정적인 스포츠 응원 느낌',
-  holiday: '명절·시즌 축하 느낌',
-  vip: '차분하고 고급스러운 느낌',
-  sale: '눈에 띄는 특가·할인 느낌',
-  launch: '새로움을 알리는 출시 느낌',
+  sports_cheer: ['열정적인 스포츠 응원 느낌', '#213f78'],
+  holiday_gift: ['명절·시즌 축하 느낌', '#95500b'],
+  member_appreciation: ['차분하고 고급스러운 느낌', '#765240'],
+  flash_sale: ['눈에 띄는 특가·할인 느낌', '#e24c28'],
+  pre_registration: ['새로움을 알리는 출시 느낌', '#614ab8'],
 }
-const draftTheme = (html) => (/theme-([a-z]+)/.exec(html || '') ?? [])[1]
 
-/** 최신 버전 HTML을 블록별 텍스트로 묶는다. 미리보기·담기가 공유한다 */
-async function loadDraftContent(eventId) {
+let eventCssText = null
+
+/** 미리보기용 event.css를 텍스트로 읽는다. 실패하면 빈 문자열(색상 분석 생략) */
+async function loadEventCss() {
+  if (eventCssText == null) {
+    try {
+      eventCssText = await (await fetch('/assets/event.css')).text()
+    } catch {
+      eventCssText = ''
+    }
+  }
+  return eventCssText
+}
+
+/** 버전 HTML의 클래스가 언급된 CSS 규칙에서 쓴 색을 빈도순으로 최대 3개.
+    테마·백지 가리지 않고 렌더에 쓰이는 실제 색이 나온다 */
+async function cssColorsFor(html) {
+  const css = await loadEventCss()
+  if (!css) return []
+  const classes = new Set(
+    [...(html || '').matchAll(/class="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/)).filter(Boolean))
+  if (!classes.size) return []
+  const found = {}
+  for (const rule of css.split('}')) {
+    const brace = rule.indexOf('{')
+    if (brace < 0) continue
+    const sel = rule.slice(0, brace)
+    let hit = false
+    for (const c of classes) {
+      if (sel.includes('.' + c)) { hit = true; break }
+    }
+    if (!hit) continue
+    const colors = rule.slice(brace).match(/#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b|rgba?\([^)]*\)/g) || []
+    for (let col of colors) {
+      col = col.toLowerCase()
+      if (/^#(fff(fff)?|000(000)?)$/.test(col)) continue
+      found[col] = (found[col] || 0) + 1
+    }
+  }
+  return Object.entries(found).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c]) => c)
+}
+
+/** 디자인 한 줄 — 템플릿 느낌 + 실제 색상. 둘 다 없으면 빈 문자열 */
+function draftDesign(d) {
+  const parts = []
+  if (d.mood) parts.push(d.mood[0] + ' (대표 색상: ' + d.mood[1] + ')')
+  if (d.colors.length) parts.push('실제 사용 색상: ' + d.colors.join(', '))
+  return parts.join(' · ')
+}
+
+/** 최신 버전 HTML을 블록별 텍스트로 묶는다. 미리보기·담기가 공유한다.
+    templateKey로 분위기를 판별한다 (저장 HTML엔 색이 없어 키로 본다) */
+async function loadDraftContent(eventId, templateKey) {
   const list = (await loadVersions(eventId)).versions ?? []
   const latest = list.slice().sort((a, b) => a.versionNo - b.versionNo).at(-1)
   if (!latest) return null
@@ -267,21 +317,22 @@ async function loadDraftContent(eventId) {
   for (const t of collectTexts(new DOMParser().parseFromString('<body>' + (v.htmlContent || '') + '</body>', 'text/html').body)) {
     (byBlock[t.block] ||= []).push(t.text)
   }
-  return { html: v.htmlContent, blocks: byBlock, mood: DRAFT_MOOD[draftTheme(v.htmlContent)] }
+  return { html: v.htmlContent, blocks: byBlock, mood: DRAFT_MOOD[templateKey] ?? null, colors: await cssColorsFor(v.htmlContent) }
 }
 
 /** 지난 기획 미리보기 — 게시물명 + 렌더 미리보기. 블록 요약은 보여주지 않는다 */
-async function openCreateDraftPreview(eventId, title) {
+async function openCreateDraftPreview(eventId, title, templateKey) {
   try {
-    const d = await loadDraftContent(eventId)
+    const d = await loadDraftContent(eventId, templateKey)
     if (!d) { toast('버전이 없어요.'); return }
-    const moodLine = d.mood
-      ? '<p class="rag-rec-desc">[분위기] ' + esc(d.mood) + '</p>'
+    const design = draftDesign(d)
+    const moodLine = design
+      ? '<p class="rag-rec-desc">[디자인] ' + esc(design) + '</p>'
       : ''
     modal(esc(title) + ' 미리보기',
       moodLine
       + '<div class="version-preview-frame">' + serverFrame(d.html, '미리보기') + '</div>',
-      button('create-rag-copy', '담기', 'data-event="' + eventId + '"', 'btn sm primary')
+      button('create-rag-copy', '담기', 'data-event="' + eventId + '" data-template="' + esc(templateKey ?? '') + '"', 'btn sm primary')
       + button('create-rag-drafts', '목록', '', 'btn sm')
       + button('close', '닫기', '', 'btn sm ghost'), true)
     document.querySelector('#overlay .modal')?.classList.add('version-preview-modal')
@@ -296,18 +347,19 @@ function appendPlanning(ta, text) {
 }
 
 /** 지난 기획 담기 — 블록 내용을 기획창에 넣는다. 기획 길이 상한을 넘지 않게 자른다 */
-async function copyDraftBlocks(eventId) {
+async function copyDraftBlocks(eventId, templateKey) {
   const ta = document.querySelector('[data-create="prompt"]')
   if (!ta || !Number.isSafeInteger(eventId) || eventId <= 0) return
   toast('담는 중…')
   try {
-    const d = await loadDraftContent(eventId)
+    const d = await loadDraftContent(eventId, templateKey)
     if (!d) { toast('버전이 없어요.'); return }
     const lines = Object.entries(d.blocks)
       .map(([k, ts]) => '[' + draftLabelOf(k) + '] ' + ts.join(' '))
       .join('\n')
-    // 디자인(분위기)도 맨 위에 붙인다 — 미리보기에서 보는 것과 같은 문구
-    const payload = (d.mood ? '[디자인] ' + d.mood + '\n' : '') + lines
+    // 디자인도 맨 위에 붙인다 — 미리보기에서 보는 것과 같은 문구
+    const design = draftDesign(d)
+    const payload = (design ? '[디자인] ' + design + '\n' : '') + lines
     const room = REQUEST_MAX - ta.value.length
     if (room <= 0) { toast('기획이 꽉 찼어요.'); return }
     appendPlanning(ta, payload.slice(0, room))
@@ -343,7 +395,7 @@ export function handleCreateRagClick(a, b) {
     case 'create-rag-copy': {
       // 기획 입력창에 덧붙인다. 모달은 열어 둬서 여러 개를 고를 수 있다
       if (b.dataset.event) {
-        copyDraftBlocks(Number(b.dataset.event))
+        copyDraftBlocks(Number(b.dataset.event), b.dataset.template || null)
         return true
       }
       const ta = document.querySelector('[data-create="prompt"]')
@@ -356,7 +408,7 @@ export function handleCreateRagClick(a, b) {
     }
     case 'create-rag-preview': {
       const previewId = Number(b.dataset.event)
-      if (Number.isSafeInteger(previewId) && previewId > 0) openCreateDraftPreview(previewId, b.dataset.title || '')
+      if (Number.isSafeInteger(previewId) && previewId > 0) openCreateDraftPreview(previewId, b.dataset.title || '', b.dataset.template || null)
       return true
     }
     case 'create-rag-similar-view': {
