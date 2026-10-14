@@ -223,7 +223,7 @@
   --ev-gradient-hero: linear-gradient(135deg, #090d16 0%, #1e293b 60%, #991b1b 100%);
   --ev-gradient-cta: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
   --ev-accent-tag: #f59e0b;
-  /* 템플릿 전용 포인트색 — 40-templates/01-sports.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/01-sports.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #dc2626;
   --tpl-accent-bright: #ef4444;
   --tpl-accent-deep: #991b1b;
@@ -238,13 +238,15 @@
   --ev-gradient-hero: linear-gradient(135deg, #2b1055 0%, #591a3a 50%, #832729 100%);
   --ev-gradient-cta: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   --ev-accent-tag: #ef4444;
-  /* 템플릿 전용 포인트색 — 40-templates/02-holiday.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/02-holiday.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #f59e0b;
   --tpl-accent-deep: #d97706;
   --tpl-accent-soft: #fde68a;
   --tpl-accent-light: #fef08a;
   --tpl-ribbon: #dc2626;
   --tpl-step: #1b4332;
+  --tpl-warm: #ea580c;
+  --tpl-warm-deep: #c2410c;
 }
 
 /* 3. 회원 감사 / VIP 프로모션 (Luxury Champagne Gold & Dark Indigo) */
@@ -256,10 +258,12 @@
   --ev-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%);
   --ev-gradient-cta: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
   --ev-accent-tag: #38bdf8;
-  /* 템플릿 전용 포인트색 — 40-templates/03-vip.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/03-vip.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #cca43b;
   --tpl-accent-light: #fef08a;
   --tpl-accent-deep: #b45309;
+  --tpl-gold: #eab308;
+  --tpl-gold-deep: #ca8a04;
 }
 
 /* 4. 타임 세일 / 플래시 세일 (Vibrant Coral & Sunset Gradient) */
@@ -271,9 +275,10 @@
   --ev-gradient-hero: linear-gradient(135deg, #2f3542 0%, #ff4757 100%);
   --ev-gradient-cta: linear-gradient(135deg, #ff6b81 0%, #ff4757 100%);
   --ev-accent-tag: #ffa502;
-  /* 템플릿 전용 포인트색 — 40-templates/04-sale.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/04-sale.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #ccff00;
   --tpl-accent-hover: #b8e600;
+  --tpl-accent-soft: #e6ff66;
 }
 
 /* 5. 신규 런칭 / 사전예약 (Cyber Neon Cyan & Electric Violet) */
@@ -285,11 +290,12 @@
   --ev-gradient-hero: linear-gradient(135deg, #050515 0%, #1e1035 60%, #083344 100%);
   --ev-gradient-cta: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
   --ev-accent-tag: #a855f7;
-  /* 템플릿 전용 포인트색 — 40-templates/05-launch.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
+  /* 템플릿 전용 포인트색 — 40-templates/05-launch.css · 08-interactive.css 가 쓴다. 값은 팔레트와 무관한 지금 색 그대로다 */
   --tpl-accent: #2563eb;
   --tpl-accent-deep: #1d4ed8;
   --tpl-accent-bright: #38bdf8;
   --tpl-accent-ink: #1e3a8a;
+  --tpl-accent-light: #3b82f6;
 }
 
 /* ── 20-themes/02-basic.css ── */
@@ -4420,7 +4426,7 @@ body {
 .theme-sports .sp-vote-wrap {
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px dashed rgba(220, 38, 38, 0.4);
+  border-top: 1px dashed color-mix(in srgb, var(--tpl-accent) 40%, transparent);
   text-align: center;
 }
 .theme-sports .sp-vote-title {
@@ -4448,16 +4454,16 @@ body {
   white-space: nowrap;
 }
 .theme-sports .sp-vote-btn:hover {
-  background: rgba(220, 38, 38, 0.25);
-  border-color: #ef4444;
+  background: color-mix(in srgb, var(--tpl-accent) 25%, transparent);
+  border-color: var(--tpl-accent-bright);
   color: #fff;
   transform: translateY(-1px);
 }
 .theme-sports .sp-vote-btn.active {
-  background: #dc2626;
-  border-color: #ef4444;
+  background: var(--tpl-accent);
+  border-color: var(--tpl-accent-bright);
   color: #fff;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tpl-accent-bright) 50%, transparent);
 }
 
 /* Template 2: Holiday 3 Lucky Draw Songpyeon Boxes */
@@ -4490,7 +4496,7 @@ body {
 }
 .theme-holiday .hl-pouch-card:hover {
   transform: translateY(-6px);
-  border-color: #ea580c;
+  border-color: var(--tpl-warm);
   box-shadow: 0 12px 24px rgba(180, 83, 9, 0.15);
 }
 .theme-holiday .hl-pouch-visual {
@@ -4569,7 +4575,7 @@ body {
 .theme-holiday .hl-pouch-prize {
   font-size: 13px;
   font-weight: 800;
-  color: #ea580c;
+  color: var(--tpl-warm);
   margin-bottom: 6px;
 }
 .theme-holiday .hl-pouch-desc {
@@ -4586,16 +4592,16 @@ body {
   font-size: 12px;
   font-weight: 800;
   color: #fff;
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  background: linear-gradient(135deg, var(--tpl-warm) 0%, var(--tpl-warm-deep) 100%);
   border: none;
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba(234, 88, 12, 0.3);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--tpl-warm) 30%, transparent);
   transition: all 0.2s ease;
 }
 .theme-holiday .hl-pouch-btn:hover {
   transform: scale(1.03);
-  box-shadow: 0 5px 12px rgba(234, 88, 12, 0.4);
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--tpl-warm) 40%, transparent);
 }
 .theme-holiday .hl-pouch-btn.opened {
   background: #15803d;
@@ -4625,13 +4631,13 @@ body {
   font-weight: 700;
   color: #78350f;
   background: #fef3c7;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--tpl-accent-soft);
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .theme-holiday .hl-share-btn:hover {
-  background: #fde68a;
+  background: var(--tpl-accent-soft);
   color: #92400e;
 }
 .theme-holiday .hl-cta-btn.cta-completed {
@@ -4647,8 +4653,8 @@ body {
   font-size: 12px;
   font-weight: 700;
   color: #854d0e;
-  background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
-  border: 1px solid #ca8a04;
+  background: linear-gradient(135deg, var(--tpl-accent-light) 0%, var(--tpl-gold) 100%);
+  border: 1px solid var(--tpl-gold-deep);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -4656,7 +4662,7 @@ body {
 }
 .theme-vip .vp-coupon-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(202, 138, 4, 0.3);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--tpl-gold-deep) 30%, transparent);
   color: #713f12;
 }
 .theme-vip .vp-coupon-btn.downloaded {
@@ -4673,7 +4679,7 @@ body {
   font-size: 12px;
   font-weight: 900;
   color: #000;
-  background: #ccff00;
+  background: var(--tpl-accent);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -4683,8 +4689,8 @@ body {
   white-space: nowrap;
 }
 .theme-sale .fs-deal-btn:hover {
-  background: #e6ff66;
-  box-shadow: 0 0 12px rgba(204, 255, 0, 0.5);
+  background: var(--tpl-accent-soft);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--tpl-accent) 50%, transparent);
   transform: translateY(-1px);
 }
 
@@ -4695,7 +4701,7 @@ body {
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.06);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--tpl-accent) 6%, transparent);
 }
 .theme-launch .lc-gauge-header {
   display: flex;
@@ -4706,12 +4712,12 @@ body {
 .theme-launch .lc-gauge-title {
   font-size: 15px;
   font-weight: 800;
-  color: #1e3a8a;
+  color: var(--tpl-accent-ink);
 }
 .theme-launch .lc-gauge-percent {
   font-size: 15px;
   font-weight: 900;
-  color: #2563eb;
+  color: var(--tpl-accent);
 }
 .theme-launch .lc-progress-track {
   height: 10px;
@@ -4723,7 +4729,7 @@ body {
 .theme-launch .lc-progress-fill {
   height: 100%;
   width: 74%;
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(90deg, var(--tpl-accent-light) 0%, var(--tpl-accent) 100%);
   border-radius: 999px;
   transition: width 0.5s ease;
 }
@@ -4751,7 +4757,7 @@ body {
   border-radius: 999px;
   margin-bottom: 4px;
   background: #dbeafe;
-  color: #1d4ed8;
+  color: var(--tpl-accent-deep);
 }
 .theme-launch .lc-milestone-item.achieved .lc-ms-badge {
   background: #dcfce7;
@@ -4805,14 +4811,14 @@ body {
   transition: border-color 0.2s;
 }
 .theme-launch .lc-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--tpl-accent-light);
 }
 .theme-launch .lc-form-btn {
   padding: 12px 16px;
   font-size: 13px;
   font-weight: 700;
   color: #fff;
-  background: #2563eb;
+  background: var(--tpl-accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -4820,7 +4826,7 @@ body {
   transition: background 0.2s;
 }
 .theme-launch .lc-form-btn:hover {
-  background: #1d4ed8;
+  background: var(--tpl-accent-deep);
 }
 .theme-launch .lc-share-row {
   display: flex;
@@ -4837,15 +4843,15 @@ body {
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 700;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--tpl-accent-bright);
+  background: color-mix(in srgb, var(--tpl-accent-bright) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tpl-accent-bright) 30%, transparent);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 .theme-launch .lc-share-btn:hover {
-  background: rgba(56, 189, 248, 0.2);
+  background: color-mix(in srgb, var(--tpl-accent-bright) 20%, transparent);
 }
 
 @media (max-width: 640px) {
@@ -7866,6 +7872,128 @@ body:has(.palette-brand) {
   --ev-bg: #fff8fb; --ev-surface: #ffffff; --ev-surface-subtle: #fff0f7; --ev-border: #f8d3e6;
 }
 
+/* ── 90-palettes/95-template-accent.css ── */
+/* 팔레트를 템플릿 전용 포인트색(--tpl-*)에 연결한다 (#207)
+ *
+ * 팔레트는 포인트색을 --ev-primary 한 가지로 준다. 그런데 템플릿은 그 색을 세 곳에 쓴다.
+ * 한 값으로는 다 못 맞추므로 쓰임새별로 나눠서 연결한다.
+ *
+ *   밝은 바탕 위의 글자 · 흰 글자가 얹히는 채움   → --ev-primary-hover  (팔레트가 이미 진하게 골라 둔 값)
+ *   어두운 바탕 위의 글자 · 선                    → --ev-primary-on-dark (아래에서 만든다)
+ *   테두리 · 빛번짐 같은 장식                     → --ev-primary
+ *
+ * 왜 hover 인가: 밝은 팔레트 16종은 hover 위의 흰색 대비가 5.7 이상이다. 기본색은 summer(4.10) ·
+ * pastel(4.23) 처럼 흰색 위 글자 기준 4.5 에 못 미치는 것이 있다.
+ *
+ * 이 파일은 팔레트(01 · 02)와 템플릿(40) 뒤에 온다. 아래 규칙은 [class*="palette-"] 가 붙은 루트에만
+ * 걸리므로, 팔레트가 없으면 템플릿은 20-themes 의 지금 색 그대로다.
+ *
+ * ★ 새 템플릿 토큰(--tpl-*)을 만들면 여기 연결도 같이 추가한다.
+ *   안 하면 그 색만 팔레트를 안 따라간다 (tests/template-contrast.test.mjs 가 잡는다).
+ */
+
+/* ── 팔레트에서 파생하는 값 — 팔레트마다 따로 적지 않고 여기서 한 번에 만든다 ── */
+[class*="palette-"] {
+  /* 어두운 바탕용: 흰색과 섞어 밝힌다 (oklch 를 못 읽는 브라우저의 대체값) */
+  --ev-primary-on-dark: color-mix(in srgb, var(--ev-primary) 45%, white);
+  --ev-primary-on-dark-soft: color-mix(in oklab, var(--ev-primary-on-dark) 45%, white);
+  /* hover 보다 한 단계 더 진한 색 (버튼 그라데이션의 끝) */
+  --ev-primary-deep: color-mix(in oklab, var(--ev-primary-hover) 78%, black);
+}
+@supports (color: oklch(from red l c h)) {
+  [class*="palette-"] {
+    /* 색상 · 채도는 두고 밝기만 0.74 아래로 내려가지 않게 한다.
+       어두운 바탕 5곳(#121215 · #1e293b · #292524 · #3d1627 · #172554) 위에서 18종 모두 대비 4.95 이상.
+       night · esports 처럼 이미 밝은 기본색은 그대로 둔다 */
+    --ev-primary-on-dark: oklch(from var(--ev-primary) max(l, 0.74) c h);
+  }
+}
+
+/* ── 템플릿별 연결 ── */
+
+/* sports · launch: 어두운 히어로 위의 밝은 변종은 on-dark, 나머지는 진한 쪽 */
+.theme-sports[class*="palette-"],
+.theme-launch[class*="palette-"] {
+  --tpl-accent: var(--ev-primary-hover);
+  --tpl-accent-deep: var(--ev-primary-deep);
+  --tpl-accent-bright: var(--ev-primary-on-dark);
+  /* launch 의 --tpl-accent-ink(연한 바탕 위 짙은 글자)는 연결하지 않는다 — 쓰는 카드의 바탕이 안 바뀌기 때문 */
+}
+/* launch 의 진행 막대 · 입력창 포커스 테두리 (장식) */
+.theme-launch[class*="palette-"] { --tpl-accent-light: var(--ev-primary); }
+
+/* holiday: 히어로가 와인색(어두움)이라 연한 금색 둘은 on-dark 계열 */
+.theme-holiday[class*="palette-"] {
+  --tpl-accent: var(--ev-primary);
+  --tpl-accent-deep: var(--ev-primary-hover);
+  --tpl-accent-soft: var(--ev-primary-on-dark-soft);
+  --tpl-accent-light: var(--ev-primary-on-dark-soft);
+  --tpl-ribbon: var(--ev-primary-hover);
+  --tpl-step: var(--ev-primary-deep);
+  /* 복주머니 카드의 주황 (글자 · 버튼 · 호버 테두리) */
+  --tpl-warm: var(--ev-primary-hover);
+  --tpl-warm-deep: var(--ev-primary-deep);
+}
+/* 공유 .hero-title .highlight 는 --ev-accent-tag 를 쓰는데, 팔레트의 태그색은 밝은 바탕용이다
+   (valentine 의 #7f1d1d 는 와인색 히어로 위에서 대비 1.56) */
+.theme-holiday[class*="palette-"] .hl-hero { --ev-accent-tag: var(--ev-primary-on-dark); }
+
+/* vip: 포인트색 글자가 어두운 히어로 · 쿠폰 위에 있다. 밝은 단계 번호만 hover */
+.theme-vip[class*="palette-"] {
+  --tpl-accent: var(--ev-primary-on-dark);
+  --tpl-accent-light: var(--ev-primary-on-dark-soft);
+  --tpl-accent-deep: var(--ev-primary-hover);
+  /* 쿠폰 받기 버튼의 금색 그라데이션 끝 · 테두리 */
+  --tpl-gold: var(--ev-primary-on-dark);
+  --tpl-gold-deep: var(--ev-primary-hover);
+}
+/* 쿠폰 카드는 바탕이 밝은색(#fafaf9)으로 고정이다. 공유 .benefit-value 는 --ev-primary 를 쓰므로
+   night · esports 의 노랑 · 초록이 흰 바탕 위에 놓인다 (대비 1.8). 이 카드 안에서만 진하게 */
+.theme-vip[class*="palette-"] .vp-coupon .benefit-value { color: var(--ev-primary-deep); }
+
+/* sale: 전체가 어둡다 */
+.theme-sale[class*="palette-"] {
+  --tpl-accent: var(--ev-primary-on-dark);
+  --tpl-accent-hover: color-mix(in oklab, var(--ev-primary-on-dark) 85%, black);
+  --tpl-accent-soft: var(--ev-primary-on-dark-soft);
+}
+/* sale 안의 공유 블록(소제목 · 버튼)도 어두운 바탕 위에 있다.
+   같은 루트에서 --ev-primary 를 자기 값으로 다시 정의할 수는 없어(순환) 바로 아래 자식에 건다 */
+.theme-sale[class*="palette-"] > * {
+  --ev-primary: var(--ev-primary-on-dark);
+  --ev-primary-hover: var(--tpl-accent-hover);
+  --ev-gradient-cta: linear-gradient(var(--ev-primary-on-dark), var(--tpl-accent-hover));
+}
+
+/* ── 밝은 템플릿의 공유 블록 ──
+ * 소제목 · 혜택 값 · 태그 같은 공유 블록은 글자를 --ev-primary 로 칠한다. 밝은 팔레트의 기본색은 이 글자에 모자란 것이 있다
+ * (summer 4.10 · pastel 4.23). 템플릿 안에서는 밝은 바탕 위 글자 규칙(hover)을 따른다.
+ * sale 과 같은 이유로 루트가 아니라 바로 아래 자식에 건다. 템플릿 자신의 어두운 영역은 --tpl-* 를 쓰므로 영향이 없다.
+ * night · esports 는 기본색이 밝아서 제외한다. */
+:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports)) > * {
+  --ev-primary: var(--ev-primary-hover);
+}
+
+/* ── 공유 CTA 버튼 ──
+ * 팔레트의 CTA 그라데이션은 밝은 쪽 끝 때문에 18종 중 9종이 흰 글자 · 어두운 글자 어느 쪽도 4.5 에 못 미친다.
+ * 밝은 템플릿 4종은 hover → deep 의 진한 그라데이션과 흰 글자를 쓴다 (밝은 팔레트 한정 — night · esports 는 99 에서) */
+:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports)) {
+  --ev-gradient-cta: linear-gradient(135deg, var(--ev-primary-hover), var(--ev-primary-deep));
+}
+/* 40-templates/07-refinements.css 는 holiday · vip · launch 의 .cta-btn 글자를 템플릿 자기 그라데이션에 맞춰 어둡게 고정해 둔다 */
+:is(.theme-holiday, .theme-vip, .theme-launch)[class*="palette-"] .cta-btn { color: #ffffff; }
+
+/* holiday 고유 CTA도 흰 글자에 맞는 진한 팔레트 그라데이션을 사용한다. */
+.theme-holiday[class*="palette-"]:not(:is(.palette-night, .palette-esports)) [data-block="cta"] .cta-btn {
+  background: var(--ev-gradient-cta);
+  color: #ffffff;
+}
+
+/* 밝은·어두운 팔레트 사이에서도 글자색을 즉시 바꿔 대비를 유지한다. */
+.theme-holiday[class*="palette-"] [data-block="cta"] .cta-btn {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
 /* ── 90-palettes/97-template-neutrals.css ── */
 /* 템플릿은 포인트색만 팔레트를 따른다 — 바탕·글자 같은 중성색은 템플릿 것을 유지한다.
  *
@@ -7931,6 +8059,28 @@ body:has(.palette-brand) {
   border-bottom-color: var(--ev-border);
 }
 .theme-vip:is(.palette-night, .palette-esports) .vp-step-num { color: var(--ev-primary); }
+
+/* 밝은 템플릿 × 어두운 팔레트 — 포인트색 위의 글자 (#207)
+ * night · esports 의 기본색은 밝은 노랑 · 초록이라, 흰 글자를 얹은 채움(버튼 · 번호 배지)이 안 읽힌다.
+ * 위의 #211 규칙과 같은 방식으로 이 두 팔레트에만 건다. */
+.theme-sports:is(.palette-night, .palette-esports) :is(.sp-cta-btn, .sp-vote-btn.active),
+.theme-launch:is(.palette-night, .palette-esports) :is(.lc-cta-btn, .lc-timeline-badge, .lc-form-btn),
+.theme-holiday:is(.palette-night, .palette-esports) :is(.hl-gift-ribbon, .hl-step-num),
+:is(.theme-holiday, .theme-vip, .theme-launch):is(.palette-night, .palette-esports) .cta-btn { color: #111111; }
+/* holiday 의 리본 · 단계 번호는 진한 채움(hover · deep)이 아니라 밝은 기본색 위에 어두운 글자로 */
+.theme-holiday:is(.palette-night, .palette-esports) { --tpl-ribbon: var(--ev-primary); --tpl-step: var(--ev-primary); }
+/* launch 의 타임라인 카드는 글자색까지 고정이라 흰 카드 그대로 둔다. 그 위의 포인트색 글자만 진하게 */
+.theme-launch:is(.palette-night, .palette-esports) :is(.lc-timeline-phase, .lc-gauge-percent) { color: var(--ev-primary-deep); }
+/* 마일스톤 배지는 연한 파랑(#dbeafe) 바탕이 고정이라 포인트색 대신 짙은 남색 글자 */
+.theme-launch:is(.palette-night, .palette-esports) .lc-ms-badge { color: var(--tpl-accent-ink); }
+
+/* 인증 버튼의 진한 배경에서는 흰 글자를 유지한다. */
+.theme-launch:is(.palette-night, .palette-esports) .lc-form-btn { color: #ffffff; }
+/* holiday 의 복주머니 카드도 흰색 고정이다. 주황(글자 · 흰 글자 버튼)을 진한 쪽으로 */
+.theme-holiday:is(.palette-night, .palette-esports) {
+  --tpl-warm: var(--ev-primary-deep);
+  --tpl-warm-deep: color-mix(in oklab, var(--ev-primary-deep) 80%, black);
+}
 
 /* ── 99-a11y/01-reduced-motion.css ── */
 @media (prefers-reduced-motion: reduce) {

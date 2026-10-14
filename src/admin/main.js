@@ -4,7 +4,7 @@ import { validSnapshot } from '@shared/preview/document.js'
 import { applySelection } from '@shared/preview/editable.js'
 import { version } from '@shared/selectors.js'
 import './styles.css'
-
+import './user-management.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
@@ -31,6 +31,7 @@ import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorM
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
 import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary } from './views/create.js'
 import { loginView } from './views/login.js'
+import { usersView, ensureAdminUsers, resetAdminUsers, handleUsersClick, handleUsersChange, handleUsersSubmit } from './views/user-management.js'
 
 /**
  * 관리자 앱 셸.
@@ -45,10 +46,11 @@ export const api = createApi({ authBase: '/api/admin/auth' })
 // repo 가 이 클라이언트로 서버를 부른다 (목업 모드면 안 쓰인다).
 useApi(api)
 
-const VIEWS = { admin: adminView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, participants: participantsView, login: loginView }
+const VIEWS = { admin: adminView, users: usersView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, participants: participantsView, login: loginView }
 
 const ROUTES = [
   { path: '/', name: 'admin' },
+  { path: '/users', name: 'users' },
   { path: '/login', name: 'login' },
   { path: '/templates', name: 'templates' },
   { path: '/events/new', name: 'create' },
@@ -60,6 +62,7 @@ const ROUTES = [
 const PATH = {
   admin: () => '/',
   login: () => '/login',
+  users: () => '/users',
   templates: () => '/templates',
   create: () => '/events/new',
   editor: (id) => `/events/${id}/edit`,
@@ -77,6 +80,8 @@ function header() {
       ['admin', 'editor', 'versions', 'create'].includes(ui.route) ? 'active' : '') +
     button('route', '템플릿 라이브러리', 'data-route="templates"',
       ui.route === 'templates' ? 'active' : '') +
+    button('route', '사용자 관리', 'data-route="users"',
+      ui.route === 'users' ? 'active' : '') +
     '</nav><div class="account">' +
     (ui.logged
       ? '<span class="avatar">' + icon('layers') + '</span><span class="name">운영자님</span>' +
@@ -96,6 +101,7 @@ function render(scroll = false) {
   if (ui.route === 'admin') ensureAdminServer(() => render())
   // 템플릿 라이브러리는 목업 모드에서도 목록이 있다 (mock/library.js)
   if (ui.route === 'templates') ensureLibrary(() => render())
+  if (ui.route === 'users') ensureAdminUsers(() => render())
   if (ui.route === 'participants') ensureParticipants(ui.activeId, () => render())
   // 서버 모드 편집 · 버전 이력 화면은 목업 화면 대신 서버 화면이다 (views/server-editor.js · server-versions.js)
   const serverView = USE_SERVER && { editor: serverEditorView, versions: serverVersionsView }[ui.route]
@@ -105,7 +111,7 @@ function render(scroll = false) {
   $('#app').innerHTML = (serverView || VIEWS[ui.route] || adminView)()
   hydrate()
   if (serverView) afterServerRender()
-  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리', participants: '참여 관리' }[ui.route]
+  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리', users: '사용자 관리', participants: '참여 관리' }[ui.route]
     ?? '이벤트 관리'
   document.title += ' | NewVent'
   if (scroll) window.scrollTo(0, 0)
@@ -156,6 +162,8 @@ document.addEventListener('click', (ev) => {
   ev.preventDefault()
   if (b.disabled) return
   const a = b.dataset.act
+
+  if (handleUsersClick(a, b, () => render())) return
 
   if (a === 'logout') {
     Object.keys(ui.requests).forEach((id) => stopRequest(id, '로그아웃하여 요청을 중단했어요. 기존 내용은 유지됩니다.'))
@@ -345,6 +353,7 @@ document.addEventListener('input',ev=>{
 });
 
 document.addEventListener('change',ev=>{
+ if (handleUsersChange(ev)) return
  if(handleParticipantsChange(ev,()=>render()))return;
  if(handleLibraryChange(ev,()=>render()))return;
  if(ev.target.id==='admin-from'||ev.target.id==='admin-to'){
@@ -362,6 +371,8 @@ document.addEventListener('change',ev=>{
 });
 
 document.addEventListener('submit',ev=>{
+ if (handleUsersSubmit(ev, () => render())) return
+
  if(ev.target.id==='create-basics'){
   ev.preventDefault();
   if(validateCreation()){ui.creation.step=2;render(true);}
@@ -413,6 +424,8 @@ document.addEventListener('input',editButton);
  *   ensureServerEditor 는 id 가 같으면 다시 읽지 않으므로 저절로 지워지지도 않는다.
  */
 async function logout() {
+  resetAdminUsers()
+
   if (AUTH_ENABLED) await api.logout()
   resetAdminServer()
   resetLibrary()
