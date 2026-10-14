@@ -16,16 +16,14 @@ import { icon } from '@shared/icons.js'
 import { AI_START, CONFIGS } from '@shared/mock/configs.js'
 import { baseSnapshot } from '@shared/mock/fixtures.js'
 import { persist } from '@shared/persist.js'
-import { serverFrame, thumb } from '@shared/preview/document.js'
-import { collectTexts } from '@shared/preview/server-texts.js'
+import { thumb } from '@shared/preview/document.js'
 import { state, ui } from '@shared/state.js'
 import { button, field } from '@shared/ui/controls.js'
 import { toast } from '@shared/ui/toast.js'
-import { modal } from '@shared/ui/modal.js'
 import { GRADES, REQUEST_MAX, TEMPLATE_KEYS, audienceOf, gradeLabel } from '@shared/grades.js'
-
 import { BLOCK_LABELS } from '@shared/constants.js'
 import { createEvent, loadAdminEvents, loadSimilarVersions, loadVersion, loadVersions, startGenerate, USE_SERVER } from '@shared/repo.js'
+import { LAYOUTS, layoutPicks } from '@shared/layouts.js'
 import { resetAdminServer } from './list.js'
 import { openServerEditor } from './server-editor.js'
 
@@ -75,7 +73,7 @@ function creationView(){
    const selected=c.templateId===cfg.templateId;
    return '<button class="template-option '+(selected?'selected':'')+'" data-act="select-create-template" data-template="'+cfg.templateId+'" aria-pressed="'+selected+'" '+(restricted?'aria-disabled="true"':'')+'>'+thumb(cfg,baseSnapshot(cfg))+'<span class="name">'+esc(cfg.name)+(selected?' <span class="badge pink">선택됨</span>':'')+'</span><span class="create-template-detail">'+esc(cfg.kind)+' · '+policyLabel(cfg)+'</span>'+(restricted?'<span class="template-restriction">참여 대상을 우수 이상으로 설정해주세요.</span>':'')+'</button>';
   }).join('')+'</div>';
-  const ai='<div class="creation-section-title"><h3>어떤 이벤트를 만들고 싶으신가요?</h3><p>목적, 원하는 분위기, 확정된 혜택 등을 자유롭게 적어주세요.</p></div><label class="field">이벤트 기획<textarea data-create="prompt" maxlength="'+REQUEST_MAX+'" rows="6" placeholder="예: 가을맞이 고객 감사 이벤트를 만들고 싶어요. 흰색과 분홍색으로 따뜻하게 표현하고, 혜택은 아직 정해지지 않았으니 임의로 추가하지 말아주세요.">'+esc(c.prompt)+'</textarea></label>' + (USE_SERVER ? '<div class="chips">' + button('create-rag-drafts', '초안 보기', '', 'chip') + button('create-rag-similar', '유사 이벤트 찾기', '', 'chip') + '</div>' : '') + '<div class="review-note">'+(USE_SERVER?'<strong>AI 가 요청을 읽고 페이지를 만듭니다.</strong><br>수십 초 걸릴 수 있어요. 요청에 없는 혜택은 만들지 않으니 확정된 혜택을 적어주세요. 최대 '+REQUEST_MAX+'자.':'<strong>AI 생성 흐름을 확인하는 체험 모드입니다.</strong><br>입력한 기획은 대화창에 전달되고, 공통 구조의 예시 초안이 열립니다. 실제 AI가 요청을 해석해 HTML을 생성하지는 않습니다.<br>예시 참여 방식: 로그인 후 계정당 1회 응모.')+'</div>';
+  const ai='<div class="creation-section-title"><h3>어떤 이벤트를 만들고 싶으신가요?</h3><p>목적, 원하는 분위기, 확정된 혜택 등을 자유롭게 적어주세요.</p></div><label class="field">이벤트 기획<textarea data-create="prompt" maxlength="'+REQUEST_MAX+'" rows="6" placeholder="예: 가을맞이 고객 감사 이벤트를 만들고 싶어요. 흰색과 분홍색으로 따뜻하게 표현하고, 혜택은 아직 정해지지 않았으니 임의로 추가하지 말아주세요.">'+esc(c.prompt)+'</textarea></label>' + (USE_SERVER ? '<div class="chips">' + button('create-rag-drafts', '초안 보기', '', 'chip') + button('create-rag-similar', '유사 이벤트 찾기', '', 'chip') + '</div>' : '') + '<div class="review-note">'+(USE_SERVER?'<strong>AI 가 요청을 읽고 페이지를 만듭니다.</strong><br>수십 초 걸릴 수 있어요. 요청에 없는 혜택은 만들지 않으니 확정된 혜택을 적어주세요. 최대 '+REQUEST_MAX+'자.':'<strong>AI 생성 흐름을 확인하는 체험 모드입니다.</strong><br>입력한 기획은 대화창에 전달되고, 공통 구조의 예시 초안이 열립니다. 실제 AI가 요청을 해석해 HTML을 생성하지는 않습니다.<br>예시 참여 방식: 로그인 후 계정당 1회 응모.')+'</div>'+(USE_SERVER?layoutField(c):'');
   content='<section class="panel"><div class="panel-head">어떤 방식으로 시작할까요?</div><div class="panel-body">'+modes+(c.mode==='template'?templates:ai)+'<p id="create-error" class="create-error" role="alert"></p><div class="create-actions">'+button('create-back',icon('back')+'기본 정보 수정')+button('finish-create',c.mode==='template'?'선택한 템플릿으로 시작 '+icon('arrow'):(USE_SERVER?'AI 로 만들기 ':'AI 초안 체험하기 ')+icon('sparkle'),'','btn primary')+'</div></div></section>';
  }
  return '<div class="container create-container">'+button('cancel-create',icon('back')+'이벤트 관리로','', 'backlink')+'<div class="page-heading"><span class="eyebrow">START SOMETHING NEW</span><h1>새 이벤트 만들기</h1><p>기본 정보를 정하고, 나에게 맞는 제작 방식으로 시작하세요.</p></div>'+progress+'<div class="create-layout"><div>'+content+'</div><aside id="creation-summary" class="card creation-summary">'+creationSummary()+'</aside></div></div>';
@@ -144,7 +142,8 @@ async function serverCreate(c,cfg){
  }
  const request=c.mode==='ai'?c.prompt.trim():null;
  let jobId=null,startError=null;
- try{jobId=(await startGenerate(event.id,request?{requestText:request}:{})).jobId;}
+ // 고른 배치 — 비어 있으면(자동) 보내지 않는다. AI 가 고른다
+ try{jobId=(await startGenerate(event.id,request?{requestText:request,...(c.layout?{layout:c.layout}:{})}:{})).jobId;}
  catch(e){startError=e?.message||'페이지 생성을 시작하지 못했어요.';}
  ui.creation=null;
  resetAdminServer();
@@ -153,6 +152,7 @@ async function serverCreate(c,cfg){
  toast(startError?'이벤트를 만들었어요. 페이지 생성은 다시 시도해주세요.':'이벤트를 만들고 페이지를 생성하고 있어요.');
 }
 
+/** AI 생성의 페이지 배치 고르기 — 맨 앞이 자동(AI 가 고른다). 고르면 서버가 그 배치로 건다 */
 /* ── 만들기 화면 RAG (기획 단계 — eventId 없음, query 모드로만 부른다) ── */
 
 /** 기획 입력창 내용. 저장 전이라 DOM 값을 직접 읽는다 */
@@ -368,6 +368,11 @@ export function handleCreateRagClick(a, b) {
     }
   }
   return false
+}
+
+function layoutField(c){
+ const options=[{cssClass:'',label:'자동',title:'AI 가 내용에 맞춰 골라요',icon:icon('sparkle')},...LAYOUTS.map(l=>({cssClass:l.cssClass,label:l.label,title:l.hint+(l.min?' 내용 영역 '+l.min+'개 이상.':'')}))];
+ return '<div class="field lay-field"><span>페이지 배치</span><div id="create-layouts">'+layoutPicks('create-layout',c.layout||'',options)+'</div><span class="helper">자동은 AI 가 내용에 맞춰 골라요. 영역이 모자라 쓸 수 없는 배치는 기본 배치로 만들어져요. 만든 뒤 편집 화면에서 바꿀 수 있어요.</span></div>';
 }
 
 export { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary }

@@ -5,6 +5,7 @@
  *   페이지 생성   POST /api/admin/events/{id}/generate      ┐ 같은 작업 자리 — GET …/generate/{jobId} 로 폴링,
  *   AI 대화 수정  POST /api/admin/events/{id}/edit          ┘ DELETE 로 중단
  *   직접 수정     POST /api/admin/events/{id}/versions/direct-edit  (바로 새 버전)
+ *                 문구 · 버튼 디자인 · 블록 순서 · 페이지 배치 · 영역 모양 — 전부 모델을 안 부른다
  *   미리보기      GET  /api/admin/events/{id}/preview       (최신 버전 + editableTexts)
  *   버전 저장     PUT  /api/admin/events/{id}/versions/{versionId}/checkpoint
  *   저장한 버전   GET  /api/admin/events/{id}/versions      (버전 이력 화면은 server-versions.js)
@@ -17,7 +18,8 @@
  * ★ 수정 기준은 항상 최신 버전이다 (AI 수정 · 직접 수정 모두)
  *   이전 버전에서 이어 가려면 이력 화면의 "이 버전에서 이어서 작업" 이 그 버전을 최신으로 가져온다.
  *
- * ★ AI 대화 내역은 서버에 남지 않는다 (백엔드 ChatMessage 저장 미구현) — 이 탭이 열려 있는 동안만 보인다
+ * ★ AI 대화 내역은 서버에 저장된다.
+ *   편집 화면을 열 때 조회하고, 현재 작업의 대화는 화면에 즉시 추가한다.
  *
  * ★ 목업 편집 화면(editor.js)을 쓰지 않는 이유
  *   그 화면은 목업 스냅샷(제목 · 소개 · 혜택 제목 · 버튼 필드)으로 그리고 고친다.
@@ -32,11 +34,13 @@ import { $, esc } from '@shared/dom.js'
 import { badgeOf, serverStatus } from '@shared/format.js'
 import { GRADES, gradeLabel, REQUEST_MAX } from '@shared/grades.js'
 import { icon } from '@shared/icons.js'
+import { LAYOUTS, STACK, layoutPicks, markPick } from '@shared/layouts.js'
+import { hasVariantIcons, shortName, variantIcon } from '@shared/variant-icons.js'
 import { serverFrame } from '@shared/preview/document.js'
 import { collectTexts, matches, normalize, textsOf } from '@shared/preview/server-texts.js'
 import {
   cancelGeneration, deleteAsset, directEdit, endEvent, generationStatus,
-  loadAdminEvent, loadAssets, loadPreview, loadVersions,
+  loadAdminEvent, loadAssets, loadChatMessages, loadPreview, loadVersions,
   uploadAsset,
   publishEvent, saveCheckpoint, startEdit, startGenerate, updateEventInfo,
   searchRagPreview, loadPromptDrafts,
@@ -66,7 +70,8 @@ const GREETING = '어떻게 고쳐볼까요? 예: "제목을 가을 대축제로
 const chatOf = (id) => (CHATS[id] ||= [{ role: 'assistant', text: GREETING }])
 
 // order 는 null 로 시작한다 — 아직 안 건드렸다는 뜻이다. 미리보기 순서를 그대로 쓴다
-const freshDirect = () => ({ values: {}, style: {}, styleOn: {}, order: null })
+// layout 도 null 로 시작한다. variants 는 고친 영역만 담는다 (영역 → class)
+const freshDirect = () => ({ values: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {} })
 
 /** 새로 만든 직후처럼 진행 중인 작업을 들고 들어올 때 — 목록에서 열 때는 인자 없이 */
 function openServerEditor(id, { jobId = null, request = null, startError = null } = {}) {
@@ -79,7 +84,9 @@ function openServerEditor(id, { jobId = null, request = null, startError = null 
     job: jobId ? { jobId, kind: 'generate', phase: 'QUEUED', label: '대기 중', percent: 0, done: false } : null,
     request,                           // 이번에 보낸 생성 요청문 (AI 생성)
     prompt: request || '',             // 다시 만들기 입력칸
+    genLayout: '',                     // 다시 만들기 — 고른 페이지 배치. '' 는 자동(AI 가 고른다)
     chatInput: '',
+    chatError: null,
     tab: 'chat',                       // chat | direct
     selected: [],                      // AI 대화 — 미리보기에서 고른 영역(data-block). 최대 MAX_SELECTED
     direct: freshDirect(),
@@ -100,18 +107,53 @@ function ensureServerEditor(id, rerender) {
   else if (s.status === 'ready' && s.job && !s.job.done && !s.polling) poll(s, rerender)
 }
 
+async function restoreChatHistory(s) {
+  // 이전 접속의 화면 캐시 대신 서버 이력을 다시 읽는다.
+  CHATS[s.id] = [{ role: 'assistant', text: GREETING }]
+  s.chatError = null
+
+  try {
+    const messages = await loadChatMessages(s.id)
+
+    if (ui.serverEditor !== s) return
+
+    CHATS[s.id] = messages.length
+      ? messages.map((message) => ({
+          id: message.id,
+          role: message.role === 'ADMIN' ? 'user' : 'assistant',
+          text: message.content,
+          tone: message.status === 'COMPLETED'
+            ? 'DONE'
+            : message.status,
+          blocks: message.targetBlock
+            ? message.targetBlock.split(',').map((block) => block.trim())
+                .filter(Boolean)
+            : [],
+        }))
+      : [{ role: 'assistant', text: GREETING }]
+  } catch (error) {
+    s.chatError = error?.message || '이전 대화를 불러오지 못했어요.'
+  }
+}
+
 async function load(s, rerender) {
   s.status = 'loading'
   try {
     // ★ 이미지 목록은 못 읽어도 편집은 열려야 한다 — 없으면 + 로 다시 올릴 수 있다
     const [event, preview, versions, assets] = await Promise.all([
       loadAdminEvent(s.id), loadPreview(s.id), loadVersions(s.id).catch(() => null),
-      loadAssets(s.id).catch(() => []),
+      loadAssets(s.id).catch(() => []), restoreChatHistory(s),
     ])
+
+    // 조회 도중 다른 이벤트로 이동했다면 화면을 갱신하지 않는다.
+    if (ui.serverEditor !== s) return
+
     Object.assign(s, {
       event, preview, versions: versions?.versions ?? null, assets, status: 'ready', error: null,
     })
   } catch (e) {
+    if (ui.serverEditor !== s) return
+
     Object.assign(s, { status: 'error', error: e?.message || '이벤트를 불러오지 못했어요.' })
   }
   rerender()
@@ -234,7 +276,7 @@ async function regenerate(rerender) {
   if (text.length > REQUEST_MAX) { s.notice = '요청은 ' + REQUEST_MAX + '자 이내로 입력해주세요.'; rerender(); return }
   s.notice = null
   try {
-    const r = await startGenerate(s.id, template ? {} : { requestText: text })
+    const r = await startGenerate(s.id, template ? {} : { requestText: text, ...(s.genLayout ? { layout: s.genLayout } : {}) })
     s.request = template ? null : text
     s.job = { jobId: r.jobId, kind: 'generate', phase: r.phase, label: '대기 중', percent: r.percent ?? 0, done: false }
   } catch (e) {
@@ -292,7 +334,7 @@ function directChanges(s) {
   if (on.color && st.color) style.color = st.color
   if (st.size) style.size = st.size
   if (st.shape) style.shape = st.shape
-  return { edits, buttonStyle: Object.keys(style).length ? style : null, order: changedOrder(s) }
+  return { edits, buttonStyle: Object.keys(style).length ? style : null, order: changedOrder(s), looks: changedLooks(s) }
 }
 
 /* ── 블록 순서 ──────────────────────────────────────────────── */
@@ -324,6 +366,8 @@ function setOrder(s, next) {
   s.direct.order = next
   paintOrder(s)
   previewOrder(s)
+  // 옮긴 영역을 따라 미리보기 도구줄도 옮긴다
+  $('.event-frame')?.nvToolsRefresh?.()
   updateDirectCount(s)
 }
 
@@ -397,15 +441,172 @@ function paintOrder(s) {
   if (ol) ol.innerHTML = orderItems(s, running(s) || s.busy)
 }
 
+/* ── 페이지 배치 · 영역 모양 ────────────────────────────────────
+ *
+ * ★ 모델을 부르지 않는다. 고르는 것이 class 이름 하나라 서버가 바로 붙인다 (블록 순서와 같다).
+ * ★ 선택지는 미리보기 응답의 looks 다 — 지금 페이지에서 못 고르는 것과 그 이유까지 서버가 준다.
+ *   여기서는 조건(영역 수 · 항목 수)을 다시 적지 않는다.
+ */
+
+const looksOf = (s) => s.preview?.looks || null
+
+/** 지금 화면에 보이는 값 — 고친 게 있으면 그것, 없으면 저장된 것 */
+const layoutNow = (s) => s.direct.layout || looksOf(s)?.layout || STACK
+const variantNow = (s, k) => s.direct.variants[k] ?? looksOf(s)?.blocks?.[k]?.variant ?? ''
+
+/** 저장된 값과 달라진 것만 — 요청 본문에 그대로 실린다 */
+function changedLooks(s) {
+  const L = looksOf(s)
+  if (!L || L.template) return null
+  const layout = s.direct.layout && s.direct.layout !== L.layout ? s.direct.layout : null
+  const variants = {}
+  Object.entries(s.direct.variants).forEach(([k, v]) => { if (L.blocks[k] && v !== L.blocks[k].variant) variants[k] = v })
+  const n = (layout ? 1 : 0) + Object.keys(variants).length
+  return n ? { layout, variants, count: n } : null
+}
+
+function pickLayout(s, cls) {
+  const L = looksOf(s)
+  const opt = L?.layouts.find((l) => l.cssClass === cls)
+  if (!opt || L.template) return
+  if (opt.blocked && cls !== L.layout) { toast(opt.blocked); return }
+  s.direct.layout = cls === L.layout ? null : cls
+  syncLooks(s)
+}
+
+function pickVariant(s, key, cls) {
+  const L = looksOf(s)
+  const b = L?.blocks[key]
+  if (!b || L.template) return
+  const why = b.variants.find((v) => v.cssClass === cls)?.blocked
+  if (why) { toast(why); syncLooks(s); return }
+  s.direct.variants[key] = cls
+  syncLooks(s)
+}
+
+/** 고른 것을 화면 세 곳(옆 패널 · 미리보기 · 미리보기 도구줄)에 맞춘다. 전체를 다시 그리지 않는다 */
+function syncLooks(s) {
+  paintLooks(s)
+  previewLooks(s)
+  updateDirectCount(s)
+}
+
+/** 미리보기 iframe 의 class 만 바꾼다 — 서버 Looks.apply 가 저장할 모양과 같다 */
+function previewLooks(s) {
+  const L = looksOf(s)
+  const frame = $('.event-frame')
+  const root = frame?.contentDocument?.querySelector('.ev-container, .event-page')
+  if (!L || L.template || !root) return
+  const layout = layoutNow(s)
+  L.layouts.forEach((l) => root.classList.toggle(l.cssClass, l.cssClass === layout && layout !== STACK))
+  Object.entries(L.blocks).forEach(([k, b]) => {
+    const sec = [...root.children].find((el) => el.matches('section[data-block="' + k + '"]'))
+    if (!sec) return
+    const variant = variantNow(s, k)
+    b.variants.forEach((v) => sec.classList.toggle(v.cssClass, v.cssClass === variant))
+  })
+  frame.nvToolsRefresh?.()
+}
+
+const layoutOptions = (s) => looksOf(s).layouts.map((l) => ({
+  cssClass: l.cssClass, label: l.label, blocked: l.cssClass === looksOf(s).layout ? null : l.blocked,
+  title: LAYOUTS.find((x) => x.cssClass === l.cssClass)?.hint || l.desc,
+}))
+
+const variantSelect = (s, k, b, dis) => '<select data-svariant="' + esc(k) + '" ' + dis + ' aria-label="' + esc(labelOf(k)) + ' 모양">'
+  + '<option value=""' + (variantNow(s, k) === '' ? ' selected' : '') + '>기본 모양</option>'
+  + b.variants.map((v) => '<option value="' + esc(v.cssClass) + '"' + (variantNow(s, k) === v.cssClass ? ' selected' : '')
+    + (v.blocked ? ' disabled title="' + esc(v.blocked) + '"' : '') + '>' + esc(v.desc) + (v.blocked ? ' (항목 부족)' : '') + '</option>').join('')
+  + '</select>'
+
+/**
+ * 모양을 아이콘으로 — 맨 앞이 기본 모양(class 없음)이다.
+ * 항목이 모자라 못 쓰는 모양은 흐리게 그린다. disabled 로 막지 않는다 — 눌렀을 때 이유를 알려 준다
+ */
+const variantPicks = (s, k, b, dis) => '<div class="lay-picks var-picks" role="group" aria-label="' + esc(labelOf(k)) + ' 모양">'
+  + [{ cssClass: '', desc: '기본 모양' }, ...b.variants].map((v) => {
+    const on = variantNow(s, k) === v.cssClass
+    return '<button type="button" class="lay-pick' + (on ? ' active' : '') + (v.blocked ? ' blocked' : '') + '" data-act="server-variant" data-block="' + esc(k)
+      + '" data-variant="' + esc(v.cssClass) + '" aria-pressed="' + on + '"' + (v.blocked ? ' aria-disabled="true"' : '')
+      + ' title="' + esc(v.blocked || v.desc) + '" ' + dis + '>' + variantIcon(v.cssClass) + '<span>' + esc(shortName(v.cssClass, v.desc)) + '</span></button>'
+  }).join('') + '</div>'
+
+/**
+ * 모양을 고를 수 있는 영역만. 아이콘을 그려 둔 영역(제목·소개 · 혜택 · 참여 방법 · 참여 버튼)은 아이콘으로,
+ * 나머지는 이름 목록으로 보여 준다
+ */
+function lookRows(s, busy) {
+  const dis = busy ? 'disabled' : ''
+  return Object.entries(looksOf(s).blocks).filter(([, b]) => b.variants.length).map(([k, b]) => (hasVariantIcons(b.variants)
+    ? '<div class="look-block"><span class="look-name">' + esc(labelOf(k)) + '</span>' + variantPicks(s, k, b, dis) + '</div>'
+    : '<div class="look-row"><span class="look-name">' + esc(labelOf(k)) + '</span>' + variantSelect(s, k, b, dis) + '</div>')).join('')
+}
+
+/** 배치 · 모양 묶음 — 직접 수정 패널 맨 위 */
+function looksHTML(s, busy) {
+  const L = looksOf(s)
+  if (!L) return ''
+  if (L.template) {
+    return '<fieldset class="sedit-group"><legend>페이지 배치</legend>'
+      + '<p class="helper">템플릿으로 만든 페이지는 배치 · 모양을 바꿀 수 없어요. 문구와 순서는 바꿀 수 있어요.</p></fieldset>'
+  }
+  return '<fieldset class="sedit-group"><legend>페이지 배치</legend><div id="server-layouts">'
+    + layoutPicks('server-layout', layoutNow(s), layoutOptions(s), busy) + '</div>'
+    + '<p class="helper">흐린 배치는 지금 영역 수로는 쓸 수 없어요. 누르면 이유를 알려드려요.</p></fieldset>'
+    + '<fieldset class="sedit-group"><legend>영역 모양</legend><div class="look-rows" id="server-looks">' + lookRows(s, busy) + '</div>'
+    + '<p class="helper">미리보기에서 영역에 마우스를 올려도 바꿀 수 있어요.</p></fieldset>'
+}
+
+function paintLooks(s) {
+  const L = looksOf(s)
+  if (!L || L.template) return
+  markPick($('#server-layouts'), layoutNow(s))
+  // 고르던 select 의 포커스를 지킨다 — 다시 그리지 않고 값만 맞춘다
+  const rows = $('#server-looks')
+  rows?.querySelectorAll('select[data-svariant]').forEach((el) => { el.value = variantNow(s, el.dataset.svariant) })
+  rows?.querySelectorAll('[data-act="server-variant"]').forEach((el) => {
+    const on = variantNow(s, el.dataset.block) === el.dataset.variant
+    el.classList.toggle('active', on)
+    el.setAttribute('aria-pressed', String(on))
+  })
+}
+
+/**
+ * 미리보기 도구줄(frame.js 의 server-edit 모드)이 올린 영역에 무엇을 보여 줄지 묻는다.
+ * 유의사항 · 작업 중에는 null — 도구줄을 안 띄운다
+ */
+function toolsOf(s, key) {
+  if (ui.serverEditor !== s || s.tab !== 'direct' || running(s) || s.busy || key === 'notices') return null
+  const L = looksOf(s)
+  const b = L && !L.template ? L.blocks[key] : null
+  const order = currentOrder(s), at = order.indexOf(key)
+  return {
+    label: labelOf(key),
+    move: at >= 0 && order.length > 1 ? { up: at > 0, down: at < order.length - 1 } : null,
+    variants: b?.variants.length ? b.variants : null,
+    variant: variantNow(s, key),
+  }
+}
+
+/** 미리보기 도구줄에서 누른 것 — main.js 가 nv-tool 을 넘긴다 */
+function handleServerTool(ev) {
+  const s = ui.serverEditor
+  const { block, tool, value } = ev.detail || {}
+  if (!s || s.tab !== 'direct' || running(s) || s.busy || !block) return
+  if (tool === 'up') nudgeBlock(s, block, -1)
+  else if (tool === 'down') nudgeBlock(s, block, 1)
+  else if (tool === 'variant') pickVariant(s, block, value ?? '')
+}
+
 async function applyDirect(rerender) {
   const s = ui.serverEditor
   if (!s?.preview || running(s) || s.busy) return
-  const { edits, buttonStyle, order } = directChanges(s)
+  const { edits, buttonStyle, order, looks } = directChanges(s)
   if (hasEmptyNoticeEdit(s, edits)) {
     toast('유의사항은 빈칸으로 저장할 수 없어요. 내용을 입력해주세요.')
     return
   }
-  if (!edits.length && !buttonStyle && !order) { toast('바꾼 내용이 없어요.'); return }
+  if (!edits.length && !buttonStyle && !order && !looks) { toast('바꾼 내용이 없어요.'); return }
   s.busy = true
   rerender()
   try {
@@ -414,6 +615,8 @@ async function applyDirect(rerender) {
       ...(edits.length ? { edits } : {}),
       ...(buttonStyle ? { buttonStyle } : {}),
       ...(order ? { blockOrder: order } : {}),
+      ...(looks?.layout ? { layout: looks.layout } : {}),
+      ...(looks && Object.keys(looks.variants).length ? { variants: looks.variants } : {}),
     })
     await refreshPage(s)
     toast('v' + r.versionNo + ' 로 반영했어요. 이력에 남기려면 버전 저장을 눌러주세요.')
@@ -483,8 +686,8 @@ function previewButtonStyle(s) {
 }
 
 function updateDirectCount(s) {
-  const { edits, buttonStyle, order } = directChanges(s)
-  const n = edits.length + (buttonStyle ? 1 : 0) + (order ? 1 : 0)
+  const { edits, buttonStyle, order, looks } = directChanges(s)
+  const n = edits.length + (buttonStyle ? 1 : 0) + (order ? 1 : 0) + (looks?.count || 0)
   const el = $('#server-direct-count')
   if (el) el.textContent = n ? '바꾼 항목 ' + n + '개' : '바꾼 항목 없음'
   const apply = $('[data-act="server-direct-apply"]')
@@ -609,6 +812,7 @@ const ymd = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' })
 const dotted = (iso) => (iso ? ymd.format(new Date(iso)).replaceAll('-', '.') : '')
 
 const RESULT = {
+  PENDING: ['pending', '진행 중'],
   DONE: ['success', '완료'],
   FAILED: ['error', '실패'],
   ASK_BACK: ['clarify', '확인 필요'],
@@ -641,6 +845,12 @@ function progressHTML(s, extra) {
     + '<p>' + esc(text) + '</p></div>' + notice
 }
 
+/** 생성 화면의 배치 선택지 — 맨 앞이 자동 */
+const genLayoutOptions = () => [
+  { cssClass: '', label: '자동', title: 'AI 가 내용에 맞춰 골라요', icon: icon('sparkle') },
+  ...LAYOUTS.map((l) => ({ cssClass: l.cssClass, label: l.label, title: l.hint + (l.min ? ' 내용 영역 ' + l.min + '개 이상.' : '') })),
+]
+
 /** 생성 입력 — 페이지가 없을 때는 본 화면, 있을 때는 AI 대화 아래 "처음부터 다시 만들기" */
 function generateForm(s) {
   const e = s.event
@@ -652,8 +862,12 @@ function generateForm(s) {
       + (busy ? 'disabled' : '') + ' placeholder="예: 가을 맞이 데이터 이벤트. 혜택은 데이터 3GB, 카페 쿠폰 추첨.">'
       + esc(s.prompt || '') + '</textarea><span class="helper" id="server-prompt-count">'
       + (s.prompt || '').length + ' / ' + REQUEST_MAX + '자</span></label>'
+  // 배치 — 자동이면 AI 가 고른다. 고르면 서버가 그 배치로 건다 (영역이 모자라면 기본 배치로 만든다)
+  const layouts = e.template ? '' : '<div class="field"><span>페이지 배치</span><div id="server-gen-layouts">'
+    + layoutPicks('server-gen-layout', s.genLayout || '', genLayoutOptions(), busy) + '</div>'
+    + '<span class="helper">자동은 AI 가 내용에 맞춰 골라요. 영역이 모자라 쓸 수 없는 배치는 기본 배치로 만들어져요.</span></div>'
   return (s.request && !hasPage ? '<p class="workspace-tip">요청: ' + esc(s.request) + '</p>' : '')
-    + form
+    + form + layouts
     + '<div class="row">' + button('server-generate', (e.template ? icon('grid') : icon('sparkle')) + (hasPage ? '처음부터 다시 만들기' : '페이지 만들기'),
         busy ? 'disabled' : '', hasPage ? 'btn sm' : 'btn primary') + '</div>'
 }
@@ -666,10 +880,30 @@ const TONE = { FAILED: 'tone-fail', ASK_BACK: 'tone-ask', CANCELLED: 'tone-ask' 
 function chatPanel(s) {
   const busy = running(s)
   const tags = (m) => (m.blocks?.length ? '<span class="bubble-tags">' + m.blocks.map((k) => '<span>' + esc(labelOf(k)) + '</span>').join('') + '</span>' : '')
-  const log = chatOf(s.id).map((m) => '<div class="bubble ' + (m.role === 'user' ? 'me' : TONE[m.tone] || '') + '"><small>'
-    + (m.role === 'user' ? '관리자' : 'NewVent 어시스턴트' + (m.tone && m.tone !== 'DONE' ? ' · ' + (RESULT[m.tone]?.[1] || '') : ''))
-    + '</small>' + tags(m) + esc(m.text) + '</div>').join('')
+  const log = chatOf(s.id).map((m) => {
+    const statusLabel = m.tone && m.tone !== 'DONE'
+      ? RESULT[m.tone]?.[1]
+      : null
+
+    const speaker = m.role === 'user'
+      ? '관리자'
+      : 'NewVent 어시스턴트' + (statusLabel ? ' · ' + statusLabel : '')
+
+    return '<div class="bubble '
+      + (m.role === 'user' ? 'me' : TONE[m.tone] || '')
+      + '"><small>'
+      + esc(speaker)
+      + '</small>'
+      + tags(m)
+      + esc(m.text)
+      + '</div>'
+  }).join('')
   return '<div class="server-scroll" id="server-scroll">'
+    + (s.chatError
+      ? '<p class="helper" role="alert">'
+        + esc(s.chatError)
+        + ' 편집 화면을 다시 열면 재조회합니다.</p>'
+      : '')
     + '<div class="chat" id="chat-log" role="log" aria-label="AI 대화" aria-live="polite">' + log + '</div>'
     + '<details class="server-regen"><summary>처음부터 다시 만들기</summary>' + generateForm(s) + '</details></div>'
     + '<form class="server-foot" id="server-chat-form" aria-busy="' + busy + '">'
@@ -767,7 +1001,8 @@ function directPanel(s) {
     + select('size', '크기', [['small', '작게'], ['medium', '보통'], ['large', '크게']])
     + select('shape', '모양', [['square', '각지게'], ['round', '둥글게'], ['pill', '알약형']]) + '</div></fieldset>' : ''
   return '<div class="server-scroll" id="server-scroll">'
-    + '<p class="workspace-tip">미리보기에서 문구를 누르면 해당 칸으로 이동해요. 기간 · 유의사항은 서버가 채우는 자리라 고칠 수 없어요.</p>'
+    + '<p class="workspace-tip">미리보기에서 문구를 누르면 해당 칸으로 이동하고, 영역에 마우스를 올리면 순서 · 모양을 바꿀 수 있어요. 기간 · 유의사항은 서버가 채우는 자리라 고칠 수 없어요.</p>'
+    + looksHTML(s, busy)
     + orderHTML(s, busy)
     + (grouped ? '' : '<p class="helper" style="margin-bottom:10px">영역 구분을 불러오지 못해 문구를 순서대로 보여줘요.</p>')
     + '<div id="server-direct">' + fields + styleForm + '</div></div>'
@@ -1050,8 +1285,10 @@ function afterServerRender() {
   if (s.tab === 'direct') {
     updateDirectCount(s)
     const frame = $('.event-frame')
-    // 고치던 값 · 바꾼 순서가 남아 있으면 (탭 전환 · 기기 전환) 새 iframe 에도 다시 입힌다
-    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewOrder(s) }, { once: true })
+    // 미리보기 도구줄이 올린 영역에 보여 줄 것을 여기서 묻는다 (frame.js 의 server-edit 모드)
+    if (frame) frame.nvTools = (key) => toolsOf(s, key)
+    // 고치던 값 · 바꾼 순서 · 배치가 남아 있으면 (탭 전환 · 기기 전환) 새 iframe 에도 다시 입힌다
+    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewOrder(s); previewLooks(s) }, { once: true })
   } else {
     // 고른 영역 외곽선 — 새 iframe(새 버전 · 기기 전환)에도 다시 입힌다
     const frame = $('.event-frame')
@@ -1087,6 +1324,7 @@ function setPreviewText(node, index, value) {
 /* ───────────────────────── 입력 · 동작 ───────────────────────── */
 
 /** main.js 의 click 위임에서 부른다. 처리했으면 true */
+function handleServerClick(a, b, rerender) {
 /* ────────────────────── RAG 예시 찾기 ────────────────────── */
 
 /** 예시 찾기 — 참고 예시(내 이벤트 문구) + 프롬프트 초안(다른 이벤트)을 한 모달에.
@@ -1173,7 +1411,6 @@ async function runRagExamples() {
   })
 }
 
-function handleServerClick(a, b, rerender) {
   const s = ui.serverEditor
   switch (a) {
     case 'server-rag-examples': openRagExamples(); return true
@@ -1208,6 +1445,11 @@ function handleServerClick(a, b, rerender) {
     case 'server-unselect-all':
       if (s && !running(s)) { s.selected = []; paintSelection(s) }
       return true
+    case 'server-layout': if (s && !running(s) && !s.busy) pickLayout(s, b.dataset.layout); return true
+    case 'server-variant': if (s && !running(s) && !s.busy) pickVariant(s, b.dataset.block, b.dataset.variant || ''); return true
+    case 'server-gen-layout':
+      if (s && !running(s)) { s.genLayout = b.dataset.layout || ''; markPick($('#server-gen-layouts'), s.genLayout) }
+      return true
     case 'server-order-up': if (s) nudgeBlock(s, b.dataset.block, -1); return true
     case 'server-order-down': if (s) nudgeBlock(s, b.dataset.block, 1); return true
     case 'server-asset-delete': if (s) removeAsset(s, b.dataset.id, rerender); return true
@@ -1237,6 +1479,7 @@ function handleServerInput(ev) {
   if (t.id === 'server-prompt') { onServerPromptInput(t.value); return true }
   if (t.id === 'server-chat') { onChatInput(t.value); return true }
   if (t.id === 'server-publish-version') { onPublishPick(t.value); return true }
+  if (t.dataset.svariant !== undefined) { pickVariant(s, t.dataset.svariant, t.value); return true }
   if (t.dataset.sedit !== undefined) {
     const i = Number(t.dataset.sedit)
     s.direct.values[i] = t.value
@@ -1420,5 +1663,5 @@ export {
   openServerEditor, ensureServerEditor, serverEditorView, afterServerRender, loadingView, refreshPage, running, openPublish,
   regenerate, cancel as cancelServerGeneration, onServerPromptInput, reloadServerEditor,
   handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock,
-  handleServerDrag, handleServerChange,
+  handleServerDrag, handleServerTool, handleServerChange,
 }
