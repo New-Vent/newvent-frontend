@@ -81,7 +81,7 @@ function serverVersionsView() {
       : '<div class="card">' + list.map((v) => {
         const isLatest = sameVersion(v, latest)
         return '<div class="version-row server-version-row"><div class="version-number">v' + v.versionNo + '</div><div class="version-text"><h3>'
-          + esc(v.requestContent || (v.sourceVersionNo ? 'v' + v.sourceVersionNo + ' 에서 고친 버전' : '처음 만든 버전')) + ' '
+          + esc(v.changeSummary?.trim() || (v.sourceVersionNo ? 'v' + v.sourceVersionNo + ' 에서 변경한 버전' : '처음 만든 버전')) + ' '
           + (v.published ? '<span class="badge green">게시 중</span>' : '')
           + (isLatest ? '<span class="badge pink">최신</span>' : '') + '</h3>'
           + '<p>' + when(v.createdAt) + ' · ' + (v.sourceVersionNo ? 'v' + v.sourceVersionNo + '에서 이어진 버전' : '최초 버전') + '</p></div>'

@@ -34,3 +34,25 @@
   border-bottom-color: var(--ev-border);
 }
 .theme-vip:is(.palette-night, .palette-esports) .vp-step-num { color: var(--ev-primary); }
+
+/* 밝은 템플릿 × 어두운 팔레트 — 포인트색 위의 글자 (#207)
+ * night · esports 의 기본색은 밝은 노랑 · 초록이라, 흰 글자를 얹은 채움(버튼 · 번호 배지)이 안 읽힌다.
+ * 위의 #211 규칙과 같은 방식으로 이 두 팔레트에만 건다. */
+.theme-sports:is(.palette-night, .palette-esports) :is(.sp-cta-btn, .sp-vote-btn.active),
+.theme-launch:is(.palette-night, .palette-esports) :is(.lc-cta-btn, .lc-timeline-badge, .lc-form-btn),
+.theme-holiday:is(.palette-night, .palette-esports) :is(.hl-gift-ribbon, .hl-step-num),
+:is(.theme-holiday, .theme-vip, .theme-launch):is(.palette-night, .palette-esports) .cta-btn { color: #111111; }
+/* holiday 의 리본 · 단계 번호는 진한 채움(hover · deep)이 아니라 밝은 기본색 위에 어두운 글자로 */
+.theme-holiday:is(.palette-night, .palette-esports) { --tpl-ribbon: var(--ev-primary); --tpl-step: var(--ev-primary); }
+/* launch 의 타임라인 카드는 글자색까지 고정이라 흰 카드 그대로 둔다. 그 위의 포인트색 글자만 진하게 */
+.theme-launch:is(.palette-night, .palette-esports) :is(.lc-timeline-phase, .lc-gauge-percent) { color: var(--ev-primary-deep); }
+/* 마일스톤 배지는 연한 파랑(#dbeafe) 바탕이 고정이라 포인트색 대신 짙은 남색 글자 */
+.theme-launch:is(.palette-night, .palette-esports) .lc-ms-badge { color: var(--tpl-accent-ink); }
+
+/* 인증 버튼의 진한 배경에서는 흰 글자를 유지한다. */
+.theme-launch:is(.palette-night, .palette-esports) .lc-form-btn { color: #ffffff; }
+/* holiday 의 복주머니 카드도 흰색 고정이다. 주황(글자 · 흰 글자 버튼)을 진한 쪽으로 */
+.theme-holiday:is(.palette-night, .palette-esports) {
+  --tpl-warm: var(--ev-primary-deep);
+  --tpl-warm-deep: color-mix(in oklab, var(--ev-primary-deep) 80%, black);
+}
