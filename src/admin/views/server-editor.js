@@ -811,6 +811,7 @@ const ymd = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' })
 const dotted = (iso) => (iso ? ymd.format(new Date(iso)).replaceAll('-', '.') : '')
 
 const RESULT = {
+  PENDING: ['pending', '진행 중'],
   DONE: ['success', '완료'],
   FAILED: ['error', '실패'],
   ASK_BACK: ['clarify', '확인 필요'],
@@ -878,9 +879,24 @@ const TONE = { FAILED: 'tone-fail', ASK_BACK: 'tone-ask', CANCELLED: 'tone-ask' 
 function chatPanel(s) {
   const busy = running(s)
   const tags = (m) => (m.blocks?.length ? '<span class="bubble-tags">' + m.blocks.map((k) => '<span>' + esc(labelOf(k)) + '</span>').join('') + '</span>' : '')
-  const log = chatOf(s.id).map((m) => '<div class="bubble ' + (m.role === 'user' ? 'me' : TONE[m.tone] || '') + '"><small>'
-    + (m.role === 'user' ? '관리자' : 'NewVent 어시스턴트' + (m.tone && m.tone !== 'DONE' ? ' · ' + (RESULT[m.tone]?.[1] || '') : ''))
-    + '</small>' + tags(m) + esc(m.text) + '</div>').join('')
+  const log = chatOf(s.id).map((m) => {
+    const statusLabel = m.tone && m.tone !== 'DONE'
+      ? RESULT[m.tone]?.[1]
+      : null
+
+    const speaker = m.role === 'user'
+      ? '관리자'
+      : 'NewVent 어시스턴트' + (statusLabel ? ' · ' + statusLabel : '')
+
+    return '<div class="bubble '
+      + (m.role === 'user' ? 'me' : TONE[m.tone] || '')
+      + '"><small>'
+      + esc(speaker)
+      + '</small>'
+      + tags(m)
+      + esc(m.text)
+      + '</div>'
+  }).join('')
   return '<div class="server-scroll" id="server-scroll">'
     + (s.chatError
       ? '<p class="helper" role="alert">'
