@@ -1035,6 +1035,24 @@ function ragRow(title, desc, copyText) {
     + button('server-rag-copy', '담기', 'data-text="' + esc(copyText) + '"', 'btn sm primary') + '</div>'
 }
 
+/** 초안에서 예시 내용만 뽑는다 — 앞의 작성 가이드는 버린다.
+    형식: "{가이드} {형태} (예시: {내용})" → "{내용}" */
+function ragExample(prompt) {
+  const s = String(prompt ?? '')
+  const i = s.indexOf('(예시:')
+  if (i < 0) return s
+  return s.slice(i + 4).replace(/\)\s*$/, '').trim()
+}
+
+/** 문구를 키워드로 축약 — 짧은 구·숫자·기호 강조구만 최대 3개 */
+function ragKeywords(text) {
+  return String(text ?? '').split(/[.。!?\n]+/)
+    .map((s) => s.trim())
+    .filter((s) => s && (s.length <= 25 || /[0-9%GB]/.test(s) || /[★♪🎉💯🎅▶]/.test(s)))
+    .slice(0, 3)
+    .join(' / ')
+}
+
 /** 결과 칸 — 모달 안에서 검색어만 바꿔 다시 부른다 */
 function ragResultBox(id, tip) {
   return '<div id="' + id + '"><p class="helper">' + tip + '</p></div>'
@@ -1072,7 +1090,10 @@ async function runRagExamples() {
     const res = await searchRagPreview(s.id, q)
     const items = res?.results ?? []
     return items.length
-      ? items.map((c) => ragRow(labelOf(c.blockKey ?? ''), c.content ?? '', c.content ?? '')).join('')
+      ? items.map((c) => {
+        const kw = ragKeywords(c.content) || c.content
+        return ragRow(labelOf(c.blockKey ?? ''), kw, kw)
+      }).join('')
       : '<p>비슷한 문구가 없어요.</p>'
   })
   fillBox('rag-others', async () => {
@@ -1080,8 +1101,10 @@ async function runRagExamples() {
     if (!Array.isArray(items) || !items.length) return '<p>초안이 없어요. 검색어를 바꿔보세요.</p>'
     const rows = items.map((d) => {
       const label = labelOf(d.blockKey ?? '')
-      const add = '‘' + label + '’ 영역에 추가해줘: ' + (d.prompt ?? '')
-      return ragRow(d.eventTitle ?? '', '[' + label + '] ' + (d.prompt ?? ''), add)
+      const ex = ragExample(d.prompt)
+      const kw = ragKeywords(ex) || ex
+      const add = '‘' + label + '’ 영역에 추가해줘: ' + kw
+      return ragRow(d.eventTitle ?? '', '[' + label + '] ' + kw, add)
     }).join('')
     return '<p class="helper">초안 ' + items.length + '건</p>' + rows
   })
