@@ -235,12 +235,13 @@ async function runCreateSimilar() {
     if (!Array.isArray(items) || !items.length) return '<p>비슷한 사례가 없어요. 검색어를 바꿔보세요.</p>'
     return items.map((v) => {
       const refs = (v.topChunks ?? []).map((c) => c.content).filter(Boolean).join(' / ')
+      const src = '(출처: ' + (v.eventTitle ?? '') + ' v' + v.versionNo + ')\n참고: ' + refs
       return '<div class="rag-rec-row"><div class="rag-rec-text"><p class="rag-rec-title">'
       + esc(v.eventTitle ?? '') + ' · v' + v.versionNo + '</p>'
       + '<p class="rag-rec-desc">유사도 ' + Math.round((v.similarity ?? 0) * 100) + '%'
       + (refs ? ' · ' + esc(refs) : '') + '</p></div>'
       + button('create-rag-similar-view', '보기', 'data-event="' + v.eventId + '" data-version="' + v.versionId + '"', 'btn sm ghost')
-      + (refs ? button('create-rag-copy', '담기', 'data-text="' + esc('참고: ' + refs) + '"', 'btn sm primary') : '') + '</div>'
+      + (refs ? button('create-rag-copy', '담기', 'data-text="' + esc(src) + '"', 'btn sm primary') : '') + '</div>'
     }).join('')
   })
 }
