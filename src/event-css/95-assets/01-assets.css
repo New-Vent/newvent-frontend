@@ -1,0 +1,200 @@
+/* 95-assets — 관리자가 올린 이미지(.ev-asset)
+ *
+ * ★ 왜 폴더가 따로이고 90-palettes 보다 뒤인가
+ *   사진 위의 글자색을 여기서 **흰색으로 못 박는다**. 사진이 무슨 색인지 모르니
+ *   테마 · 팔레트가 정한 글자색을 그대로 쓸 수 없다. 덮개로 어둡게 깔고 흰 글씨로
+ *   못 박는 조합만이 올릴 때 미리 재 볼 수 있다. 그러려면 테마(20) · 변형(60) ·
+ *   팔레트(90) 가 건 글자색을 전부 이겨야 해서 그 뒤에 선다.
+ *
+ * ★ 모델은 배치 이름만 고른다. 자리 · 크기 · 잘림 · 덮개 · 글자색은 전부 여기가 쥔다.
+ *   변형 · 팔레트 · 장식과 같은 방식이다.
+ *
+ * ★ src 는 서버가 허용 목록으로 대조한다(BlockValidator). CSS 는 주소를 모른다.
+ *
+ * ★★ 변형(.v-*)과 달리 **템플릿 블록(.ev-block)도 가리지 않는다.**
+ *   변형을 가린 이유는 템플릿이 자기 디자인을 갖고 있어서 섞으면 둘 다 망가지기 때문인데,
+ *   올린 이미지는 모델이 고른 게 아니라 **관리자가 직접 올려서 넣어 달라고 한 것**이다.
+ *   여기서 가리면 프롬프트는 안내하는데 화면은 그대로인 조용한 실패가 된다.
+ */
+
+/* ── ① 배경 — 영역을 꽉 채우고 덮개를 얹는다 ────────────────────── */
+
+[data-block]:has(> .ev-asset-bg) { position: relative; overflow: hidden; }
+
+[data-block] > .ev-asset-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ★★ 글자색은 **올릴 때 재서** 정한다. 셋 중 하나가 <img> 에 class 로 박혀 온다.
+
+     ev-asset-on-light   밝은 그림   어두운 글씨 · 덮개 없음
+     ev-asset-on-dark    어두운 사진  흰 글씨   · 덮개 없음
+     ev-asset-on-mixed   섞인 사진   흰 글씨   · 덮개 (ev-asset-dim-35 · -55 · -68 이 농도)
+
+   ★ 왜 CSS 가 못 정하나 — CSS 는 사진이 무슨 색인지 모른다. 모델도 그림을 못 본다.
+     정할 수 있는 곳은 바이트가 손에 있는 업로드 순간뿐이다 (ImageProbe.toneOf).
+
+   ★ 덮개가 셋 중 하나에만 가는 게 핵심이다. 전에는 **모든** 사진에 55% 를 씌워서
+     밝은 일러스트가 갈색으로 뭉개졌다 — 보여 주려고 올린 사진을 덮어 버린 셈이었다.
+     위는 하늘 아래는 숲인 사진만 어느 글자색도 못 버텨서, 그때만 덮는다.
+
+   ★ 판정 경계 (회색 단색 실측): 120 → MIXED · 130 이상 → LIGHT.
+     어두운 글씨(#0f172a)가 4.5 를 넘는 가장 어두운 바탕이 그 사이다. */
+
+[data-block]:has(> .ev-asset-bg) > :not(.ev-asset) { position: relative; z-index: 1; }
+
+/* ★★ 사진을 깐 영역에서는 테마 · 변형의 **장식을 끈다.**
+     물결 자락(v-hero-wave) · 유리판(v-hero-glass) · 오로라 띠(theme-aurora)가
+     사진 위에 그대로 겹쳐 그려져서 떠다니는 얼룩이 된다 — 사진 없는 페이지를 꾸미려고
+     만든 그림이라 사진 위에서는 쓸 자리가 없다.
+
+   ★★ [data-block] 을 세 번 적은 건 특이도 때문이다. 장식 쪽이 (0,3,0) 이다 —
+       [data-block="hero"].v-hero-wave:not(.ev-block)::after
+       .theme-aurora [data-block="hero"]:not(.ev-block)…::before
+     (0,2,0) 으로는 파일이 뒤에 있어도 밀린다(실측: 4개 조합에서 장식이 그대로 남았다).
+
+   ★★ 아래 덮개도 같은 ::after 를 쓴다. **특이도를 맞추고 뒤에 둬야** 덮개가 이긴다 —
+     한쪽만 올리면 덮개가 같이 꺼진다. */
+[data-block][data-block][data-block]:has(> .ev-asset-bg)::before,
+[data-block][data-block][data-block]:has(> .ev-asset-bg)::after {
+  content: none;
+}
+
+/* ★ 구름은 영역이 아니라 **컨테이너**에 붙는다(theme-bloom). hero 에 사진을 깔면
+     그 위에 떠서 얼룩이 된다 — 구름 좌표가 104px · 300px 라 hero 와 겹친다.
+     페이지 전체 배경 쪽은 02-page-bg.css 가 따로 끈다. */
+.ev-container:has([data-block="hero"] > .ev-asset-bg)::before,
+.ev-container:has([data-block="hero"] > .ev-asset-bg)::after {
+  content: none;
+}
+
+/* 섞인 사진에만 덮개. 농도는 서버가 재서 class 로 박는다 */
+[data-block][data-block][data-block]:has(> .ev-asset-on-mixed)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: rgba(0, 0, 0, .55);
+}
+/* ★ 위 규칙과 특이도가 같다. **뒤에 있어서** 이긴다 — 순서를 바꾸면 안 먹는다 */
+[data-block][data-block][data-block]:has(> .ev-asset-dim-35)::after { background: rgba(0, 0, 0, .35); }
+[data-block][data-block][data-block]:has(> .ev-asset-dim-68)::after { background: rgba(0, 0, 0, .68); }
+
+/* ★ [data-block] 을 세 번 적은 건 오타가 아니다 — **특이도를 올리는 유일한 방법**이다.
+     테마가 제목 색을 0,3,1 로 집고 있어서(.theme-bloom [data-block="hero"]:not(.ev-block) h1)
+     파일이 뒤에 있어도 같은 특이도면 밀린다. :not(.ev-block) 을 뺀 순간 0,2,1 로 떨어져
+     제목이 테마 색으로 돌아갔다(실측). 테마가 쓰는 .theme-bloom.theme-bloom 과 같은 수법이다.
+   ★ **제목을 투명하게 만드는 둘**은 세 경우 모두에서 끈다. 글자색과 무관한 사고다.
+       theme-bloom          h1 에 9px 흰 획을 둘러 글자 속을 먹는다
+       v-hero-gradient-text color: transparent 로 두고 배경을 글자에 깎아 넣는다 */
+[data-block][data-block][data-block]:has(> .ev-asset-bg)
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  -webkit-text-stroke: 0;
+  background-image: none;
+}
+
+/* 밝은 그림 — 테마 글자색을 그대로 쓴다. 흰 그림자로 테두리만 살린다 */
+[data-block][data-block][data-block]:has(> .ev-asset-on-light)
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  -webkit-text-fill-color: currentColor;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, .55), 0 1px 6px rgba(0, 0, 0, .25);
+}
+
+/* 어두운 사진 · 섞인 사진 — 흰 글씨로 못 박는다 */
+[data-block][data-block][data-block]:has(> .ev-asset-on-dark)
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title),
+[data-block][data-block][data-block]:has(> .ev-asset-on-mixed)
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+}
+
+/* 페이지 전체 배경(ev-asset-page)은 02-page-bg.css 가 맡는다 —
+   여기와 자리가 달라서(루트의 직계 자식) 다룰 것이 통째로 다르다. */
+
+/* ── ② 제목 옆 그림 ───────────────────────────────────────────── */
+
+[data-block="hero"]:has(> .ev-asset-art) {
+  position: relative;
+  padding-right: 32%;
+  text-align: left;
+}
+
+[data-block="hero"] > .ev-asset-art {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26%;
+  max-width: 230px;
+  height: auto;
+  z-index: 1;
+}
+
+/* ★★ 왼쪽 자리. 관리자가 "왼쪽으로" 라고 말할 수 있어야 한다 —
+     전에는 오른쪽 하나뿐이라 왼쪽이라고 해도 **바꿀 이름이 없어서** 그대로 오른쪽에 붙었다.
+   ★ 자리를 옮기면 **글자 쪽 여백도 반대로** 가야 한다. 안 그러면 그림이 글자를 덮는다.
+   ★ 위 두 규칙과 같은 특이도(0,2,0 · 0,2,0)인데 **뒤에 있어서** 이긴다. 순서를 바꾸면 안 먹는다.
+   ★ 서버가 붙인다(AssetEdit) — 모델이 고르는 이름이 아니다. */
+[data-block="hero"]:has(> .ev-asset-art-left) { padding-right: 24px; padding-left: 32%; }
+
+[data-block="hero"] > .ev-asset-art-left { right: auto; left: 22px; }
+
+/* 좁은 화면에서는 옆이 아니라 아래로 — 글자 칸이 반으로 줄면 제목이 세로로 갈라진다 */
+@media (max-width: 640px) {
+  [data-block="hero"]:has(> .ev-asset-art) { padding-right: 24px; text-align: center; }
+  /* ★ 좁은 화면에서는 왼쪽 · 오른쪽이 의미가 없다 — 어차피 글자 아래로 내려간다 */
+  [data-block="hero"]:has(> .ev-asset-art-left) { padding-left: 24px; }
+  [data-block="hero"] > .ev-asset-art-left { left: auto; }
+  [data-block="hero"] > .ev-asset-art {
+    position: static;
+    transform: none;
+    width: 60%;
+    max-width: 200px;
+    margin: 14px auto 0;
+  }
+}
+
+/* ── ③ 항목 아이콘 — 지금 이모지가 들어가는 54x54 자리를 그대로 쓴다 ── */
+
+.benefit-icon > .ev-asset-icon,
+.step-icon > .ev-asset-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ── ④ 로고 ──────────────────────────────────────────────────── */
+
+[data-block="hero"] > .ev-asset-logo {
+  display: block;
+  height: 30px;
+  width: auto;
+  margin: 0 0 14px;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+}
+[data-block="hero"].v-hero-center > .ev-asset-logo { margin-inline: auto; }
+
+/* ── ⑤ 가로 띠 ───────────────────────────────────────────────── */
+
+[data-block] > .ev-asset-band {
+  display: block;
+  width: 100%;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0 0 14px;
+  position: relative;
+  z-index: 1;
+}

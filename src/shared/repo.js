@@ -251,6 +251,35 @@ export async function loadPreview(eventId) {
   }
 }
 
+/* ── 올린 이미지 ─────────────────────────────────────────────── */
+
+/**
+ * 이 이벤트에 올라온 이미지 목록 → [{ assetId, url, caption, contentType, byteSize, scrim }]
+ * ★ 목업 모드에는 업로드가 없다. 빈 배열을 준다 — 화면이 분기하지 않게
+ */
+export async function loadAssets(eventId) {
+  if (!USE_SERVER) return []
+  const res = await requireApi().get(`/api/admin/events/${eventId}/assets`)
+  return res?.assets ?? res ?? []
+}
+
+/**
+ * 이미지 하나 올리기 → { assetId, url, … }
+ * ★ multipart 다. api.js 의 postForm 이 Content-Type 을 브라우저에 맡긴다 —
+ *   우리가 적으면 boundary 가 빠져서 서버가 파트를 못 읽는다
+ */
+export async function uploadAsset(eventId, file, caption) {
+  const form = new FormData()
+  form.append('file', file)
+  if (caption) form.append('caption', caption)
+  return requireApi().postForm(`/api/admin/events/${eventId}/assets`, form)
+}
+
+/** 올린 이미지 지우기. ★ 이미 게시된 페이지에 박혀 있으면 그 자리가 깨진다 */
+export async function deleteAsset(eventId, assetId) {
+  return requireApi().del(`/api/admin/events/${eventId}/assets/${assetId}`)
+}
+
 /**
  * AI 대화 수정 시작 → { jobId, phase, percent }. 결과는 generationStatus 로 폴링한다 (생성과 같은 작업 자리).
  * ★ 기준은 항상 **최신 버전** 이다 — 다른 버전에서 이어 가려면 restoreVersion 으로 먼저 최신으로 가져온다
@@ -687,6 +716,126 @@ export function participationBody(gameCode, input = {}) {
     case 'PRE_REGISTRATION': return { phoneNumber: input.phoneNumber }
     case 'LUCKY_POUCH': return { pouchIndex: input.pouchIndex }
     default: return undefined   // BASIC · gameCode 없음
+  }
+}
+
+/* ─────────────── 관리자 — 참여 설정 · 참여자 ─────────────── */
+
+/**
+ * 참여 설정 조회 — `GET /api/admin/events/{id}/participation-config`
+ *
+ * ★ 아직 설정하지 않았어도 404 가 아니라 `{ gameCode: null, config: {} }` 가 온다.
+ *   화면이 빈 폼으로 시작하면 되고 분기를 따로 만들 필요가 없다.
+ * ★ 남의 이벤트는 403 (COMMON403-0), 없거나 휴지통이면 404 (EVENT404-0).
+ */
+export async function loadParticipationConfig(eventId) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여 설정 화면이 없다')
+  return requireApi().get(`/api/admin/events/${eventId}/participation-config`)
+}
+
+/**
+ * 참여 설정 저장 — `PUT …/participation-config` (이벤트당 하나라 덮어쓴다)
+ *
+ * config 모양은 방식마다 다르다. 서버 ParticipationValidator 와 같은 규칙이다.
+ *   BASIC              resultMode 없으면 결과를 내지 않는다. 있으면
+ *                        IMMEDIATE   winProbability(0~100) + prizeName
+ *                        GUARANTEED  prizeName
+ *                        DELAYED     winnerCount(1↑) + prizeName + announcementAt(ISO)
+ *   SPORTS_PREDICTION  predictionOptions: string[] (비어 있으면 안 되고 중복도 안 된다)
+ *                      announcementAt: ISO (★ **이벤트 종료 이후**여야 한다)
+ *                      rewards: [{ rewardId, target, selection, winnerCount?, prizeName }]
+ *                        target     ALL_PARTICIPANTS · CORRECT_PREDICTIONS
+ *                        selection  ALL (대상 전원) · DRAW (대상 중 추첨 → winnerCount 1↑)
+ *                        rewardId   이벤트 안에서 중복 금지. 참여 기록의 result_data.rewards 에
+ *                                   그대로 박히므로 **발표 뒤에 바꾸면 안 된다**
+ *   PRE_REGISTRATION   {} — 전화번호는 참여 입력이지 설정이 아니다
+ *   LUCKY_POUCH        pouches: [{ pouchIndex, winProbability, prizeName }]
+ *                        번호는 1부터 길이까지 빠짐없이
+ *
+ * ★ 참여 기록이 있으면 **결과를 뒤집는 값**은 잠긴다 (409 PARTICIPATION409-3).
+ *   바꿀 수 있는 것은 prizeName · announcementAt 뿐이다.
+ *   값이 실제로 달라진 키만 보므로, 폼 전체를 그대로 PUT 해도 통과한다.
+ * ★ 모양이 틀리면 409 PARTICIPATION409-1, 없는 방식이면 409 PARTICIPATION409-2.
+ *
+ * ★★ SPORTS_PREDICTION 은 **winningPrediction · drawnAt 을 보내면 거절한다**
+ *   (ParticipationConfigService.requireAnnouncementAfterEnd). 둘은 설정이 아니라
+ *   진행 상태다 — 정답은 registerSportsResult 가, drawnAt 은 발표 배치가 쓴다.
+ *   그래서 **읽은 설정을 그대로 되돌려 보내면 안 된다**. 화면이 두 키를 떼고 보낸다.
+ */
+export async function saveParticipationConfig(eventId, { gameCode, config }) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여 설정 화면이 없다')
+  return requireApi().put(`/api/admin/events/${eventId}/participation-config`, { gameCode, config })
+}
+
+/**
+ * 설정이 아니라 **진행 상태**인 키 — 설정을 저장할 때 떼고 보낸다.
+ *
+ *   winningPrediction  관리자가 등록한 실제 경기 결과 (registerSportsResult)
+ *   drawnAt            발표 배치가 끝난 시각 (SportsPredictionDrawJob)
+ *
+ * ★ 서버가 **이 키가 있으면 저장을 거절한다** (실측 409 PARTICIPATION409-1).
+ *   읽은 설정을 그대로 PUT 하는 화면이라 여기서 한 번 걸러야 한다.
+ * ★ 떼고 보내면 서버에 저장된 값도 **같이 지워진다** (설정을 통째로 덮어쓴다 —
+ *   실측: 정답 등록 후 재저장 → winningPrediction 이 null 이 된다).
+ *   그래서 정답이 등록된 뒤의 저장은 화면이 먼저 확인을 받는다.
+ */
+const PROGRESS_KEYS = ['winningPrediction', 'drawnAt']
+export function configWithoutProgress(config) {
+  const out = { ...(config || {}) }
+  PROGRESS_KEYS.forEach((k) => delete out[k])
+  return out
+}
+
+/**
+ * 실제 경기 결과 등록 · 정정 — `PUT /api/admin/events/{id}/sports-result`
+ *
+ * 승부 예측형만 쓴다. 참여자의 예측과 맞춰 발표 시각 이후 배치가 혜택별로 추첨한다.
+ *
+ * ★ 이것만은 **참여 기록이 있어도 통과한다** — 설정 API 를 거치지 않고 config 를
+ *   직접 고치므로 ParticipationConfigLock 을 타지 않는다 (실측 확인).
+ *   정답은 경기가 끝난 뒤에야 알기 때문에 그래야 맞다.
+ * ★ 선택지에 없는 값이면 400 PARTICIPATION400-1.
+ * ★ 발표 처리(drawnAt)가 끝난 뒤에는 409 PARTICIPATION409-4 — 확정된 당첨을 뒤집지 않는다.
+ * ★ 발표 시각이 이벤트 종료 이후가 아니면 409 PARTICIPATION409-1 (설정이 먼저 틀린 것이다).
+ */
+export async function registerSportsResult(eventId, winningPrediction) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여 설정 화면이 없다')
+  return requireApi().put(`/api/admin/events/${eventId}/sports-result`, { winningPrediction })
+}
+
+/**
+ * 참여자 목록 — `GET /api/admin/events/{id}/participations`
+ *
+ *   { summary:      { totalParticipationCount, rewardCount, pendingCount },
+ *     participants: { content[], page, size, totalElements, totalPages } }
+ *
+ * ★ **summary 는 필터와 무관하게 전체다.** resultStatus=WON 을 걸어도
+ *   summary.totalParticipationCount 는 전체 참여 수이고, 거른 수는
+ *   participants.totalElements 다. 둘을 섞으면 "전체 참여"가 거짓이 된다.
+ * ★ size 는 50 이 상한이다. 51 이상이면 400 — 전화번호가 들어 있는 응답이라 상한이 있다.
+ * ★ resultStatus 는 WON · LOST · PENDING 만. 그 외 값은 400.
+ * ★ 참여가 없어도 404 가 아니라 빈 목록과 0 집계를 준다.
+ *
+ * @param {{resultStatus?:'WON'|'LOST'|'PENDING'|null, page?:number, size?:number}} [opts]
+ */
+export async function loadParticipants(eventId, { resultStatus = null, page = 0, size = 20 } = {}) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여자 화면이 없다')
+  const q = new URLSearchParams({ page: String(page), size: String(size) })
+  if (resultStatus) q.set('resultStatus', resultStatus)
+  return requireApi().get(`/api/admin/events/${eventId}/participations?${q}`)
+}
+
+/**
+ * 당첨자 전체 — 페이지를 끝까지 모은다 (loadAdminEvents 와 같은 방식).
+ * ★ 서버에 CSV 엔드포인트가 아직 없어서 화면이 모아 만든다. size 상한이 50 이다.
+ */
+export async function loadAllParticipants(eventId, resultStatus = null) {
+  if (!USE_SERVER) throw new Error('목업 모드에는 참여자 화면이 없다')
+  const out = []
+  for (let page = 0; ; page++) {
+    const d = await loadParticipants(eventId, { resultStatus, page, size: 50 })
+    out.push(...d.participants.content)
+    if (page + 1 >= d.participants.totalPages || d.participants.content.length === 0) return out
   }
 }
 
