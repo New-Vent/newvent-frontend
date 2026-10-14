@@ -26,8 +26,10 @@ import { requestFor, requestPending, updateEditor } from '@shared/editor-state.j
 import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
 import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
-import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag } from './views/server-editor.js'
+import { markPick } from '@shared/layouts.js'
+import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag, handleServerTool, handleServerChange } from './views/server-editor.js'
 import { templatesView, ensureLibrary, resetLibrary, handleLibraryClick, handleLibrarySubmit, handleLibraryChange } from './views/templates.js'
+import { participantsView, ensureParticipants, resetParticipants, handleParticipantsClick, handleParticipantsSubmit, handleParticipantsChange } from './views/participants.js'
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
@@ -50,7 +52,7 @@ useApi(api)
 
 const adminNotifications = createAdminNotifications(api, AUTH_ENABLED && USE_SERVER)
 
-const VIEWS = { admin: adminView, users: usersView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, login: loginView }
+const VIEWS = { admin: adminView, users: usersView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, participants: participantsView, login: loginView }
 
 const ROUTES = [
   { path: '/', name: 'admin' },
@@ -60,6 +62,7 @@ const ROUTES = [
   { path: '/events/new', name: 'create' },
   { path: '/events/:id/edit', name: 'editor' },
   { path: '/events/:id/versions', name: 'versions' },
+  { path: '/events/:id/participants', name: 'participants' },
 ]
 
 const PATH = {
@@ -70,6 +73,7 @@ const PATH = {
   create: () => '/events/new',
   editor: (id) => `/events/${id}/edit`,
   versions: (id) => `/events/${id}/versions`,
+  participants: (id) => `/events/${id}/participants`,
 }
 
 function header() {
@@ -126,6 +130,7 @@ function render(scroll = false) {
   // 템플릿 라이브러리는 목업 모드에서도 목록이 있다 (mock/library.js)
   if (ui.route === 'templates') ensureLibrary(() => render())
   if (ui.route === 'users') ensureAdminUsers(() => render())
+  if (ui.route === 'participants') ensureParticipants(ui.activeId, () => render())
   // 서버 모드 편집 · 버전 이력 화면은 목업 화면 대신 서버 화면이다 (views/server-editor.js · server-versions.js)
   const serverView = USE_SERVER && { editor: serverEditorView, versions: serverVersionsView }[ui.route]
   if (serverView) ensureServerEditor(ui.activeId, () => render())
@@ -134,7 +139,7 @@ function render(scroll = false) {
   $('#app').innerHTML = (serverView || VIEWS[ui.route] || adminView)()
   hydrate()
   if (serverView) afterServerRender()
-  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리', users: '사용자 관리' }[ui.route]
+  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리', users: '사용자 관리', participants: '참여 관리' }[ui.route]
     ?? '이벤트 관리'
   document.title += ' | NewVent'
   if (scroll) window.scrollTo(0, 0)
@@ -143,6 +148,10 @@ function render(scroll = false) {
 const router = createRouter(ROUTES, (match) => {
   ui.route = match.name
   if (match.params.id) ui.activeId = match.params.id
+  // 참여자 화면은 들어올 때마다 다시 읽는다. 참여는 사용자가 수시로 만드는 값이라
+  // 한 번 읽고 캐시해 두면 떠났다 돌아와도 옛 숫자가 그대로 남는다.
+  // (여기는 이동할 때 한 번만 돈다 — render 안에서 비우면 끝없이 다시 읽는다)
+  if (match.name === 'participants' && ui.participants) ui.participants.status = 'idle'
   render(true)
 })
 
@@ -242,6 +251,7 @@ document.addEventListener('click', (ev) => {
 
   // ── 템플릿 라이브러리 (PR #133) — 목업 · 서버 둘 다 쓴다 ────────
   if(handleLibraryClick(a,b,()=>render()))return;
+  if(handleParticipantsClick(a,b,()=>render()))return;
 
   // ── 서버 모드 편집 화면 ─────────────────────────────────────────
   if(USE_SERVER&&(handleServerClick(a,b,()=>render())||handleVersionsClick(a,b,()=>render())))return;
@@ -373,9 +383,11 @@ document.addEventListener('click', (ev) => {
   if(a==='route'){navigate(b.dataset.route);return;}
   if(a==='edit'){navigate('editor',b.dataset.id);return;}
   if(a==='versions'){navigate('versions',b.dataset.id);return;}
+  if(a==='participants'){navigate('participants',b.dataset.id);return;}
   if(a==='new'){startCreation();return;}
   if(a==='cancel-create'){ui.creation=null;navigate('admin');return;}
   if(a==='create-back'){ui.creation.step=1;render(true);return;}
+  if(a==='create-layout'){ui.creation.layout=b.dataset.layout||'';markPick(document.querySelector('#create-layouts'),ui.creation.layout);return;}
   if(a==='create-mode'){ui.creation.mode=b.dataset.mode;render();document.querySelector('[data-act="create-mode"][data-mode="'+ui.creation.mode+'"]')?.focus({preventScroll:true});return;}
   if(a==='select-create-template'){   if(b.getAttribute('aria-disabled')==='true'){creationError('먼저 기본 정보에서 참여 대상을 우수 이상으로 바꿔주세요.');return;}   ui.creation.templateId=b.dataset.template;const y=window.scrollY;render();window.scrollTo(0,y);document.querySelector('[data-act="select-create-template"][data-template="'+ui.creation.templateId+'"]')?.focus({preventScroll:true});return;  }
   if(a==='finish-create'){finishCreation();return;}
@@ -420,7 +432,10 @@ document.addEventListener('input',ev=>{
 });
 
 document.addEventListener('change',ev=>{
+ // 이미지 올리기 — AI 대화 입력칸의 +. 파일 고르기는 input 이벤트를 내지 않는다
+ if(USE_SERVER&&handleServerChange(ev,()=>render()))return;
  if (handleUsersChange(ev)) return
+ if(handleParticipantsChange(ev,()=>render()))return;
  if(handleLibraryChange(ev,()=>render()))return;
  if(ev.target.id==='admin-from'||ev.target.id==='admin-to'){
   if(ev.target.id==='admin-from')ui.adminFrom=ev.target.value; else ui.adminTo=ev.target.value;
@@ -445,6 +460,7 @@ document.addEventListener('submit',ev=>{
   return;
  }
  // 템플릿 검색 · 정보 수정 · 등록 · 이 템플릿으로 만들기
+ if(handleParticipantsSubmit(ev,()=>render()))return;
  if(handleLibrarySubmit(ev,{rerender:()=>render(),openEditor:openTemplateEvent}))return;
  if(USE_SERVER&&handleServerSubmit(ev,()=>render()))return;
  if(ev.target.id==='chat-form'){ev.preventDefault();const p=ev.target.querySelector('textarea').value.trim();if(p&&!requestPending())handlePrompt(p);}
@@ -495,6 +511,7 @@ async function logout() {
   if (AUTH_ENABLED) await api.logout()
   resetAdminServer()
   resetLibrary()
+  resetParticipants()
   ui.serverEditor = null
   ui.logged = false
   navigate('login')
@@ -518,6 +535,7 @@ document.addEventListener('focusin',ev=>{if(USE_SERVER){handleServerFocus(ev);re
 // 블록 순서 끌어 놓기 — 네 가지가 한 함수로 들어간다 (server-editor.handleServerDrag)
 ['dragstart','dragover','drop','dragend'].forEach(t=>document.addEventListener(t,ev=>{if(USE_SERVER)handleServerDrag(ev);}));
 document.addEventListener('nv-pick',handleServerPick);
+document.addEventListener('nv-tool',handleServerTool);
 document.addEventListener('nv-block',handleServerBlock);
 
 document.addEventListener('focusout',()=>queueMicrotask(()=>highlightEditingText()));

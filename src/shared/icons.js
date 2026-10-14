@@ -20,6 +20,7 @@ const paths = {
   sparkle:'<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5zM21 2v4m-2-2h4"/>',
   edit:'<path d="m14 5 5 5M4 20l5-1L21 7a2 2 0 0 0-4-4L5 15z"/>',
   close:'<path d="m6 6 12 12M18 6 6 18"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
   desktop:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M12 17v4m-5 0h10"/>',
   phone:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/>'
 };

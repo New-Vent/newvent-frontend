@@ -4,6 +4,8 @@
 // "팔레트를 붙여서 새로 기준 미달이 됐거나 눈에 띄게 나빠진" 요소를 모은다.
 // 기준선은 같은 템플릿의 팔레트 없는 상태다 — 템플릿이 원래부터 못 넘는 곳은 이 테스트의 대상이 아니다.
 //
+// baseFails: 팔레트 없는 기본 상태에서 기준 미달인 요소 (#220)
+//
 // 결과는 #result 에 base64(UTF-8 JSON) 로 적는다.
 (function () {
   var CONFIG = window.__CONFIG__
@@ -101,7 +103,9 @@
         }
       })
     })
-    result.contrast[theme] = { total: Object.keys(base).length, regressions: regressions }
+    var baseFails = Object.keys(base).filter(function (i) { return base[i].c < base[i].need })
+      .map(function (i) { return { name: base[i].name, text: base[i].text, c: +base[i].c.toFixed(2), need: base[i].need } })
+    result.contrast[theme] = { total: Object.keys(base).length, regressions: regressions, baseFails: baseFails }
 
     // 토큰: 20-themes 에 정의된 --tpl-* 가 팔레트에서 바뀌는가
     root.className = 'ev-container event-page theme-' + theme

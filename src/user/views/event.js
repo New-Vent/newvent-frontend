@@ -63,13 +63,24 @@ function participationInput(gameCode) {
 }
 
 /** 참여 결과 — WON 만 상품명이 온다 */
-function participationResult(r) {
+function participationResult(r, eventId) {
   const won = r.status === 'WON'
   const pending = r.status === 'PENDING'
+  const lost = r.status === 'LOST'
+
+  const message = pending
+    ? '참여가 접수되었어요'
+    : won
+      ? '당첨되었어요!'
+      : lost
+        ? '아쉽게 당첨되지 않았어요'
+        : '참여 접수가 완료되었어요'
+
   return '<div class="participation-access ' + (won ? 'ready' : pending ? 'login' : 'done') + '" role="status">'
-    + '<strong>' + (pending ? '참여가 접수되었어요' : won ? '당첨되었어요!' : '아쉽게 당첨되지 않았어요') + '</strong>'
+    + '<strong>' + message + '</strong>'
+     (pending ? '참여가 접수되었어요' : won ? '당첨되었어요!' : '아쉽게 당첨되지 않았어요') + '</strong>'
     + (won && r.prizeName ? '<p class="summary">' + esc(r.prizeName) + '</p>' : '')
-    + button('route', '내 혜택에서 보기', 'data-route="my"', 'btn sm wide') + '</div>'
+    + button('result', '참여 결과 보기', 'data-route="my"', 'btn sm wide') + '</div>'
 }
 
 /**
@@ -92,18 +103,19 @@ function serverParticipation() {
       + '<p class="helper">' + esc(s.error || '') + '</p>'
       + button('participation-retry', '다시 확인', '', 'btn sm wide') + '</div>'
   }
-  if (s.result) return participationResult(s.result)
+  if (s.result) return participationResult(s.result, s.eventId)
 
   const d = s.data || {}
   if (d.participated || !d.canParticipate) {
     const u = unavailableOf(d.participated && !d.unavailableReason ? 'ALREADY_PARTICIPATED' : d.unavailableReason)
     return '<div class="participation-access ' + u.tone + '" role="status"><strong>' + esc(u.title) + '</strong>'
       + '<p class="helper">' + esc(u.desc) + '</p>'
-      + (d.participated ? button('route', '내 혜택에서 보기', 'data-route="my"', 'btn sm wide') : '')
+      + (d.participated ? button('result', '참여 결과 보기', 'data-event-id="' + esc(String(s.eventId)) + '"', 'btn sm wide') : '')
       + '</div>'
   }
 
-  // gameCode 가 없으면 BASIC 으로 본다 — 지금 서버가 안 준다
+  // gameCode 는 서버가 준다(백엔드 #199~). 옛 이벤트처럼 없으면 BASIC 으로 본다 —
+  // 추가 입력이 없는 방식이라 그대로 참여하면 된다
   const input = participationInput(d.gameCode)
   return '<form id="participate-form" class="participation-access ready" role="status">'
     + '<strong>지금 참여할 수 있어요</strong>'
@@ -144,7 +156,9 @@ function serverEventView() {
   return '<div class="container">'
     + button('route', icon('back') + '이벤트 목록', 'data-route="home"', 'backlink')
     + '<div class="detail-layout"><div class="detail-frame">'
-    + serverFrame(e.publishedHtml, esc(e.title), 'readonly')
+    // live — 페이지 안의 「참여하기」(data-slot="cta-link")를 호스트가 받는다.
+    // 그 밖의 클릭은 readonly 와 똑같이 막는다 (frame.js 의 bindFrame 참고)
+    + serverFrame(e.publishedHtml, esc(e.title), 'live', e.id)
     + '</div><aside class="detail-side card">'
     + '<div class="spread"><span class="badge green">진행 중</span>'
     + (e.closingSoon ? '<span class="badge pink">마감 임박</span>' : '') + '</div>'

@@ -153,7 +153,10 @@ function ensureParticipationStatus(id, rerender) {
   loadParticipationStatus(id).then(
     (d) => { const cur = ui.serverParticipation
              if (cur?.eventId !== String(id)) return
-             cur.data = d; cur.state = 'done'; rerender() },
+             cur.data = d; cur.state = 'done'
+             // 이미 참여했으면 페이지 안의 버튼도 잠가 둔다 (frame.js live 분기가 읽는다)
+             if (d?.participated) ui.participated = { ...(ui.participated || {}), [String(id)]: true }
+             rerender() },
     (err) => { const cur = ui.serverParticipation
                if (cur?.eventId !== String(id)) return
                cur.error = err?.message || '참여 가능 여부를 확인하지 못했어요.'
@@ -280,7 +283,7 @@ document.addEventListener('click', (ev) => {
   if (a === 'route') return navigate(b.dataset.route)
   if (a === 'event') return navigate('event', b.dataset.id)
   if (a === 'login-prompt') return showLoginPrompt()
-  if (a === 'result') return ui.logged ? showResult(b.dataset.id) : showLoginPrompt()
+  if (a === 'result') return ui.logged ? showResult(b.dataset.id, b.dataset.eventId) : showLoginPrompt()
   if (a === 'participation-retry') {
     ui.serverParticipation = null
     render()
@@ -340,6 +343,40 @@ document.addEventListener('click', (ev) => {
  * ★ 성공하면 결과를 패널에 남기고, 내 참여 목록 캐시를 비워 다음에 다시 읽게 한다.
  * ★ 409(이미 참여)는 화면이 낡은 것이다 — 상태를 다시 물어 버튼을 닫는다.
  */
+/**
+ * 페이지 안의 「참여하기」 — iframe 이 올린 nv-participate 를 받는다 (frame.js 의 live 분기).
+ *
+ * 새 흐름을 만들지 않고 **옆 패널의 폼을 그대로 누른다.** 검증 · 중복 방지 · 결과 표시가
+ * 이미 거기 있어서, 길을 둘로 만들면 둘이 갈라진다.
+ *
+ *   로그인 전        로그인 안내
+ *   참여 못 하는 상태  패널이 이유를 띄우고 있다 — 그쪽으로 보낸다
+ *   추가 입력 필요    그 칸으로 보낸다 (휴대폰 번호 등). 빈 채로 보내면 서버가 400 이다
+ *   그 밖             폼을 제출한다
+ *
+ * ★ 서버가 넣는 목적지는 /events/{id} 로, PATH.event 와 같은 모양이다.
+ *   한쪽을 바꾸면 다른 쪽도 바꿔야 한다.
+ */
+function participateFromPage() {
+  if (!ui.logged) return showLoginPrompt()
+
+  const panel = $('.participation-access')
+  const form = $('#participate-form')
+  if (!form) {
+    // 아직 확인 중이거나(로딩) 참여할 수 없는 상태 — 패널에 이유가 적혀 있다
+    panel?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    return
+  }
+
+  const need = form.querySelector('[data-participate]')
+  if (need && !need.value.trim()) {
+    panel?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    need.focus()
+    return
+  }
+  form.requestSubmit()
+}
+
 async function submitParticipation(form) {
   const s = ui.serverParticipation
   if (!s || s.busy || s.state !== 'done') return
@@ -357,6 +394,9 @@ async function submitParticipation(form) {
     const made = await participate(s.eventId, participationBody(gameCode, { phoneNumber: phone }))
     s.busy = false
     s.result = made.resultData || { status: 'PENDING' }
+    // 페이지 안의 「참여하기」도 잠근다. render 로 iframe 이 새로 떠도 되살아나야 해서
+    // ui 에 적어 둔다 — frame.js 의 live 분기가 이 값을 보고 다시 잠근다
+    ui.participated = { ...(ui.participated || {}), [s.eventId]: true }
     // 내 혜택은 다음에 들어갈 때 서버에서 다시 읽는다
     ui.serverMy = null
     ui.serverMyState = null
@@ -434,9 +474,13 @@ async function logout() {
   ui.serverMyError = null
   ui.serverParticipation = null
   ui.serverGrades = null
+  ui.participated = null
   navigate('home')
   toast('로그아웃했어요.')
 }
+
+// 페이지 안의 「참여하기」 — iframe(live 모드)이 올린다
+document.addEventListener('nv-participate', participateFromPage)
 
 document.addEventListener('submit', (ev) => {
   if (ev.target.id === 'participate-form') {

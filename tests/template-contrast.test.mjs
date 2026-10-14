@@ -1,4 +1,4 @@
-// 템플릿 5종 × 팔레트 전부에서 글자 대비가 팔레트 때문에 나빠지지 않는지 본다 (#207).
+// 템플릿 5종의 글자 대비를 본다 (#207 · #220).
 //
 // 실행: node --test tests/template-contrast.test.mjs
 //
@@ -7,9 +7,10 @@
 //   → CSS 를 고쳤으면 먼저 `npm run css` 로 event.css 를 다시 만든다.
 //   → 다른 CSS 로 보려면 EVENT_CSS=경로 (예: 고치기 전 CSS 로 이 테스트가 실제로 실패하는지 확인할 때).
 //
-// ★ 기준은 "4.5 이상"이 아니라 "팔레트를 붙이기 전보다 나빠지지 않을 것"이다.
-//   템플릿은 팔레트 없이도 4.5 에 못 미치는 곳이 있다 (예: holiday · vip · launch 의 소제목 라벨 2.2~3.1).
-//   그건 이 테스트가 다루는 문제가 아니다. 여기서는 팔레트가 새로 만든 문제만 잡는다.
+// ★ 두 가지를 본다
+//   1) 팔레트 없는 기본 상태에서 글자 대비가 기준(작은 글자 4.5 · 큰 글자 3) 이상인가 (#220)
+//   2) 팔레트를 붙였을 때 그보다 나빠지거나 새로 미달이 된 곳이 없는가 (#207)
+//   2) 는 "4.5 이상"이 아니라 "붙이기 전보다 나빠지지 않을 것"이다 — 기본 상태 자체가 기준 밖인 요소는 1) 이 잡는다.
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -38,6 +39,11 @@ const TEMPLATES = Object.fromEntries(
 const KNOWN = []
 // 일부러 팔레트에 연결하지 않은 토큰 (이유는 90-palettes/95-template-accent.css)
 const UNCONNECTED_TOKENS = ['launch --tpl-accent-ink']
+
+// ── 기본 상태에서 기준 미달을 허용하는 요소 ──
+// holiday 복주머니 일러스트(금 · 파랑 몸통 그라데이션) 위의 福 — 색 하나로 못 풀어서 이번 범위에서 뺐다 (#220).
+const KNOWN_BASE = [{ template: 'holiday', names: ['span.hl-pouch-hanja'] }]
+const isKnownBase = (template, x) => KNOWN_BASE.some((k) => k.template === template && k.names.includes(x.name))
 
 const isKnown = (template, r) =>
   KNOWN.some((k) => k.template === template && k.palettes.includes(r.palette) && k.names.includes(r.name))
@@ -102,6 +108,17 @@ test('측정이 비어 있지 않다 (아무것도 안 재서 통과하는 것�
   for (const [theme, r] of Object.entries(result.contrast)) {
     assert.ok(r.total >= 30, `${theme}: 측정한 글자 요소가 ${r.total}개뿐이다`)
   }
+})
+
+test('팔레트 없는 기본 상태에서 글자 대비가 기준 이상이다', { skip }, async () => {
+  const { result } = await get()
+  const problems = []
+  for (const [theme, r] of Object.entries(result.contrast)) {
+    for (const x of r.baseFails) {
+      if (!isKnownBase(theme, x)) problems.push(`${theme}: ${x.name} "${x.text}" ${x.c} (필요 ${x.need})`)
+    }
+  }
+  assert.deepEqual(problems, [], '\n' + problems.join('\n'))
 })
 
 test('팔레트를 붙여서 새로 안 읽히게 되거나 눈에 띄게 나빠진 글자가 없다', { skip }, async () => {
