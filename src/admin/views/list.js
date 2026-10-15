@@ -240,6 +240,15 @@ function serverFiltered() {
 const blocked = (why) => `disabled title="${why}"`
 
 /**
+ * 다른 관리자가 만든 이벤트 — 목록 · 상세는 모두에게 보이지만 그 밖의 동작은 만든 사람만 할 수 있다.
+ * (편집 · 게시 · 게시 내리기 · 삭제는 403, 버전 이력은 404, 참여자는 403)
+ * ★ ownedByMe 가 false 일 때만 막는다 — 필드가 없는 서버에서는 지금처럼 둔다
+ */
+const notMine = (e) => e.ownedByMe === false
+const NOT_MINE = '다른 관리자가 만든 이벤트예요'
+const ownerOnly = (e) => (notMine(e) ? ' ' + blocked(NOT_MINE) : '')
+
+/**
  * 목록의 게시 — 최신 버전을 게시한다 (다른 버전은 편집 화면 · 버전 이력에서 고른다).
  * 목록 응답에 버전이 없어 누를 때 미리보기로 최신 버전을 알아낸다 (main.js publish-latest)
  * 이미 게시 중이면 상태만 보여준다 — 재게시는 편집 화면 · 버전 이력에서 버전을 골라 한다.
@@ -247,11 +256,12 @@ const blocked = (why) => `disabled title="${why}"`
 function publishButton(e) {
   if (e.status === 'ENDED') return button('publish-latest', '게시하기', `data-id="${e.id}" ${blocked('종료된 이벤트는 게시할 수 없어요')}`, 'btn sm ghost')
   if (e.status === 'PUBLISHED') return button('publish-latest', '게시 중', `data-id="${e.id}" ${blocked('재게시는 편집 화면이나 버전 이력에서 할 수 있어요')}`, 'btn sm ghost')
+  if (notMine(e)) return button('publish-latest', '게시하기', `data-id="${e.id}" ${blocked(NOT_MINE)}`, 'btn sm ghost')
   return button('publish-latest', '게시하기', `data-id="${e.id}"`, 'btn sm primary')
 }
 
 const serverTitleCell = (e) =>
-  `<td><h3>${esc(e.name)}</h3><small>ID ${e.id}${e.template ? ' · ' + esc(e.template) : ''}</small></td>`
+  `<td><h3>${esc(e.name)}</h3><small>ID ${e.id}${e.template ? ' · ' + esc(e.template) : ''}${notMine(e) ? ' · 다른 관리자' : ''}</small></td>`
 
 /** 나의 이벤트 — 버전 열 대신 게시 상태 · 기간 (목록 API 에 버전 정보가 없다) */
 function serverMine(es) {
@@ -260,11 +270,11 @@ function serverMine(es) {
     + '<td>' + badgeOf(serverStatus(e)) + (e.closingSoon ? ' <span class="badge amber">마감 임박</span>' : '')
     + `<br><small>${serverPeriod(e)}</small></td>`
     + '<td><div class="row">'
-    + button('versions', '버전 이력', `data-id="${e.id}"`, 'btn sm')
-    + button('participants', '참여자', `data-id="${e.id}"`, 'btn sm')
-    + button('edit', '편집하기', `data-id="${e.id}"`, 'btn sm soft')
+    + button('versions', '버전 이력', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm')
+    + button('participants', '참여자', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm')
+    + button('edit', '편집하기', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm soft')
     + publishButton(e)
-    + button('delete-event', '삭제하기', `data-id="${e.id}"`, 'btn sm danger')
+    + button('delete-event', '삭제하기', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm danger')
     + '</div></td></tr>')
   return `<table class="admin-table"><thead><tr><th>이벤트</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
     + rows.join('')
@@ -279,7 +289,7 @@ function serverLive(es) {
     + `<td>${serverPeriod(e)}</td>`
     + '<td>' + badgeOf('live') + '</td>'
     + '<td><div class="row">'
-    + button('unpublish', '게시 내리기', `data-id="${e.id}"`, 'btn sm soft')
+    + button('unpublish', '게시 내리기', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm soft')
     + '</div></td></tr>')
   return `<table class="admin-table"><thead><tr><th>이벤트</th><th>기간</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
     + rows.join('')
