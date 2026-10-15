@@ -332,7 +332,18 @@
   }
 }
 
-/* 종 아이콘의 시각적 높이 보정 */
+/* 헤더와 어울리도록 종 크기·선 굵기 조정 */
 #header .admin-notifications-bell svg {
-  transform: translateY(1px);
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.1;
+  transform: none;
+}
+
+/* 안 읽은 알림 표시 */
+#header .admin-notifications-dot {
+  width: 5px;
+  height: 5px;
+  top: 8px;
+  right: 9px;
 }

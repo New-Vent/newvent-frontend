@@ -5,3 +5,227 @@
 @import '@shared/styles/admin.css';
 @import '@shared/styles/editor.css';
 @import '@shared/styles/responsive.css';
+
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('https://cdn.jsdelivr.net/gh/innks/NanumSquareRound@master/NanumSquareRoundB.woff2')
+    format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('https://cdn.jsdelivr.net/gh/innks/NanumSquareRound@master/NanumSquareRoundEB.woff2')
+    format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+#header {
+  height: auto;
+  background: #fff;
+  border-bottom: 1px solid #e5eaf1;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+}
+
+#header button {
+  font-family: inherit;
+}
+
+#header .admin-header-container {
+  display: block;
+  height: auto;
+}
+
+#header .admin-header-main {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  min-height: 78px;
+}
+
+#header .brand.brand-image {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+#header .brand-image .brand-logo {
+  display: block;
+  width: 180px;
+  height: 40px;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+}
+
+#header .admin-header-tools {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/*
+ * 종 아이콘은 기존 notifications.css 사용.
+ * 회색 종 + 빨간 점 + 기존 알림 팝업 유지.
+ */
+
+/* 운영자 드롭다운 */
+#header .admin-account-dropdown {
+  width: 270px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 13px;
+  box-shadow: 0 12px 40px rgb(35 51 78 / 13%);
+}
+
+#header .admin-account-profile {
+  padding: 21px;
+}
+
+#header .admin-account-profile-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#header .admin-account-profile-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #edf5ff;
+  color: #4283e5;
+}
+
+#header .admin-account-profile-avatar svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#header .admin-account-profile-identity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+
+#header .admin-account-profile-identity strong {
+  color: #29394f;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+#header .admin-account-role {
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #edf5ff;
+  color: #4383df;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+#header .admin-account-login-id {
+  margin: 13px 0 0;
+  color: #8792a1;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#header .admin-account-dropdown .admin-account-logout {
+  padding: 15px 21px;
+  border-top: 1px solid #edf0f5;
+  border-radius: 0;
+  color: #647287;
+  font-size: 12px;
+}
+
+#header .admin-account-dropdown .admin-account-logout:hover {
+  background: #f6f8fb;
+}
+
+/* 좁은 화면 */
+@media (max-width: 1000px) {
+  #header .admin-header-main {
+    gap: 25px;
+  }
+
+  #header .brand-image .brand-logo {
+    width: 150px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 760px) {
+  #header .brand-image .brand-logo {
+    width: 140px;
+    height: 32px;
+  }
+
+  #header .admin-header-tools {
+    order: 1;
+  }
+
+  #header .admin-notifications-panel {
+    position: fixed;
+    top: 76px;
+    right: 16px;
+  }
+}
+
+/* 운영자 버튼 */
+#header .admin-header-tools .admin-account-trigger {
+  height: 36px;
+  min-height: 36px;
+  gap: 6px;
+  padding: 0 5px;
+}
+
+#header .admin-header-tools .admin-account-trigger .avatar {
+  width: 24px;
+  height: 24px;
+}
+
+#header .admin-header-tools .admin-account-trigger .avatar svg {
+  width: 16px;
+  height: 16px;
+}
+
+#header .admin-header-tools .admin-account-trigger .name {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+#header .admin-header-tools .admin-account-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+@media (pointer: coarse) {
+  #header .admin-header-tools .admin-account-trigger {
+    min-height: 44px;
+  }
+}
+
+/* 관리자 일반 화면: 헤더와 본문 사이 여백 */
+body:not(.editing-workspace) #app {
+  padding-top: 24px;
+}
