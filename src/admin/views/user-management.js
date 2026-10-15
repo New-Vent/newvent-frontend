@@ -282,10 +282,16 @@ const pageButtons = Array.from(
 
   return `
     <div class="container">
-      <div class="page-heading">
-        <span class="eyebrow">USER MANAGEMENT</span>
-        <h1>사용자 관리</h1>
-        <p>사용자 정보를 확인하고, 요금제를 변경하세요.</p>
+      <div class="page-heading admin-page-heading">
+        <div class="admin-page-title">
+          <div class="admin-page-title__path">
+            <span>워크스페이스</span>
+            <span aria-hidden="true">›</span>
+            <span class="admin-page-title__current">사용자 관리</span>
+          </div>
+          <h1>사용자 관리</h1>
+          <p>사용자 정보를 확인하고, 요금제를 변경하세요.</p>
+        </div>
       </div>
 
       <section class="users-list">

@@ -229,3 +229,13 @@
 body:not(.editing-workspace) #app {
   padding-top: 24px;
 }
+
+/* 이벤트 관리 제목 */
+.page-heading.admin-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 22px;
+}

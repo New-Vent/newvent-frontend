@@ -17,15 +17,12 @@
  * ★ 서버 모드에서 아직 없는 것
  *   버전 번호 · 게시 전 변경 개수 — 목록 API 가 버전 정보를 안 준다
  */
-
-import { published, rows } from '@shared/selectors.js'
-
 import { esc } from '@shared/dom.js'
-import { badgeOf, eventStatus, serverStatus, shortDate, statusBadge } from '@shared/format.js'
+import { badgeOf, eventStatus, serverStatus, shortDate } from '@shared/format.js'
 import { icon } from '@shared/icons.js'
 import { loadAdminEventCounts, loadAdminEvents, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
-import { button, metric } from '@shared/ui/controls.js'
+import { button } from '@shared/ui/controls.js'
 
 /** 탭 정의. ui.adminTab 이 이 중 하나를 가리킨다. */
 const TABS = [
@@ -321,21 +318,134 @@ function serverTable(tab, es) {
 }
 
 function metrics() {
-  if (!USE_SERVER) {
-    const active = state.db.events.filter((e) => !e.deletedAt)
-    return metric('전체 이벤트', active.length, '모든 작업 공간', 'layers')
-      + metric('진행 중', active.filter((e) => eventStatus(e) === 'live').length, '현재 게시된 이벤트 기준', 'bolt')
-      + metric('게시 전 변경', active.filter((e) => e.versions.at(-1).v !== e.publishedVersion).length,
-          '최신 저장 버전과 게시 버전이 다른 이벤트', 'edit')
-  }
-    const s = server()
-    const counts = s.counts
-    const description = (text) => s.countsError ? '개수 조회 실패' : text
+  let counts
+  let unavailableMessage = ''
 
-    return metric( '전체 이벤트', counts?.total ?? '–', description('휴지통을 제외한 모든 이벤트'), 'layers')
-      + metric('게시 중', counts?.published ?? '–', description('시작 전 예약 게시 포함'), 'bolt')
-      + metric('미게시', counts?.draft ?? '–', description('게시 전 또는 게시를 내린 이벤트'), 'edit')
-      + metric('종료', counts?.ended ?? '–', description('자동 종료 또는 관리자가 종료한 이벤트'), 'clock')
+  if (USE_SERVER) {
+    const s = server()
+    counts = s.counts
+    unavailableMessage = s.countsError
+      ? '통계를 불러오지 못했어요.'
+      : '통계를 불러오고 있어요.'
+  } else {
+    const active = state.db.events.filter((e) => !e.deletedAt)
+
+    counts = {
+      total: active.length,
+      published: active.filter((e) =>
+        ['live', 'upcoming'].includes(eventStatus(e)),
+      ).length,
+      draft: active.filter((e) => eventStatus(e) === 'draft').length,
+      ended: active.filter((e) => eventStatus(e) === 'ended').length,
+    }
+  }
+
+  const ready = counts != null
+  const total = counts?.total ?? 0
+
+  const items = [
+    {
+      key: 'published',
+      label: '게시 중',
+      count: counts?.published ?? 0,
+      description: '시작 전 예약 게시 포함',
+    },
+    {
+      key: 'draft',
+      label: '미게시',
+      count: counts?.draft ?? 0,
+      description: '게시 전 또는 게시를 내린 이벤트',
+    },
+    {
+      key: 'ended',
+      label: '종료',
+      count: counts?.ended ?? 0,
+      description: '자동 종료 또는 관리자 종료',
+    },
+  ]
+
+  const number = (value) =>
+    ready ? value.toLocaleString('ko-KR') : '–'
+
+  let offset = 0
+
+  const segments = items.map((item) => {
+    if (!ready || total === 0 || item.count === 0) return ''
+
+    const start = offset
+    offset += item.count
+
+    return `
+      <circle
+        class="event-overview__segment is-${item.key}"
+        cx="90"
+        cy="90"
+        r="72"
+        pathLength="${total}"
+        stroke-dasharray="${item.count} ${total - item.count}"
+        stroke-dashoffset="${-start}"
+      />
+    `
+  }).join('')
+
+  const chartLabel = ready
+    ? `전체 ${total}개, 게시 중 ${counts.published}개, 미게시 ${counts.draft}개, 종료 ${counts.ended}개. 휴지통 제외.`
+    : unavailableMessage
+
+  return `
+    <section class="event-overview" aria-label="이벤트 상태 통계">
+      <div class="event-overview__chart">
+        <div
+          class="event-overview__donut"
+          role="img"
+          aria-label="${chartLabel}"
+        >
+          <svg viewBox="0 0 180 180" aria-hidden="true">
+            <circle
+              class="event-overview__track"
+              cx="90"
+              cy="90"
+              r="72"
+            />
+            ${segments}
+          </svg>
+
+          <div class="event-overview__center">
+            <span>전체 이벤트</span>
+            <strong>${number(total)}</strong>
+          </div>
+        </div>
+
+        ${!ready
+          ? `<p class="event-overview__notice">${unavailableMessage}</p>`
+          : total === 0
+            ? '<p class="event-overview__notice">등록된 이벤트가 없어요.</p>'
+            : ''}
+      </div>
+
+      <div class="event-overview__metrics">
+        ${items.map((item) => `
+          <div class="event-overview__item is-${item.key}">
+            <h3 class="event-overview__label">${item.label}</h3>
+
+            <strong class="event-overview__value">
+              ${number(item.count)}
+            </strong>
+
+            <span class="event-overview__ratio">
+              ${ready
+                ? `전체의 ${(total ? item.count / total * 100 : 0).toFixed(1)}%`
+                : '비율 확인 중'}
+            </span>
+
+            <p class="event-overview__description">
+              ${item.description}
+            </p>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  `
 }
 
 /* ───────────────────────── 화면 ───────────────────────── */
@@ -359,12 +469,36 @@ function adminView() {
         .join('')
     + '</div>'
 
-  return '<div class="container">'
-    + '<div class="page-heading spread"><div><span class="eyebrow">EVENT WORKSPACE</span>'
-    + '<h1>이벤트 관리</h1><p>아이디어를 다듬고, 준비된 이벤트를 게시하세요.</p></div>'
-    + button('new', '새 이벤트 만들기 ' + icon('sparkle'), '', 'btn primary')
+    return '<div class="container admin-events-page">'
+    + '<div class="page-heading spread admin-page-heading">'
+    + '<div class="admin-page-title">'
+    +   '<div class="admin-page-title__path">'
+    +     '<span>워크스페이스</span>'
+    +     '<span aria-hidden="true">›</span>'
+    +     '<span class="admin-page-title__current">이벤트 관리</span>'
+    +   '</div>'
+    +   '<h1>이벤트 관리</h1>'
+    +   '<p>아이디어를 다듬고, 준비된 이벤트를 게시하세요.</p>'
     + '</div>'
-    + '<div class="metrics admin-status-metrics">' + metrics() + '</div>'
+    + button(
+      'new',
+      `<svg class="admin-create-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <path d="M14 3v6h6m-8 3v6m-3-3h6"/>
+      </svg>
+      새 이벤트 만들기`,
+      '',
+      'btn primary admin-create-event',
+    )
+    + '</div>'
+    + metrics()
     + (USE_SERVER && server().countsError
     ? '<p role="alert">' + esc(server().countsError)
       + ' ' + button('admin-reload', '다시 불러오기', '', 'btn sm')

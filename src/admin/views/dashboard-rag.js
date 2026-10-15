@@ -43,11 +43,22 @@ function weekDelta(rows) {
 
 export function dashboardRagView() {
   const rows = ui.ragTrend
-  const back = button('route', icon('back') + '이벤트 관리', 'data-route="admin"', 'backlink')
-  const head = '<div class="page-heading"><span class="eyebrow">RAG</span><h1>품질 추이</h1></div>'
-  if (!rows) return '<div class="container">' + back + head + '<div class="card"><p>불러오는 중…</p></div></div>'
+  const head = `
+    <div class="page-heading admin-page-heading">
+      <div class="admin-page-title">
+        <div class="admin-page-title__path">
+          <span>워크스페이스</span>
+          <span aria-hidden="true">›</span>
+          <span class="admin-page-title__current">RAG 품질</span>
+        </div>
+        <h1>RAG 품질</h1>
+        <p>주간 AI 호출과 RAG 사용 추이를 확인하세요.</p>
+      </div>
+    </div>
+  `
+  if (!rows) return '<div class="container">' + head + '<div class="card"><p>불러오는 중…</p></div></div>'
   if (!rows.length) {
-    return '<div class="container">' + back + head
+    return '<div class="container">' + head
       + '<div class="card"><p>아직 집계된 호출이 없어요.</p></div></div>'
   }
 
@@ -75,7 +86,7 @@ export function dashboardRagView() {
       + (d.diff === 0 ? '변동 없음' : (d.diff > 0 ? '+' + d.diff + '회' : d.diff + '회')) + '</p>'
     : ''
 
-  return '<div class="container">' + back + head + legend + delta
+  return '<div class="container">' + head + legend + delta
     + '<div class="card"><div class="trend">' + cols + '</div>'
     + '<p class="helper">막대 높이는 주간 전체 호출 수, 안쪽 초록색은 RAG 를 쓴 호출이에요. '
     + '막대 위 숫자는 전체 / RAG 사용 회수, 아래는 사용률이에요. 마우스를 올리면 청크 수도 보여요. '

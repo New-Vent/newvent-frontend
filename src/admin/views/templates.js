@@ -227,10 +227,33 @@ function templatesView() {
     + (s.includeInactive ? ' checked' : '') + '> 비활성 템플릿도 보기</label>'
 
   return '<div class="container">'
-    + '<div class="page-heading spread"><div><span class="eyebrow">TEMPLATE LIBRARY</span>'
-    + '<h1>템플릿 라이브러리</h1>'
-    + '<p>저장한 디자인을 템플릿으로 두고, 새 이벤트를 바로 시작하세요.</p></div>'
-    + button('new', '새 이벤트 만들기 ' + icon('sparkle'), '', 'btn primary')
+    + '<div class="page-heading spread admin-page-heading">'
+    + '<div class="admin-page-title">'
+    +   '<div class="admin-page-title__path">'
+    +     '<span>워크스페이스</span>'
+    +     '<span aria-hidden="true">›</span>'
+    +     '<span class="admin-page-title__current">템플릿 라이브러리</span>'
+    +   '</div>'
+    +   '<h1>템플릿 라이브러리</h1>'
+    +   '<p>저장한 디자인을 템플릿으로 두고, 새 이벤트를 바로 시작하세요.</p>'
+    + '</div>'
+    + button(
+      'new',
+      `<svg class="admin-create-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <path d="M14 3v6h6m-8 3v6m-3-3h6"/>
+      </svg>
+      새 이벤트 만들기`,
+      '',
+      'btn primary admin-create-event',
+    )
     + '</div>'
     + '<section class="admin-list-section">'
     + '<div class="section-title spread"><div class="admin-list-tabs">' + tabs + '</div>'
