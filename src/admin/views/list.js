@@ -282,6 +282,15 @@ function serverMine(es) {
     + '</tbody></table>'
 }
 
+/**
+ * 사용자가 보는 게시 페이지 /e/{id}. 운영은 nginx, 로컬은 vite 프록시가 백엔드로 넘겨서 상대 경로 하나로 둘 다 열린다.
+ * ★ /events/{id}(사용자 SPA)가 아니다 — 관리자 dev(5174)와 사용자 dev(5173)는 포트가 달라 로컬에서 안 열린다
+ * ★ 공개 API 응답의 url 필드는 쓰지 않는다 — 채우는 곳이 없어 항상 null 이다
+ * 게시 페이지는 누구나 보는 화면이라 소유자와 상관없이 연다
+ */
+const publicPageLink = (e) =>
+  `<a class="btn sm" href="/e/${encodeURIComponent(e.id)}" target="_blank" rel="noopener">페이지 열기</a>`
+
 /** 게시중 — 기간을 보여준다. 게시 버전 번호는 목록 API 에 없다 */
 function serverLive(es) {
   const rows = es.map((e) =>
@@ -289,6 +298,7 @@ function serverLive(es) {
     + `<td>${serverPeriod(e)}</td>`
     + '<td>' + badgeOf('live') + '</td>'
     + '<td><div class="row">'
+    + publicPageLink(e)
     + button('unpublish', '게시 내리기', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm soft')
     + '</div></td></tr>')
   return `<table class="admin-table"><thead><tr><th>이벤트</th><th>기간</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
