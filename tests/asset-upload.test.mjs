@@ -29,7 +29,7 @@ async function setup({ upload, remove } = {}) {
     assetBusy: false,
   }
   const ui = { serverEditor: s, route: 'editor' }
-  const uploaded = [], removed = [], messages = []
+  const uploaded = [], removed = [], messages = [], edited = []
   const bindings = {
     BLOCK_LABELS, PINNED_BLOCKS: ['notices', 'cta'], $: () => null, esc: String,
     badgeOf: () => '', serverStatus: () => '', GRADES: [], gradeLabel: () => '', REQUEST_MAX: 500,
@@ -39,7 +39,7 @@ async function setup({ upload, remove } = {}) {
     loadAdminEvent: async () => s.event, loadPreview: async () => s.preview,
     loadVersions: async () => ({ versions: [] }), loadAssets: async () => s.assets,
     publishEvent: async () => ({}), saveCheckpoint: async () => ({}), updateEventInfo: async () => ({}),
-    startEdit: async () => ({}), startGenerate: async () => ({}), directEdit: async () => ({}),
+    startEdit: async () => ({}), startGenerate: async () => ({}), directEdit: async (...args) => { edited.push(args); return { versionNo: 9 } },
     uploadAsset: async (...args) => {
       uploaded.push(args)
       if (upload) return upload()
@@ -70,7 +70,7 @@ async function setup({ upload, remove } = {}) {
     return { handled, target }
   }
   const settle = () => new Promise((r) => setImmediate(r))
-  return { s, uploaded, removed, messages, pick, settle, module, source, bound: Object.keys(bindings) }
+  return { s, uploaded, removed, messages, edited, pick, settle, module, source, bound: Object.keys(bindings) }
 }
 
 const file = (size, name = 'dog.png') => ({ size, name })
@@ -260,4 +260,80 @@ test('페이지에 없는 사진은 그대로 지워진다', async () => {
 
   assert.equal(h.removed.length, 1)
   assert.equal(h.s.assets.length, 0)
+})
+
+/* ── 제목 글자 크기 · 색 (직접 수정) ────────────────────────── */
+
+/**
+ * ★★ 글자 크기 · 색은 **CSS 가 쥐고 있어서** 모델이 못 바꾼다.
+ *   모델에게 시키면 "강조했습니다" 라고 보고하고 화면은 그대로다(실측).
+ *   그래서 관리자가 고른 값을 서버가 인라인 style 로 박는다 — 여기는 그 길이 이어지는지 본다.
+ */
+test('★ 고른 제목 디자인만 요청에 담긴다', async () => {
+  const h = await setup()
+  h.s.preview.editableTexts = []
+  h.s.direct.style = { titleColor: '#15803d', titleSize: 'large', headingColor: '#111111' }
+  // ★ 색은 체크를 해야 들어간다. headingColor 는 체크를 안 했으니 빠져야 한다
+  h.s.direct.styleOn = { titleColor: true }
+
+  h.module.namespace.handleServerClick('server-direct-apply', { dataset: {} }, () => {})
+  await h.settle()
+
+  assert.equal(h.edited.length, 1, '직접 수정 요청이 가야 합니다')
+  const body = h.edited[0][1]
+  assert.deepEqual(body.textStyle, { titleColor: '#15803d', titleSize: 'large' })
+})
+
+// ★★ 아무것도 안 고르면 textStyle 을 보내지 않는다. 빈 값을 보내면 인라인 style 이 박혀서
+//   그 제목만 팔레트를 안 따라간다 — 비움이 "테마를 따른다" 는 뜻이다
+test('★ 제목 디자인을 안 고르면 textStyle 을 안 보낸다', async () => {
+  const h = await setup()
+  h.s.preview.editableTexts = []
+  h.s.direct.style = { titleColor: '#15803d' }
+  h.s.direct.styleOn = {}
+
+  h.module.namespace.handleServerClick('server-direct-apply', { dataset: {} }, () => {})
+  await h.settle()
+
+  // 바꾼 게 하나도 없으니 요청 자체가 안 간다
+  assert.equal(h.edited.length, 0)
+  assert.ok(h.messages.some((m) => m.includes('바꾼 내용이 없어요')), h.messages.join(' | '))
+})
+
+/**
+ * ★★ 제보: "직접수정에서 제목 디자인을 바꿔도 미리보기에 적용 안 됨".
+ *   미리보기만의 문제가 아니었다 — updateDirectCount 가 textStyle 을 **안 세서**
+ *   "바꾼 항목 없음" 이 뜨고 **저장 버튼이 disabled 로 남았다.** 저장 자체가 안 됐다.
+ */
+test('★ 제목 디자인만 바꿔도 바뀐 항목으로 센다', async () => {
+  const h = await setup()
+  h.s.preview.editableTexts = []
+  h.s.direct.style = { titleSize: 'large' }
+  h.s.direct.styleOn = {}
+
+  const { textStyle } = h.module.namespace.__directChanges
+    ? h.module.namespace.__directChanges(h.s)
+    : { textStyle: null }
+
+  // ★ directChanges 는 안 내보내므로 저장 경로로 확인한다 — 요청이 가면 센 것이다
+  h.module.namespace.handleServerClick('server-direct-apply', { dataset: {} }, () => {})
+  await h.settle()
+
+  assert.equal(h.edited.length, 1, '제목 크기만 바꿔도 저장 요청이 가야 합니다')
+  assert.deepEqual(h.edited[0][1].textStyle, { titleSize: 'large' })
+})
+
+// ★ 미리보기에 바로 보이는 길이 있어야 한다. 저장해야만 보이면 맞는지 알 수가 없다
+test('★ 제목 디자인 미리보기 함수가 있다', async () => {
+  const h = await setup()
+
+  assert.ok(h.source.includes('function previewTextStyle'), 'previewTextStyle 이 있어야 합니다')
+  // 서버(applyTextStyle)와 같은 값을 써야 한다 — 어긋나면 미리보기와 저장 결과가 다르다
+  for (const px of ['28px', '36px', '46px', '58px', '18px', '22px', '27px', '32px']) {
+    assert.ok(h.source.includes(px), px + ' 가 미리보기 표에 있어야 합니다')
+  }
+  // ★ 투명 글자 수법을 쓰는 변형도 이겨야 한다
+  assert.ok(h.source.includes('-webkit-text-fill-color'))
+  // 고르는 자리마다 미리보기를 다시 그린다
+  assert.ok(h.source.includes('previewButtonStyle(s)\n    previewTextStyle(s)'))
 })
