@@ -607,6 +607,18 @@ export async function useTemplate(code, body) {
   return requireApi().post(`/api/admin/template-library/${encodeURIComponent(code)}/events`, body)
 }
 
+/** 기본 제공 템플릿 목록 */
+export async function loadBasicTemplates() {
+  return requireApi().get('/api/admin/templates')
+}
+
+/** 선택한 기본 템플릿 상세 */
+export async function loadBasicTemplate(templateKey) {
+  return requireApi().get(
+    `/api/admin/templates/${encodeURIComponent(templateKey)}`,
+  )
+}
+
 /* ────────────────────────── 회원가입 ────────────────────────── */
 
 /**
