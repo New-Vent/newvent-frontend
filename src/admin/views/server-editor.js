@@ -932,34 +932,62 @@ function assetAdd(s) {
 }
 
 /**
+ * 올린 이미지의 **고정 번호**. 서버가 행에 박아 둔 값이다 (EventAsset.seq).
+ *
+ * ★★ i + 1 로 세면 안 된다. 1번을 지우는 순간 2번이 1번이 되고,
+ *   "1번 이미지를 배경으로" 가 **다른 사진**을 가리킨다 — 제보로 올라온 문제가 그거다.
+ * ★ 옛 응답(seq 없음)에는 순서로 버틴다. 새로 올리면 서버가 번호를 준다.
+ */
+function assetNo(a, i) {
+  return a.seq ?? i + 1
+}
+
+/**
  * 올린 이미지 목록 — 입력칸 위.
  *
  * ★★ 번호가 핵심이다. 프롬프트에도 같은 번호로 실린다(Asset.promptLines) —
  *   관리자가 "2번 이미지를 배경으로" 라고 쓸 수 있는 유일한 끈이다.
+ *
+ * ★★ 페이지에 들어간 사진은 **배지로 접는다.** 전에는 흐리게만 해서 입력칸 위가
+ *   계속 사진으로 막혀 있었다. 그렇다고 목록에서 빼면 "1번 이미지 지워줘" 를 쓸 수 없다 —
+ *   번호는 살리고 자리만 비우는 쪽이 맞다. 배지를 누르면 그 사진만 다시 펼친다.
  */
 function assetStrip(s) {
   const list = s.assets || []
   if (!list.length) return ''
   const busy = running(s) || s.assetBusy
-  // ★ 페이지에 이미 들어간 것인지. 미리보기 HTML 에 그 주소가 박혀 있으면 쓰인 것이다.
-  //   번호는 그대로 둔다 — 목록에서 빼면 "2번" 이 가리키는 게 달라져서 다음 요청이 어긋난다
+  // ★ 페이지에 이미 들어간 것인지. 미리보기 HTML 에 그 주소가 박혀 있으면 쓰인 것이다
   const html = s.preview?.html || ''
   const used = (a) => html.includes(a.url)
 
-  const thumbs = list.map((a, i) => '<span class="chat-asset' + (used(a) ? ' is-used' : '') + '">'
+  const del = (a, n) => button('server-asset-delete', '×',
+    'data-id="' + esc(a.assetId) + '" aria-label="' + n + '번 이미지 지우기" ' + (busy ? 'disabled' : ''),
+    'chat-asset-x')
+
+  const thumb = (a, n, isUsed) => '<span class="chat-asset' + (isUsed ? ' is-used' : '') + '">'
     + '<img src="' + esc(a.url) + '" alt="">'
-    + '<b class="chat-asset-no">' + (i + 1) + '</b>'
-    + (used(a) ? '<b class="chat-asset-used" title="페이지에 들어가 있어요">' + icon('check') + '</b>' : '')
-    + button('server-asset-delete', '×', 'data-id="' + esc(a.assetId) + '" aria-label="' + (i + 1) + '번 이미지 지우기" ' + (busy ? 'disabled' : ''), 'chat-asset-x')
-    + '</span>').join('')
+    + '<b class="chat-asset-no">' + n + '</b>'
+    + (isUsed ? '<b class="chat-asset-used" title="페이지에 들어가 있어요">' + icon('check') + '</b>' : '')
+    + del(a, n) + '</span>'
+
+  // 들어간 사진 — 번호 + 체크만. 누르면 펼친다
+  const badge = (a, n) => button('server-asset-peek', n + icon('check'),
+    'data-id="' + esc(a.assetId) + '" title="' + n + '번 — 페이지에 들어가 있어요. 눌러서 사진 보기"'
+    + ' aria-label="' + n + '번 이미지 보기"', 'chat-asset-done')
+
+  const cells = list.map((a, i) => {
+    const n = assetNo(a, i)
+    const open = s.assetPeek === a.assetId
+    return used(a) && !open ? badge(a, n) : thumb(a, n, used(a))
+  }).join('')
 
   // ★ 안내는 **아직 안 쓴 게 있을 때만**. 다 넣고 나서도 계속 "넣으세요" 가 떠 있으면
   //   안 들어간 줄 알고 같은 말을 또 하게 된다
   const left = list.filter((a) => !used(a))
   const hint = left.length
-    ? '올리기만 해서는 안 들어가요 — "' + (list.indexOf(left[0]) + 1) + '번 이미지를 배경으로 깔아줘" 처럼 말해 주세요'
-    : '모두 페이지에 들어갔어요. 빼려면 "배경에 이미지 없애줘" 처럼 말해 주세요'
-  return '<div class="chat-assets">' + thumbs
+    ? '올리기만 해서는 안 들어가요 — "' + assetNo(left[0], list.indexOf(left[0])) + '번 이미지를 배경으로 깔아줘" 처럼 말해 주세요'
+    : '모두 페이지에 들어갔어요. 번호를 누르면 사진을 볼 수 있어요. 빼려면 "배경 이미지 없애줘" 처럼 말해 주세요'
+  return '<div class="chat-assets">' + cells
     + '<span class="helper chat-assets-hint">' + hint + '</span></div>'
 }
 
@@ -1453,6 +1481,10 @@ async function runRagExamples() {
     case 'server-order-up': if (s) nudgeBlock(s, b.dataset.block, -1); return true
     case 'server-order-down': if (s) nudgeBlock(s, b.dataset.block, 1); return true
     case 'server-asset-delete': if (s) removeAsset(s, b.dataset.id, rerender); return true
+    // ★ 접어 둔 사진을 하나만 펼친다. 같은 걸 또 누르면 다시 접는다
+    case 'server-asset-peek':
+      if (s) { s.assetPeek = s.assetPeek === b.dataset.id ? null : b.dataset.id; rerender() }
+      return true
     case 'server-direct-apply': applyDirect(rerender); return true
     case 'server-direct-reset': resetDirect(rerender); return true
     case 'server-publish': openPublish(); return true
@@ -1548,12 +1580,35 @@ async function uploadPicked(s, file, rerender) {
 }
 
 /** ★ 이미 게시된 페이지가 이 이미지를 쓰고 있으면 그 자리가 깨진다. 서버가 막지 않는다 */
+/**
+ * ★★ 페이지가 쓰고 있는 사진은 못 지운다.
+ *
+ *   제보: 썸네일 × 로 먼저 지우고 "1번 이미지 없애줘" 했더니
+ *   "아직 올린 이미지가 없어요" 가 나왔다. 행이 사라져서 번호가 가리킬 대상이 없는데
+ *   **페이지의 <img> 는 그대로** 남아 있었다 — 뺄 방법이 사라진 것이다.
+ *
+ * ★ 지우는 쪽을 막는 게 맞다. 버튼 하나가 페이지를 고치게 두면 되돌리기가 헷갈린다.
+ *   순서를 알려 주면 관리자가 두 걸음으로 끝낼 수 있다.
+ */
+function usedInPage(s, assetId) {
+  const a = (s.assets || []).find((x) => String(x.assetId) === String(assetId))
+  return !!a && (s.preview?.html || '').includes(a.url)
+}
+
 async function removeAsset(s, assetId, rerender) {
+  if (usedInPage(s, assetId)) {
+    const a = (s.assets || []).find((x) => String(x.assetId) === String(assetId))
+    const n = assetNo(a, (s.assets || []).indexOf(a))
+    toast('이 사진은 지금 페이지에 쓰이고 있어요. 먼저 "' + n + '번 이미지 지워줘" 로 페이지에서 뺀 다음 지워 주세요.')
+    return
+  }
   s.assetBusy = true
   rerender()
   try {
     await deleteAsset(s.id, assetId)
     s.assets = (s.assets || []).filter((a) => String(a.assetId) !== String(assetId))
+    // ★ 펼쳐 둔 게 바로 그거였으면 접어 둔 상태도 지운다 — 없는 id 가 남아 있으면 안 된다
+    if (String(s.assetPeek) === String(assetId)) s.assetPeek = null
   } catch (e) {
     toast(e?.message || '이미지를 지우지 못했어요.')
   } finally {
