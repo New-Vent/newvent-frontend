@@ -78,15 +78,31 @@ function participationResult(r, eventId) {
 
   return '<div class="participation-access ' + (won ? 'ready' : pending ? 'login' : 'done') + '" role="status">'
     + '<strong>' + message + '</strong>'
-     (pending ? '참여가 접수되었어요' : won ? '당첨되었어요!' : '아쉽게 당첨되지 않았어요') + '</strong>'
     + (won && r.prizeName ? '<p class="summary">' + esc(r.prizeName) + '</p>' : '')
     + button('result', '참여 결과 보기', 'data-route="my"', 'btn sm wide') + '</div>'
 }
 
 /**
- * 서버 모드 참여 패널 — **iframe 이 아니라 옆 패널에 둔다.**
- * 게시된 HTML 안의 버튼은 `<a href="#">` 로 죽어 있고, 생성된 HTML 에 스크립트를
- * 넣지 않는 것이 백엔드 설계 의도다. 그래서 참여는 호스트가 맡는다.
+ * 페이지가 **자기 참여 UI 를 들고 있나.**
+ *
+ * 들고 있으면 입력도 참여 버튼도 페이지 안에 있다. 그때 옆 패널이 같은 칸을 또 그리면
+ * 입력이 두 군데가 되어 어느 쪽이 진짜인지 알 수 없다 — 패널은 길만 알려준다.
+ *
+ * ★ **data-game 으로 보면 안 된다.** 서버는 참여 설정이 있는 페이지면 전부 body 에
+ *   data-game 을 적지만, 고르는 칸(.ev-game)은 **이름표(data-behavior)가 있는 페이지에만**
+ *   심는다 (BehaviorPlanter.bindGame 이 participate 버튼을 못 찾으면 그냥 돌아간다).
+ *   실측: 지금 게시돼 있는 페이지는 전부 이름표가 없어서 data-game 만 붙고 칸은 없다.
+ *   그래서 **참여 이름표가 있는지**를 본다 — 그게 runtime 이 실제로 맡는다는 뜻이다.
+ */
+function pageDrawsGame() {
+  return /data-behavior\s*=\s*"[^"]*\bparticipate\b/i.test(ui.serverEvent?.publishedHtml || '')
+}
+
+/**
+ * 서버 모드 참여 패널.
+ *
+ * 패널이 맡는 것은 **상태와 결과**다 — 로그인 안내 · 참여 불가 사유 · 참여 결과.
+ * 입력은 페이지가 들고 있으면 페이지가(.ev-game + runtime), 없으면 패널이 맡는다.
  */
 function serverParticipation() {
   if (!ui.logged) {
@@ -112,6 +128,17 @@ function serverParticipation() {
       + '<p class="helper">' + esc(u.desc) + '</p>'
       + (d.participated ? button('result', '참여 결과 보기', 'data-event-id="' + esc(String(s.eventId)) + '"', 'btn sm wide') : '')
       + '</div>'
+  }
+
+  // 페이지가 입력을 들고 있으면 패널은 길만 알려준다 — 입력을 두 벌 두지 않는다
+  if (pageDrawsGame()) {
+    return '<div class="participation-access ready" role="status">'
+      + '<strong>지금 참여할 수 있어요</strong>'
+      + '<p class="helper">'
+      + (d.gameCode === 'BASIC' || !d.gameCode
+        ? '왼쪽 페이지의 <strong>참여하기</strong> 버튼을 눌러주세요.'
+        : '왼쪽 페이지에서 고르고 <strong>참여하기</strong>를 눌러주세요.')
+      + '</p></div>'
   }
 
   // gameCode 는 서버가 준다(백엔드 #199~). 옛 이벤트처럼 없으면 BASIC 으로 본다 —
