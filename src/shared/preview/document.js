@@ -130,31 +130,60 @@ function takeStagedDocument(id) {
  * "여기가 1번 칸" 이라고 선언만 하고, 클릭 처리와 API 호출은 호스트가 한다.
  * 그래야 LLM 이 만든 HTML 에 스크립트를 넣지 않아도 된다.
  *
- * allow-scripts 는 **editor 한 모드에만** 준다.
+ * allow-scripts 는 **두 모드에만** 준다.
  *   editor         목업 편집기. 블록을 갈아 끼운 뒤 window.newVentReinit(key) 로
  *                  타이머 · 참가자 카운터를 다시 연결해야 한다 (AI_EDIT_RULES 2-2)
+ *   live           공개 상세. 서버가 붙인 /assets/event-runtime.js 가 돌아야
+ *                  참여 UI(.ev-game)가 동작한다 — 아래 참고
  *   그 외          server-edit · server-select · readonly · user · thumb —
  *                  전부 호스트가 contentDocument 로 처리한다. 스크립트가 필요 없다.
  *
- * ⚠ allow-scripts 와 allow-same-origin 을 함께 주면 sandbox 는 사실상 무력해진다.
- *   editor 는 목업 전용(TEMPLATE_BODIES — 우리가 쓴 HTML)이라 그 조합을 감수한다.
- *   서버가 내려준 HTML 이 들어오는 모드에는 주지 않는다.
+ * ★★ live 가 allow-scripts 를 받는 이유 (2026-10-15, 백엔드 published-game-widget)
+ *   서버가 게시 HTML 안에 고르는 칸(.ev-game)과 runtime 을 심는 쪽으로 바뀌었다.
+ *   runtime 은 입력을 모아 **iframe 요소에서** nv-participate 를 올리는데
+ *   (event-runtime.js 의 notifyHost), 그러려면 window.frameElement 를 읽어야 한다 —
+ *   그건 same-origin 일 때만 된다. 즉 **두 권한이 다 있어야 참여가 성립한다.**
+ *   postMessage 로 바꾸면 sandbox 를 조일 수 있지만 그건 서버 쪽 변경이다.
+ *
+ * ⚠ allow-scripts + allow-same-origin 이면 sandbox 는 사실상 없는 것과 같다.
+ *   iframe 안 스크립트가 parent 를 통째로 만질 수 있다 (쿠키를 들고 /api/auth/refresh 를
+ *   부르면 토큰까지 닿는다). 그래서 **live 는 우리 스크립트 하나만 돌게 막는다** —
+ *   serverDocument 가 /assets/event-runtime.js 외의 <script> 를 전부 걷어낸다.
+ *   서버도 이름표가 있는 페이지에서는 같은 일을 하지만(PageShell.standalone),
+ *   이름표 이전에 만든 옛 페이지는 인라인 스크립트가 남아 있어 여기서 한 번 더 막는다.
  */
-const SANDBOX_READ = 'allow-same-origin'                 // 스크립트 실행 안 됨
-const SANDBOX_EDIT = 'allow-same-origin allow-scripts'   // newVentReinit 이 필요하다
+const SANDBOX_READ = 'allow-same-origin'                    // 스크립트 실행 안 됨
+const SANDBOX_SCRIPT = 'allow-same-origin allow-scripts'    // newVentReinit · event-runtime.js
 
-const sandboxFor = (mode) => (mode === 'editor' ? SANDBOX_EDIT : SANDBOX_READ)
+const SCRIPTED = ['editor', 'live']
+const sandboxFor = (mode) => (SCRIPTED.includes(mode) ? SANDBOX_SCRIPT : SANDBOX_READ)
+
+/** 돌아도 되는 단 하나의 스크립트 — 우리가 public/assets 에 넣어 둔 런타임 */
+const RUNTIME_SRC = '/assets/event-runtime.js'
 
 /**
- * 서버가 준 조각(GET …/preview 의 html)을 미리보기 문서로 감싼다.
- * ★ 조각에는 래퍼 · 테마 · 유의사항이 있고 스타일시트는 없다 — 여기서 /assets/event.css 를 붙인다
- * ★ <script> 를 굳이 걷어내지 않는다. 서버 조각을 띄우는 모드(readonly · server-edit ·
- *   server-select)는 sandbox 에 allow-scripts 가 없어서 **어차피 실행되지 않는다.**
- *   원본을 그대로 둬야 나중에 editor 로 띄울 때도 같은 문서를 쓸 수 있다.
+ * 서버가 준 HTML 을 미리보기 문서로 감싼다.
+ *
+ * 두 모양이 다 들어온다.
+ *   조각      GET …/preview 의 html — 래퍼 · 테마는 있고 <head> 는 없다
+ *   완전한 문서 공개 상세의 publishedHtml — <html><head>…<body data-event-id data-game>
+ *             (백엔드 PageShell.standalone)
+ *
+ * ★ **body 의 속성을 지키는 것이 중요하다.** data-event-id · data-game 이 없으면
+ *   runtime 이 참여 방식을 몰라 「참여 기능은 준비 중이에요」로 끝난다.
+ *   그래서 완전한 문서는 그대로 파싱하고 body 를 통째로 쓴다 — 조각처럼 감싸면 속성이 날아간다.
+ *
+ * ★ <script> 는 **런타임 하나만** 남긴다. live 모드는 allow-scripts 를 받으므로
+ *   (sandboxFor 참고) 여기 남은 것은 실제로 돈다 — 옛 페이지에 남은 인라인 스크립트가
+ *   same-origin 권한으로 도는 길을 여기서 끊는다.
  */
 function serverDocument(html){
- const doc=new DOMParser().parseFromString('<body>'+(html||'')+'</body>','text/html');
+ const raw=html||'';
+ // <!doctype> · <html> 로 시작하면 완전한 문서다 (공백 · 주석 뒤에 와도 잡는다)
+ const whole=/^\s*(<!--[\s\S]*?-->\s*)*(<!doctype\b|<html\b)/i.test(raw);
+ const doc=new DOMParser().parseFromString(whole?raw:'<body>'+raw+'</body>','text/html');
  doc.querySelectorAll('iframe').forEach(n=>n.remove());
+ doc.querySelectorAll('script').forEach(n=>{if(n.getAttribute('src')!==RUNTIME_SRC)n.remove();});
  // 조각에 .ev-container 가 없으면 감싸준다.
  //   event.css 의 폭·여백·배경은 전부 .ev-container 기준이라, 없으면 본문이
  //   맨몸으로 붙어 읽기 어렵다. 템플릿으로 만든 페이지는 컨테이너를 들고 오지만
