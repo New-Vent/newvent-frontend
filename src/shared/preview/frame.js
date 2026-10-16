@@ -107,30 +107,41 @@ function bindFrame(frame){
    if(b===over)label(b);},true);return;
  }
  /**
-  * 공개 이벤트 상세 (사용자 화면) — 페이지 안의 「참여하기」만 통과시킨다.
+  * 공개 이벤트 상세 (사용자 화면).
   *
-  * ★ iframe 안에서는 스크립트가 **돌지 않는다** (sandbox 에 allow-scripts 가 없다).
-  *   그래서 클릭 처리는 전부 호스트가 한다. 여기서는 nv-participate 만 올리고
-  *   실제 참여는 사용자 앱이 맡는다 (user/main.js) — 로그인 토큰이 거기에만 있다.
+  * ★ **여기만 iframe 안에서 스크립트가 돈다** (sandboxFor 의 live). 서버가 붙인
+  *   /assets/event-runtime.js 가 고르는 칸(.ev-game)을 맡고, 참여 버튼을 누르면
+  *   입력을 모아 이 iframe 요소에서 nv-participate 를 올린다. 받는 쪽은 사용자 앱이다
+  *   (user/main.js) — 로그인 토큰이 거기에만 있다.
   *
-  * ★ 조건을 좁게 잡는다. `[data-slot="cta-link"]` 하나만 본다 —
-  *   `.btn` 이나 `.cta-btn` 을 잡으면 sports_cheer 의 응원 투표 버튼까지 걸린다.
-  *   그건 페이지 안에서만 뜻이 있는 버튼이다.
+  * ★ 그래서 **참여에 쓰이는 것은 잠그지 않는다.** 예전에는 cta-link 빼고 전부 disabled 였는데,
+  *   그러면 고르는 버튼이 눌리지 않고 runtime 이 입력을 못 모은다 (runtime 은 el.disabled 를 건너뛴다).
   *
-  * ★ 나머지 클릭은 readonly 와 똑같이 막는다. 링크를 따라가면 iframe 이 통째로 바뀐다.
+  * ★ 호스트가 아직 맡는 것은 둘뿐이다.
+  *   1) 바깥으로 나가는 클릭 막기 — 링크를 따라가면 iframe 이 통째로 바뀐다
+  *   2) 이름표가 없는 옛 페이지의 「참여하기」(data-slot="cta-link") —
+  *      runtime 은 [data-behavior] 만 보므로 그 버튼은 여기서 올려 준다
+  *
+  * ★ stopPropagation 은 **막을 때만** 쓴다. 여기는 capture 라 무조건 멈추면
+  *   runtime 의 document 리스너(버블)가 아예 돌지 않는다.
   */
  if(mode==='live'){
+  // 참여와 무관한 입력만 잠근다 (옛 템플릿의 체험용 폼 등)
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>{
-   if(!el.closest('[data-slot="cta-link"]'))el.disabled=true;
+   if(!el.closest('[data-behavior],[data-slot="cta-link"]'))el.disabled=true;
   });
   if(ui.participated?.[frame.dataset.event])markParticipated(frame);
   doc.addEventListener('click',ev=>{
-   ev.preventDefault();ev.stopPropagation();
+   const link=ev.target.closest('a[href]');
+   // runtime 이 맡는 링크(data-behavior)는 그쪽이 preventDefault 한다
+   if(link&&!link.closest('[data-behavior]')){ev.preventDefault();}
    const cta=ev.target.closest('[data-slot="cta-link"]');
-   if(!cta||cta.getAttribute('aria-disabled')==='true')return;
-   // 목적지는 서버가 data-href(button) 또는 href(a)로 넣는다. 둘 다 /events/{id} 다
+   if(!cta||cta.closest('[data-behavior]'))return;           // 새 페이지 — runtime 이 맡는다
+   ev.preventDefault();ev.stopPropagation();
+   if(cta.getAttribute('aria-disabled')==='true')return;
+   // 옛 페이지. 목적지는 서버가 data-href(button) 또는 href(a)로 넣는다 — 둘 다 /events/{id} 다
    const href=cta.dataset.href||cta.getAttribute('href')||'';
-   frame.dispatchEvent(new CustomEvent('nv-participate',{bubbles:true,detail:{href,eventId:frame.dataset.event}}));
+   frame.dispatchEvent(new CustomEvent('nv-participate',{bubbles:true,cancelable:true,detail:{href,eventId:frame.dataset.event}}));
   },true);
   return;
  }
@@ -242,18 +253,26 @@ function hydrate(root=document){
 }
 
 /**
- * 참여를 마친 페이지로 바꾼다 — 참여 버튼을 잠그고 문구를 바꾼다.
+ * 참여를 마친 페이지로 바꾼다.
  *
- * ★ 참여 버튼은 `[data-slot="cta-link"]` 다. 서버가 거기에만 목적지(data-href · href)를 넣는다.
- *   aria-disabled 로 잠근다 — <a> 는 disabled 가 없고, bindFrame 의 live 분기가 이 값을 본다.
+ * ★ **body 의 data-participated 가 본체다.** runtime 이 참여 버튼을 누를 때마다 이 속성을
+ *   보고 「이미 참여한 이벤트예요」로 막는다 (event-runtime.js 의 participate).
+ *   서버는 이 속성을 적지 않는다 — 로그인한 사람별이라 공유 링크 페이지는 알 수 없다.
+ *   그래서 사용자 앱이 상태 API 로 알아내 여기서 붙인다.
+ *
+ * ★ 옛 페이지의 참여 버튼은 `[data-slot="cta-link"]` 다 — runtime 이 모르므로 문구까지 바꿔 잠근다.
+ *   aria-disabled 로 잠근다 (<a> 는 disabled 가 없고, bindFrame 의 live 분기가 이 값을 본다).
+ * ★ 새 페이지의 참여 버튼은 runtime 이 맡으니 **문구를 건드리지 않는다** — 디자인이 서버 것이다.
+ *   누르면 안내 토스트가 뜨고, 눌렀다는 것 자체는 알려야 하니 흐리게만 둔다.
  */
 function markParticipated(frame){
  const doc=frame?.contentDocument;if(!doc?.body||doc.body.hasAttribute('data-participated'))return;
  doc.body.setAttribute('data-participated','');
- doc.querySelectorAll('[data-slot="cta-link"]').forEach(el=>{
+ doc.querySelectorAll('[data-slot="cta-link"]:not([data-behavior])').forEach(el=>{
   el.textContent='참여 완료';el.setAttribute('aria-disabled','true');
   if('disabled' in el)el.disabled=true;
  });
+ doc.querySelectorAll('[data-behavior~="participate"]').forEach(el=>{el.style.opacity='.55';});
 }
 
 export { bindFrame, hydrate, markParticipated, replaceBlock }

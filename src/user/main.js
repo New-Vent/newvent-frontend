@@ -10,7 +10,7 @@ import { icon } from '@shared/icons.js'
 import { button } from '@shared/ui/controls.js'
 import { toast } from '@shared/ui/toast.js'
 import { closeModal, ask } from '@shared/ui/modal.js'
-import { hydrate } from '@shared/preview/frame.js'
+import { hydrate, markParticipated } from '@shared/preview/frame.js'
 import { createRouter } from '@shared/router.js'
 import { setNavigate } from '@shared/navigate.js'
 import { initialDatabase, PLANS, gradeOfPlan } from '@shared/mock/fixtures.js'
@@ -344,20 +344,33 @@ document.addEventListener('click', (ev) => {
  * ★ 409(이미 참여)는 화면이 낡은 것이다 — 상태를 다시 물어 버튼을 닫는다.
  */
 /**
- * 페이지 안의 「참여하기」 — iframe 이 올린 nv-participate 를 받는다 (frame.js 의 live 분기).
+ * 페이지 안의 「참여하기」 — iframe 이 올린 nv-participate 를 받는다.
  *
- * 새 흐름을 만들지 않고 **옆 패널의 폼을 그대로 누른다.** 검증 · 중복 방지 · 결과 표시가
- * 이미 거기 있어서, 길을 둘로 만들면 둘이 갈라진다.
+ * 길이 둘이다. **어느 쪽인지는 detail.payload 로 갈린다.**
  *
- *   로그인 전        로그인 안내
- *   참여 못 하는 상태  패널이 이유를 띄우고 있다 — 그쪽으로 보낸다
- *   추가 입력 필요    그 칸으로 보낸다 (휴대폰 번호 등). 빈 채로 보내면 서버가 400 이다
- *   그 밖             폼을 제출한다
+ *   새 페이지  서버가 고르는 칸(.ev-game)과 runtime 을 심어 준다. runtime 이 입력을
+ *              모아 { eventId, game, payload } 로 올린다 → 여기서 바로 참여 API 를 부른다.
+ *   옛 페이지  이름표가 없어 runtime 이 모른다. frame.js 가 cta-link 클릭을
+ *              { href, eventId } 로 올린다 → 옆 패널의 폼을 그대로 누른다.
  *
- * ★ 서버가 넣는 목적지는 /events/{id} 로, PATH.event 와 같은 모양이다.
- *   한쪽을 바꾸면 다른 쪽도 바꿔야 한다.
+ * ★ **preventDefault 를 꼭 부른다.** runtime 은 "앱이 받았나" 를 그것으로 본다
+ *   (event-runtime.js 의 notifyHost — cancelable 이벤트의 반환값).
+ *   안 부르면 페이지가 「미리보기에서는 참여가 접수되지 않아요」를 띄운다.
  */
-function participateFromPage() {
+function participateFromPage(ev) {
+  const detail = ev?.detail || {}
+
+  // 새 길 — runtime 이 모아 준 본문이 그대로 참여 API 본문이다 (ParticipationCreateRequest)
+  if (detail.payload) {
+    ev.preventDefault()                       // 받았다고 알린다 (이게 없으면 페이지가 안내를 띄운다)
+    const frame = ev.target?.closest?.('.event-frame') || ev.target
+    if (!ui.logged) return showLoginPrompt()
+    submitFromPage(frame, detail)
+    return
+  }
+
+  // 옛 길 — 입력이 패널에 있다. 검증 · 중복 방지 · 결과 표시가 거기 모여 있어 그대로 쓴다
+  ev?.preventDefault?.()
   if (!ui.logged) return showLoginPrompt()
 
   const panel = $('.participation-access')
@@ -375,6 +388,58 @@ function participateFromPage() {
     return
   }
   form.requestSubmit()
+}
+
+/** 참여 실패 안내 — 서버 코드마다 할 말이 다르다 */
+function participationError(e) {
+  // ★ 등급 부족은 403-0 이다. 409-3 은 「참여 설정이 잠김」으로 관리자 쪽 코드다
+  if (e?.status === 401) return '로그인이 필요해요.'
+  if (e?.code === 'PARTICIPATION403-0') return '참여할 수 있는 멤버십 등급이 아니에요.'
+  if (e?.code === 'PARTICIPATION409-1') return '참여 설정이 없어요. 잠시 후 다시 확인해주세요.'
+  if (e?.code === 'PARTICIPATION400-0') return '입력을 확인해주세요.'
+  return e?.message || '참여하지 못했어요. 잠시 후 다시 시도해주세요.'
+}
+
+let sendingFromPage = false
+
+/**
+ * 페이지에서 올라온 참여를 접수한다.
+ *
+ * ★ 성공하면 iframe 안 body 에 data-participated 를 **바로** 붙인다 (markParticipated).
+ *   다시 그리기를 기다리면 그 사이 한 번 더 누를 수 있고, 서버는 409 로 막는다.
+ * ★ 결과는 옆 패널이 보여준다 — 패널과 페이지가 서로 다른 말을 하지 않게 한 곳에 모은다.
+ */
+async function submitFromPage(frame, { eventId, payload }) {
+  if (sendingFromPage) return
+  const id = String(eventId ?? frame?.dataset?.event ?? '')
+  if (!id) return
+  sendingFromPage = true
+  try {
+    const made = await participate(id, payload)
+    ui.participated = { ...(ui.participated || {}), [id]: true }
+    markParticipated(frame)
+    const s = ui.serverParticipation
+    if (s?.eventId === id) s.result = made.resultData || { status: 'PENDING' }
+    // 내 혜택은 다음에 들어갈 때 서버에서 다시 읽는다
+    ui.serverMy = null
+    ui.serverMyState = null
+    render()
+    toast(made.resultData?.status === 'WON' ? '당첨되었어요!' : '참여가 접수되었어요.')
+  } catch (e) {
+    if (e?.status === 401) { showLoginPrompt(); return }
+    if (e?.code === 'PARTICIPATION409-0') {
+      // 다른 기기 · 탭에서 이미 참여했다 — 화면만 맞춘다
+      ui.participated = { ...(ui.participated || {}), [id]: true }
+      markParticipated(frame)
+      ui.serverParticipation = null
+      render()
+      toast('이미 참여한 이벤트예요.')
+      return
+    }
+    toast(participationError(e))
+  } finally {
+    sendingFromPage = false
+  }
 }
 
 async function submitParticipation(form) {
