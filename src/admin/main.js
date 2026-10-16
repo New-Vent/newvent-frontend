@@ -601,7 +601,7 @@ document.addEventListener('input',ev=>{
  if(ev.target.matches('#chat-form textarea')){ui.chatInputs[currentEvent().id]=ev.target.value;return;}
  if(ev.target.dataset.create&&ui.creation){
   const k=ev.target.dataset.create;
-  if(['title','start','end','grade','prompt'].includes(k))ui.creation[k]=ev.target.value;
+  if(['title','start','end','startTime','endTime','grade','prompt'].includes(k))ui.creation[k]=ev.target.value;
   if(k==='grade'&&ui.creation.grade==='NORMAL'&&ui.creation.templateId==='tpl-3')ui.creation.templateId=null;
   refreshCreationSummary()
   return;
@@ -632,9 +632,10 @@ document.addEventListener('change',ev=>{
 document.addEventListener('submit',ev=>{
  if (handleUsersSubmit(ev, () => render())) return
 
- if(ev.target.id==='create-basics'){
+ if(ev.target.id==='create-basics'){ 
   ev.preventDefault();
-  if(validateCreation()){ui.creation.step=2;render(true);}
+  if (ui.creation?.libraryTemplate) { finishCreation(); return }
+  if(validateCreation()){ui.creation.step=2; render(true);}
   return;
  }
  // 템플릿 검색 · 정보 수정 · 등록 · 이 템플릿으로 만들기

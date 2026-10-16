@@ -31,28 +31,98 @@ function applyRange(picker, { from, to }) {
   }))
 }
 
-export function eventRangePicker(from = '', to = '', { creation = false } = {}) {
+export function eventRangePicker(from = '', to = '', { creation = false, startTime = '', endTime = '' } = {} ) {
   const values = { from, to }
   const inputs = FIELDS.map(({ name, createKey }) => `
     <input type="hidden" name="${name}"
       ${creation ? `data-create="${createKey}"` : ''}
       value="${esc(values[name])}">
   `).join('')
-  const fields = FIELDS.map(({ name, label }) => `
-    <div class="event-range-field">
-      <span class="event-range-field__label">${label}</span>
-      <button type="button" class="event-range-trigger"
-        data-range-open="${name}" aria-label="${label} 선택" aria-expanded="false">
-        <span
-          data-range-${name}-label
-          class="${values[name] ? '' : 'is-placeholder'}"
-        >
-          ${values[name] ? esc(formatDate(values[name])) : '날짜 선택'}
-        </span>
-        <span class="event-range-trigger__arrow" aria-hidden="true">▾</span>
-      </button>
-    </div>
-  `).join('')
+    const fields = FIELDS.map(({ name, label, createKey }) => {
+    const time = name === 'from' ? startTime : endTime
+    const fieldLabel = creation
+      ? name === 'from' ? '시작 일시' : '종료 일시'
+      : label
+
+    return `
+      <div class="event-range-field">
+        <span class="event-range-field__label">${fieldLabel}</span>
+
+        <div class="${creation ? 'create-datetime-row' : 'event-range-date-row'}">
+          <button
+            type="button"
+            class="event-range-trigger"
+            data-range-open="${name}"
+            aria-label="${label} 선택"
+            aria-expanded="false"
+          >
+            <span
+              data-range-${name}-label
+              class="${values[name] ? '' : 'is-placeholder'}"
+            >
+              ${values[name] ? esc(formatDate(values[name])) : '날짜 선택'}
+            </span>
+            <span class="event-range-trigger__arrow" aria-hidden="true">▾</span>
+          </button>
+
+          ${creation ? `
+            <div class="create-time-picker">
+              <input
+                type="hidden"
+                name="${createKey}Time"
+                data-create="${createKey}Time"
+                value="${esc(time)}"
+              >
+
+              <button
+                type="button"
+                class="create-time-trigger"
+                data-time-open
+                aria-label="${fieldLabel} 시간 선택"
+                aria-expanded="false"
+              >
+                <span data-time-label class="${time ? '' : 'is-placeholder'}">
+                  ${time ? esc(time) : '시간 선택'}
+                </span>
+                <span class="create-time-icon" aria-hidden="true"></span>
+              </button>
+
+              <div
+                class="create-time-popup"
+                role="group"
+                aria-label="${fieldLabel} 시간 선택"
+                hidden
+              >
+                <div class="create-time-heading">
+                  <span>시간 선택</span>
+                  <span>24시간</span>
+                </div>
+
+                <div class="create-time-dials">
+                  <div class="create-time-column">
+                    <span>시</span>
+                    <div class="create-time-wheel" data-time-wheel="hour"></div>
+                  </div>
+
+                  <span class="create-time-colon">:</span>
+
+                  <div class="create-time-column">
+                    <span>분</span>
+                    <div class="create-time-wheel" data-time-wheel="minute"></div>
+                  </div>
+                </div>
+
+                <div class="create-time-footer">
+                  <span data-time-preview aria-live="polite"></span>
+                  <button type="button" data-time-done>확인</button>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `
+  }).join('')
 
   return `
     <fieldset class="event-filter-group${creation ? ' create-period' : ''}">
@@ -81,6 +151,7 @@ export function eventRangePicker(from = '', to = '', { creation = false } = {}) 
 }
 
 export function initEventRangePicker() {
+  initCreationTimePicker()
   const drafts = new WeakMap()
 
   const hide = (picker, restoreFocus = false) => {
@@ -208,5 +279,148 @@ export function initEventRangePicker() {
     event.preventDefault()
     event.stopImmediatePropagation()
     hide(calendar.closest('.event-range-picker'), true)
+  }, true)
+}
+
+function initCreationTimePicker() {
+  const itemHeight = 36
+  const pad = (value) => String(value).padStart(2, '0')
+  let active = null
+
+  const readTime = (picker) => [
+    ...picker.querySelectorAll('[data-time-wheel]'),
+  ].map((wheel) => {
+    const max = wheel.children.length - 1
+    return Math.max(
+      0,
+      Math.min(max, Math.round(wheel.scrollTop / itemHeight)),
+    )
+  })
+
+  const sync = (picker) => {
+    const values = readTime(picker)
+
+    picker.querySelectorAll('[data-time-wheel]').forEach((wheel, index) => {
+      ;[...wheel.children].forEach((button, value) => {
+        button.setAttribute(
+          'aria-pressed',
+          String(value === values[index]),
+        )
+      })
+    })
+
+    picker.querySelector('[data-time-preview]').textContent =
+      values.map(pad).join(':')
+  }
+
+  const close = (restoreFocus = false) => {
+    if (!active) return
+
+    const trigger = active.querySelector('[data-time-open]')
+    active.querySelector('.create-time-popup').hidden = true
+    trigger.setAttribute('aria-expanded', 'false')
+    active = null
+
+    if (restoreFocus) trigger.focus()
+  }
+
+  const prepare = (picker) => {
+    picker.querySelectorAll('[data-time-wheel]').forEach((wheel, index) => {
+      if (wheel.children.length) return
+
+      const count = index === 0 ? 24 : 60
+
+      wheel.innerHTML = Array.from({ length: count }, (_, value) => `
+        <button
+          type="button"
+          data-time-value="${value}"
+          aria-label="${value}${index === 0 ? '시' : '분'}"
+          aria-pressed="false"
+        >${pad(value)}</button>
+      `).join('')
+
+      wheel.addEventListener('scroll', () => sync(picker))
+
+      wheel.addEventListener('focusin', (event) => {
+        const button = event.target.closest('[data-time-value]')
+        if (!button) return
+
+        wheel.scrollTop = Number(button.dataset.timeValue) * itemHeight
+      })
+    })
+  }
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return
+
+    const picker = event.target.closest('.create-time-picker')
+    if (active && picker !== active) close()
+    if (!picker) return
+
+    const trigger = event.target.closest('[data-time-open]')
+
+    if (trigger) {
+      const alreadyOpen = active === picker
+      close()
+      if (alreadyOpen) return
+
+      // 날짜 달력과 시간 선택창이 동시에 뜨지 않도록 닫기
+      document.querySelectorAll('.event-range-picker').forEach((range) => {
+        range.querySelector('.event-range-calendar').hidden = true
+        range.querySelectorAll('[data-range-open]').forEach((button) => {
+          button.setAttribute('aria-expanded', 'false')
+        })
+      })
+
+      prepare(picker)
+      active = picker
+
+      const input = picker.querySelector('input[data-create]')
+      const initial = input.value ||
+        (input.dataset.create === 'endTime' ? '23:59' : '00:00')
+      const values = initial.split(':').map(Number)
+
+      picker.querySelector('.create-time-popup').hidden = false
+      trigger.setAttribute('aria-expanded', 'true')
+
+      picker.querySelectorAll('[data-time-wheel]').forEach((wheel, index) => {
+        wheel.scrollTop = values[index] * itemHeight
+      })
+
+      sync(picker)
+      return
+    }
+
+    const option = event.target.closest('[data-time-value]')
+
+    if (option) {
+      option.closest('[data-time-wheel]').scrollTo({
+        top: Number(option.dataset.timeValue) * itemHeight,
+        behavior: 'smooth',
+      })
+      return
+    }
+
+    if (event.target.closest('[data-time-done]')) {
+      const value = readTime(picker).map(pad).join(':')
+      const input = picker.querySelector('input[data-create]')
+      const label = picker.querySelector('[data-time-label]')
+
+      input.value = value
+      label.textContent = value
+      label.classList.remove('is-placeholder')
+
+      // main.js의 기존 입력 처리로 ui.creation에 반영
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      close(true)
+    }
+  })
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !active) return
+
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    close(true)
   }, true)
 }

@@ -24,7 +24,7 @@ import { toast } from '@shared/ui/toast.js'
 import { modal } from '@shared/ui/modal.js'
 import { GRADES, REQUEST_MAX, TEMPLATE_KEYS, audienceOf } from '@shared/grades.js'
 
-import { createEvent, loadAdminEvents, loadSimilarVersions, loadVersion, loadVersions, startGenerate, USE_SERVER, loadBasicTemplates, loadBasicTemplate } from '@shared/repo.js'
+import { createEvent, loadAdminEvents, loadSimilarVersions, loadVersion, loadVersions, startGenerate, USE_SERVER, loadBasicTemplates, loadBasicTemplate, useTemplate } from '@shared/repo.js'
 import { LAYOUTS, layoutPicks } from '@shared/layouts.js'
 import { resetAdminServer } from './list.js'
 import { openServerEditor } from './server-editor.js'
@@ -46,7 +46,7 @@ function syncCreationDateFont() {
   ]
 
   form.querySelectorAll(
-    '.event-range-trigger, [data-range-from-label], [data-range-to-label]',
+     '.event-range-trigger, [data-range-from-label], [data-range-to-label], .create-time-trigger, [data-time-label]',
   ).forEach((el) => {
     properties.forEach((property) => {
       el.style.setProperty(property, css.getPropertyValue(property))
@@ -255,6 +255,8 @@ function createInitialCreation() {
     title: '',
     start: '',
     end: '',
+    startTime: '',
+    endTime: '',
     grade: '',
     mode: 'template',
     templateId: null,
@@ -262,9 +264,46 @@ function createInitialCreation() {
   }
 }
 
-function startCreation() {
-  ui.creation = createInitialCreation()
+function startCreation(libraryTemplate = null) {
+  ui.creation = {
+    ...createInitialCreation(),
+    libraryTemplate,
+  }
+
   navigate('create')
+}
+
+function isCreationDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false
+
+  const date = new Date(`${value}T00:00:00Z`)
+
+  return Number.isFinite(date.getTime())
+    && date.toISOString().slice(0, 10) === value
+}
+
+function isCreationTime(value) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value || '')
+}
+
+function creationDateTime(date, time) {
+  return `${date}T${time}:00+09:00`
+}
+
+function isCreationPeriodValid(c) {
+  if (
+    !isCreationDate(c.start)
+    || !isCreationDate(c.end)
+    || !isCreationTime(c.startTime)
+    || !isCreationTime(c.endTime)
+  ) {
+    return false
+  }
+
+  const start = Date.parse(creationDateTime(c.start, c.startTime))
+  const end = Date.parse(creationDateTime(c.end, c.endTime))
+
+  return end > start
 }
 
 /**
@@ -273,16 +312,15 @@ function startCreation() {
  */
 function creationSummary() {
   const c = ui.creation
-  const cfg = USE_SERVER
-    ? c.templateDetail
-    : CONFIGS.find((x) => x.templateId === c.templateId)
+  const cfg = c.libraryTemplate || (
+    USE_SERVER ? c.templateDetail : CONFIGS.find((x) => x.templateId === c.templateId))
 
   const title = c.title.trim()
   const grade = GRADES.find((g) => g.code === c.grade)
-  const validPeriod = Boolean(c.start && c.end && c.start <= c.end)
+  const validPeriod = isCreationPeriodValid(c)
   const days = validPeriod ? daysBetween(c.start, c.end) + 1 : 0
 
-  const method = c.step === 1
+  const method = c.step === 1 && !c.libraryTemplate
     ? null
     : c.mode === 'ai'
       ? {
@@ -310,12 +348,22 @@ function creationSummary() {
   const done = checks.filter(Boolean).length
   const ready = done === checks.length
 
-  const dateBlock = (label, value) => `
+  const dateBlock = (label, value, time) => `
     <div class="event-ticket__date">
       <span class="event-ticket__label">${label}</span>
-      <strong>${validPeriod ? esc(value.slice(5).replace('-', '.')) : '—'}</strong>
+
+      <strong>
+        ${isCreationDate(value)
+          ? esc(value.slice(5).replace('-', '.'))
+          : '—'}
+      </strong>
+
       <span class="event-ticket__sub">
-        ${validPeriod ? esc(value.slice(0, 4)) : '날짜 선택'}
+        ${isCreationDate(value) ? esc(value.slice(0, 4)) : '날짜 선택'}
+      </span>
+
+      <span class="event-ticket__time">
+        ${isCreationTime(time) ? esc(time) : '시간 선택'}
       </span>
     </div>
   `
@@ -337,13 +385,13 @@ function creationSummary() {
       </div>
 
       <div class="event-ticket__period">
-        ${dateBlock('시작일', c.start)}
+        ${dateBlock('시작일', c.start, c.startTime)}
 
         <span class="event-ticket__duration">
           ${validPeriod ? `${days}일간` : '미설정'}
         </span>
 
-        ${dateBlock('종료일', c.end)}
+        ${dateBlock('종료일', c.end, c.endTime)}
       </div>
 
       <dl class="event-ticket__details">
@@ -427,6 +475,8 @@ document.addEventListener('change', (event) => {
 function creationView(){
  if (!ui.creation) ui.creation = createInitialCreation()
  const c=ui.creation;
+ const librarySelected = Boolean(c.libraryTemplate)
+
  const progress = `
    <ol class="create-progress" aria-label="이벤트 생성 단계">
      <li
@@ -436,12 +486,17 @@ function creationView(){
        <span>${c.step === 1 ? '1' : icon('check')}</span>
        이벤트 정보
      </li>
+
      <li
-       class="${c.step === 2 ? 'current' : ''}"
-       ${c.step === 2 ? 'aria-current="step"' : ''}
+       class="${
+         librarySelected
+           ? 'done'
+           : c.step === 2 ? 'current' : ''
+       }"
+       ${!librarySelected && c.step === 2 ? 'aria-current="step"' : ''}
      >
-       <span>2</span>
-       제작 방식
+       <span>${librarySelected ? icon('check') : '2'}</span>
+       ${librarySelected ? '제작 방식 · 템플릿 선택됨' : '제작 방식'}
      </li>
    </ol>
  `
@@ -476,7 +531,7 @@ function creationView(){
           >
         </div>
 
-        ${eventRangePicker(c.start, c.end, { creation: true })}
+        ${eventRangePicker(c.start, c.end, { creation: true, startTime: c.startTime, endTime: c.endTime })}
 
         <div class="field create-grade-field">
           <label for="create-event-grade" class="create-field-label">
@@ -515,7 +570,8 @@ function creationView(){
         <div class="create-actions">
           ${button('cancel-create', '취소')}
           <button type="submit" class="btn primary">
-            다음 단계 ${icon('arrow')}
+            ${c.libraryTemplate ? '이 템플릿으로 시작하기' : '다음 단계'}
+            ${icon('arrow')}
           </button>
         </div>
       </form>
@@ -564,14 +620,65 @@ function validateCreation(){
  if(c.title.trim().length>100)return creationError('이벤트명은 100자 이내로 입력해주세요.','title');
  const dateOK=x=>/^\d{4}-\d{2}-\d{2}$/.test(x)&&!Number.isNaN(Date.parse(x))&&new Date(x).toISOString().slice(0,10)===x;
  if(!dateOK(c.start)||!dateOK(c.end))return creationError('시작일과 종료일을 입력해주세요.','start');
- if(c.start>c.end)return creationError('종료일은 시작일보다 빠를 수 없어요.','end');
+ if (!isCreationTime(c.startTime)) { return creationError('시작 시간을 입력해주세요.', 'startTime') }
+ if (!isCreationTime(c.endTime)) { return creationError('종료 시간을 입력해주세요.', 'endTime')}
+ if(!isCreationPeriodValid(c))return creationError('종료 일시는 시작 일시보다 늦어야 해요.','endTime');
  if(!GRADES.some(g=>g.code===c.grade))return creationError('참여 대상을 선택해주세요.','grade');
  return true;
+}
+
+async function createFromLibrary(c) {
+  if (!USE_SERVER || c.submitting) return
+
+  c.submitting = true
+
+  const submit = document.querySelector(
+    '#create-basics button[type="submit"]',
+  )
+
+  if (submit) {
+    submit.disabled = true
+    submit.textContent = '만드는 중…'
+  }
+
+  let made
+
+  try {
+    made = await useTemplate(c.libraryTemplate.templateKey, {
+      name: c.title.trim(),
+      startAt: creationDateTime(c.start, c.startTime),
+      endAt: creationDateTime(c.end, c.endTime),
+      grade: c.grade,
+    })
+  } catch (error) {
+    c.submitting = false
+
+    if (submit?.isConnected) {
+      submit.disabled = false
+      submit.innerHTML = `이 템플릿으로 시작하기 ${icon('arrow')}`
+    }
+
+    if (ui.creation === c) {
+      creationError(error?.message || '이벤트를 만들지 못했어요.')
+    }
+
+    return
+  }
+
+  // 요청 중 다른 화면으로 이동했다면 현재 화면을 바꾸지 않는다.
+  if (ui.creation !== c || ui.route !== 'create') return
+
+  ui.creation = null
+  resetAdminServer()
+  openServerEditor(made.eventId)
+  navigate('editor', String(made.eventId))
+  toast('선택한 템플릿으로 이벤트 초안을 만들었어요.')
 }
 
 function finishCreation(){
  if(ui.route!=='create'||!ui.logged||ui.role!=='admin'||!validateCreation())return;
  const c=ui.creation;
+ if (c.libraryTemplate) { return createFromLibrary(c)}
  if(c.mode==='template'&&!c.templateId)return creationError('시작할 템플릿을 선택해주세요.');
  if(c.mode==='ai'&&!c.prompt.trim())return creationError('만들고 싶은 이벤트를 설명해주세요.','prompt');
  if(c.mode==='ai'&&c.prompt.trim().length>REQUEST_MAX)return creationError('기획은 '+REQUEST_MAX+'자 이내로 입력해주세요.','prompt');
@@ -613,8 +720,8 @@ async function serverCreate(c,cfg){
  try{
   event = await createEvent({
     name: c.title.trim(),
-    startAt: c.start + 'T00:00:00+09:00',
-    endAt: c.end + 'T23:59:59+09:00',
+    startAt: creationDateTime(c.start, c.startTime),
+    endAt: creationDateTime(c.end, c.endTime),
     grade: c.grade,
     ...(c.mode === 'template'
       ? { templateKey: c.templateDetail.templateKey }

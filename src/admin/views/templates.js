@@ -30,6 +30,7 @@ import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
 import { ask, closeModal, modal } from '@shared/ui/modal.js'
 import { toast } from '@shared/ui/toast.js'
+import { startCreation } from './create.js'
 
 /** 목록 탭 → 서버 builtin 파라미터. null 은 "전체"(파라미터를 안 보낸다) */
 const SCOPES = [
@@ -432,22 +433,15 @@ const ymd = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' })
 const dayFromNow = (n) => ymd.format(new Date(Date.now() + n * 86400000))
 
 function openUse(code) {
-  const t = (lib().data?.content || []).find((x) => x.templateKey === code)
-  if (!t) return
-  modal(esc(t.name) + ' 템플릿으로 시작',
-    '<form id="library-use-form" class="fields" novalidate data-code="' + esc(code) + '">'
-    + '<p class="helper">템플릿 디자인을 그대로 복사해 초안(DRAFT)을 만들어요. AI 를 부르지 않고, 게시도 하지 않습니다.</p>'
-    + '<label class="field">이벤트명 <span class="helper">관리 목록에서 쓰는 이름이에요. 페이지 안의 제목 문구는 편집 화면에서 고칩니다.</span>'
-    + '<input name="name" maxlength="100" required placeholder="예: 가을맞이 응원 이벤트"></label>'
-    + '<div class="field-pair">'
-    + '<label class="field">시작일<input name="start" type="date" required value="' + dayFromNow(0) + '"></label>'
-    + '<label class="field">종료일<input name="end" type="date" required value="' + dayFromNow(14) + '"></label></div>'
-    + '<label class="field">참여 대상<select name="grade">'
-    + GRADES.map((g) => '<option value="' + g.code + '">' + esc(g.label) + ' · ' + esc(g.desc) + '</option>').join('')
-    + '</select></label>'
-    + '<p class="create-error" role="alert"></p>'
-    + '<div class="modal-actions">' + button('close', '취소')
-    + '<button type="submit" class="btn primary">이 템플릿으로 만들기</button></div></form>')
+  const template = (lib().data?.content || [])
+    .find((item) => item.templateKey === code)
+
+  if (!USE_SERVER || !template?.active) return
+
+  startCreation({
+    templateKey: template.templateKey,
+    name: template.name,
+  })
 }
 
 /* ───────────────────────── 제출 · 클릭 ───────────────────────── */
