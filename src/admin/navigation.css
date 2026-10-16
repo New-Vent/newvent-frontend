@@ -1,0 +1,195 @@
+/* 관리자 헤더와 전체 메뉴 */
+#header {
+  overflow: visible;
+}
+
+#header .admin-header-main {
+  position: relative;
+  flex-wrap: nowrap;
+  min-height: 78px;
+  padding-top: 0;
+}
+
+#header .admin-header-tools {
+  position: static;
+  gap: 10px;
+}
+
+#header .admin-navigation-panel[hidden] {
+  display: none !important;
+}
+
+/* 운영자와 알림 사이 구분선 */
+#header .admin-navigation-divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 19px;
+  margin: 0 3px;
+  background: #e9edf3;
+}
+
+/* 햄버거 버튼 */
+#header .admin-navigation-toggle {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #748094;
+  cursor: pointer;
+}
+
+#header .admin-navigation-toggle:hover,
+#header .admin-navigation-toggle[aria-expanded="true"] {
+  background: #f1f4f8;
+}
+
+#header .admin-navigation-toggle svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 로고 시작점부터 햄버거 끝까지 펼쳐지는 메뉴 */
+#header .admin-navigation-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  width: auto;
+  max-width: none;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid #e5ebf3;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgb(37 59 88 / 10%);
+}
+
+#header .admin-navigation-container {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 18px 12px;
+  box-sizing: border-box;
+}
+
+#header .admin-navigation-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  margin: 0;
+  gap: 0;
+}
+
+#header .admin-navigation-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 58px;
+  margin: 0;
+  padding: 8px 18px;
+  border: 0;
+  border-right: 1px solid #edf1f6;
+  border-radius: 0;
+  background: #fff;
+  color: #485b74;
+  text-align: left;
+  cursor: pointer;
+}
+
+#header .admin-navigation-item:last-child {
+  border-right: 0;
+}
+
+#header .admin-navigation-title {
+  font-family: 'NanumSquareRound', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+#header .admin-navigation-description {
+  color: #929eaf;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+#header .admin-navigation-item[aria-current="page"] {
+  color: #337fe9;
+}
+
+#header .admin-navigation-item:hover {
+  background: #fafcff;
+  color: #337fe9;
+}
+
+/* 모바일 */
+@media (max-width: 760px) {
+  #header .admin-header-main {
+    gap: 12px;
+    min-height: 68px;
+  }
+
+  #header .admin-header-tools {
+    gap: 4px;
+  }
+
+  #header .admin-navigation-container {
+    padding: 12px;
+  }
+
+  #header .admin-navigation-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 8px;
+  }
+
+  #header .admin-navigation-item {
+    min-height: 62px;
+    padding: 10px 12px;
+  }
+
+  #header .admin-navigation-item:nth-child(even) {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  #header .brand-image .brand-logo {
+    width: 115px;
+    height: 28px;
+  }
+
+  #header .admin-header-tools .admin-account-trigger .name,
+  #header .admin-header-tools .admin-account-chevron,
+  #header .admin-navigation-divider {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) {
+  #header .admin-navigation-toggle {
+    width: 44px;
+    height: 44px;
+  }
+}

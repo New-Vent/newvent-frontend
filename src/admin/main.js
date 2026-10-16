@@ -8,6 +8,7 @@ import { applySelection } from '@shared/preview/editable.js'
 import { version } from '@shared/selectors.js'
 import './styles.css'
 import './user-management.css'
+import './navigation.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
@@ -81,48 +82,201 @@ const PATH = {
 }
 
 function header() {
-  $('#header').innerHTML =
-    '<div class="container">' +
-    '<a class="brand" href="/" data-link aria-label="NewVent 관리자">' +
-    '<span class="brand-mark"></span><span>New<b>Vent</b></span></a>' +
-    '<nav class="nav" aria-label="주 메뉴">' +
-    button('route', '이벤트 관리', 'data-route="admin"',
-      ['admin', 'editor', 'versions', 'create'].includes(ui.route) ? 'active' : '') +
-    button('route', '템플릿 라이브러리', 'data-route="templates"',
-      ui.route === 'templates' ? 'active' : '') +
-    button('route', '사용자 관리', 'data-route="users"',
-      ui.route === 'users' ? 'active' : '') +
-    button('route', 'RAG 품질', 'data-route="rag"',
-      ui.route === 'rag' ? 'active' : '') +
-    '</nav><div class="account">' +
-    (ui.logged
-      ? '<div id="admin-notifications"></div>' +
-        '<div class="admin-account-menu">' +
-          '<button type="button" class="admin-account-trigger" ' +
-            'data-account-toggle ' +
-            'aria-label="운영자님 계정 메뉴" ' +
-            'aria-expanded="false" ' +
-            'aria-controls="admin-account-dropdown">' +
-            '<span class="avatar">' + icon('user') + '</span>' +
-            '<span class="name">운영자님</span>' +
-            '<span class="admin-account-chevron">' +
-              icon('chevron') +
-            '</span>' +
-          '</button>' +
-          '<div id="admin-account-dropdown" ' +
-            'class="admin-account-dropdown" hidden>' +
-            '<button type="button" class="admin-account-logout" ' +
-              'data-act="logout">' +
-              icon('logout') +
-              '<span>로그아웃</span>' +
-            '</button>' +
-          '</div>' +
-        '</div>'
-      : button('route', '로그인', 'data-route="login"', 'btn soft sm')) +
-    '</div></div>'
+  const profile = ui.adminProfile
+  const name = profile?.name || '이름 미연동'
+  const loginId = profile?.loginId || '아이디 미연동'
 
-    adminNotifications.mount(ui.logged)
+  const accountMenu = ui.logged
+    ? '<div class="admin-account-menu">' +
+        '<button type="button" class="admin-account-trigger" ' +
+          'data-account-toggle ' +
+          'aria-label="운영자 계정 메뉴" ' +
+          'aria-expanded="false" ' +
+          'aria-controls="admin-account-dropdown">' +
+          '<span class="avatar">' + icon('user') + '</span>' +
+          '<span class="name">운영자님</span>' +
+          '<span class="admin-account-chevron">' +
+            icon('chevron') +
+          '</span>' +
+        '</button>' +
+
+        '<div id="admin-account-dropdown" ' +
+          'class="admin-account-dropdown" hidden>' +
+          '<div class="admin-account-profile">' +
+            '<div class="admin-account-profile-heading">' +
+              '<span class="admin-account-profile-avatar">' +
+                icon('user') +
+              '</span>' +
+              '<div class="admin-account-profile-identity">' +
+                '<strong>' + esc(name) + '</strong>' +
+                '<span class="admin-account-role">관리자</span>' +
+              '</div>' +
+            '</div>' +
+            '<p class="admin-account-login-id">' +
+              '로그인 ID · ' + esc(loginId) +
+            '</p>' +
+          '</div>' +
+
+          '<button type="button" class="admin-account-logout" ' +
+            'data-act="logout">' +
+            icon('logout') +
+            '<span>로그아웃</span>' +
+          '</button>' +
+        '</div>' +
+      '</div>'
+    : button(
+        'route',
+        '로그인',
+        'data-route="login"',
+        'btn soft sm'
+      )
+
+  const eventRoutes = [ 'admin', 'editor', 'versions', 'create', 'participants' ]
+  const activeRoute = eventRoutes.includes(ui.route)
+    ? 'admin'
+    : ui.route
+
+  const menus = [
+    {
+      route: 'admin',
+      title: '이벤트 관리',
+      description: '만들기부터 게시까지',
+    },
+    {
+      route: 'templates',
+      title: '템플릿 라이브러리',
+      description: '저장한 디자인 모아보기',
+    },
+    {
+      route: 'users',
+      title: '사용자 관리',
+      description: '회원 정보와 요금제',
+    },
+    {
+      route: 'rag',
+      title: 'RAG 품질',
+      description: 'AI 생성 품질 살펴보기',
+    },
+  ]
+
+  const menuItems = menus.map((menu) => `
+    <button
+      type="button"
+      class="admin-navigation-item"
+      data-act="route"
+      data-route="${menu.route}"
+      ${activeRoute === menu.route ? 'aria-current="page"' : ''}
+    >
+      <span class="admin-navigation-title">${menu.title}</span>
+      <span class="admin-navigation-description">
+        ${menu.description}
+      </span>
+    </button>
+  `).join('')
+
+  $('#header').innerHTML = `
+  <div class="container admin-header-container">
+    <div class="admin-header-main">
+      <a
+        class="brand brand-image"
+        href="/"
+        data-link
+        aria-label="NewVent 관리자"
+      >
+        <img
+          class="brand-logo"
+          src="/assets/newvent-logo.png"
+          alt="NEWVENT"
+        >
+      </a>
+
+      <div class="admin-header-tools">
+        ${accountMenu}
+
+        ${ui.logged ? `
+          <span
+            class="admin-navigation-divider"
+            aria-hidden="true"
+          ></span>
+
+          <div id="admin-notifications"></div>
+
+          <button
+            type="button"
+            class="admin-navigation-toggle"
+            data-admin-menu-toggle
+            aria-label="전체 메뉴 열기"
+            aria-expanded="false"
+            aria-controls="admin-navigation-panel"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+
+          <div
+            id="admin-navigation-panel"
+            class="admin-navigation-panel"
+            hidden
+          >
+            <div class="admin-navigation-container">
+              <nav
+                class="admin-navigation-list"
+                aria-label="주 메뉴"
+              >
+                ${menuItems}
+              </nav>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  </div>
+`
+
+  adminNotifications.mount(ui.logged)
 }
+
+function setAdminMenu(open, restoreFocus = false) {
+  const trigger = document.querySelector('[data-admin-menu-toggle]')
+  const panel = document.getElementById('admin-navigation-panel')
+
+  if (!trigger || !panel) return
+
+  if (open) closeAccountMenu()
+
+  panel.hidden = !open
+  trigger.setAttribute('aria-expanded', String(open))
+  trigger.setAttribute('aria-label', open ? '전체 메뉴 닫기' : '전체 메뉴 열기')
+
+  if (restoreFocus) trigger.focus()
+}
+
+document.addEventListener('click', (event) => {
+  const toggle = event.target.closest('[data-admin-menu-toggle]')
+  const panel = document.getElementById('admin-navigation-panel')
+
+  if (toggle) { setAdminMenu(toggle.getAttribute('aria-expanded') !== 'true'); return }
+  if (!panel || panel.hidden) return
+
+  // 메뉴 선택 후에는 기존 data-act="route" 처리로 화면 이동.
+  if ( event.target.closest('.admin-navigation-item') || !panel.contains(event.target)) { setAdminMenu(false) }
+})
+
+document.addEventListener('keydown', (event) => {
+  const panel = document.getElementById('admin-navigation-panel')
+
+  if (event.key === 'Escape' && panel && !panel.hidden) { setAdminMenu(false, true) }
+})
+
+document.addEventListener('focusin', (event) => {
+  const trigger = document.querySelector('[data-admin-menu-toggle]')
+  const panel = document.getElementById('admin-navigation-panel')
+
+  if (!panel || panel.hidden) return
+
+  if ( !panel.contains(event.target) && !trigger?.contains(event.target)) { setAdminMenu(false) }
+})
 
 function render(scroll = false) {
   state.observers.forEach((x) => x.disconnect())
