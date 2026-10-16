@@ -239,3 +239,482 @@ body:not(.editing-workspace) #app {
   gap: 16px;
   margin-bottom: 22px;
 }
+
+/* 이벤트 / 휴지통 탭 */
+.admin-events-page .event-list-tabs {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-events-page .event-list-tabs > .event-list-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 44px;
+  padding: 8px 0 14px;
+  margin: 0;
+
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+
+  color: #9ba3b1;
+  cursor: pointer;
+}
+
+/* 개수 배지 */
+.admin-events-page .event-list-tab__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 26px;
+  height: 23px;
+  padding: 0 8px;
+
+  border-radius: 999px;
+  background: #9ba3b1;
+  color: #fff;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+/* 선택된 메뉴 */
+.admin-events-page .event-list-tab[aria-pressed="true"] {
+  color: #343e50;
+}
+
+.admin-events-page
+.event-list-tab[aria-pressed="true"]
+.event-list-tab__count {
+  background: #343e50;
+}
+
+/* 선택된 메뉴 밑줄 */
+.admin-events-page .event-list-tab::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  height: 2px;
+  border-radius: 2px;
+  background: transparent;
+}
+
+.admin-events-page
+.event-list-tab[aria-pressed="true"]::after {
+  background: #343e50;
+}
+
+/* 필터 팝업 */
+.admin-events-page .event-filter .event-filter-popup {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 320px;
+  min-width: 0;
+  max-width: calc(100vw - 32px);
+  height: auto;
+  min-height: 0;
+  padding: 16px;
+  gap: 14px;
+  border-radius: 12px;
+  overflow: visible;
+}
+
+/* 제목과 초기화 */
+.admin-events-page .event-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5eaf2;
+}
+
+.admin-events-page .event-filter-header h3 {
+  margin: 0;
+  color: #344359;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.admin-events-page .event-filter-header .event-filter-reset {
+  position: static;
+  float: none;
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #8491a6;
+  font-size: 12px;
+}
+
+/* 필터 그룹 */
+.admin-events-page .event-filter-popup .event-filter-group {
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.admin-events-page .event-filter-group legend {
+  margin: 0 0 8px;
+  padding: 0;
+  color: #344359;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* 상태 선택 */
+.admin-events-page .event-filter-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.admin-events-page .event-filter-option {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.admin-events-page .event-filter-option > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+.admin-events-page .event-filter-option > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 30px;
+  padding: 6px 2px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: #f3f5f9;
+  box-shadow: none;
+  color: #8190a5;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.admin-events-page .event-filter-option > input:checked + span {
+  border-color: transparent;
+  background: #edf5ff;
+  color: #3484e8;
+  font-weight: 700;
+}
+
+.admin-events-page .event-filter-option > input:focus-visible + span {
+  outline: 2px solid #3484e8;
+  outline-offset: 2px;
+}
+
+/* 하단 버튼 */
+.admin-events-page .event-filter-actions {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding-top: 11px;
+  border-top: 1px solid #e5eaf2;
+}
+
+.admin-events-page .event-filter-actions > button {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  height: auto;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.admin-events-page .event-filter-actions > .event-filter-apply {
+  flex: 1.5;
+}
+
+/* 기간 선택 입력칸 */
+.admin-events-page .event-range-picker {
+  position: relative;
+  min-width: 0;
+}
+
+.admin-events-page .event-range-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  padding: 9px 10px;
+
+  border: 1px solid #e5eaf2;
+  border-radius: 8px;
+  background: #fff;
+  color: #344359;
+
+  font-family: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.admin-events-page .event-range-trigger__arrow {
+  color: #8491a6;
+}
+
+/* 달력은 필터 왼쪽으로 표시 */
+.admin-events-page .event-range-calendar {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 30px);
+  left: auto;
+  z-index: 100;
+
+  box-sizing: border-box;
+  width: 260px;
+  padding: 12px;
+
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgb(20 41 68 / 14%);
+}
+
+.admin-events-page .event-range-calendar[hidden] {
+  display: none;
+}
+
+/* 월 제목과 이동 버튼 */
+.admin-events-page .event-range-calendar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.admin-events-page .event-range-calendar__header strong {
+  color: #344359;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-events-page .event-range-calendar__nav {
+  display: flex;
+  gap: 4px;
+}
+
+.admin-events-page .event-range-calendar__nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 26px;
+  height: 26px;
+  min-height: 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #65748b;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* 날짜 */
+.admin-events-page .event-range-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  row-gap: 3px;
+}
+
+.admin-events-page .event-range-weekday {
+  padding-bottom: 8px;
+  color: #8491a6;
+  font-size: 10px;
+  text-align: center;
+}
+
+.admin-events-page .event-range-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 0;
+  height: 29px;
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #344359;
+
+  font-family: inherit;
+  font-size: 11px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.admin-events-page .event-range-day span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.admin-events-page .event-range-day.is-between {
+  background: #edf5ff;
+}
+
+.admin-events-page .event-range-day.is-start {
+  background: linear-gradient(
+    to right, transparent 50%, #edf5ff 50%
+  );
+}
+
+.admin-events-page .event-range-day.is-end {
+  background: linear-gradient(
+    to left, transparent 50%, #edf5ff 50%
+  );
+}
+
+.admin-events-page .event-range-day.is-start.is-end {
+  background: transparent;
+}
+
+.admin-events-page .event-range-day.is-start span,
+.admin-events-page .event-range-day.is-end span {
+  background: #3484e8;
+  color: #fff;
+  font-weight: 700;
+}
+
+.admin-events-page .event-range-day:hover span {
+  box-shadow: inset 0 0 0 1px #3484e8;
+}
+
+/* 작은 선택 완료 버튼 */
+.admin-events-page .event-range-calendar__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid #e5eaf2;
+}
+
+.admin-events-page [data-range-hint] {
+  color: #8491a6;
+  font-size: 10px;
+}
+
+.admin-events-page .event-range-done {
+  width: auto;
+  min-height: 26px;
+  margin: 0;
+  padding: 5px 9px;
+
+  border: 0;
+  border-radius: 6px;
+  background: #3989ec;
+  color: #fff;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-events-page .event-range-done:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* 작은 화면에서는 입력칸 아래로 표시 */
+@media (max-width: 680px) {
+  .admin-events-page .event-range-calendar {
+    top: calc(100% + 8px);
+    right: 0;
+    left: auto;
+    max-width: 100%;
+  }
+}
+
+/* 시작일 / 종료일 두 칸 */
+.admin-events-page .event-range-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-events-page .event-range-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.admin-events-page .event-range-field__label {
+  color: #8491a6;
+  font-size: 11px;
+}
+
+.admin-events-page .event-range-trigger[aria-expanded="true"] {
+  border-color: #3484e8;
+}

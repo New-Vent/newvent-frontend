@@ -334,10 +334,13 @@
   .reward-row .icon-btn{justify-self:end}}
 
   /* 이벤트 통계: 도넛 + 가로 요약 */
-.event-overview {
+.admin-events-page {
   --overview-published: #5aa5f5;
   --overview-draft: #c9d9ef;
   --overview-ended: #faadb3;
+}
+
+.event-overview {
   --overview-track: #edf3fb;
   --overview-ink: #30425c;
   --overview-muted: #8998ab;
@@ -667,4 +670,413 @@
   font-size: 13px;
   font-weight: 400;
   line-height: 1.7;
+}
+
+/* 그래프와 동일한 색상을 사용하는 목록 상태 배지 */
+/* 게시 상태: 연한 회색 테두리 + 은은한 배경 + 알약형 */
+.admin-events-page .admin-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 4px 11px;
+  border: 1px solid #e6ecf3;
+  border-radius: 999px;
+
+  background: color-mix(in srgb, var(--status-color) 13%, white);
+  color: #34445b;
+
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.admin-status-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--status-color);
+}
+
+/* 진행 중 */
+.admin-status-badge.is-live {
+  --status-color: #4487d7;
+}
+
+/* 미게시 */
+.admin-status-badge.is-draft {
+  --status-color: #8097b6;
+}
+
+/* 종료 */
+.admin-status-badge.is-ended {
+  --status-color: #d77d91;
+}
+
+/* 오픈 예정 */
+.admin-status-badge.is-upcoming {
+  --status-color: #9b7bc7;
+}
+
+/* 이벤트 제목 + D-day */
+.admin-events-page .admin-table .admin-event-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 제목 옆 작은 D-day 태그 */
+.admin-events-page .admin-closing-dday {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  border: 1px solid #e4c69d;
+  border-radius: 999px;
+  padding: 3px 9px;
+  background: transparent;
+  color: #ba792c;
+
+  font-size: 0.7em;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+
+  letter-spacing: 0.5px;
+}
+
+/* 마감 임박 이벤트의 왼쪽 표시선 */
+.admin-events-page .admin-table tr.is-closing-soon > td:first-child {
+  position: relative;
+}
+
+.admin-events-page .admin-table tr.is-closing-soon > td:first-child::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  left: 0;
+
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #dca859;
+}
+
+/* 이벤트 목록 관리 버튼 */
+.admin-events-page .event-management-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+}
+
+.admin-events-page .event-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 0 0 108px;
+  gap: 7px;
+  width: 108px;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 9px;
+  border: 1px solid #dfe7f1;
+  border-radius: 6px;
+  background: #fff;
+  color: #3d4c63;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-events-page .event-action-button > span:last-child {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.admin-events-page .event-action-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding-right: 7px;
+  border-right: 1px solid #dfe7f1;
+}
+
+.admin-events-page .event-action-button svg,
+.admin-events-page .event-more svg {
+  display: block;
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-events-page .event-action-button.is-edit .event-action-icon {
+  color: #397ecc;
+}
+
+.admin-events-page .event-action-button.is-publish {
+  border-color: #4488d8;
+  background: #4488d8;
+  color: #fff;
+}
+
+.admin-events-page .is-publish .event-action-icon {
+  border-color: rgb(255 255 255 / 30%);
+}
+
+.admin-events-page .event-action-button.is-unpublish {
+  border-color: #e0e7f0;
+  background: #f2f5f9;
+  color: #657b97;
+}
+
+.admin-events-page .event-action-button:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.admin-events-page .event-action-button:disabled {
+  border-color: #e6ebf2;
+  background: #f5f7fa;
+  color: #97a3b4;
+  cursor: not-allowed;
+}
+
+.admin-events-page .event-action-button:disabled .event-action-icon {
+  border-color: #e1e7ef;
+  color: inherit;
+}
+
+/* 더보기 */
+.admin-events-page .event-more {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.admin-events-page .event-more > summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 32px;
+  border-radius: 6px;
+  color: #8491a4;
+  list-style: none;
+  cursor: pointer;
+}
+
+.admin-events-page .event-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-events-page .event-more > summary:hover,
+.admin-events-page .event-more[open] > summary {
+  background: #edf2f8;
+  color: #455a76;
+}
+
+.admin-events-page .event-more-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  width: 160px;
+  padding: 5px;
+  border: 1px solid #e1e8f1;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(36 53 76 / 12%);
+}
+
+.admin-events-page .event-more-item,
+.admin-events-page .event-more-popup > a {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #3d4c63;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-events-page .event-more-item:hover:not(:disabled),
+.admin-events-page .event-more-popup > a:hover {
+  background: #f3f6fa;
+}
+
+.admin-events-page .event-more-item.is-danger {
+  margin-top: 4px;
+  border-top: 1px solid #edf0f5;
+  border-radius: 0;
+  color: #c95671;
+}
+
+.admin-events-page .event-more-item:disabled {
+  color: #a0aabb;
+  cursor: not-allowed;
+}
+
+/* 표 가장자리에서도 팝업이 잘리지 않도록 */
+.admin-events-page #admin-results {
+  overflow: visible;
+}
+
+@media (pointer: coarse) {
+  .admin-events-page .event-action-button,
+  .admin-events-page .event-more > summary,
+  .admin-events-page .event-more-item,
+  .admin-events-page .event-more-popup > a {
+    min-height: 44px;
+  }
+
+  .admin-events-page .event-more > summary {
+    width: 44px;
+  }
+}
+
+/* 이벤트 제목은 남은 공간, 상태·관리는 일정한 너비 */
+.admin-events-page .admin-event-list-table {
+  table-layout: fixed;
+  min-width: 1100px;
+}
+
+/* 이벤트 / 상태 / 기간 / 관리 */
+.admin-events-page .admin-event-list-table .event-title-column {
+  width: 34%;
+}
+
+.admin-events-page .admin-event-list-table .event-status-column {
+  width: 14%;
+}
+
+.admin-events-page .admin-event-list-table .event-period-column {
+  width: 26%;
+}
+
+.admin-events-page .admin-event-list-table .event-actions-column {
+  width: 26%;
+}
+
+.admin-events-page .admin-event-list-table .event-period-cell {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: #52627a;
+}
+
+.admin-events-page .admin-event-list-table th,
+.admin-events-page .admin-event-list-table td {
+  vertical-align: middle;
+  text-align: left;
+}
+
+.admin-events-page .admin-event-list-table td:first-child {
+  overflow-wrap: anywhere;
+}
+
+.admin-events-page .admin-event-list-table .event-management-actions {
+  margin: 0;
+}
+
+/* 휴지통: 이벤트 / 기간 / 마지막 변경 / 관리 */
+.admin-events-page .admin-trash-table {
+  table-layout: fixed;
+  min-width: 820px;
+}
+
+.admin-events-page .trash-event-column {
+  width: 34%;
+}
+
+.admin-events-page .trash-updated-column {
+  width: 14%;
+}
+
+.admin-events-page .trash-period-column {
+  width: 26%;
+}
+
+.admin-events-page .trash-actions-column {
+  width: 26%;
+}
+
+.admin-events-page .admin-trash-table th,
+.admin-events-page .admin-trash-table td {
+  vertical-align: middle;
+  text-align: left;
+}
+
+.admin-events-page .admin-trash-table td:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* 휴지통의 이벤트 기간 · 마지막 변경 */
+.admin-events-page .admin-trash-table td:nth-child(2) small,
+.admin-events-page .admin-trash-table td:nth-child(3) small {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: #52627a;
+}
+
+/* 복구: 편집하기처럼 흰 배경 + 파란 아이콘 */
+.admin-events-page .event-action-button.is-restore {
+  background: #fff;
+  border-color: #bccde2;
+  color: #34445c;
+  font-weight: 600;
+}
+
+.admin-events-page .is-restore .event-action-icon {
+  color: #3175c8;
+  border-color: #c9d7e8;
+}
+
+/* 영구 삭제: 같은 모양에 붉은색 적용 */
+.admin-events-page .event-action-button.is-purge {
+  background: #fbeef2;
+  border-color: #dfa9b9;
+  color: #b83f62;
+  font-weight: 600;
+}
+
+.admin-events-page .is-purge .event-action-icon {
+  border-color: #b83f62;
+  border-color: #e2b8c5;
+}
+
+.admin-events-page .event-action-button.is-restore:hover {
+  background: #f1f6fd;
+  border-color: #8faed3;
+}
+.admin-events-page .event-action-button.is-purge:hover {
+  background: #f7e0e8;
+  border-color: #cc8098;
 }

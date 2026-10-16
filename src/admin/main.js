@@ -7,6 +7,8 @@ import { validSnapshot } from '@shared/preview/document.js'
 import { applySelection } from '@shared/preview/editable.js'
 import { version } from '@shared/selectors.js'
 import './styles.css'
+import './event-filters.css'
+import { initAdminEventFilters } from './views/event-filters.js'
 import './user-management.css'
 import './navigation.css'
 import { $, esc } from '@shared/dom.js'
@@ -264,9 +266,21 @@ document.addEventListener('click', (event) => {
 })
 
 document.addEventListener('keydown', (event) => {
-  const panel = document.getElementById('admin-navigation-panel')
+  if (event.target.id !== 'admin-search') return
+  if (event.key !== 'Enter' || event.isComposing) return
 
-  if (event.key === 'Escape' && panel && !panel.hidden) { setAdminMenu(false, true) }
+  event.preventDefault()
+
+  ui.adminQuery = event.target.value.trim()
+  ui.adminPage = 1
+
+  render()
+
+  const input = document.getElementById('admin-search')
+  if (input) {
+    input.focus()
+    input.setSelectionRange(input.value.length, input.value.length)
+  }
 })
 
 document.addEventListener('focusin', (event) => {
@@ -307,6 +321,8 @@ function render(scroll = false) {
   document.title += ' | NewVent'
   if (scroll) window.scrollTo(0, 0)
 }
+
+initAdminEventFilters(() => render())
 
 const router = createRouter(ROUTES, (match) => {
   ui.route = match.name
@@ -587,15 +603,6 @@ document.addEventListener('input',ev=>{
   if(k==='grade'&&ui.creation.grade==='NORMAL'&&ui.creation.templateId==='tpl-3')ui.creation.templateId=null;
   if($('#create-error'))$('#create-error').textContent='';
   if($('#creation-summary'))$('#creation-summary').innerHTML=creationSummary();return;
- }
- if(ev.target.id==='admin-search'){
-  ui.adminQuery=ev.target.value; ui.adminPage=1
-  const pos=ev.target.selectionStart
-  render()
-  // 렌더로 입력창이 새로 그려지므로 포커스와 커서를 되돌려준다.
-  const next=$('#admin-search')
-  if(next){next.focus();try{next.setSelectionRange(pos,pos)}catch{}}
-  return
  }
  const k=ev.target.dataset.field;if(k&&Object.hasOwn(LABELS,k)&&ui.role==='admin'&&!requestPending()){currentDraft().snapshot[k]=ev.target.value;updateEditor();}
 });
