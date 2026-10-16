@@ -198,3 +198,41 @@
   position: relative;
   z-index: 1;
 }
+
+/* ── ⑥ 내용 영역의 배경 사진 — 글자를 지키는 판 ──────────────
+ *
+ * ★★ 혜택 · 참여방법 · 쿠폰 · 경품처럼 **자기 배경이 없는 영역**이 대상이다.
+ *   항목이 그냥 <li> 라서 사진을 깔면 검은 글씨가 맨몸으로 올라간다(실측 1.2 대).
+ *   전에는 그래서 배경을 막아 뒀는데, 막는 게 아니라 되게 만드는 쪽이 맞았다.
+ *
+ * ★ 풀이는 02-page-bg.css 와 같다. **글자색은 안 건드리고 바탕만 밝게** 만든다.
+ *   판이 밝으면 원래 쓰던 어두운 글씨가 그대로 읽힌다 — 테마가 몇 벌이든 같이 먹는다.
+ *
+ * ★ 직계 자식에 깐다. 항목 하나하나가 아니다 —
+ *   백지 생성은 `.block-header` + `ul`, 템플릿은 `.block-header` + `.benefits-grid` 라
+ *   둘을 한 선택자로 덮는 자리가 직계 자식뿐이다. 사진은 그 사이와 바깥 여백으로 보인다.
+ *
+ * ★★ hero · 강조 · 참여 버튼은 **뺀다.** 그 셋은 자기 색 배경이 있어서 판이 필요 없고,
+ *   글자색은 톤(on-light · on-dark · on-mixed)이 이미 쥐고 있다 — 거기에 판을 깔면
+ *   재서 맞춰 둔 대비가 어긋난다(블록 배경 12곳 최악 6.38).
+ * ★ 유의사항은 배경 자체를 막는다(Asset.NO_SURFACE).
+ */
+[data-block]:has(> .ev-asset-bg):not([data-block="hero"], [data-block="highlight"], [data-block="cta"])
+  > :not(.ev-asset) {
+  background: rgba(255, 255, 255, .90);
+  backdrop-filter: blur(3px);
+  border-radius: var(--ev-radius-md, 14px);
+  padding: 14px 16px;
+}
+
+/* ★★ 판이 밝아졌으니 그 위의 글자도 어두워야 한다.
+ *   theme-punch · theme-aurora 처럼 **어두운 판을 전제로 흰 글씨**를 쓰는 테마가 있다 —
+ *   판만 바꾸고 글자를 안 바꾸면 흰 판에 흰 글씨가 된다(02-page-bg.css 에서 겪었다).
+ * ★ [data-block] 을 세 번 적은 건 특이도용이다. 테마가 0,3,1 로 집고 있다.
+ * ★ 강조색(--ev-primary 로 칠한 배지 · 숫자)은 안 건드린다 — :is 에 든 것만이다. */
+[data-block][data-block][data-block]:has(> .ev-asset-bg):not([data-block="hero"], [data-block="highlight"], [data-block="cta"])
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  color: var(--ev-text-main, #0f172a);
+  -webkit-text-fill-color: var(--ev-text-main, #0f172a);
+  text-shadow: none;
+}

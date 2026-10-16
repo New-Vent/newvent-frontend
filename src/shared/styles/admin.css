@@ -187,6 +187,16 @@
 .server-foot .chat-asset-x:hover{background:#b91c1c}
 .server-foot .chat-asset-x:disabled{opacity:.5;cursor:default}
 .server-foot .chat-assets-hint{flex:1 1 160px;min-width:0;font-weight:500}
+/* ★★ 페이지에 들어간 사진 — 흐리게 + 체크. 이 두 규칙이 **없어서** 화면이 하나도 안 변했다.
+   마크업만 올라가고 CSS 를 같이 안 올린 자리다(제보: "썸네일이 계속 보인다"). */
+.server-foot .chat-asset.is-used{opacity:.55;border-color:var(--green,#168467)}
+.server-foot .chat-asset-used{position:absolute;right:0;bottom:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;background:var(--green,#168467);color:#fff;border-radius:6px 0 0 0}
+.server-foot .chat-asset-used svg{width:11px;height:11px}
+/* ★ 접어 둔 사진 — 번호 + 체크만 남긴다. 누르면 그 사진만 펼친다.
+   자리를 46px 에서 한 줄 높이로 줄이는 게 핵심이다 — 입력칸 위가 사진으로 막히지 않는다 */
+.server-foot .chat-asset-done{display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 7px;border:1px solid var(--green,#168467);border-radius:999px;background:color-mix(in oklab,var(--green,#168467) 12%,transparent);color:var(--green,#168467);font-size:11px;font-weight:700;line-height:1;cursor:pointer}
+.server-foot .chat-asset-done:hover{background:color-mix(in oklab,var(--green,#168467) 22%,transparent)}
+.server-foot .chat-asset-done svg{width:11px;height:11px}
 .server-regen{margin-top:14px}
 .server-regen summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)}
 .server-regen[open] summary{margin-bottom:10px}
