@@ -164,6 +164,9 @@
 .sorder-name{flex:1;font-size:13px;font-weight:600}
 .sorder-moves{display:flex;gap:4px}
 .sorder-moves .btn{padding:2px 7px;min-height:0;font-size:11px;line-height:1.6}
+.sorder-items{flex-basis:100%;display:grid;gap:4px;padding:4px 0 0 24px}
+.sorder-subitem{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}
+.sorder-subitem .btn{padding:0 7px;min-height:0;font-size:12px;line-height:1.6}
 
 /* 페이지 배치 고르기 — 아이콘 버튼 줄 (편집 화면 · 생성 화면). 흐린 것은 지금 못 고르는 배치다 */
 .lay-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px}
