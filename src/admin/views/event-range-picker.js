@@ -14,8 +14,10 @@ const readRange = (picker) => Object.fromEntries(
 function syncRangeLabels(picker) {
   FIELDS.forEach(({ name }) => {
     const value = inputOf(picker, name).value
-    picker.querySelector(`[data-range-${name}-label]`).textContent =
-      value ? formatDate(value) : '날짜 선택'
+    const label = picker.querySelector(`[data-range-${name}-label]`)
+
+    label.textContent = value ? formatDate(value) : '날짜 선택'
+    label.classList.toggle('is-placeholder', !value)
   })
 }
 
@@ -41,7 +43,10 @@ export function eventRangePicker(from = '', to = '', { creation = false } = {}) 
       <span class="event-range-field__label">${label}</span>
       <button type="button" class="event-range-trigger"
         data-range-open="${name}" aria-label="${label} 선택" aria-expanded="false">
-        <span data-range-${name}-label>
+        <span
+          data-range-${name}-label
+          class="${values[name] ? '' : 'is-placeholder'}"
+        >
           ${values[name] ? esc(formatDate(values[name])) : '날짜 선택'}
         </span>
         <span class="event-range-trigger__arrow" aria-hidden="true">▾</span>

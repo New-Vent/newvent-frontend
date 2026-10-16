@@ -1861,3 +1861,9 @@ body:not(.editing-workspace) #app {
   outline: 2px solid #3985e7;
   outline-offset: 3px;
 }
+
+/* 날짜 선택 전 안내 문구 */
+.create-container .event-range-trigger .is-placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}

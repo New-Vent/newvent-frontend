@@ -253,8 +253,8 @@ function createInitialCreation() {
   return {
     step: 1,
     title: '',
-    start: DEMO_DATE,
-    end: '2026-10-06',
+    start: '',
+    end: '',
     grade: '',
     mode: 'template',
     templateId: null,
