@@ -2,10 +2,10 @@ import './notifications.css'
 import './account-menu.css'
 import { createAdminNotifications } from './notifications.js'
 import { CONTENT_FIELDS, LABELS } from '@shared/constants.js'
-import { showSelectedTarget } from '@shared/editor-state.js'
+import { showSelectedTarget, requestFor, requestPending, updateEditor } from '@shared/editor-state.js'
 import { validSnapshot } from '@shared/preview/document.js'
-import { applySelection } from '@shared/preview/editable.js'
-import { version } from '@shared/selectors.js'
+import { applySelection, refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
+import { version, eventById, currentEvent, currentDraft } from '@shared/selectors.js'
 import './styles.css'
 import './event-filters.css'
 import { initAdminEventFilters } from './views/event-filters.js'
@@ -24,9 +24,6 @@ import { modal, closeModal, ask } from '@shared/ui/modal.js'
 import { hydrate } from '@shared/preview/frame.js'
 import { createRouter } from '@shared/router.js'
 import { setNavigate } from '@shared/navigate.js'
-import { eventById, currentEvent, currentDraft } from '@shared/selectors.js'
-import { requestFor, requestPending, updateEditor } from '@shared/editor-state.js'
-import { refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 
 import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
 import { markPick } from '@shared/layouts.js'
@@ -34,9 +31,9 @@ import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRend
 import { templatesView, ensureLibrary, resetLibrary, handleLibraryClick, handleLibrarySubmit, handleLibraryChange } from './views/templates.js'
 import { participantsView, ensureParticipants, resetParticipants, handleParticipantsClick, handleParticipantsSubmit, handleParticipantsChange } from './views/participants.js'
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
-import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
+import { editorView, refreshChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
-import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary, handleCreateRagClick, ensureCreationTemplates, selectCreationTemplate } from './views/create.js'
+import { creationView, startCreation, validateCreation, finishCreation, refreshCreationSummary, handleCreateRagClick, ensureCreationTemplates, selectCreationTemplate } from './views/create.js'
 import { loginView } from './views/login.js'
 import { usersView, ensureAdminUsers, resetAdminUsers, handleUsersClick, handleUsersChange, handleUsersSubmit } from './views/user-management.js'
 import { dashboardRagView, ensureDashboard } from './views/dashboard-rag.js'
@@ -265,21 +262,26 @@ document.addEventListener('click', (event) => {
   if ( event.target.closest('.admin-navigation-item') || !panel.contains(event.target)) { setAdminMenu(false) }
 })
 
+// 생성 제목의 Enter 제출 방지와 관리자 검색을 한 곳에서 처리한다.
 document.addEventListener('keydown', (event) => {
-  if (event.target.id !== 'admin-search') return
-  if (event.key !== 'Enter' || event.isComposing) return
+  const input = event.target
+  if (!(input instanceof HTMLInputElement) || event.key !== 'Enter') return
 
+  if (input.matches('#create-basics [data-create="title"]')) {
+    event.preventDefault()
+    return
+  }
+
+  if (input.id !== 'admin-search' || event.isComposing) return
   event.preventDefault()
-
-  ui.adminQuery = event.target.value.trim()
+  ui.adminQuery = input.value.trim()
   ui.adminPage = 1
-
   render()
 
-  const input = document.getElementById('admin-search')
-  if (input) {
-    input.focus()
-    input.setSelectionRange(input.value.length, input.value.length)
+  const search = document.getElementById('admin-search')
+  if (search) {
+    search.focus()
+    search.setSelectionRange(search.value.length, search.value.length)
   }
 })
 
@@ -570,9 +572,9 @@ document.addEventListener('click', (ev) => {
   if(a==='create-back'){ui.creation.step=1;render(true);return;}
   if(a==='create-layout'){ui.creation.layout=b.dataset.layout||'';markPick(document.querySelector('#create-layouts'),ui.creation.layout);return;}
   if(a==='create-mode'){ui.creation.mode=b.dataset.mode;render();document.querySelector('[data-act="create-mode"][data-mode="'+ui.creation.mode+'"]')?.focus({preventScroll:true});return;}
-  if (a === 'select-create-template') { selectCreationTemplate(b.dataset.template, () => render()); return }
+  if (a === 'select-create-template') { selectCreationTemplate(b.dataset.template); return }
   if (a === 'retry-create-templates') { if (ui.creation) { ui.creation.templatesState = null; render() } return }
-  if (a === 'retry-create-template-detail') { if (ui.creation?.templateId) { selectCreationTemplate(ui.creation.templateId, () => render()) } return }
+  if (a === 'retry-create-template-detail') { if (ui.creation?.templateId) { selectCreationTemplate(ui.creation.templateId) } return }
   if(a==='finish-create'){finishCreation();return;}
   // ── 만들기 화면 RAG (기획 단계) — 모달이라 다시 그리지 않는다 ──
   if(handleCreateRagClick(a,b))return;
@@ -601,8 +603,8 @@ document.addEventListener('input',ev=>{
   const k=ev.target.dataset.create;
   if(['title','start','end','grade','prompt'].includes(k))ui.creation[k]=ev.target.value;
   if(k==='grade'&&ui.creation.grade==='NORMAL'&&ui.creation.templateId==='tpl-3')ui.creation.templateId=null;
-  if($('#create-error'))$('#create-error').textContent='';
-  if($('#creation-summary'))$('#creation-summary').innerHTML=creationSummary();return;
+  refreshCreationSummary()
+  return;
  }
  const k=ev.target.dataset.field;if(k&&Object.hasOwn(LABELS,k)&&ui.role==='admin'&&!requestPending()){currentDraft().snapshot[k]=ev.target.value;updateEditor();}
 });

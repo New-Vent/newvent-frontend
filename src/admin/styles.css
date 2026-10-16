@@ -478,12 +478,12 @@ body:not(.editing-workspace) #app {
 }
 
 /* 기간 선택 입력칸 */
-.admin-events-page .event-range-picker {
+:is(.admin-events-page, .create-container) .event-range-picker {
   position: relative;
   min-width: 0;
 }
 
-.admin-events-page .event-range-trigger {
+:is(.admin-events-page, .create-container) .event-range-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -506,12 +506,12 @@ body:not(.editing-workspace) #app {
   min-width: 0;
 }
 
-.admin-events-page .event-range-trigger__arrow {
+:is(.admin-events-page, .create-container) .event-range-trigger__arrow {
   color: #8491a6;
 }
 
 /* 달력은 필터 왼쪽으로 표시 */
-.admin-events-page .event-range-calendar {
+:is(.admin-events-page, .create-container) .event-range-calendar {
   position: absolute;
   top: 0;
   right: calc(100% + 30px);
@@ -528,30 +528,30 @@ body:not(.editing-workspace) #app {
   box-shadow: 0 10px 28px rgb(20 41 68 / 14%);
 }
 
-.admin-events-page .event-range-calendar[hidden] {
+:is(.admin-events-page, .create-container) .event-range-calendar[hidden] {
   display: none;
 }
 
 /* 월 제목과 이동 버튼 */
-.admin-events-page .event-range-calendar__header {
+:is(.admin-events-page, .create-container) .event-range-calendar__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
 }
 
-.admin-events-page .event-range-calendar__header strong {
+:is(.admin-events-page, .create-container) .event-range-calendar__header strong {
   color: #344359;
   font-size: 12px;
   font-weight: 700;
 }
 
-.admin-events-page .event-range-calendar__nav {
+:is(.admin-events-page, .create-container) .event-range-calendar__nav {
   display: flex;
   gap: 4px;
 }
 
-.admin-events-page .event-range-calendar__nav button {
+:is(.admin-events-page, .create-container) .event-range-calendar__nav button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -570,20 +570,20 @@ body:not(.editing-workspace) #app {
 }
 
 /* 날짜 */
-.admin-events-page .event-range-calendar__grid {
+:is(.admin-events-page, .create-container) .event-range-calendar__grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   row-gap: 3px;
 }
 
-.admin-events-page .event-range-weekday {
+:is(.admin-events-page, .create-container) .event-range-weekday {
   padding-bottom: 8px;
   color: #8491a6;
   font-size: 10px;
   text-align: center;
 }
 
-.admin-events-page .event-range-day {
+:is(.admin-events-page, .create-container) .event-range-day {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -605,7 +605,7 @@ body:not(.editing-workspace) #app {
   cursor: pointer;
 }
 
-.admin-events-page .event-range-day span {
+:is(.admin-events-page, .create-container) .event-range-day span {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -615,39 +615,39 @@ body:not(.editing-workspace) #app {
   border-radius: 50%;
 }
 
-.admin-events-page .event-range-day.is-between {
+:is(.admin-events-page, .create-container) .event-range-day.is-between {
   background: #edf5ff;
 }
 
-.admin-events-page .event-range-day.is-start {
+:is(.admin-events-page, .create-container) .event-range-day.is-start {
   background: linear-gradient(
     to right, transparent 50%, #edf5ff 50%
   );
 }
 
-.admin-events-page .event-range-day.is-end {
+:is(.admin-events-page, .create-container) .event-range-day.is-end {
   background: linear-gradient(
     to left, transparent 50%, #edf5ff 50%
   );
 }
 
-.admin-events-page .event-range-day.is-start.is-end {
+:is(.admin-events-page, .create-container) .event-range-day.is-start.is-end {
   background: transparent;
 }
 
-.admin-events-page .event-range-day.is-start span,
-.admin-events-page .event-range-day.is-end span {
+:is(.admin-events-page, .create-container) .event-range-day.is-start span,
+:is(.admin-events-page, .create-container) .event-range-day.is-end span {
   background: #3484e8;
   color: #fff;
   font-weight: 700;
 }
 
-.admin-events-page .event-range-day:hover span {
+:is(.admin-events-page, .create-container) .event-range-day:hover span {
   box-shadow: inset 0 0 0 1px #3484e8;
 }
 
 /* 작은 선택 완료 버튼 */
-.admin-events-page .event-range-calendar__footer {
+:is(.admin-events-page, .create-container) .event-range-calendar__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -658,12 +658,12 @@ body:not(.editing-workspace) #app {
   border-top: 1px solid #e5eaf2;
 }
 
-.admin-events-page [data-range-hint] {
+:is(.admin-events-page, .create-container) [data-range-hint] {
   color: #8491a6;
   font-size: 10px;
 }
 
-.admin-events-page .event-range-done {
+:is(.admin-events-page, .create-container) .event-range-done {
   width: auto;
   min-height: 26px;
   margin: 0;
@@ -681,7 +681,7 @@ body:not(.editing-workspace) #app {
   cursor: pointer;
 }
 
-.admin-events-page .event-range-done:disabled {
+:is(.admin-events-page, .create-container) .event-range-done:disabled {
   opacity: 0.45;
   cursor: default;
 }
@@ -697,25 +697,25 @@ body:not(.editing-workspace) #app {
 }
 
 /* 시작일 / 종료일 두 칸 */
-.admin-events-page .event-range-fields {
+:is(.admin-events-page, .create-container) .event-range-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.admin-events-page .event-range-field {
+:is(.admin-events-page, .create-container) .event-range-field {
   display: flex;
   flex-direction: column;
   gap: 7px;
   min-width: 0;
 }
 
-.admin-events-page .event-range-field__label {
+:is(.admin-events-page, .create-container) .event-range-field__label {
   color: #8491a6;
   font-size: 11px;
 }
 
-.admin-events-page .event-range-trigger[aria-expanded="true"] {
+:is(.admin-events-page, .create-container) .event-range-trigger[aria-expanded="true"] {
   border-color: #3484e8;
 }
 
@@ -1142,4 +1142,722 @@ body:not(.editing-workspace) #app {
   .template-library-page .template-card-manage .btn {
     min-height: 44px;
   }
+}
+
+/* 이벤트 생성 단계: 작고 간결하게 */
+.create-container .create-progress {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin: 34px 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.create-container .create-progress li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #98a2b3;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.create-container .create-progress li > span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #e2e7ef;
+  border-radius: 50%;
+  background: #fff;
+  color: #98a2b3;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.create-container .create-progress li.current {
+  color: #347bd6;
+  font-weight: 600;
+}
+
+.create-container .create-progress li.current > span {
+  border-color: #4088e5;
+  background: #4088e5;
+  color: #fff;
+}
+
+.create-container .create-progress li.done {
+  color: #607b9d;
+}
+
+.create-container .create-progress li.done > span {
+  border-color: #dce7f5;
+  background: #edf4fd;
+  color: #4088e5;
+}
+
+.create-container .create-progress svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* 이벤트 생성 하단 버튼 */
+.create-container .create-actions {
+  align-items: center;
+  gap: 10px;
+  padding-top: 18px;
+}
+
+.create-container .create-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: none;
+  width: auto;
+  min-height: 36px;
+  margin: 0;
+  padding: 9px 16px;
+  border: 1px solid #dfe6ef;
+  border-radius: 9px;
+  background: #fff;
+  color: #64748b;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  box-shadow: none;
+  transform: none;
+}
+
+.create-container .create-actions .btn:hover:not(:disabled) {
+  background: #f5f8fc;
+  border-color: #cbd8e8;
+}
+
+.create-container .create-actions .btn.primary {
+  margin-left: auto;
+  padding-inline: 18px;
+  border-color: #4088e5;
+  background: #4088e5;
+  color: #fff;
+}
+
+.create-container .create-actions .btn.primary:hover:not(:disabled) {
+  border-color: #3279d5;
+  background: #3279d5;
+}
+
+.create-container .create-actions .btn svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+}
+
+.create-container .create-actions .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (pointer: coarse) {
+  .create-container .create-actions .btn {
+    min-height: 44px;
+  }
+}
+
+/* 이벤트 생성 요약 — 티켓 */
+.creation-summary .event-ticket {
+  min-width: 0;
+  color: #344359;
+}
+
+.event-ticket__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.event-ticket__eyebrow {
+  color: #3985e7;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+}
+
+.event-ticket__label,
+.event-ticket__sub {
+  display: block;
+  color: #8792a5;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.event-ticket__title {
+  padding: 23px 0 18px;
+  border-bottom: 1px dashed #dde4ee;
+}
+
+.creation-summary .event-ticket__title h3 {
+  margin: 6px 0 0;
+  color: #344359;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.creation-summary .event-ticket .is-empty {
+  color: #9ca6b6;
+  font-weight: 400;
+}
+
+.event-ticket__period {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 22px 0;
+}
+
+.event-ticket__date {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.event-ticket__date:last-child {
+  text-align: right;
+}
+
+.event-ticket__date strong {
+  color: #344359;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-ticket__duration {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: #eef5ff;
+  color: #387bd1;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.event-ticket__details {
+  margin: 0;
+  padding: 0;
+}
+
+.event-ticket__row {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px dashed #dde4ee;
+}
+
+.event-ticket__row dt {
+  margin: 0;
+  color: #8792a5;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.creation-summary .event-ticket__row dd {
+  min-width: 0;
+  margin: 0;
+  color: #344359;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.event-ticket__row dd small {
+  display: block;
+  margin-top: 4px;
+  color: #8792a5;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.event-ticket__ready {
+  margin-top: 24px;
+}
+
+.event-ticket__ready-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #8792a5;
+  font-size: 12px;
+}
+
+.event-ticket__ready-heading strong {
+  color: #3985e7;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.event-ticket__progress {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #edf1f6;
+}
+
+.event-ticket__progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #3985e7;
+}
+
+.event-ticket__ready p {
+  margin: 10px 0 0;
+  color: #8792a5;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* 기본 정보 입력 박스 높이 줄이기 */
+.create-container #create-basics.panel-body {
+  padding-block: 20px;
+}
+
+.create-container #create-basics .create-actions {
+  margin-top: 11px;
+}
+
+/* 생성 화면의 기간 입력 */
+.create-container .create-period {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.create-container .create-period > legend {
+  color: inherit;
+}
+
+.create-container .event-range-trigger {
+  min-height: 40px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* 생성 화면에서는 입력칸 아래에 달력 표시 */
+.create-container .event-range-calendar {
+  top: calc(100% + 8px);
+  right: 0;
+  left: auto;
+  width: 260px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 참여 대상 화살표를 안쪽으로 이동 */
+.create-container #create-basics select[data-create="grade"] {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2375869b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  background-size: 16px;
+}
+
+/* 날짜 입력과 달력 글꼴 통일 */
+.create-container .create-period,
+.create-container .create-period button,
+.create-container .create-period span,
+.create-container .create-period strong {
+  font-family: inherit;
+}
+
+/* '이벤트 기간'을 이벤트명·참여 대상 제목과 통일 */
+.create-container .create-period > legend {
+  margin-bottom: 10px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: inherit;
+}
+
+/* 시작일·종료일 보조 라벨 */
+.create-container .event-range-field__label {
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* 달력이 카드 경계에서 잘리지 않도록 */
+.create-container .create-layout > div > .panel,
+.create-container #create-basics {
+  overflow: visible;
+}
+
+/* 날짜에 적용했던 강제 글꼴 제거 */
+#create-basics .event-range-trigger,
+#create-basics [data-range-from-label],
+#create-basics [data-range-to-label] {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+}
+
+/* 이벤트명: 제목 옆에 짧은 설명 */
+.create-container #create-basics .create-name-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+}
+
+.create-container #create-basics .create-field-label,
+.create-container #create-basics .create-period > legend {
+  margin: 0;
+  padding: 0;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.create-container #create-basics .create-title-help {
+  color: #8491a3;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.create-container #create-basics .create-name-field > input {
+  width: 100%;
+  min-width: 0;
+}
+
+.create-container #create-basics .create-period {
+  margin-top: 28px;
+}
+
+/* 참여 등급: 선택창과 안내를 나란히 */
+.create-container #create-basics .create-grade-field {
+  margin-top: 26px;
+}
+
+.create-container #create-basics .create-grade-field > label {
+  display: block;
+}
+
+.create-container #create-basics .create-grade-row {
+  display: grid;
+  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.create-container #create-basics .create-grade-row > select {
+  width: 100%;
+  min-width: 0;
+}
+
+.create-container #create-basics .create-grade-help {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  color: #8491a3;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+.create-container #create-basics .create-info-icon {
+  flex-shrink: 0;
+}
+
+/* 이벤트명: 제목 ↔ 입력창 */
+.create-container #create-basics .create-name-field {
+  gap: 3px;
+}
+
+.create-container #create-basics .create-name-heading {
+  margin-bottom: 5px;
+}
+
+/* 이벤트 기간: 제목 ↔ 날짜 영역 */
+.create-container #create-basics .create-period > legend {
+  margin-bottom: 8px;
+}
+
+/* 시작일·종료일: 라벨 ↔ 날짜 입력창 */
+.create-container #create-basics .event-range-field {
+  gap: 6px;
+}
+
+/* 참여 등급: 제목 ↔ 선택창 */
+.create-container #create-basics .create-grade-field {
+  gap: 3px;
+}
+
+.create-container #create-basics .create-grade-field > label {
+  margin-bottom: 5px;
+}
+
+/* 양쪽 카드 높이 맞추기 */
+.create-container .create-layout {
+  align-items: stretch;
+}
+
+.create-container .create-layout > div {
+  display: flex;
+  min-width: 0;
+}
+
+.create-container .create-layout > div > .panel {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.create-container .create-layout > .creation-summary {
+  align-self: stretch;
+  height: auto;
+  max-height: none;
+}
+
+/* 좁은 화면에서는 세로로 배치 */
+@media (max-width: 600px) {
+  .create-container #create-basics .create-grade-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* 기본 정보 화면: 카드 안쪽 높이 사용 */
+.create-container .create-layout > div > .panel:has(#create-basics) {
+  display: flex;
+  flex-direction: column;
+}
+
+.create-container #create-basics {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 20px;
+}
+
+/* 입력 영역의 최소 높이 */
+.create-container #create-basics > .create-name-field,
+.create-container #create-basics > .create-period,
+.create-container #create-basics > .create-grade-field {
+  min-height: min-content;
+}
+
+/* 구분선과 버튼을 함께 카드 하단으로 */
+.create-container #create-basics > .create-actions {
+  flex-shrink: 0;
+  margin: 0;
+  padding-top: 18px;
+  border-top: 1px solid #e5eaf2;
+}
+
+.create-container #create-basics > .create-error:empty {
+  display: none;
+}
+
+/* 선택 전: 회색 안내 */
+.create-container #create-event-grade:invalid {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* 선택 후: 입력값 색 */
+.create-container #create-event-grade:valid,
+.create-container #create-event-grade option {
+  color: #475569;
+}
+
+/* 입력 영역 크기 */
+.create-container #create-basics > .create-name-field,
+.create-container #create-basics > .create-period,
+.create-container #create-basics > .create-grade-field {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+}
+
+/* 입력칸 끝 ↔ 다음 항목 제목: 동일한 간격 */
+.create-container #create-basics > .create-period,
+.create-container #create-basics > .create-grade-field {
+  margin-top: 28px;
+}
+
+/* 버튼과 구분선은 하단 유지 */
+.create-container #create-basics > .create-actions {
+  margin-top: auto;
+}
+
+/* 등급 선택창과 하단 구분선 사이 최소 여백 */
+.create-container #create-basics > .create-grade-field {
+  padding-bottom: 24px;
+}
+
+/* 초안 보기 팝업 크기 */
+#overlay .modal:has(.rag-board-head) {
+  width: min(820px, calc(100vw - 40px));
+  max-height: 80vh;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* 설명과 검색창 */
+#overlay .modal .rag-board-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+#overlay .modal .rag-board-head > .helper {
+  flex: 1 1 280px;
+  margin: 0;
+  color: #8491a3;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+#overlay .modal .rag-board-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#overlay .modal .rag-board-search input {
+  width: 190px;
+  min-width: 0;
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid #e1e7ef;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+/* 목록 간격 */
+#overlay .modal .rag-rec-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid #edf0f5;
+}
+
+#overlay .modal .rag-rec-text {
+  flex: 1;
+  min-width: 0;
+}
+
+#overlay .modal .rag-rec-title {
+  margin: 0 0 5px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+#overlay .modal .rag-rec-desc {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+/* 미리보기·담기 버튼 크기 통일 */
+#overlay .modal .rag-rec-row > .btn,
+#overlay .modal .rag-board-search > .btn {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+/* 미리보기 버튼 테두리 */
+#overlay .modal .rag-rec-row > [data-act="create-rag-preview"] {
+  border: 1px solid #dfe6ef;
+  background: #fff;
+  color: #64748b;
+}
+
+#overlay .modal .rag-rec-row > [data-act="create-rag-preview"]:hover {
+  background: #f6f8fb;
+}
+
+/* 기존 생성 화면 버튼과 색 맞추기 */
+#overlay .modal .rag-rec-row > [data-act="create-rag-copy"] {
+  border: 1px solid #4088e5;
+  background: #4088e5;
+  color: #fff;
+}
+
+/* 초안 보기: 스크롤바까지 둥근 모서리 안으로 제한 */
+#overlay .modal:has(.rag-board-head) {
+  border-radius: 16px;
+  clip-path: inset(0 round 16px);
+}
+
+/* 미리보기 하단 보조 버튼 */
+.btn.preview-list-btn,
+.btn.preview-close-btn {
+  min-height: 36px;
+  padding: 8px 16px;
+  border: 1px solid #d5deea;
+  border-radius: 8px;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn.preview-list-btn {
+  background: #fff;
+  color: #42536b;
+}
+
+.btn.preview-close-btn {
+  background: #edf1f6;
+  color: #42536b;
+}
+
+.btn.preview-list-btn:hover,
+.btn.preview-close-btn:hover {
+  border-color: #b7c6d9;
+  background: #e4ebf4;
+}
+
+.btn.preview-list-btn:focus-visible,
+.btn.preview-close-btn:focus-visible {
+  outline: 2px solid #3985e7;
+  outline-offset: 3px;
 }
