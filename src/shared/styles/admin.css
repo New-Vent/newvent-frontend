@@ -770,8 +770,10 @@
 .admin-events-page .event-management-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  width: max-content;
+  width: 100%;
+  min-width: 0;
 }
 
 .admin-events-page .event-action-button {
@@ -960,8 +962,9 @@
 
 /* 이벤트 제목은 남은 공간, 상태·관리는 일정한 너비 */
 .admin-events-page .admin-event-list-table {
+  width: 100%;
   table-layout: fixed;
-  min-width: 1100px;
+  min-width: 0;
 }
 
 /* 이벤트 / 상태 / 기간 / 관리 */
@@ -1005,8 +1008,9 @@
 
 /* 휴지통: 이벤트 / 기간 / 마지막 변경 / 관리 */
 .admin-events-page .admin-trash-table {
+  width: 100%;
   table-layout: fixed;
-  min-width: 820px;
+  min-width: 0;
 }
 
 .admin-events-page .trash-event-column {
@@ -1079,4 +1083,24 @@
 .admin-events-page .event-action-button.is-purge:hover {
   background: #f7e0e8;
   border-color: #cc8098;
+}
+
+/* 좁은 화면에서도 셀 내용이 표 밖으로 밀리지 않도록 */
+.admin-events-page .admin-event-list-table th,
+.admin-events-page .admin-event-list-table td,
+.admin-events-page .admin-trash-table th,
+.admin-events-page .admin-trash-table td {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* 좁은 화면에서는 셀 여백도 축소 */
+@media (max-width: 1100px) {
+  .admin-events-page .admin-event-list-table th,
+  .admin-events-page .admin-event-list-table td,
+  .admin-events-page .admin-trash-table th,
+  .admin-events-page .admin-trash-table td {
+    padding-inline: 12px;
+  }
 }

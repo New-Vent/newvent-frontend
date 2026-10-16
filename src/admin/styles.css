@@ -718,3 +718,428 @@ body:not(.editing-workspace) #app {
 .admin-events-page .event-range-trigger[aria-expanded="true"] {
   border-color: #3484e8;
 }
+
+/* ── 템플릿 라이브러리: 제목 ── */
+
+.template-library-page .admin-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.template-library-page .admin-create-event {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.template-library-page .admin-list-section {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* ── 탭 + 검색 ── */
+
+.template-library-page .template-library-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 0;
+  border-bottom: 1px solid #e1e7ef;
+}
+
+.template-library-page .template-library-toolbar .admin-list-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 32px;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.template-library-page .template-library-toolbar .admin-list-tabs button {
+  position: relative;
+  flex: none;
+  margin: 0;
+  padding: 14px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #98a2b3;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  box-shadow: none;
+}
+
+.template-library-page .template-library-toolbar .admin-list-tabs button:hover,
+.template-library-page .template-library-toolbar .admin-list-tabs button.active {
+  color: #344054;
+}
+
+.template-library-page .template-library-toolbar .admin-list-tabs button.active::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: #344054;
+}
+
+.template-library-page .template-library-toolbar .search {
+  display: flex;
+  align-items: center;
+  flex: 0 1 290px;
+  gap: 10px;
+  width: 290px;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 0 10px auto;
+  padding: 10px 14px;
+  border: 1px solid #e1e7ef;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.template-library-page .template-library-toolbar .search svg {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color: #98a2b3;
+}
+
+.template-library-page .template-library-toolbar .search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #47566d;
+  font-size: 12px;
+}
+
+/* ── 총 개수 + 비활성 체크 ── */
+
+.template-library-page .template-library-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin: 17px 0 15px;
+}
+
+.template-library-page .template-library-meta .admin-result-count {
+  margin: 0;
+  color: #7c899c;
+  font-size: 12px;
+}
+
+.template-library-page .template-library-meta .admin-result-count strong {
+  color: #344054;
+  font-weight: 700;
+}
+
+.template-library-page .template-library-meta .template-inactive-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 0 auto;
+  color: #758297;
+  font-size: 12px;
+}
+
+.template-library-page .template-inactive-toggle input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: #4088e5;
+}
+
+/* ── 카드 + 썸네일 ── */
+
+.template-library-page .template-library-grid {
+  gap: 20px;
+}
+
+.template-library-page .template-card {
+  min-width: 0;
+  gap: 10px;
+  border-color: #e3e9f1;
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.template-library-page .template-thumb-stage {
+  flex: none;
+  min-width: 0;
+  margin: -18px -18px 2px;
+  padding: 12px;
+  border-bottom: 1px solid #edf0f5;
+  background: #fff;
+}
+
+.template-library-page .template-thumb-stage .template-thumb {
+  width: 100%;
+  margin: 0;
+  aspect-ratio: 720 / 440;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #e3e8ef;
+}
+
+.template-library-page .template-card-head {
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.template-library-page .template-card-head h3 {
+  color: #29394f;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.template-library-page .template-card-head .badge {
+  padding: 4px 7px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+
+.template-library-page .template-card-desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-height: 40px;
+  margin: 2px 0 0;
+  color: #758297;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.template-library-page .template-card-key {
+  display: none;
+}
+
+/* ── 카드 버튼 ── */
+
+.template-library-page .template-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 13px;
+  border-top: 1px solid #edf0f5;
+}
+
+.template-library-page .template-card-actions .btn {
+  min-height: 36px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.template-library-page .template-preview-button,
+.template-preview-modal .template-preview-button {
+  border: 1px solid #dce4ef;
+  background: #fff;
+  color: #56677e;
+  box-shadow: none;
+}
+
+.template-library-page .template-preview-button:hover,
+.template-preview-modal .template-preview-button:hover {
+  border-color: #c8d7eb;
+  background: #f5f8fc;
+}
+
+.template-library-page .template-use-button {
+  flex: 1;
+  border: 1px solid #4088e5;
+  background: #4088e5;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.template-library-page .template-use-button:hover:not(:disabled) {
+  border-color: #3279d5;
+  background: #3279d5;
+}
+
+.template-library-page .template-card-manage {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 0;
+}
+
+.template-library-page .template-card-manage .btn {
+  min-height: 30px;
+  padding: 4px 2px;
+  border: 0;
+  background: transparent;
+  color: #758297;
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.template-library-page .template-card-manage .btn:hover:not(:disabled) {
+  color: #4088e5;
+}
+
+.template-library-page .template-card .btn:disabled {
+  opacity: 1;
+  border-color: #e5eaf1;
+  background: #f2f5f9;
+  color: #8a96a7;
+  cursor: not-allowed;
+}
+
+.template-library-page .template-card-manage .btn:disabled {
+  background: transparent;
+}
+
+/* ── 상세보기 ── */
+
+.template-preview-modal.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(840px, 96vw);
+  max-width: 840px;
+  max-height: 92dvh;
+  overflow: hidden;
+}
+
+.template-preview-modal .modal-head,
+.template-preview-modal .modal-actions,
+.template-preview-modal > .helper {
+  flex: none;
+}
+
+.template-preview-modal .modal-head h2 {
+  font-size: 18px;
+}
+
+.template-preview-scroll {
+  flex: 1;
+  min-height: 0;
+  margin-top: 14px;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid #e2e7ef;
+  border-radius: 10px;
+  background: #fff;
+  overscroll-behavior: contain;
+}
+
+.template-preview-canvas {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+  overflow: hidden;
+  background: #fff;
+}
+
+.template-preview-canvas iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 720px !important;
+  max-width: none;
+  min-height: 440px;
+  border: 0;
+  transform-origin: top left;
+}
+
+/* ── 빈 상태 / 로딩 / 오류 ── */
+
+.template-library-page .admin-list-section > .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 220px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.template-library-page .admin-list-section > .empty > svg {
+  display: block;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: 0 0 4px;
+  color: #8badd7;
+}
+
+.template-library-page .admin-list-section > .empty > strong {
+  margin: 0;
+  color: #344054;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.template-library-page .admin-list-section > .empty > p {
+  max-width: 520px;
+  margin: 0;
+  color: #8291a5;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+/* ── 반응형 ── */
+
+@media (max-width: 760px) {
+  .template-preview-scroll {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .template-library-page .template-library-toolbar {
+    gap: 4px;
+  }
+
+  .template-library-page .template-library-toolbar .search {
+    order: -1;
+    flex-basis: 100%;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+
+  .template-library-page .template-library-toolbar .search input {
+    font-size: 16px;
+  }
+
+  .template-library-page .template-library-toolbar .admin-list-tabs {
+    gap: 26px;
+  }
+}
+
+@media (pointer: coarse) {
+  .template-library-page .template-card-actions .btn,
+  .template-library-page .template-card-manage .btn {
+    min-height: 44px;
+  }
+}

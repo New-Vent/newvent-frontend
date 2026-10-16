@@ -131,6 +131,62 @@ function resetLibrary() {
 
 /* ───────────────────────── 목록 ───────────────────────── */
 
+/** 카드 썸네일 전용: 첫 배너를 동일한 크기로 표시 */
+function libraryPreviewHtml(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const hero = doc.querySelector('[data-block="hero"]')
+
+  // 첫 배너가 없는 등록 템플릿은 원래 화면을 표시
+  if (!hero) return html
+
+  // 테마가 붙은 기존 컨테이너는 유지하고 첫 배너만 남김
+  const container = hero.closest('.ev-container')
+
+  if (container) {
+    container.replaceChildren(hero)
+  } else {
+    doc.body.replaceChildren(hero)
+  }
+
+  const style = doc.createElement('style')
+  style.textContent = `
+    html,
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 720px !important;
+      overflow: hidden !important;
+    }
+
+    .ev-container {
+      box-sizing: border-box !important;
+      width: 720px !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    [data-block="hero"] {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      max-width: none !important;
+      height: 440px !important;
+      min-height: 440px !important;
+      max-height: 440px !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      overflow: hidden !important;
+      align-content: center !important;
+    }
+  `
+
+  doc.body.appendChild(style)
+  return doc.body.outerHTML
+}
+
 /**
  * 카드 위쪽 썸네일.
  *
@@ -147,7 +203,7 @@ function cardThumb(t) {
   if (!html) {
     return '<div class="thumb template-thumb empty-thumb" aria-hidden="true">' + icon('grid') + '</div>'
   }
-  return '<div class="thumb template-thumb">' + serverFrame(html, esc(t.name) + ' 미리보기') + '</div>'
+  return '<div class="thumb template-thumb">' + serverFrame(libraryPreviewHtml(html), t.name + ' 미리보기') + '</div>'
 }
 
 function templateCard(t) {
@@ -157,7 +213,9 @@ function templateCard(t) {
   const code = esc(t.templateKey)
 
   return '<article class="card template-card' + (t.active ? '' : ' inactive') + '">'
+    + '<div class="template-thumb-stage">'  
     + cardThumb(t)
+    + '</div>'
     + '<div class="template-card-head"><h3>' + esc(t.name) + '</h3>'
     + '<span class="badge' + (mine ? ' pink' : '') + '">' + (mine ? '내 등록' : '기본 제공') + '</span>'
     + (t.active ? '' : '<span class="badge amber">비활성</span>')
@@ -165,14 +223,19 @@ function templateCard(t) {
     // ★ 수식어를 `empty` 로 쓰면 안 된다 — components.css 의 빈 상태 박스(.empty)가
     //   같이 걸려서 설명 한 줄에 55px 패딩이 붙는다.
     + '<p class="template-card-desc' + (t.description ? '' : ' no-desc') + '">'
-    + esc(t.description || '설명이 없어요.') + '</p>'
+    + esc(
+      (t.description || '')
+        .replace(/\btemplate_[\w-]+\.html\b/gi, '')
+        .trim() || '설명이 없어요.',
+    ) + '</p>'
     + '<small class="template-card-key">' + code + '</small>'
     + '<div class="row template-card-actions">'
-    + button('template-preview', '미리보기', 'data-code="' + code + '"', 'btn sm')
+    + button('template-preview', '상세보기', 'data-code="' + code + '"', 'btn sm template-preview-button')
     + button('template-use', '이 템플릿으로 만들기',
         'data-code="' + code + '" ' + (!USE_SERVER ? SERVER_ONLY : t.active ? '' : INACTIVE_USE),
-        'btn sm primary')
-    + button('template-edit', '정보 수정', 'data-code="' + code + '" ' + manage, 'btn sm soft')
+        'btn sm template-use-button') + '</div>'
+    + '<div class="template-card-manage">'
+    + button('template-edit', '정보 수정', 'data-code="' + code + '" ' + manage, 'btn sm ghost')
     + button('template-deactivate', '비활성화', 'data-code="' + code + '" '
         + (manage || (t.active ? '' : 'disabled title="이미 비활성이에요"')), 'btn sm ghost')
     + '</div></article>'
@@ -226,7 +289,7 @@ function templatesView() {
     '<label class="template-inactive-toggle"><input type="checkbox" id="library-inactive"'
     + (s.includeInactive ? ' checked' : '') + '> 비활성 템플릿도 보기</label>'
 
-  return '<div class="container">'
+  return '<div class="container template-library-page">'
     + '<div class="page-heading spread admin-page-heading">'
     + '<div class="admin-page-title">'
     +   '<div class="admin-page-title__path">'
@@ -256,13 +319,25 @@ function templatesView() {
     )
     + '</div>'
     + '<section class="admin-list-section">'
-    + '<div class="section-title spread"><div class="admin-list-tabs">' + tabs + '</div>'
-    + '<form id="library-search-form" class="search" role="search">' + icon('search')
-    + '<input id="library-search" aria-label="템플릿 검색" placeholder="템플릿 이름 검색 후 엔터" '
-    + 'maxlength="100" value="' + esc(s.keyword) + '"></form></div>'
+    + '<div class="template-library-toolbar">'
+    +   '<div class="admin-list-tabs">' + tabs + '</div>'
+    +   '<form id="library-search-form" class="search" role="search">'
+    +     icon('search')
+    +     '<input id="library-search"'
+    +       ' aria-label="템플릿 검색"'
+    +       ' placeholder="템플릿 이름 검색 후 엔터"'
+    +       ' maxlength="100"'
+    +       ' value="' + esc(s.keyword) + '">'
+    +   '</form>'
+    + '</div>'
+    + '<div class="template-library-meta">'
+    + '<p class="admin-result-count" aria-live="polite">'
+    + (s.status === 'ready'
+      ? '총 <strong>' + (d?.totalElements ?? 0) + '</strong>개 템플릿'
+      : '불러오는 중…')
+    + '</p>'
     + inactiveToggle
-    + '<p class="admin-result-count">'
-    + (s.status === 'ready' ? (d?.totalElements ?? 0) + '개 템플릿' : '불러오는 중…') + '</p>'
+    + '</div>'
     + grid()
     + (s.status === 'ready' ? pager(d?.page ?? 0, d?.totalPages ?? 1) : '')
     + '<p class="review-note">템플릿은 <strong>본인 이벤트의 저장된 버전</strong>으로만 등록해요. '
@@ -280,9 +355,12 @@ async function openPreview(code) {
     const html = s.thumbs[code] ?? (await loadTemplatePreview(code)).html
     modal((t?.name || code) + ' · 템플릿 미리보기',
       '<p class="helper">읽기 전용 · 기간과 참여 링크는 비어 있어요. 이벤트를 만들면 채워집니다.</p>'
-      + '<div class="version-preview-frame">' + serverFrame(html, (t?.name || code) + ' 미리보기') + '</div>',
-      button('close', '닫기', '', 'btn primary'), true)
-    document.querySelector('#overlay .modal')?.classList.add('version-preview-modal')
+      + '<div class="template-preview-scroll">'
+      + '<div class="template-preview-canvas">'
+      + serverFrame(html, (t?.name || code) + ' 미리보기')
+      + '</div></div>',
+      button('close', '닫기', '', 'btn template-preview-button'), true)
+    document.querySelector('#overlay .modal')?.classList.add('template-preview-modal')
   } catch (e) {
     toast(e?.message || '템플릿 미리보기를 불러오지 못했어요.')
   }
