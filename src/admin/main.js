@@ -33,7 +33,7 @@ import { participantsView, ensureParticipants, resetParticipants, handleParticip
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
 import { editorView, refreshChat, addChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
-import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary, handleCreateRagClick } from './views/create.js'
+import { creationView, startCreation, creationError, validateCreation, finishCreation, creationSummary, handleCreateRagClick, ensureCreationTemplates, selectCreationTemplate } from './views/create.js'
 import { loginView } from './views/login.js'
 import { usersView, ensureAdminUsers, resetAdminUsers, handleUsersClick, handleUsersChange, handleUsersSubmit } from './views/user-management.js'
 import { dashboardRagView, ensureDashboard } from './views/dashboard-rag.js'
@@ -138,6 +138,8 @@ function render(scroll = false) {
   if (ui.route === 'users') ensureAdminUsers(() => render())
   if (ui.route === 'rag') ensureDashboard(() => render())
   if (ui.route === 'participants') ensureParticipants(ui.activeId, () => render())
+  if (ui.route === 'create') ensureCreationTemplates(() => render())
+
   // 서버 모드 편집 · 버전 이력 화면은 목업 화면 대신 서버 화면이다 (views/server-editor.js · server-versions.js)
   const serverView = USE_SERVER && { editor: serverEditorView, versions: serverVersionsView }[ui.route]
   if (serverView) ensureServerEditor(ui.activeId, () => render())
@@ -398,7 +400,9 @@ document.addEventListener('click', (ev) => {
   if(a==='create-back'){ui.creation.step=1;render(true);return;}
   if(a==='create-layout'){ui.creation.layout=b.dataset.layout||'';markPick(document.querySelector('#create-layouts'),ui.creation.layout);return;}
   if(a==='create-mode'){ui.creation.mode=b.dataset.mode;render();document.querySelector('[data-act="create-mode"][data-mode="'+ui.creation.mode+'"]')?.focus({preventScroll:true});return;}
-  if(a==='select-create-template'){   if(b.getAttribute('aria-disabled')==='true'){creationError('먼저 기본 정보에서 참여 대상을 우수 이상으로 바꿔주세요.');return;}   ui.creation.templateId=b.dataset.template;const y=window.scrollY;render();window.scrollTo(0,y);document.querySelector('[data-act="select-create-template"][data-template="'+ui.creation.templateId+'"]')?.focus({preventScroll:true});return;  }
+  if (a === 'select-create-template') { selectCreationTemplate(b.dataset.template, () => render()); return }
+  if (a === 'retry-create-templates') { if (ui.creation) { ui.creation.templatesState = null; render() } return }
+  if (a === 'retry-create-template-detail') { if (ui.creation?.templateId) { selectCreationTemplate(ui.creation.templateId, () => render()) } return }
   if(a==='finish-create'){finishCreation();return;}
   // ── 만들기 화면 RAG (기획 단계) — 모달이라 다시 그리지 않는다 ──
   if(handleCreateRagClick(a,b))return;

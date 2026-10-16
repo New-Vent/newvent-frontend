@@ -24,10 +24,190 @@ import { toast } from '@shared/ui/toast.js'
 import { modal } from '@shared/ui/modal.js'
 import { GRADES, REQUEST_MAX, TEMPLATE_KEYS, audienceOf, gradeLabel } from '@shared/grades.js'
 import { BLOCK_LABELS } from '@shared/constants.js'
-import { createEvent, loadAdminEvents, loadSimilarVersions, loadVersion, loadVersions, startGenerate, USE_SERVER } from '@shared/repo.js'
+import { createEvent, loadAdminEvents, loadSimilarVersions, loadVersion, loadVersions, startGenerate, USE_SERVER, loadBasicTemplates, loadBasicTemplate } from '@shared/repo.js'
 import { LAYOUTS, layoutPicks } from '@shared/layouts.js'
 import { resetAdminServer } from './list.js'
 import { openServerEditor } from './server-editor.js'
+
+function creationTemplates() {
+  if (!USE_SERVER) return CONFIGS
+
+  return (ui.creation?.serverTemplates || []).map((template) => {
+    const templateId = Object.keys(TEMPLATE_KEYS).find((id) => TEMPLATE_KEYS[id] === template.templateKey,)
+    const local = CONFIGS.find((cfg) => cfg.templateId === templateId)
+
+    return {
+      ...local,
+      ...template,
+      templateId: templateId || template.templateKey,
+      previewConfig: local,
+    }
+  })
+}
+
+export function ensureCreationTemplates(rerender) {
+  const c = ui.creation
+  if (!USE_SERVER || !c || c.step !== 2 || c.mode !== 'template') return
+  if (c.templatesState) return
+
+  c.templatesState = 'loading'
+
+  loadBasicTemplates()
+    .then((templates) => {
+      if (ui.creation !== c) return
+
+      c.serverTemplates = templates.filter((template) => template.active)
+      c.templatesState = 'done'
+    })
+    .catch((error) => {
+      if (ui.creation !== c) return
+
+      c.templatesState = 'error'
+      c.templatesError = error?.message || '템플릿 목록을 불러오지 못했어요.'
+    })
+    .finally(() => {
+      if (ui.creation === c && ui.route === 'create') rerender()
+    })
+}
+
+export async function selectCreationTemplate(templateId, rerender) {
+  const c = ui.creation
+  if (!c || c.submitting) return
+
+  const template = creationTemplates().find((item) => item.templateId === templateId,)
+  if (!template) return
+
+  if (templateId === 'tpl-3' && c.grade === 'NORMAL') { creationError('먼저 기본 정보에서 참여 대상을 우수 이상으로 바꿔주세요.'); return }
+
+  // 같은 카드를 다시 눌렀을 때 중복 조회하지 않는다.
+  if (c.templateId === templateId && ['loading', 'done'].includes(c.templateDetailState)) { return }
+
+  c.templateId = templateId
+  c.templateDetail = null
+  c.templateDetailError = null
+
+  if (!USE_SERVER) { updateCreationSelection();  return }
+
+  const requestId = (c.templateRequestId || 0) + 1
+  c.templateRequestId = requestId
+  c.templateDetailState = 'loading'
+
+  updateCreationSelection()
+
+  try {
+    const detail = await loadBasicTemplate(template.templateKey)
+
+    if (ui.creation !== c || c.templateRequestId !== requestId) return
+    if (!detail.active) throw new Error('사용할 수 없는 템플릿이에요.')
+
+    c.templateDetail = detail
+    c.templateDetailState = 'done'
+  } catch (error) {
+    if (ui.creation !== c || c.templateRequestId !== requestId) return
+
+    c.templateDetailState = 'error'
+    c.templateDetailError = error?.message || '템플릿 상세 정보를 불러오지 못했어요.'
+  }
+
+  if (ui.creation === c && ui.route === 'create') { updateCreationSelection() }
+}
+
+function creationTemplateCards(c) {
+  if (USE_SERVER && c.templatesState === 'error') {
+    return '<p role="alert">' + esc(c.templatesError) + '</p>'
+      + button('retry-create-templates', '다시 불러오기', '', 'btn sm')
+  }
+
+  if (USE_SERVER && c.templatesState !== 'done') {
+    return '<p class="helper">템플릿을 불러오는 중…</p>'
+  }
+
+  const templates = creationTemplates()
+  if (!templates.length) {
+    return '<p class="helper">사용 가능한 기본 템플릿이 없어요.</p>'
+  }
+
+  const cards = templates.map((cfg) => {
+    const selected = c.templateId === cfg.templateId
+    const restricted = cfg.templateId === 'tpl-3' && c.grade === 'NORMAL'
+    const preview = USE_SERVER ? cfg.previewConfig : cfg
+    const description = USE_SERVER
+      ? cfg.description || ''
+      : cfg.kind + ' · ' + policyLabel(cfg)
+
+    return '<button type="button" class="template-option '
+      + (selected ? 'selected' : '')
+      + '" data-act="select-create-template" data-template="'
+      + esc(cfg.templateId)
+      + '" aria-pressed="' + selected + '"'
+      + (restricted ? ' aria-disabled="true"' : '') + '>'
+      + (preview ? thumb(preview, baseSnapshot(preview)) : '')
+      + '<span class="name">' + esc(cfg.name)
+      + (selected ? ' <span class="badge pink">선택됨</span>' : '')
+      + '</span>'
+      + '<span class="create-template-detail">' + esc(description) + '</span>'
+      + (restricted
+        ? '<span class="template-restriction">참여 대상을 우수 이상으로 설정해주세요.</span>'
+        : '')
+      + '</button>'
+  }).join('')
+
+  return '<div class="template-grid create-template-grid">'
+    + cards + '</div>'
+    + '<div id="creation-template-detail" aria-live="polite">'
+    + creationTemplateDetail(c)
+    + '</div>'
+}
+
+function creationTemplateDetail(c) {
+  if (!USE_SERVER || !c.templateId) return ''
+
+  if (c.templateDetailState === 'loading') {
+    return '<p class="helper">선택한 템플릿을 확인하는 중…</p>'
+  }
+
+  if (c.templateDetailState === 'error') {
+    return '<p role="alert">' + esc(c.templateDetailError) + '</p>'
+      + button('retry-create-template-detail', '다시 확인', '', 'btn sm')
+  }
+
+  return c.templateDetail
+    ? '<p class="helper">' + esc(c.templateDetail.description || '') + '</p>'
+    : ''
+}
+
+function updateCreationSelection() {
+  const c = ui.creation
+  if (!c || ui.route !== 'create') return
+
+  document.querySelectorAll(
+    '[data-act="select-create-template"]',
+  ).forEach((card) => {
+    const selected = card.dataset.template === c.templateId
+
+    card.classList.toggle('selected', selected)
+    card.setAttribute('aria-pressed', String(selected))
+
+    const name = card.querySelector('.name')
+    name?.querySelectorAll('.badge').forEach((badge) => badge.remove())
+
+    if (selected && name) {
+      const badge = document.createElement('span')
+      badge.className = 'badge pink'
+      badge.textContent = '선택됨'
+      name.appendChild(badge)
+    }
+  })
+
+  const summary = document.getElementById('creation-summary')
+  if (summary) summary.innerHTML = creationSummary()
+
+  const detail = document.getElementById('creation-template-detail')
+  if (detail) detail.innerHTML = creationTemplateDetail(c)
+
+  const error = document.getElementById('create-error')
+  if (error) error.textContent = ''
+}
 
 function startCreation(){
  ui.creation={step:1,title:'',start:DEMO_DATE,end:'2026-10-06',grade:'NORMAL',mode:'template',templateId:null,prompt:''};
@@ -39,7 +219,10 @@ function startCreation(){
  * 항목마다 아이콘 · 라벨 · 값, 아래에 준비 상태(채운 항목 수)를 보여 준다.
  */
 function creationSummary(){
- const c=ui.creation,cfg=CONFIGS.find(x=>x.templateId===c.templateId);
+ const c = ui.creation
+ const cfg = USE_SERVER
+   ? c.templateDetail
+   : CONFIGS.find((x) => x.templateId === c.templateId)
  const grade=GRADES.find(g=>g.code===c.grade);
  const validPeriod=c.start&&c.end&&c.start<=c.end;
  const days=validPeriod?daysBetween(c.start,c.end)+1:0;
@@ -70,11 +253,7 @@ function creationView(){
   content='<section class="panel"><div class="panel-head">먼저 이벤트의 기본 정보를 알려주세요</div><form id="create-basics" class="panel-body fields" novalidate><label class="field">이벤트명 <span class="helper">관리 목록과 이벤트 페이지의 제목으로 사용해요.</span><input data-create="title" name="title" maxlength="100" required placeholder="예: 가을맞이 함께하는 응원 이벤트" value="'+esc(c.title)+'"></label><div class="field-pair"><label class="field">시작일<input data-create="start" type="date" required value="'+esc(c.start)+'"></label><label class="field">종료일<input data-create="end" type="date" required value="'+esc(c.end)+'"></label></div><label class="field">참여 대상<select data-create="grade">'+GRADES.map(g=>'<option value="'+g.code+'" '+(c.grade===g.code?'selected':'')+'>'+esc(g.label)+' · '+esc(g.desc)+'</option>').join('')+'</select><span class="helper">이 등급 이상인 회원만 참여할 수 있어요.</span></label><p id="create-error" class="create-error" role="alert"></p><div class="create-actions">'+button('cancel-create','취소')+'<button type="submit" class="btn primary">다음 · 시작 방식 선택 '+icon('arrow')+'</button></div></form></section>';
  }else{
   const modes='<div class="creation-methods">'+button('create-mode',icon('grid')+'<strong>템플릿으로 시작</strong><span>완성된 디자인을 고르고 내용을 다듬어요.</span>','data-mode="template" aria-pressed="'+(c.mode==='template')+'"','method-card '+(c.mode==='template'?'selected':''))+button('create-mode',icon('sparkle')+'<strong>AI로 새로 만들기 '+(USE_SERVER?'':'<small class="badge">체험</small>')+'</strong><span>원하는 이벤트를 설명하고 초안에서 시작해요.</span>','data-mode="ai" aria-pressed="'+(c.mode==='ai')+'"','method-card '+(c.mode==='ai'?'selected':''))+'</div>';
-  const templates='<div class="creation-section-title"><h3>어울리는 템플릿을 선택해주세요</h3><p>디자인을 선택한 다음 아래 버튼으로 편집을 시작해요.</p></div><div class="template-grid create-template-grid">'+CONFIGS.map(cfg=>{
-   const restricted=cfg.templateId==='tpl-3'&&c.grade==='NORMAL';
-   const selected=c.templateId===cfg.templateId;
-   return '<button class="template-option '+(selected?'selected':'')+'" data-act="select-create-template" data-template="'+cfg.templateId+'" aria-pressed="'+selected+'" '+(restricted?'aria-disabled="true"':'')+'>'+thumb(cfg,baseSnapshot(cfg))+'<span class="name">'+esc(cfg.name)+(selected?' <span class="badge pink">선택됨</span>':'')+'</span><span class="create-template-detail">'+esc(cfg.kind)+' · '+policyLabel(cfg)+'</span>'+(restricted?'<span class="template-restriction">참여 대상을 우수 이상으로 설정해주세요.</span>':'')+'</button>';
-  }).join('')+'</div>';
+  const templates='<div class="creation-section-title"><h3>어울리는 템플릿을 선택해주세요</h3><p>디자인을 선택한 다음 아래 버튼으로 편집을 시작해요.</p></div>'+ creationTemplateCards(c)
   const ai='<div class="creation-section-title"><h3>어떤 이벤트를 만들고 싶으신가요?</h3><p>목적, 원하는 분위기, 확정된 혜택 등을 자유롭게 적어주세요.</p></div><label class="field">이벤트 기획<textarea data-create="prompt" maxlength="'+REQUEST_MAX+'" rows="6" placeholder="예: 가을맞이 고객 감사 이벤트를 만들고 싶어요. 흰색과 분홍색으로 따뜻하게 표현하고, 혜택은 아직 정해지지 않았으니 임의로 추가하지 말아주세요.">'+esc(c.prompt)+'</textarea></label>' + (USE_SERVER ? '<div class="chips">' + button('create-rag-drafts', '초안 보기', '', 'chip') + button('create-rag-similar', '유사 이벤트 찾기', '', 'chip') + '</div>' : '') + '<div class="review-note">'+(USE_SERVER?'<strong>AI 가 요청을 읽고 페이지를 만듭니다.</strong><br>수십 초 걸릴 수 있어요. 요청에 없는 혜택은 만들지 않으니 확정된 혜택을 적어주세요. 최대 '+REQUEST_MAX+'자.':'<strong>AI 생성 흐름을 확인하는 체험 모드입니다.</strong><br>입력한 기획은 대화창에 전달되고, 공통 구조의 예시 초안이 열립니다. 실제 AI가 요청을 해석해 HTML을 생성하지는 않습니다.<br>예시 참여 방식: 로그인 후 계정당 1회 응모.')+'</div>'+(USE_SERVER?layoutField(c):'');
   content='<section class="panel"><div class="panel-head">어떤 방식으로 시작할까요?</div><div class="panel-body">'+modes+(c.mode==='template'?templates:ai)+'<p id="create-error" class="create-error" role="alert"></p><div class="create-actions">'+button('create-back',icon('back')+'기본 정보 수정')+button('finish-create',c.mode==='template'?'선택한 템플릿으로 시작 '+icon('arrow'):(USE_SERVER?'AI 로 만들기 ':'AI 초안 체험하기 ')+icon('sparkle'),'','btn primary')+'</div></div></section>';
  }
@@ -104,7 +283,17 @@ function finishCreation(){
  if(c.mode==='template'&&!c.templateId)return creationError('시작할 템플릿을 선택해주세요.');
  if(c.mode==='ai'&&!c.prompt.trim())return creationError('만들고 싶은 이벤트를 설명해주세요.','prompt');
  if(c.mode==='ai'&&c.prompt.trim().length>REQUEST_MAX)return creationError('기획은 '+REQUEST_MAX+'자 이내로 입력해주세요.','prompt');
- const cfg=c.mode==='ai'?AI_START:CONFIGS.find(x=>x.templateId===c.templateId);if(!cfg)return;
+ if (USE_SERVER && c.mode === 'template') {
+  const selected = creationTemplates().find((item) => item.templateId === c.templateId,)
+
+  if (c.templateDetailState !== 'done'|| !c.templateDetail?.active || c.templateDetail.templateKey !== selected?.templateKey) { return creationError('선택한 템플릿의 상세 정보를 먼저 확인해주세요.')}
+}
+
+const cfg = c.mode === 'ai'
+  ? AI_START
+  : creationTemplates().find((item) => item.templateId === c.templateId)
+
+if (!cfg) return
  if(cfg.templateId==='tpl-3'&&c.grade==='NORMAL')return creationError('VIP 감사 템플릿은 참여 대상이 우수 이상일 때 사용할 수 있어요.');
  if(USE_SERVER)return serverCreate(c,cfg);
  const id='EVT-2026-'+String(Math.max(...state.db.events.map(e=>Number(e.id.split('-').at(-1))))+1).padStart(3,'0');
@@ -130,13 +319,15 @@ async function serverCreate(c,cfg){
  if(btn){btn.disabled=true;btn.textContent='만드는 중…';}
  let event;
  try{
-  event=await createEvent({
-   name:c.title.trim(),
-   startAt:c.start+'T00:00:00+09:00',
-   endAt:c.end+'T23:59:59+09:00',
-   grade:c.grade,
-   ...(c.mode==='template'?{templateKey:TEMPLATE_KEYS[cfg.templateId]}:{}),
-  });
+  event = await createEvent({
+    name: c.title.trim(),
+    startAt: c.start + 'T00:00:00+09:00',
+    endAt: c.end + 'T23:59:59+09:00',
+    grade: c.grade,
+    ...(c.mode === 'template'
+      ? { templateKey: c.templateDetail.templateKey }
+      : {}),
+  })
  }catch(e){
   c.submitting=false;
   if(btn){btn.disabled=false;btn.textContent=c.mode==='template'?'선택한 템플릿으로 시작':'AI 로 만들기';}
