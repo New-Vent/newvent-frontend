@@ -51,6 +51,7 @@ import { closeModal, modal } from '@shared/ui/modal.js'
 
 import { resetAdminServer } from './list.js'
 import { toast } from '@shared/ui/toast.js'
+import { eventRangePicker } from './event-range-picker.js'
 
 const POLL_MS = 1000
 
@@ -1249,12 +1250,22 @@ function previewPanel(s) {
     ? '<div class="canvas"><div class="canvas-frame ' + (ui.mobile ? 'mobile' : '') + '">'
       + serverFrame(p.html, '이벤트 미리보기', s.tab === 'direct' ? 'server-edit' : 'server-select') + '</div></div>'
     : '<div class="empty"><strong>아직 만들어진 페이지가 없어요</strong><p>왼쪽에서 페이지를 만들어보세요.</p></div>'
-  return '<div class="studio-preview-column"><section class="panel"><div class="preview-controls"><div class="row wrap"><span>미리보기</span>'
-    + (p ? '<span class="badge pink">최신 v' + p.versionNo + '</span>'
-      + '<span class="badge ' + (isSaved(s) ? '' : 'amber') + '">' + (isSaved(s) ? '저장된 버전' : '이력에 저장 전') + '</span>' : '')
-    + (published ? '<span class="badge green">게시 v' + published.versionNo + '</span>' : '')
-    + (p && s.tab === 'chat' ? '<span class="pick-guide">' + icon('sparkle') + '영역을 눌러 고칠 곳을 고르세요</span>' : '')
-    + '</div><div class="device-controls">'
+  return '<div class="studio-preview-column"><section class="panel"><div class="preview-controls">'
+    + '<div class="preview-status-line">'
+    + '<span class="preview-label">미리보기</span>'
+    + (p
+      ? '<span class="preview-current">현재 v' + p.versionNo + '</span>'
+        + '<span class="preview-save-state' + (isSaved(s) ? '' : ' is-unsaved') + '">'
+        + (isSaved(s) ? '✓ 저장됨' : '이력에 저장 전') + '</span>'
+      : '')
+    + (published
+      ? '<span class="preview-published">게시 중 v' + published.versionNo + '</span>'
+      : '')
+    + '</div>'
+    + (p && s.tab === 'chat'
+      ? '<span class="preview-edit-hint">' + icon('sparkle') + '수정할 영역을 선택하세요</span>'
+      : '')
+    + '<div class="device-controls">'
     + button('device', icon('desktop'), 'data-mode="desktop" aria-label="데스크톱 미리보기"', 'btn sm ' + (!ui.mobile ? 'active' : ''))
     + button('device', icon('phone'), 'data-mode="mobile" aria-label="모바일 미리보기"', 'btn sm ' + (ui.mobile ? 'active' : ''))
     + '</div></div>' + body + '</section></div>'
@@ -1330,7 +1341,7 @@ async function confirmEndEvent(eventId, rerender) {
   }
 }
 
-// 서버 시각 → 한국 시간의 datetime-local 입력값
+// 서버 시각을 한국 시간의 날짜·시간 문자열로 변환한다.
 function infoDateValue(value) {
   if (!value) return ''
   const time = new Date(value).getTime()
@@ -1349,6 +1360,9 @@ function openEventInfo() {
   }
 
   const e = s.event
+  const startValue = infoDateValue(e.startAt)
+  const endValue = infoDateValue(e.endAt)
+
   const options = GRADES.map((g) =>
     '<option value="' + g.code + '" '
     + (e.grade === g.code ? 'selected' : '') + '>'
@@ -1359,32 +1373,71 @@ function openEventInfo() {
     '이벤트 기본 정보 수정',
     '<form id="server-info-form">'
       + '<label class="field"><span>이벤트명</span>'
+      + '<span class="helper">페이지에 표시되는 제목이에요.</span>'
       + '<input name="name" value="' + esc(e.name)
       + '" required maxlength="100"></label>'
-      + '<label class="field"><span>시작 일시 · 한국 시간</span>'
-      + '<input name="startAt" type="datetime-local" step="1" value="'
-      + infoDateValue(e.startAt) + '" required></label>'
-      + '<label class="field"><span>종료 일시 · 한국 시간</span>'
-      + '<input name="endAt" type="datetime-local" step="1" value="'
-      + infoDateValue(e.endAt) + '" required></label>'
-      + '<label class="field"><span>참여 대상 등급</span>'
-      + '<select name="grade">' + options + '</select></label>'
+      + '<div class="admin-datetime-widget admin-info-period">'
+      + eventRangePicker(
+        startValue.slice(0, 10),
+        endValue.slice(0, 10),
+        {
+          creation: true,
+          startTime: startValue.slice(11, 16),
+          endTime: endValue.slice(11, 16),
+        },
+      )
+      + '</div>'
+      + '<label class="field"><span>참여 등급</span>'
+      + '<select name="grade">' + options + '</select>'
+      + '<span class="helper" data-info-grade-description></span>'
+      + '</label>'
       + '<p id="server-info-error" role="alert"></p>'
       + '</form>',
     button('close', '취소')
       + '<button type="submit" form="server-info-form" '
       + 'class="btn primary">저장</button>'
   )
+
+  const form = document.getElementById('server-info-form')
+  const gradeSelect = form.querySelector('[name="grade"]')
+  const gradeDescription = form.querySelector('[data-info-grade-description]')
+
+  const descriptions = {
+    NORMAL: '모든 회원이 참여할 수 있어요.',
+    EXCELLENT: '우수·최우수 회원이 참여할 수 있어요.',
+    BEST: '최우수 회원만 참여할 수 있어요.',
+  }
+
+  const syncGradeDescription = () => {
+    gradeDescription.textContent = descriptions[gradeSelect.value] || ''
+  }
+
+  gradeSelect.addEventListener('change', syncGradeDescription)
+  syncGradeDescription()
 }
 
 async function saveEventInfo(form, rerender) {
   const s = ui.serverEditor
-  if (!s || running(s) || s.busy || !form.reportValidity()) return
-
+  if (!s || running(s) || s.busy ) return
+  if (!form.reportValidity()) return
+  
   const data = new FormData(form)
   const name = String(data.get('name') || '').trim()
-  const startValue = String(data.get('startAt') || '')
-  const endValue = String(data.get('endAt') || '')
+  const combineDateTime = (dateKey, timeKey, original) => {
+    const date = String(data.get(dateKey) || '')
+    const time = String(data.get(timeKey) || '')
+    if (!date || !time) return ''
+
+    const originalTime = infoDateValue(original).slice(11)
+    const fullTime = time === originalTime.slice(0, 5)
+      ? originalTime
+      : time + ':00'
+
+    return date + 'T' + fullTime
+  }
+
+  const startValue = combineDateTime('from', 'startTime', s.event.startAt)
+  const endValue = combineDateTime('to', 'endTime', s.event.endAt)
   const grade = String(data.get('grade') || '')
   const error = form.querySelector('#server-info-error')
   const showError = (message) => { error.textContent = message }
@@ -1465,11 +1518,15 @@ function serverEditorView() {
   const busy = running(s) || s.busy
   const saved = isSaved(s)
   return '<div class="container studio-container workspace">'
-    + '<div class="workspace-toolbar"><div class="workspace-title">' + backToList() + '<strong>' + esc(e.name) + '</strong></div>'
-    + '<div class="row wrap">' + badgeOf(serverStatus(e))
-    + '<span class="badge">' + dotted(e.startAt) + ' ~ ' + dotted(e.endAt) + '</span>'
-    + '<span class="badge">' + esc(gradeLabel(e.grade)) + '</span>'
-    + '<span class="badge">ID ' + e.id + '</span></div>'
+    + '<div class="workspace-toolbar"><div class="workspace-title">'
+    + backToList()
+    + '<strong>' + esc(e.name) + '</strong>'
+    + '<div class="workspace-event-meta">'
+    + '<span class="workspace-event-status">' + badgeOf(serverStatus(e)) + '</span>'
+    + '<span>' + dotted(e.startAt) + ' ~ ' + dotted(e.endAt) + '</span>'
+    + '<span>' + esc(gradeLabel(e.grade)) + '</span>'
+    + '<span>ID ' + esc(e.id) + '</span>'
+    + '</div></div>'
     + '<div class="row workspace-actions">'
     + (canEndEvent(s)
         ? button('server-end', '이벤트 종료', busy ? 'disabled' : '', 'btn sm')

@@ -14,9 +14,8 @@
 import { esc } from '@shared/dom.js'
 import { icon } from '@shared/icons.js'
 import { serverFrame } from '@shared/preview/document.js'
-import { loadVersion, loadVersions, removeCheckpoint, restoreVersion, saveCheckpoint } from '@shared/repo.js'
-import { reindexVersion } from '@shared/repo.js'
-import { ensureRagPanel, ragIndexBadge, ragPanel, refreshRagPanel } from './rag-panel.js'
+import { loadVersion, loadVersions, reindexVersion, removeCheckpoint, restoreVersion, saveCheckpoint } from '@shared/repo.js'
+import { ensureRagPanel, ragPanel, refreshRagPanel } from './rag-panel.js'
 import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
 import { ask, modal } from '@shared/ui/modal.js'
@@ -57,7 +56,10 @@ async function reindexOne(eventId, versionId, rerender) {
 
 function serverVersionsView() {
   const s = ui.serverEditor
-  const back = button('edit', icon('back') + '편집 화면으로', 'data-id="' + (s?.id ?? ui.activeId) + '"', 'backlink')
+  const fromEditor = ui.versionsBackRoute === 'editor'
+  const back = fromEditor
+    ? button('edit', icon('back') + '편집 화면으로', 'data-id="' + (s?.id ?? ui.activeId) + '"', 'backlink' ) 
+    : button('route', icon('back') + '이벤트 관리로', 'data-route="admin"', 'backlink' )
   ensureRagPanel(s.id)
   const pending = loadingView(s, back)
   if (pending) return pending
@@ -66,40 +68,49 @@ function serverVersionsView() {
   const busy = running(s) || s.busy
   const ended = s.event?.status === 'ENDED'
   const latestSaved = !!latest && (list || []).some((v) => sameVersion(v, latest))
-
-  const current = latest
-    ? '<div class="card" style="margin-bottom:16px"><div class="version-row"><div class="version-number">v' + latest.versionNo + '</div>'
-      + '<div class="version-text"><h3>지금 최신 버전 <span class="badge ' + (latestSaved ? '' : 'amber') + '">' + (latestSaved ? '저장됨' : '이력에 저장 전') + '</span></h3>'
-      + '<p>AI 대화 · 직접 수정은 이 버전을 기준으로 이어져요.</p></div>'
-      + button('server-version-save', latestSaved ? '저장됨' : '버전 저장', (latestSaved || busy) ? 'disabled' : '', 'btn sm') + '</div></div>'
-    : '<div class="empty"><strong>아직 만들어진 페이지가 없어요</strong><p>편집 화면에서 페이지를 만들어보세요.</p></div>'
-
   const rows = list == null
     ? '<div class="empty"><strong>버전 이력을 불러오지 못했어요</strong>' + button('server-reload', '다시 불러오기', '', 'btn sm') + '</div>'
     : !list.length
       ? '<div class="empty"><strong>저장한 버전이 없어요</strong><p>편집 화면에서 "버전 저장" 을 누르면 여기에 남아요.</p></div>'
       : '<div class="card">' + list.map((v) => {
         const isLatest = sameVersion(v, latest)
-        return '<div class="version-row server-version-row"><div class="version-number">v' + v.versionNo + '</div><div class="version-text"><h3>'
+        return '<div class="version-row server-version-row' + (isLatest ? ' is-current' : '') + '"><div class="version-number">v' + v.versionNo + '</div><div class="version-text"><h3>'
           + esc(v.changeSummary?.trim() || (v.sourceVersionNo ? 'v' + v.sourceVersionNo + ' 에서 변경한 버전' : '처음 만든 버전')) + ' '
           + (v.published ? '<span class="badge green">게시 중</span>' : '')
-          + (isLatest ? '<span class="badge pink">최신</span>' : '') + '</h3>'
+          + (isLatest ? '<span class="badge pink">현재 작업</span>' : '') + '</h3>'
           + '<p>' + when(v.createdAt) + ' · ' + (v.sourceVersionNo ? 'v' + v.sourceVersionNo + '에서 이어진 버전' : '최초 버전') + '</p></div>'
           + '<div class="version-actions">'
           + button('server-version-preview', '미리보기', 'data-version="' + v.versionId + '"', 'btn sm')
           + button('server-version-publish', v.published ? '게시 중' : '이 버전 게시',
-              'data-version="' + v.versionId + '" ' + ((v.published || busy || ended) ? 'disabled' : ''), 'btn sm ' + (v.published ? 'ghost' : 'soft'))
+              'data-version="' + v.versionId + '" ' + ((v.published || busy || ended) ? 'disabled' : ''), 'btn sm version-publish-btn ' + (v.published ? 'ghost' : 'soft'))
           + button('server-version-restore', '이 버전에서 이어서 작업', 'data-version="' + v.versionId + '" '
               + (canRestoreVersion(s, v) ? '' : 'disabled'), 'btn sm')
-          + button('server-version-template', '템플릿으로 등록', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm soft')
+          + button('server-version-template', '템플릿으로 등록', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm soft version-template-btn')
           + button('server-version-unsave', '저장 해제', 'data-version="' + v.versionId + '" ' + ((v.published || busy) ? 'disabled title="게시 중인 버전은 해제할 수 없어요"' : ''), 'btn sm ghost')
-          + button('server-rag-reindex-one', '재색인', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm')
+          + button('server-rag-reindex-one', '재색인', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm version-reindex-btn')
           + '</div></div>'
       }).join('') + '</div>'
 
   return '<div class="container">' + back
-    + '<div class="page-heading"><span class="eyebrow">VERSION HISTORY</span><h1>버전 이력</h1><p>' + esc(s.event.name) + ' ' + ragIndexBadge(s.id) + '</p></div>'
-    + current + rows + ragPanel(s.id)
+    + '<div class="page-heading">'
+    +   '<div class="admin-page-title">'
+    +     '<div class="admin-detail-title-row">'
+    +       '<h1>버전 이력</h1>'
+    +       '<span class="admin-detail-event-name">' + esc(s.event.name) + '</span>'
+    +     '</div>'
+    +     '<p>저장한 버전을 확인하고, 이전 버전에서 이어서 작업하거나 게시하세요.</p>'
+    +   '</div>'
+    + '</div>'
+    + (latest && !latestSaved
+      ? '<div class="helper">현재 작업 버전 v' + latest.versionNo + '은 아직 이력에 저장되지 않았어요. '
+        + button('server-version-save', '버전 저장', busy ? 'disabled' : '', 'btn sm')
+        + '</div>'
+      : '')
+    + '<div class="version-history-heading">'
+    + '<h2>버전 이력</h2>'
+    + (list == null ? '' : '<span>' + list.length + '개</span>')
+    + '</div>'
+    + rows + ragPanel(s.id)
     + '<p class="review-note">생성 · 수정할 때마다 버전이 자동으로 만들어지지만, 이력에는 "버전 저장" 한 버전만 남아요. '
     + '마음에 드는 버전은 <strong>템플릿으로 등록</strong>해 두면 다른 이벤트에서 다시 쓸 수 있어요. '
     + '이전 버전에서 이어서 작업하면 그 내용으로 새 최신 버전이 만들어져요. 기존 이력과 게시 중인 페이지는 유지돼요.</p></div>'

@@ -7,9 +7,9 @@ import { validSnapshot } from '@shared/preview/document.js'
 import { applySelection, refreshButtonEditor, refreshContentEditor, highlightEditingText, editButton } from '@shared/preview/editable.js'
 import { version, eventById, currentEvent, currentDraft } from '@shared/selectors.js'
 import './styles.css'
+import './user-management.css'
 import './event-filters.css'
 import { initAdminEventFilters } from './views/event-filters.js'
-import './user-management.css'
 import './navigation.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
@@ -338,6 +338,10 @@ const router = createRouter(ROUTES, (match) => {
 
 /** 이식한 뷰들이 부르는 navigate(route, id) 를 라우터로 넘긴다. */
 function navigate(route, id) {
+  if (route === 'versions' && ui.route !== 'versions') {
+    ui.versionsBackRoute = ui.route === 'editor' ? 'editor' : 'admin'
+  }
+
   if (id) ui.activeId = id
   closeModal()
   router.navigate(PATH[route] ? PATH[route](id ?? ui.activeId) : '/')
@@ -409,6 +413,28 @@ function openTemplateEvent(eventId) {
   navigate('editor', String(eventId))
 }
 
+// 이벤트 더보기: 바깥 클릭 또는 메뉴 항목 선택 시 닫기
+document.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element)) return
+
+  document.querySelectorAll('.event-more[open]').forEach((menu) => {
+    const clickedOutside = !menu.contains(event.target)
+    const selectedItem = event.target.closest('.event-more-popup a, .event-more-popup button')
+
+    if (clickedOutside || selectedItem) {
+      menu.open = false
+    }
+  })
+}, true)
+
+// Esc 키로도 닫기
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return
+
+  document.querySelectorAll('.event-more[open]').forEach((menu) => {
+    menu.open = false
+  })
+})
 document.addEventListener('click', (ev) => {
   const link = ev.target.closest('a[data-link]')
   if (link) {

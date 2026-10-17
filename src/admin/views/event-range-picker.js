@@ -16,6 +16,8 @@ function syncRangeLabels(picker) {
     const value = inputOf(picker, name).value
     const label = picker.querySelector(`[data-range-${name}-label]`)
 
+    if (!label) return
+
     label.textContent = value ? formatDate(value) : '날짜 선택'
     label.classList.toggle('is-placeholder', !value)
   })
@@ -150,8 +152,14 @@ export function eventRangePicker(from = '', to = '', { creation = false, startTi
   `
 }
 
+let initialized = false
+
 export function initEventRangePicker() {
+  if (initialized) return
+  initialized = true
+
   initCreationTimePicker()
+  initFloatingPickers()
   const drafts = new WeakMap()
 
   const hide = (picker, restoreFocus = false) => {
@@ -192,9 +200,13 @@ export function initEventRangePicker() {
 
     picker.querySelector('[data-range-month]').textContent = `${year}년 ${month + 1}월`
     picker.querySelector('[data-range-grid]').innerHTML = weekdays + blanks + days
-    picker.querySelector('[data-range-hint]').textContent =
-      selectingEnd ? '종료일을 선택하세요' : '시작일을 선택하세요'
-    picker.querySelector('[data-range-done]').disabled = !(from && to)
+    const single = picker.dataset.rangeSingle === 'true'
+
+    picker.querySelector('[data-range-hint]').textContent = single
+      ? '날짜를 선택하세요'
+      : selectingEnd ? '종료일을 선택하세요' : '시작일을 선택하세요'
+
+    picker.querySelector('[data-range-done]').disabled = single ? !from : !(from && to)
   }
 
   const open = (picker, trigger) => {
@@ -241,7 +253,11 @@ export function initEventRangePicker() {
       draft.month = next.getMonth()
     } else if (day) {
       const value = day.dataset.rangeDay
-      if (!draft.selectingEnd || value < draft.from) {
+      if (picker.dataset.rangeSingle === 'true') {
+        draft.from = value
+        draft.to = value
+        draft.selectingEnd = false
+      } else if (!draft.selectingEnd || value < draft.from) {
         draft.from = value
         draft.to = ''
         draft.selectingEnd = true
@@ -249,7 +265,9 @@ export function initEventRangePicker() {
         draft.to = value
         draft.selectingEnd = false
       }
+
       applyRange(picker, draft)
+
     } else if (event.target.closest('[data-range-done]')) {
       if (draft.from && draft.to) hide(picker, true)
       return
@@ -375,7 +393,7 @@ function initCreationTimePicker() {
       prepare(picker)
       active = picker
 
-      const input = picker.querySelector('input[data-create]')
+      const input = picker.querySelector('input[type="hidden"]')
       const initial = input.value ||
         (input.dataset.create === 'endTime' ? '23:59' : '00:00')
       const values = initial.split(':').map(Number)
@@ -403,7 +421,7 @@ function initCreationTimePicker() {
 
     if (event.target.closest('[data-time-done]')) {
       const value = readTime(picker).map(pad).join(':')
-      const input = picker.querySelector('input[data-create]')
+      const input = picker.querySelector('input[type="hidden"]')
       const label = picker.querySelector('[data-time-label]')
 
       input.value = value
@@ -422,5 +440,94 @@ function initCreationTimePicker() {
     event.preventDefault()
     event.stopImmediatePropagation()
     close(true)
+  }, true)
+}
+
+function initFloatingPickers() {
+  const selector = '.event-range-calendar, .create-time-popup'
+
+  const position = (popup) => {
+    const picker = popup.closest('.event-range-picker')
+    const trigger = popup.matches('.create-time-popup')
+      ? popup.parentElement.querySelector('[data-time-open]')
+      : picker?.querySelector('[data-range-open][aria-expanded="true"]')
+
+    if (!trigger) return
+
+    const rect = trigger.getBoundingClientRect()
+    const gap = 8
+    const edge = 12
+
+    popup.style.maxWidth = `${window.innerWidth - edge * 2}px`
+    popup.style.maxHeight = `${window.innerHeight - edge * 2}px`
+    popup.style.overflowY = 'auto'
+
+    const box = popup.getBoundingClientRect()
+    const left = Math.max(
+      edge,
+      Math.min(rect.left, window.innerWidth - box.width - edge),
+    )
+
+    const below = window.innerHeight - rect.bottom - gap - edge
+    const above = rect.top - gap - edge
+    const openBelow = below >= box.height || below >= above
+    const available = Math.max(0, openBelow ? below : above)
+
+    popup.style.maxHeight = `${available}px`
+    popup.style.left = `${left}px`
+    popup.style.top = openBelow
+      ? `${rect.bottom + gap}px`
+      : `${Math.max(edge, rect.top - gap - Math.min(box.height, available))}px`
+  }
+
+  const observer = new MutationObserver((records) => {
+    const popups = new Set(
+      records.map((record) => record.target)
+        .filter((target) => target.matches?.(selector)),
+    )
+
+    popups.forEach((popup) => {
+      if (!popup.isConnected) return
+
+      if (popup.hidden) {
+        if (popup.matches(':popover-open')) popup.hidePopover()
+        return
+      }
+
+      popup.setAttribute('popover', 'manual')
+
+      if (!popup.matches(':popover-open')) popup.showPopover()
+      position(popup)
+    })
+  })
+
+  observer.observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['hidden'],
+  })
+
+  const closePopups = () => {
+    document.querySelectorAll(
+      '.event-range-calendar:popover-open, .create-time-popup:popover-open',
+    ).forEach((popup) => {
+      popup.hidden = true
+
+      const owner = popup.matches('.create-time-popup')
+        ? popup.parentElement
+        : popup.closest('.event-range-picker')
+
+      owner?.querySelectorAll('[aria-expanded="true"]').forEach((trigger) => {
+        trigger.setAttribute('aria-expanded', 'false')
+      })
+    })
+  }
+
+  window.addEventListener('resize', closePopups)
+
+  document.addEventListener('scroll', (event) => {
+    // 시간 다이얼·달력 자체의 스크롤은 유지한다.
+    if (event.target instanceof Element && event.target.closest(selector)) return
+    closePopups()
   }, true)
 }

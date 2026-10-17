@@ -32,6 +32,7 @@ import { ui } from '@shared/state.js'
 import { button, metric } from '@shared/ui/controls.js'
 import { ask } from '@shared/ui/modal.js'
 import { toast } from '@shared/ui/toast.js'
+import { eventDatetimeField, syncDatetimeFields } from './event-datetime-field.js'
 
 const PAGE_SIZE = 20
 
@@ -254,15 +255,26 @@ function sportsFields(c, lock, s, openLock) {
   return field('predictionOptions', '보기', (c.predictionOptions || []).join(', '), lock,
     '쉼표로 구분해주세요. 예: 대한민국 승, 무승부, 상대팀 승'
     + (lock ? ' (참여가 시작돼 바꿀 수 없어요 — 지운 보기를 고른 참여 기록이 떠버립니다)' : ''))
-    + field('announcementAt', '발표 시각', localValue(c.announcementAt), 'type="datetime-local" ' + openLock,
-      '이벤트 종료 이후여야 해요' + (endAt ? ' (종료 ' + when(endAt) + ')' : '')
-      + '. 이 시각이 지나면 등록한 경기 결과로 추첨이 돌아요.')
-    + '<div class="field"><span>혜택</span>'
+    + eventDatetimeField(
+      'announcementAt',
+      '발표 시각',
+      localValue(c.announcementAt),
+      {
+        extra: openLock,
+        helper: '이벤트 종료 이후여야 해요'
+          + (endAt ? ' (종료 ' + when(endAt) + ')' : '')
+          + '. 한국 시간 기준이며, 이 시각이 지나면 등록한 경기 결과로 추첨이 돌아요.',
+      },
+    )
+    + '<div class="field">'
+    + '<div class="participation-rewards-heading">'
+    + '<span>혜택</span>'
+    + (lock ? '' : button('pconf-reward-add', '+ 혜택 추가', '', 'btn sm participation-reward-add'))
+    + '</div>'
     + '<span class="helper">대상과 선정 방식을 고르세요. 「참여자 전원 · 전원 지급」은 참가 보상, '
     + '「정답자 · 추첨」은 정답자 중 추첨이에요.</span>'
     + (rewards.length ? rewards.map((r, i) => rewardRow(r, i, lock)).join('')
       : '<p class="helper">혜택이 없으면 저장할 수 없어요. 하나 이상 넣어주세요.</p>')
-    + (lock ? '' : '<div>' + button('pconf-reward-add', '혜택 추가', '', 'btn sm ghost') + '</div>')
     + '</div>'
 }
 
@@ -301,7 +313,7 @@ function configFields(gameCode, c, lock, s, openLock = '') {
     + '</select></label>'
     + (mode === 'IMMEDIATE' ? field('winProbability', '당첨 확률', c.winProbability, lock + ' type="number" min="0" max="100"', '0~100') : '')
     + (mode === 'DELAYED' ? field('winnerCount', '당첨 인원', c.winnerCount, lock + ' type="number" min="1"', '1명 이상') : '')
-    + (mode === 'DELAYED' ? field('announcementAt', '발표 시각', localValue(c.announcementAt), 'type="datetime-local"', '참여가 시작된 뒤에도 바꿀 수 있어요') : '')
+    + (mode === 'DELAYED' ? eventDatetimeField('announcementAt', '발표 시각', localValue(c.announcementAt), { helper: '한국 시간 기준 · 참여가 시작된 뒤에도 바꿀 수 있어요' } ) : '')
     + (mode ? field('prizeName', '경품명', c.prizeName, '', '참여가 시작된 뒤에도 바꿀 수 있어요') : '')
 }
 
@@ -473,7 +485,7 @@ function table(s) {
   }
   const rows = s.list?.content || []
   if (!rows.length) {
-    return '<div class="empty">' + icon('user')
+    return '<div class="empty participants-empty">' + icon('user')
       + '<strong>' + (s.filter ? '해당하는 참여자가 없어요' : '아직 참여자가 없어요') + '</strong>'
       + '<p>' + (s.filter ? '다른 조건으로 찾아보세요.'
         : started(s) ? '' : '참여 설정을 저장하면 사용자가 참여할 수 있어요.') + '</p></div>'
@@ -538,10 +550,12 @@ function participantsView() {
     + '</div>'
 
   return '<div class="container">' + back
-    + '<div class="page-heading spread"><div><span class="eyebrow">PARTICIPANTS</span>'
-    + '<h1>참여 관리</h1><p>'
-    + (s.event?.name ? esc(s.event.name) + ' · ' : '')
-    + '참여 방식을 정하고, 참여자와 당첨자를 확인하세요.</p></div>'
+    + '<div class="page-heading spread"><div class="admin-page-title">'
+    + '<div class="admin-detail-title-row">'
+    + '<h1>참여 관리</h1>'
+    + (s.event?.name ? '<span class="admin-detail-event-name">' + esc(s.event.name) + '</span>' : '')
+    + '</div>'
+    + '<p>참여 방식을 정하고, 참여자와 당첨자를 확인하세요.</p></div>'
     + button('pt-download', s.downloading ? '내려받는 중…' : '당첨자 내려받기 (CSV)',
         (s.downloading || !(sum?.rewardCount)) ? 'disabled' : '', 'btn soft')
     + '</div>'
@@ -577,7 +591,12 @@ function participantsView() {
 /* ───────────────────────── 저장 · 내려받기 ───────────────────────── */
 
 /** datetime-local 은 시간대가 없다. 서버는 OffsetDateTime 을 파싱하므로 KST 를 붙인다 */
-const toOffset = (v) => (v.length === 16 ? v + ':00+09:00' : v)
+const toOffset = (value) => {
+  if (!value) return ''
+  if (/(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return value
+
+  return (value.length === 16 ? value + ':00' : value) + '+09:00'
+}
 
 /** 혜택 줄들을 읽는다 — 인원은 추첨일 때만 넣는다 */
 function readRewards(form) {
@@ -924,6 +943,7 @@ function handleParticipantsClick(a, b, rerender) {
 function handleParticipantsSubmit(ev, rerender) {
   if (ev.target.id === 'pconf-form') {
     ev.preventDefault()
+    syncDatetimeFields(ev.target)
     submitConfig(ev.target, rerender)
     return true
   }
@@ -948,7 +968,10 @@ const RELAYOUT = ['gameCode', 'resultMode']
 
 function handleParticipantsChange(ev, rerender) {
   const t = ev.target
-  if (!t.closest?.('#pconf-form')) return false
+  const form = t.closest?.('#pconf-form')
+  if (!form) return false
+
+  syncDatetimeFields(form)
   captureDraft()
   if (RELAYOUT.includes(t.dataset?.pconf) || t.dataset?.rfield === 'selection') rerender()
   return true
