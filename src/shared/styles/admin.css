@@ -205,12 +205,17 @@
 .sedit-group legend{padding:0;margin-bottom:8px;font-size:11px;font-weight:800;color:var(--sky);letter-spacing:.02em}
 .sedit-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:start}
 .sedit-item+.sedit-item{margin-top:6px}
-.sedit-format{margin:6px 0 12px;font-size:12px}
-.sedit-format summary{cursor:pointer;color:var(--sky);padding:4px 0}
-.sedit-format-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0}
-.sedit-format-tools label{display:flex;align-items:center;gap:4px}
-.sedit-format-tools input[type=number]{width:72px}
-.sedit-format-tools input[type=color]{width:36px;height:30px;padding:2px}
+.sedit-format{margin:4px 0 12px;font-size:12px}
+.sedit-format summary{cursor:pointer;color:var(--sky);padding:4px 0;font-size:11px;font-weight:700;list-style:none}
+.sedit-format summary::-webkit-details-marker{display:none}
+.sedit-format summary::before{content:'▸';display:inline-block;margin-right:5px;transition:transform .15s}
+.sedit-format[open] summary::before{transform:rotate(90deg)}
+.sedit-format-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:4px 0 6px;padding:10px;border:1px solid #ece9f1;border-radius:10px;background:#faf9fc}
+.sedit-format-tools label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--muted)}
+.sedit-format-tools input[type=number],.sedit-format-tools select{height:28px;border:1px solid #e5e2ea;border-radius:7px;padding:0 8px;font-size:12px;background:#fff}
+.sedit-format-tools input[type=number]{width:68px}
+.sedit-format-tools input[type=color]{width:34px;height:28px;padding:2px;border:1px solid #e5e2ea;border-radius:7px;background:#fff}
+.sedit-format-tools .btn{margin-left:auto}
 .sedit-no{height:34px;display:grid;place-items:center;border-radius:8px;background:#f3f1f6;color:var(--muted);font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
 .sedit-no.changed{background:var(--sky);color:#fff}
 .sedit-item:focus-within .sedit-no:not(.changed){background:var(--tint);color:var(--sky)}
@@ -223,6 +228,36 @@
 .sedit-style label.check{display:flex;align-items:center;gap:6px;font-weight:600}
 .sedit-style input[type=color]{width:44px;height:28px;padding:2px;border:1px solid #e5e2ea;border-radius:6px;background:#fff}
 .sedit-style select{border:1px solid #e5e2ea;border-radius:8px;padding:6px 8px;font-size:12px;background:#fff}
+
+/* ── 제목 · 참여 버튼 디자인 — 설정 목록 (server-editor.js directPanel) ──
+ *   한 줄 = 설정 하나. 색: [이름 …… 스위치 · 색 칸], 크기 · 모양: 이름 아래 단추 줄(라디오) */
+.sstyle-list{border:1px solid #ece9f1;border-radius:12px;background:#fff;overflow:hidden}
+.sstyle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;font-size:12px}
+.sstyle-row+.sstyle-row{border-top:1px solid #f2eff6}
+.sstyle-row.stack{flex-direction:column;align-items:stretch;gap:7px}
+.sstyle-label{font-weight:700;color:var(--ink)}
+.sstyle-ctl{display:flex;align-items:center;gap:10px}
+.sstyle-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;font-weight:600;color:var(--muted)}
+.sstyle-toggle input{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:30px;height:18px;margin:0;border-radius:999px;background:#dcd8e3;cursor:pointer;transition:background .15s}
+.sstyle-toggle input::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003;transition:transform .15s}
+.sstyle-toggle input:checked{background:var(--sky)}
+.sstyle-toggle input:checked::after{transform:translateX(12px)}
+.sstyle-toggle input:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+.sstyle-toggle input:disabled{cursor:default;opacity:.5}
+.sstyle-state::before{content:'테마 색'}
+.sstyle-toggle:has(input:checked) .sstyle-state::before{content:'직접 지정';color:var(--sky)}
+.sstyle-ctl input[type=color]{width:34px;height:26px;padding:2px;border:1px solid #e5e2ea;border-radius:7px;background:#fff;cursor:pointer;transition:opacity .15s}
+.sstyle-row:has(input[data-sstyle-on]:not(:checked)) input[type=color]{opacity:.45}
+.sstyle-seg{display:flex;gap:2px;padding:3px;border-radius:9px;background:#f4f2f7}
+/* ★ label 을 기준으로 숨긴다 — 기준이 없으면 숨은 라디오가 페이지 위쪽에 놓여, 누를 때 포커스가 그리로 튀며 화면이 스크롤된다 */
+.sstyle-seg label{position:relative;flex:1;min-width:0}
+.sstyle-seg input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;pointer-events:none}
+.sstyle-seg span{display:block;padding:6px 2px;border-radius:7px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:background .15s,color .15s}
+.sstyle-seg span:hover{color:var(--ink)}
+.sstyle-seg input:checked+span{background:#fff;color:var(--sky);box-shadow:0 1px 3px #31213f1f}
+.sstyle-seg input:focus-visible+span{outline:2px solid var(--sky);outline-offset:-2px}
+.sstyle-seg input:disabled+span{cursor:default;opacity:.55}
+.sstyle-help{margin:8px 2px 0;font-weight:500}
 
 /* ── 새 이벤트 요약 카드 (create.js creationSummary) ─────────────── */
 .creation-summary .sum-head h3{font-size:17px;margin-top:10px}

@@ -95,3 +95,44 @@
   :where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) table { min-width: 0; table-layout: fixed; font-size: 0.82rem; }
   :where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) :is(th, td) { padding: 8px 6px; word-break: keep-all; overflow-wrap: anywhere; }
 }
+
+/* ── 확장 — 요청문이 이름을 부를 때만 프롬프트에 실린다 (registry/Variant.java core=false) ── */
+
+/* 가격 카드 — 첫 열(항목 이름)은 그대로, 나머지 열을 떨어진 카드처럼 */
+[data-block="compare"].v-compare-pricing:not(.ev-block) table { border-spacing: 10px 0; }
+[data-block="compare"].v-compare-pricing:not(.ev-block) tr:nth-child(n) td:not(:first-child) { background: var(--ev-surface-subtle); }
+[data-block="compare"].v-compare-pricing:not(.ev-block) tr:first-child :is(th, td):first-child { background: transparent; color: var(--ev-text-muted); }
+[data-block="compare"].v-compare-pricing:not(.ev-block) tr:first-child :is(th, td):not(:first-child) {
+  padding-top: 16px;
+  border-radius: 12px 12px 0 0;
+  background: var(--ev-primary);
+  color: #fff;
+}
+[data-block="compare"].v-compare-pricing:not(.ev-block) tr:last-child td:not(:first-child) { padding-bottom: 16px; border-radius: 0 0 12px 12px; }
+
+/* 체크 표 — 값 칸의 ✓ · ✗ 를 크게. 값은 모델이 요청문에서 옮긴 것이고 CSS 는 크기만 바꾼다 */
+[data-block="compare"].v-compare-check-matrix:not(.ev-block) td:not(:first-child) { color: var(--ev-primary); font-size: 1.2rem; font-weight: 800; }
+[data-block="compare"].v-compare-check-matrix:not(.ev-block) :is(th, td) { border-bottom: 1px solid var(--ev-border); }
+[data-block="compare"].v-compare-check-matrix:not(.ev-block) tr:nth-child(even) td { background: transparent; }
+
+/* VS — 둘째 · 셋째 열을 다른 색으로 맞세우고 머리글 사이에 VS */
+[data-block="compare"].v-compare-vs:not(.ev-block) tr:first-child th:nth-child(2) { position: relative; }
+[data-block="compare"].v-compare-vs:not(.ev-block) tr:first-child th:nth-child(3) { background: var(--ev-text-main); color: var(--ev-surface); }
+[data-block="compare"].v-compare-vs:not(.ev-block) tr:first-child th:nth-child(2)::after {
+  content: "VS";
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  border-radius: 50%;
+  background: var(--ev-accent-tag);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 32px;
+  text-align: center;
+  box-shadow: 0 0 0 3px var(--ev-surface);
+}

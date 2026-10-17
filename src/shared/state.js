@@ -31,4 +31,4 @@ try {
   state.storageEnabled = false
 }
 
-export const ui = {chatSide:(()=>{try{return localStorage.getItem('newvent-admin-chat-side')==='right'?'right':'left'}catch{return 'left'}})(),adminShowDeleted:false,route:'home',role:'user',logged:true,activeId:state.db.events[0].id,filter:'all',category:'all',query:'',hero:0,mobile:false,block:'hero',drafts:{},chats:{},votes:{},myFilter:'all',adminQuery:'',adminStatus:'all',demoGrade:'일반',selectedTargets:{},requests:{},chatInputs:{},manualOpen:{},demoOpen:{},scenarios:{}};
+export const ui = {chatSide:(()=>{try{return localStorage.getItem('newvent-admin-chat-side')==='right'?'right':'left'}catch{return 'left'}})(),adminShowDeleted:false,route:'home',role:'user',logged:true,activeId:state.db.events[0].id,filter:'all',category:'all',query:'',hero:0,mobile:false,fit:false,block:'hero',drafts:{},chats:{},votes:{},myFilter:'all',adminQuery:'',adminStatus:'all',demoGrade:'일반',selectedTargets:{},requests:{},chatInputs:{},manualOpen:{},demoOpen:{},scenarios:{}};

@@ -66,7 +66,8 @@ function findBrowser() {
 async function measure(browser) {
   const css = await readFile(process.env.EVENT_CSS ?? here('../public/assets/event.css'), 'utf8')
   const harness = await readFile(here('./fixtures/contrast-harness.js'), 'utf8')
-  const palettes = [...css.matchAll(/\.palette-([a-z]+),\s*body:has\(\.palette-\1\)/g)].map((m) => m[1])
+  // ★ 이름에 숫자 · 하이픈이 들어간다 (early-spring · m3-baseline). [a-z]+ 로는 그 팔레트들이 통째로 빠진다
+  const palettes = [...css.matchAll(/\.palette-([a-z0-9-]+),\s*body:has\(\.palette-\1\)/g)].map((m) => m[1])
   const config = JSON.stringify({ templates: TEMPLATES, palettes }).replaceAll('<', '\\u003c')
 
   const dir = await mkdtemp(join(tmpdir(), 'newvent-contrast-'))
@@ -98,9 +99,9 @@ test('mock 템플릿에서 템플릿 5종을 모두 찾는다', () => {
   assert.deepEqual(Object.keys(TEMPLATES).sort(), ['holiday', 'launch', 'sale', 'sports', 'vip'])
 })
 
-test('팔레트 18종 전부를 읽는다', { skip }, async () => {
+test('팔레트 143종 전부를 읽는다', { skip }, async () => {
   const { palettes } = await get()
-  assert.ok(palettes.length >= 18, `팔레트 ${palettes.length}종만 읽었다: ${palettes.join(', ')}`)
+  assert.ok(palettes.length >= 143, `팔레트 ${palettes.length}종만 읽었다: ${palettes.join(', ')}`)
 })
 
 test('측정이 비어 있지 않다 (아무것도 안 재서 통과하는 것을 막는다)', { skip }, async () => {

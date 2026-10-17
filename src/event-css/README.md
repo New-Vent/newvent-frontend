@@ -7,6 +7,9 @@
 - 손으로 만들기: `npm run css`
 - 원본과 결과가 같은지 확인: `npm run css:check` (CI · 커밋 전)
 - **`public/assets/event.css` 는 직접 고치지 않는다** — 다음 빌드에서 덮인다
+- **확장 팔레트(`90-palettes/03-expansion.css`)도 직접 고치지 않는다** — `scripts/build-palettes.mjs` 의 색 명세를 고치고
+  `npm run palettes` → `npm run css`. 대비와 겹침(다른 팔레트와 너무 비슷한 색)은 생성기가 검사한다. 확인만: `npm run palettes:check`.
+  어두운 팔레트 목록(`95` · `99` 의 `:is(.palette-night, …)`)도 생성기가 맞춘다. 백엔드 enum 줄은 `node scripts/build-palettes.mjs --java`
 
 ## 순서 = 캐스케이드
 
@@ -22,8 +25,7 @@
 | `50-blocks/` | 레지스트리 블록 기본 모양 — `01` highlight · intro · audience · faq · compare, `02` stats, `03` prize, `04` coupon, `05` schedule | 블록마다 한 파일 |
 | `60-variants/` | 블록 변형 `.v-*` — `01`~`14` 블록마다 한 파일, `80-surface` 배경, `90-responsive` | **`80-surface` 는 블록 변형보다 뒤** — 배경이 변형의 배경을 덮는다 |
 | `70-components/` | 마크업이 다른 컴포넌트 (아코디언 · 안내 상자 · 캐러셀 · 비교표 · 배지 `.t-*`) | 배경 변형보다 뒤 — 캐러셀 카드 배경이 이겨야 한다 |
-| `90-palettes/` | `01` 기본 10종 · `02` 추가 8종 · `95` 팔레트 → 템플릿 포인트색(`--tpl-*`) 연결 · `97` 어두운 템플릿(theme-sale)의 중성색 복원 · `99` 어두운 팔레트 보정 | **테마(20) · 템플릿(40)보다 뒤** — 팔레트가 이겨야 한다 |
-| `95-assets/` | `01` 올린 이미지 `.ev-asset-*` (배경 · 그림 · 아이콘 · 로고 · 띠) · `02` 페이지 전체 배경 | **팔레트(90)보다 뒤** — 사진 위 글자색을 여기서 못 박아야 해서 테마 · 변형 · 팔레트를 전부 이겨야 한다. 글자색은 올릴 때 재서 정한다(`ImageProbe.toneOf`) |
+| `90-palettes/` | `01` 기본 10종 · `02` 추가 8종 · `03` 확장 125종(밝음 103 · 어두움 22, **생성 파일** — `scripts/build-palettes.mjs`) · `95` 팔레트 → 템플릿 포인트색(`--tpl-*`) 연결 · `97` 어두운 템플릿(theme-sale)의 중성색 복원 · `99` 어두운 팔레트 보정 | **테마(20) · 템플릿(40)보다 뒤** — 팔레트가 이겨야 한다 |
 | `99-a11y/` | `prefers-reduced-motion` (흐르는 띠 · 빛나는 버튼 멈춤) | `!important` 라 자리는 무관. 찾기 쉽게 맨 끝 |
 
 폴더 안 번호는 **두 자리**로 맞춘다 (`10-` 이 `9-` 앞에 정렬되지 않게).
@@ -34,7 +36,7 @@
 | CSS | 백엔드 | 추가할 때 |
 |---|---|---|
 | `60-variants/NN-블록.css` · `70-components/06-compare.css` 의 `.v-*` | `registry/Variant.java` | 양쪽에 같은 이름 |
-| `90-palettes/*.css` 의 `.palette-*` | `registry/Palette.java` | 변수 11개(primary · hover · light · glow · gradient-hero · gradient-cta · accent-tag · bg · surface · surface-subtle · border), 어두우면 text-* 3개 + `99-dark-fixes` |
+| `90-palettes/*.css` 의 `.palette-*` | `registry/Palette.java` | 변수 11개(primary · hover · light · glow · gradient-hero · gradient-cta · accent-tag · bg · surface · surface-subtle · border), 어두우면 text-* 3개 + `99-dark-fixes` · `95-template-accent` 의 어두운 목록에 이름 추가 (`Palette.dark` 와 짝) |
 | `70-components/02-inline.css` 의 `.t-*` | `registry/Inline.java` | |
 | `50-blocks/NN-블록.css` | `registry/Block.java` | 새 블록의 기본 모양 (= 기본 변형의 모양) |
 
@@ -161,12 +163,9 @@ hex 가 테마 토큰 값과 같은 곳은 sale 뿐이다. 나머지는 템플�
 node --test tests/template-contrast.test.mjs
 ```
 
-헤드리스 Chrome/Edge 로 템플릿 5종 × 팔레트 18종을 그려, 글자 요소마다 대비를 잰다 (브라우저가 없으면 건너뛴다). 이벤트 CSS 를 고쳤으면 먼저 `npm run css` 를 한다. 기존 `tests/` 가 쓰는 `--experimental-vm-modules` 와는 따로 돈다.
+헤드리스 Chrome/Edge 로 템플릿 5종 × 팔레트 전부(2026-10-14 부터 143종)를 그려, 글자 요소마다 대비를 잰다 (브라우저가 없으면 건너뛴다). 이벤트 CSS 를 고쳤으면 먼저 `npm run css` 를 한다. 기존 `tests/` 가 쓰는 `--experimental-vm-modules` 와는 따로 돈다.
 
-**두 가지를 본다.**
-
-1. **팔레트 없는 기본 상태에서 4.5 이상** (큰 글자 — 24px 이상, 또는 18.66px 이상 굵게 — 는 3). 예외는 테스트의 `KNOWN_BASE` 에 이유와 함께 적는다. 지금은 holiday 복주머니 일러스트 위의 福 하나다.
-2. **팔레트를 붙였을 때 1) 보다 나빠지지 않을 것.** 기준선(같은 템플릿의 팔레트 없는 상태)보다 0.2 이상 나빠지거나 새로 미달이 된 요소를 센다. 처음(#207)에는 템플릿이 팔레트 없이도 4.5 에 못 미쳐서 2) 만 기준으로 삼았고, 기본 상태를 올린(#220) 뒤 1) 이 더해졌다.
+**기준은 "4.5 이상"이 아니라 "팔레트를 붙이기 전보다 나빠지지 않을 것"이다.** 팔레트 없이도 4.5 에 못 미치는 곳이 있어서 (아래), 4.5 를 기준으로 하면 팔레트와 상관없이 실패한다. 큰 글자(24px 이상, 또는 18.66px 이상 굵게)는 3 을 쓴다. 기준선보다 0.2 이상 나빠지거나 새로 미달이 된 요소를 센다.
 
 2026-10-13 측정 (3,960건 = 템플릿 5종 × 팔레트 18종 × 글자 요소 약 44개):
 
