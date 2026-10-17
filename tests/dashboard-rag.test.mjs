@@ -34,6 +34,9 @@ test('주별 사용률과 지난주 대비 증감이 나온다', async () => {
   assert.match(html, /사용률 47%/)
   // 이번 주 14회 − 지난주 7회 = +7회
   assert.match(html, /이번 주 RAG 사용 14회 · 지난주 대비 \+7회/)
+  // 툴팁 — HTML 안에 이미 그려져 있고 hover CSS 로만 보인다 (title 속성은 쓰지 않는다)
+  assert.match(html, /<span class="trend-tip">10\/05 — 전체 22회 · RAG 14회 · 사용률 64% · 청크 31개<\/span>/)
+  assert.doesNotMatch(html, /trend-bar" title="/)
 })
 
 test('데이터가 없으면 빈 메시지를 보여준다', async () => {
