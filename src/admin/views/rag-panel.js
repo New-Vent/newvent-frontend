@@ -41,7 +41,7 @@ export function ensureRagPanel(eventId) {
     p.logs = logs
     // 목록에는 실패원인·청크ID가 없다 — 인라인 표시용으로 필요한 행만 상세를 붙인다
     await attachDetails(p)
-    refresh(eventId)
+    refresh()
   })
 }
 
@@ -60,7 +60,7 @@ async function attachDetails(p) {
   }))
 }
 
-function refresh(eventId) {
+function refresh() {
   // 버전 이력 화면을 벗어난 뒤면 다시 그리지 않는다
   if (ui.route === 'versions') document.dispatchEvent(new Event('rag:refresh', { bubbles: true }))
 }
@@ -74,9 +74,16 @@ export async function refreshRagPanel(eventId) {
 export function ragIndexBadge(eventId) {
   const st = panelOf(eventId).index
   if (!st) return ''
-  return st.pendingVersions === 0
-    ? '<span class="badge green">색인 ' + st.indexedVersions + '/' + st.totalVersions + '</span>'
-    : '<span class="badge amber">미색인 ' + st.pendingVersions + '건</span>'
+
+  const pending = st.pendingVersions > 0
+  const message = pending
+    ? '재색인이 필요한 버전이 ' + st.pendingVersions + '개 있어요.'
+    : '모든 버전의 색인이 완료됐어요.'
+
+  return '<span class="admin-index-notice' + (pending ? ' is-pending' : '') + '">'
+    + '<span class="admin-index-notice-icon" aria-hidden="true">i</span>'
+    + '<span>' + message + '</span>'
+    + '</span>'
 }
 
 /** 재색인 카드 + 호출 로그 카드 */
@@ -91,20 +98,79 @@ export function ragPanel(eventId) {
     : '<p class="rag-desc">버튼을 누르면 삭제된 이벤트·시드를 빼고 전부 다시 색인해요.<br>버전 하나만 고치려면 버전 행의 [재색인]을 쓰세요.</p>'
   const logs = normalizeLogs(p?.logs)
   const rows = logs.length
-    ? logs.slice(0, 5).map((l) =>
-      '<div class="rag-log-row">'
-      + '<p class="rag-log-title"><span class="badge ' + (l.validOk ? 'green' : 'amber') + '">#' + l.id + ' ' + (l.validOk ? '성공' : '실패') + '</span>'
-      + '<span>' + esc(l.modelName ?? '') + '</span></p>'
-      + '<p class="rag-log-meta">' + when(l.createdAt) + ' · 입력 ' + (l.inputTokens ?? '-') + ' · 출력 ' + (l.outputTokens ?? '-')
-      + '토큰 · ' + ms(l.responseTimeMs) + (l.ragUsed ? ' · RAG 사용' : '') + '</p>'
-      + (!l.validOk && (l.failureType || l.failureMessage)
-        ? '<p class="rag-log-fail">실패: ' + esc([l.failureType, l.failureMessage].filter(Boolean).join(' — ')) + '</p>' : '')
-      + (l.ragUsed && l.chunkIds
-        ? '<p class="rag-log-meta">참고 청크: ' + esc(l.chunkIds) + '</p>' : '')
-      + '</div>').join('')
+    ? `
+      <div class="rag-log-table-wrap">
+        <table class="rag-log-table" aria-label="LLM 호출 로그">
+          <thead>
+            <tr>
+              <th scope="col">호출 / 모델</th>
+              <th scope="col">상태</th>
+              <th scope="col">입력 / 출력 토큰</th>
+              <th scope="col">응답 시간</th>
+              <th scope="col">일시</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${logs.slice(0, 5).map((l) => {
+              const failure = !l.validOk
+                ? [l.failureType, l.failureMessage].filter(Boolean).join(' — ')
+                : ''
+              const chunks = l.ragUsed && l.chunkIds
+                ? String(l.chunkIds)
+                : ''
+
+              return `
+                <tr>
+                  <td>
+                    <span class="rag-log-model">
+                      <span class="rag-log-id">#${esc(l.id)}</span>
+                      ${esc(l.modelName ?? '')}
+                    </span>
+                    ${l.ragUsed
+                      ? '<span class="rag-log-rag">RAG 사용</span>'
+                      : ''}
+                  </td>
+                  <td>
+                    <span class="rag-log-status ${l.validOk ? 'is-success' : 'is-failure'}">
+                      ${l.validOk ? '성공' : '실패'}
+                    </span>
+                  </td>
+                  <td class="rag-log-number">
+                    ${esc(l.inputTokens ?? '-')}
+                    <span class="rag-log-slash">/</span>
+                    ${esc(l.outputTokens ?? '-')}
+                  </td>
+                  <td class="rag-log-number">${esc(ms(l.responseTimeMs))}</td>
+                  <td class="rag-log-date">${esc(when(l.createdAt))}</td>
+                </tr>
+                ${failure || chunks ? `
+                  <tr class="rag-log-detail">
+                    <td colspan="5">
+                      ${failure
+                        ? `<p class="rag-log-fail">실패: ${esc(failure)}</p>`
+                        : ''}
+                      ${chunks
+                        ? `<p class="rag-log-meta">참고 청크: ${esc(chunks)}</p>`
+                        : ''}
+                    </td>
+                  </tr>
+                ` : ''}
+              `
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `
     : '<p class="rag-desc">아직 호출 기록이 없어요.</p>'
+
   return '<div class="card rag-card rag-reindex">'
-    + '<div class="rag-reindex-text"><h3>RAG 전체 재색인</h3>' + status + '</div>'
+    + '<div class="rag-reindex-text">'
+    + '<div class="rag-reindex-heading">'
+    + '<h3>RAG 전체 재색인</h3>'
+    + ragIndexBadge(eventId)
+    + '</div>'
+    + status
+    + '</div>'
     + button('rag-reindex-all', job?.running ? '진행 중…' : '전체 재색인', job?.running ? 'disabled' : '', 'btn sm')
     + '</div>'
     + '<div class="card rag-card"><h3>LLM 호출 로그</h3>' + rows + '</div>'

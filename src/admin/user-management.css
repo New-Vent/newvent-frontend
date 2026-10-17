@@ -22,10 +22,38 @@
   min-width: 300px;
 }
 
-.users-table td:first-child {
-  min-width: 170px;
+/* 필터가 바뀌어도 칼럼 비율 유지 */
+.users-table {
+  width: 100%;
+  min-width: 1000px;
+  table-layout: fixed;
 }
 
+.users-list .table-wrap {
+  overflow-x: auto;
+}
+
+/* 긴 사용자 정보와 이메일은 셀 안에서 줄바꿈 */
+.users-table td:nth-child(1),
+.users-table td:nth-child(2),
+.users-table td:nth-child(3) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.users-table td:first-child {
+  min-width: 0;
+}
+
+.users-table td:first-child small {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* 관리 버튼은 공간이 부족하면 다음 줄로 */
+.users-table td:last-child .row {
+  flex-wrap: wrap;
+}
 /* 상세·요금제 변경 모달 */
 .users-details {
   display: grid;
@@ -139,4 +167,62 @@
   #users-modal-body .modal-actions {
     flex-wrap: wrap;
   }
+}
+
+/* 상세 정보의 현재 요금제와 변경 버튼 */
+.users-current-plan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.users-current-plan > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.users-current-plan > .btn {
+  flex-shrink: 0;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid #d9e7fa;
+  border-radius: 6px;
+  background: #edf4ff;
+  color: #477bbd;
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.users-current-plan > .btn:hover {
+  background: #e2edff;
+}
+
+/* 검색 버튼 */
+#users-search-form > button[type="submit"] {
+  background: #4b8fe2;
+  border-color: #4b8fe2;
+  color: #fff;
+  box-shadow: none;
+}
+
+#users-search-form > button[type="submit"]:not(:disabled):hover {
+  background: #397dd0;
+  border-color: #397dd0;
+}
+
+/* 상세 보기 버튼 */
+.users-table [data-act="users-detail"] {
+  background: #edf4ff;
+  border-color: #d7e5fa;
+  color: #477bbd;
+  box-shadow: none;
+}
+
+.users-table [data-act="users-detail"]:not(:disabled):hover {
+  background: #e1edff;
+  border-color: #bfd5f3;
+  color: #3568aa;
 }
