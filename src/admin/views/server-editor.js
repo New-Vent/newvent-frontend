@@ -71,7 +71,7 @@ const chatOf = (id) => (CHATS[id] ||= [{ role: 'assistant', text: GREETING }])
 
 // order 는 null 로 시작한다 — 아직 안 건드렸다는 뜻이다. 미리보기 순서를 그대로 쓴다
 // layout 도 null 로 시작한다. variants 는 고친 영역만 담는다 (영역 → class)
-const freshDirect = () => ({ values: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {} })
+const freshDirect = () => ({ values: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {}, removeBlocks: [], removeItems: {} })
 
 /** 새로 만든 직후처럼 진행 중인 작업을 들고 들어올 때 — 목록에서 열 때는 인자 없이 */
 function openServerEditor(id, { jobId = null, request = null, startError = null } = {}) {
@@ -350,6 +350,8 @@ function directChanges(s) {
     textStyle: Object.keys(text).length ? text : null,
     order: changedOrder(s),
     looks: changedLooks(s),
+    removeBlocks: s.direct.removeBlocks,
+    removeItems: s.direct.removeItems,
   }
 }
 
@@ -368,7 +370,55 @@ function blocksInHtml(html) {
 const movableBlocks = (s) => blocksInHtml(s.preview?.html).filter((k) => !PINNED_BLOCKS.includes(k))
 
 /** 화면에 보여 줄 순서. 아직 안 끌었으면 저장된 순서 그대로 */
-const currentOrder = (s) => s.direct.order || movableBlocks(s)
+const currentOrder = (s) => (s.direct.order || movableBlocks(s)).filter((k) => !s.direct.removeBlocks.includes(k))
+
+const ITEM_SELECTORS = {
+  benefits: 'ul li, .benefit-card', stats: 'ul li', prize: 'ul li', compare: 'table tr',
+  steps: 'ol li, .step-card', schedule: 'ol li', faq: 'dl dt, details summary',
+}
+const ITEM_MINIMUMS = { benefits: 1, stats: 2, prize: 1, compare: 2, steps: 2, schedule: 2, faq: 2 }
+const ADMIN_KEEP = ['hero', 'notices', 'cta']
+function blockElement(s, key) { return $('.event-frame')?.contentDocument?.querySelector('[data-block="' + key + '"]') }
+function itemElements(s, key) {
+  const block = blockElement(s, key), selector = ITEM_SELECTORS[key]
+  if (!block || !selector) return []
+  return [...new Set([...block.querySelectorAll(selector)])]
+}
+function previewDeletes(s) {
+  const doc = $('.event-frame')?.contentDocument
+  if (!doc) return
+  doc.querySelectorAll('[data-block]').forEach((el) => {
+    if (el.dataset.nvDeleteStyle !== undefined) {
+      el.setAttribute('style', el.dataset.nvDeleteStyle); delete el.dataset.nvDeleteStyle
+    }
+  })
+  Object.keys(ITEM_SELECTORS).forEach((key) => itemElements(s, key).forEach((el) => {
+    if (el.dataset.nvDeleteStyle !== undefined) { el.setAttribute('style', el.dataset.nvDeleteStyle); delete el.dataset.nvDeleteStyle }
+  }))
+  const hide = (el) => { if (!el) return; el.dataset.nvDeleteStyle = el.getAttribute('style') || ''; el.style.setProperty('display', 'none', 'important') }
+  s.direct.removeBlocks.forEach((key) => hide(blockElement(s, key)))
+  Object.entries(s.direct.removeItems).forEach(([key, indices]) => indices.forEach((index) => hide(itemElements(s, key)[index])))
+}
+function removeBlockDraft(s, key, rerender) {
+  if (ADMIN_KEEP.includes(key)) return
+  rememberDirectScroll(s)
+  s.direct.removeBlocks = s.direct.removeBlocks.includes(key) ? s.direct.removeBlocks : [...s.direct.removeBlocks, key]
+  s.direct.order = currentOrder(s)
+  previewDeletes(s); paintOrder(s); previewOrder(s); updateDirectCount(s); rerender?.()
+}
+function removeItemDraft(s, key, index, rerender) {
+  const current = s.direct.removeItems[key] || []
+  if (current.includes(index)) return
+  rememberDirectScroll(s)
+  s.direct.removeItems[key] = [...current, index]
+  previewDeletes(s); paintOrder(s); updateDirectCount(s); rerender?.()
+}
+
+/** 삭제 버튼을 눌러 다시 그려도 직접수정 패널과 페이지의 현재 위치를 유지한다. */
+function rememberDirectScroll(s) {
+  s.direct.scrollTop = $('#server-scroll')?.scrollTop ?? 0
+  s.direct.windowScrollY = window.scrollY
+}
 
 /** 바꾼 게 있으면 보낼 목록, 없으면 null */
 function changedOrder(s) {
@@ -432,8 +482,9 @@ function previewOrder(s) {
 
 /** 순서 묶음. 옮길 수 있는 블록이 둘 미만이면 아예 안 보여 준다 */
 function orderHTML(s, busy) {
-  if (movableBlocks(s).length < 2) return ''
-  return '<fieldset class="sedit-group"><legend>블록 순서</legend>'
+  const available = currentOrder(s)
+  if (available.length < 2 && !available.some((k) => !ADMIN_KEEP.includes(k) || ITEM_SELECTORS[k])) return ''
+  return '<fieldset class="sedit-group"><legend>블록 순서 · 삭제</legend>'
     + '<ol class="sorder" id="server-order">' + orderItems(s, busy) + '</ol>'
     + '<p class="helper">끌어서 옮기거나 ▲▼ 를 누르세요. 유의사항 · 참여 버튼은 늘 맨 끝이에요.</p></fieldset>'
 }
@@ -443,11 +494,18 @@ function orderItems(s, busy) {
   return list.map((k, i) => '<li class="sorder-item" draggable="' + (busy ? 'false' : 'true')
     + '" data-sorder="' + esc(k) + '">'
     + '<span class="sorder-grip" aria-hidden="true">⠿</span>'
-    + '<span class="sorder-name">' + esc(labelOf(k)) + '</span><span class="sorder-moves">'
+    + '<span class="sorder-name">' + esc(labelOf(k)) + '</span>' + (ITEM_SELECTORS[k] && itemElements(s, k).length
+      ? '<span class="sorder-items">' + itemElements(s, k).map((el, index) => ({ el, index }))
+        .filter(({ index }) => !(s.direct.removeItems[k] || []).includes(index))
+        .map(({ el, index }) => '<span class="sorder-subitem">· ' + esc(el.textContent.trim().slice(0, 60))
+        + button('server-item-delete', '×', 'data-block="' + esc(k) + '" data-index="' + index + '" aria-label="' + esc(labelOf(k)) + ' 항목 삭제" '
+          + (busy || itemElements(s, k).length - (s.direct.removeItems[k] || []).length <= (ITEM_MINIMUMS[k] || 0) ? 'disabled' : ''), 'btn sm') + '</span>').join('') + '</span>' : '')
+    + '<span class="sorder-moves">'
     + button('server-order-up', '▲', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
         + ' 위로" ' + (busy || i === 0 ? 'disabled' : ''), 'btn sm')
     + button('server-order-down', '▼', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
         + ' 아래로" ' + (busy || i === list.length - 1 ? 'disabled' : ''), 'btn sm')
+    + (ADMIN_KEEP.includes(k) ? '' : button('server-block-delete', '✕', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k)) + ' 블록 삭제" ' + (busy ? 'disabled' : ''), 'btn sm'))
     + '</span></li>').join('')
 }
 
@@ -617,12 +675,12 @@ function handleServerTool(ev) {
 async function applyDirect(rerender) {
   const s = ui.serverEditor
   if (!s?.preview || running(s) || s.busy) return
-  const { edits, buttonStyle, textStyle, order, looks } = directChanges(s)
+  const { edits, buttonStyle, textStyle, order, looks, removeBlocks, removeItems } = directChanges(s)
   if (hasEmptyNoticeEdit(s, edits)) {
     toast('유의사항은 빈칸으로 저장할 수 없어요. 내용을 입력해주세요.')
     return
   }
-  if (!edits.length && !buttonStyle && !textStyle && !order && !looks) { toast('바꾼 내용이 없어요.'); return }
+  if (!edits.length && !buttonStyle && !textStyle && !order && !looks && !removeBlocks.length && !Object.keys(removeItems).length) { toast('바꾼 내용이 없어요.'); return }
   s.busy = true
   rerender()
   try {
@@ -632,6 +690,9 @@ async function applyDirect(rerender) {
       ...(buttonStyle ? { buttonStyle } : {}),
       ...(textStyle ? { textStyle } : {}),
       ...(order ? { blockOrder: order } : {}),
+      ...(removeBlocks.length ? { removeBlocks } : {}),
+      ...(Object.keys(removeItems).length ? { removeItems: Object.fromEntries(Object.entries(removeItems).map(([key, indices]) => [key,
+        indices.map((index) => ({ index, before: itemElements(s, key)[index]?.textContent.trim().replace(/\s+/g, ' ') || '' }))])) } : {}),
       ...(looks?.layout ? { layout: looks.layout } : {}),
       ...(looks && Object.keys(looks.variants).length ? { variants: looks.variants } : {}),
     })
@@ -649,6 +710,7 @@ function resetDirect(rerender) {
   const s = ui.serverEditor
   if (!s) return
   s.direct = freshDirect()
+  previewDeletes(s)
   rerender()
 }
 
@@ -740,7 +802,8 @@ function updateDirectCount(s) {
   // ★★ textStyle 을 안 세서 **저장 버튼이 안 켜졌다.** 제목 디자인만 바꾸면
   //   "바꾼 항목 없음" 이 뜨고 버튼이 disabled 로 남는다 — 미리보기가 아니라 이쪽이 진짜 원인이었다
   const n = edits.length + (buttonStyle ? 1 : 0) + (textStyle ? 1 : 0)
-    + (order ? 1 : 0) + (looks?.count || 0)
+    + (order ? 1 : 0) + (looks?.count || 0) + s.direct.removeBlocks.length
+    + Object.values(s.direct.removeItems).reduce((sum, xs) => sum + xs.length, 0)
   const el = $('#server-direct-count')
   if (el) el.textContent = n ? '바꾼 항목 ' + n + '개' : '바꾼 항목 없음'
   const apply = $('[data-act="server-direct-apply"]')
@@ -1054,6 +1117,13 @@ function directPanel(s) {
   const groups = []
   list.forEach((t, i) => {
     const block = grouped ? collected[i].block : 'all'
+    if (s.direct.removeBlocks.includes(block)) return
+    if (grouped && ITEM_SELECTORS[block] && (s.direct.removeItems[block] || []).some((index) => {
+      const node = collected[i]?.node
+      const section = node?.parentElement?.closest('[data-block="' + block + '"]')
+      const item = section ? [...section.querySelectorAll(ITEM_SELECTORS[block])][index] : null
+      return item && item.contains(node)
+    })) return
     if (!groups.length || groups.at(-1).block !== block) groups.push({ block, items: [] })
     groups.at(-1).items.push({ ...t, index: i })
   })
@@ -1369,6 +1439,12 @@ function afterServerRender() {
   // 대화는 최신 말이 보이게 맨 아래로
   const scroller = $('#server-scroll')
   if (scroller && s.tab === 'chat') scroller.scrollTop = scroller.scrollHeight
+  if (scroller && s.tab === 'direct' && s.direct.scrollTop != null) {
+    scroller.scrollTop = s.direct.scrollTop
+    requestAnimationFrame(() => {
+      if (ui.serverEditor === s && s.tab === 'direct') window.scrollTo(0, s.direct.windowScrollY || 0)
+    })
+  }
   document.querySelectorAll('textarea[data-autogrow]').forEach((el) => {
     if (el.dataset.sedit !== undefined) {
       const index = Number(el.dataset.sedit)
@@ -1382,7 +1458,7 @@ function afterServerRender() {
     // 미리보기 도구줄이 올린 영역에 보여 줄 것을 여기서 묻는다 (frame.js 의 server-edit 모드)
     if (frame) frame.nvTools = (key) => toolsOf(s, key)
     // 고치던 값 · 바꾼 순서 · 배치가 남아 있으면 (탭 전환 · 기기 전환) 새 iframe 에도 다시 입힌다
-    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewTextStyle(s); previewOrder(s); previewLooks(s) }, { once: true })
+    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewTextStyle(s); previewOrder(s); previewLooks(s); previewDeletes(s) }, { once: true })
   } else {
     // 고른 영역 외곽선 — 새 iframe(새 버전 · 기기 전환)에도 다시 입힌다
     const frame = $('.event-frame')
@@ -1546,6 +1622,8 @@ async function runRagExamples() {
       return true
     case 'server-order-up': if (s) nudgeBlock(s, b.dataset.block, -1); return true
     case 'server-order-down': if (s) nudgeBlock(s, b.dataset.block, 1); return true
+    case 'server-block-delete': if (s && !running(s) && !s.busy) removeBlockDraft(s, b.dataset.block, rerender); return true
+    case 'server-item-delete': if (s && !running(s) && !s.busy) removeItemDraft(s, b.dataset.block, Number(b.dataset.index), rerender); return true
     case 'server-asset-delete': if (s) removeAsset(s, b.dataset.id, rerender); return true
     // ★ 접어 둔 사진을 하나만 펼친다. 같은 걸 또 누르면 다시 접는다
     case 'server-asset-peek':
