@@ -4,6 +4,7 @@ import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
 import { loadEvent, loadEvents, loadMembershipGrades, loadMyProfile, loadParticipations, loadParticipationStatus, participate, participationBody, signUp, updateMyProfile, useApi, USE_SERVER } from '@shared/repo.js'
+import { ensureServerEvent, isUpcomingEvent } from './event-loading.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -110,7 +111,7 @@ function header() {
 /** 목록 — 한 번만 부르고, 실패하면 다시 시도 버튼이 재호출한다. */
 function ensureEvents(rerender) {
   if (!USE_SERVER) return
-  if (ui.serverEventsState === 'loading' || ui.serverEventsState === 'done') return
+  if (['loading', 'done', 'error'].includes(ui.serverEventsState)) return
   ui.serverEventsState = 'loading'
   loadEvents().then(
     (list) => { ui.serverEvents = list; ui.serverEventsState = 'done'; rerender() },
@@ -121,18 +122,7 @@ function ensureEvents(rerender) {
 
 /** 상세 — 보고 있는 이벤트가 바뀌면 다시 부른다. */
 function ensureEvent(id, rerender) {
-  if (!USE_SERVER || !id) return
-  if (ui.serverEvent?.id === Number(id) && ui.serverEventState === 'done') return
-  if (ui.serverEventState === 'loading' && ui.serverEventId === String(id)) return
-  ui.serverEventId = String(id)
-  ui.serverEventState = 'loading'
-  loadEvent(id).then(
-    (ev) => { if (ui.serverEventId !== String(id)) return
-              ui.serverEvent = ev; ui.serverEventState = 'done'; rerender() },
-    (err) => { if (ui.serverEventId !== String(id)) return
-               ui.serverEventError = err?.message || '이벤트를 불러오지 못했어요.'
-               ui.serverEventState = 'error'; rerender() },
-  )
+  if (USE_SERVER) ensureServerEvent(ui, id, loadEvent, rerender)
 }
 
 
@@ -279,6 +269,11 @@ document.addEventListener('click', (ev) => {
     render()
     return
   }
+  if (a === 'reload-event') {
+    ui.serverEventState = null
+    render()
+    return
+  }
   if (a === 'close') return closeModal()
   if (a === 'route') return navigate(b.dataset.route)
   if (a === 'event') return navigate('event', b.dataset.id)
@@ -358,6 +353,11 @@ document.addEventListener('click', (ev) => {
  *   안 부르면 페이지가 「미리보기에서는 참여가 접수되지 않아요」를 띄운다.
  */
 function participateFromPage(ev) {
+  if (isUpcomingEvent(ui.serverEvent)) {
+    ev?.preventDefault?.()
+    toast('아직 시작 전인 이벤트입니다. 시작 시각 이후 참여해주세요.')
+    return
+  }
   const detail = ev?.detail || {}
 
   // 새 길 — runtime 이 모아 준 본문이 그대로 참여 API 본문이다 (ParticipationCreateRequest)

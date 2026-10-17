@@ -11,6 +11,7 @@ import { currentEvent, currentParticipation, published } from '@shared/selectors
 import { USE_SERVER } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
+import { isUpcomingEvent } from '../event-loading.js'
 
 
 function participationControl(e){
@@ -33,6 +34,7 @@ function participationControl(e){
  * ★ 사유는 앞으로 늘어난다. 모르는 값이면 일반 문구로 넘긴다 (화면이 안 깨지게).
  */
 const UNAVAILABLE = {
+  NOT_STARTED: { tone: 'soon', title: '아직 시작 전이에요', desc: '이벤트 시작 시각 이후 참여할 수 있어요.' },
   ALREADY_PARTICIPATED: { tone: 'done', title: '이미 참여하셨어요', desc: '참여 결과는 내 혜택에서 볼 수 있어요.' },
   INSUFFICIENT_GRADE: { tone: 'grade', title: '우수 등급부터 참여할 수 있어요', desc: '멤버십 등급은 이용 실적에 따라 정해져요.' },
   NOT_CONFIGURED: { tone: 'soon', title: '준비 중이에요', desc: '참여 방식이 아직 설정되지 않았어요. 곧 열립니다.' },
@@ -105,6 +107,11 @@ function pageDrawsGame() {
  * 입력은 페이지가 들고 있으면 페이지가(.ev-game + runtime), 없으면 패널이 맡는다.
  */
 function serverParticipation() {
+  if (isUpcomingEvent(ui.serverEvent)) {
+    return '<div class="participation-access soon" role="status"><strong>오픈 예정이에요</strong>'
+      + '<p class="helper">이벤트 시작 시각 이후 참여할 수 있어요.</p>'
+      + '<button type="button" class="btn wide" disabled>시작 전에는 참여할 수 없어요</button></div>'
+  }
   if (!ui.logged) {
     return '<div class="participation-access login" role="status"><strong>로그인하면 참여할 수 있어요</strong>'
       + button('route', '로그인하고 참여하기', 'data-route="login"', 'btn primary wide') + '</div>'
@@ -173,6 +180,7 @@ function serverEventView() {
   if (ui.serverEventState === 'error' || !e) {
     return '<div class="container empty"><h3>이벤트를 불러오지 못했어요</h3>'
       + '<p>' + esc(ui.serverEventError || '') + '</p>'
+      + button('reload-event', '다시 시도', '', 'btn primary')
       + button('route', '목록으로', 'data-route="home"', 'btn') + '</div>'
   }
   if (!e.publishedHtml) {
@@ -185,9 +193,9 @@ function serverEventView() {
     + '<div class="detail-layout"><div class="detail-frame">'
     // live — 페이지 안의 「참여하기」(data-slot="cta-link")를 호스트가 받는다.
     // 그 밖의 클릭은 readonly 와 똑같이 막는다 (frame.js 의 bindFrame 참고)
-    + serverFrame(e.publishedHtml, esc(e.title), 'live', e.id)
+    + serverFrame(e.publishedHtml, esc(e.title), isUpcomingEvent(e) ? 'readonly' : 'live', e.id)
     + '</div><aside class="detail-side card">'
-    + '<div class="spread"><span class="badge green">진행 중</span>'
+    + '<div class="spread">' + (isUpcomingEvent(e) ? '<span class="badge">오픈 예정</span>' : '<span class="badge green">진행 중</span>')
     + (e.closingSoon ? '<span class="badge pink">마감 임박</span>' : '') + '</div>'
     + '<h1>' + esc(e.title) + '</h1>'
     + '<dl class="facts"><div class="fact"><dt>이벤트 기간</dt><dd>'
