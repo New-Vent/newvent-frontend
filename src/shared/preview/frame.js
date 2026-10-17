@@ -240,14 +240,31 @@ function hydrate(root=document){
   delete frame.dataset.doc;
   if(html!==undefined)frame.srcdoc=html;
  });
- root.querySelectorAll('.thumb').forEach(el=>{
+ root.querySelectorAll('.thumb, .template-preview-canvas').forEach((el) => {
   if(el.dataset.bound)return;
   // 썸네일 HTML 이 없으면 자리표시자(.thumb-empty)만 있고 iframe 이 없다.
   const frame=el.querySelector('iframe');
   if(!frame)return;
   el.dataset.bound='true';
-  const scale=()=>{if(el.isConnected)frame.style.transform='scale('+(el.clientWidth/720)+')';};
-  observeLayout(el,scale);
+  const isDetail = el.classList.contains('template-preview-canvas')
+  const scale = () => {
+    if (!el.isConnected) return
+
+    const ratio = el.clientWidth / 720
+    frame.style.transform = `scale(${ratio})`
+
+    // 상세보기는 전체 문서의 축소된 높이만큼 공간을 확보한다.
+    if (isDetail) {
+      const height = Math.ceil(frame.offsetHeight * ratio)
+      if (el.style.height !== `${height}px`) { el.style.height = `${height}px` }
+    }
+  }
+
+  observeLayout(el, scale)
+
+  if (isDetail) {
+    observeLayout(frame, scale)
+  }
  });
  root.querySelectorAll('.event-frame').forEach(frame=>{frame.onload=()=>bindFrame(frame);bindFrame(frame);});
 }

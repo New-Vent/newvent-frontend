@@ -1,6 +1,12 @@
 /** 인라인 SVG 아이콘. 원본: paths · icon() */
 
 const paths = {
+  filter: `
+    <path d="M3 6h3m4 0h11M3 12h11m4 0h3M3 18h5m4 0h9"/>
+    <circle cx="8" cy="6" r="2"/>
+    <circle cx="16" cy="12" r="2"/>
+    <circle cx="10" cy="18" r="2"/>
+  `,
   logout: '<path d="M9 5H5v14h4M9 12h12m-4-4 4 4-4 4"/>',
   bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
   arrow:'<path d="M5 12h14m-5-5 5 5-5 5"/>',

@@ -1,21 +1,7 @@
 /**
- * 이벤트 관리 목록.
- *
- * 탭 세 개로 나뉜다. **탭마다 열도 버튼도 다르다** — 같은 표를 재사용하지 않고
- * 탭별 렌더 함수를 따로 둔 이유다.
- *
- *   나의 이벤트   작업 중인 전부. 버전이력 · 편집하기 · 게시하기 · 삭제하기
- *   게시중        사용자에게 보이는 것만. 기간 · 게시버전 / 게시 내리기
- *   휴지통        삭제된 것.  게시하기(=복구 후 게시) · 영구 삭제하기
- *
- * 원본: adminView · adminTable · adminFilteredEvents
- *
- * 두 모드 — 탭 · 필터 · 페이지는 같고, 데이터와 표만 다르다
- *   목업 (VITE_API_AUTH off)  state.db
- *   서버 (VITE_API_AUTH on)   GET /api/admin/events · /trash → ui.adminServer
- *
- * ★ 서버 모드에서 아직 없는 것
- *   버전 번호 · 게시 전 변경 개수 — 목록 API 가 버전 정보를 안 준다
+ * 관리자 이벤트 목록.
+ * 이벤트·휴지통 탭과 검색·필터·페이지 이동을 제공한다.
+ * 목업/서버 모드 및 게시 상태에 따라 데이터와 표 렌더링을 구분한다.
  */
 import { esc } from '@shared/dom.js'
 import { badgeOf, eventStatus, serverStatus, shortDate } from '@shared/format.js'
@@ -23,6 +9,7 @@ import { icon } from '@shared/icons.js'
 import { loadAdminEventCounts, loadAdminEvents, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
+import { adminFilterToolbar, matchesAdminEventFilters } from './event-filters.js'
 
 /** 탭 정의. ui.adminTab 이 이 중 하나를 가리킨다. */
 const TABS = [
@@ -44,9 +31,7 @@ function adminFilteredEvents() {
 
   return state.db.events
     .filter((e) => (tab === 'trash' ? Boolean(e.deletedAt) : !e.deletedAt))
-    .filter((e) => (tab === 'live' ? eventStatus(e) === 'live' : true))
-    // 상태 필터는 '나의 이벤트'에서만 쓴다. 게시중 탭은 이미 live 로 좁혀져 있다.
-    .filter((e) => tab !== 'mine' || ui.adminStatus === 'all' || eventStatus(e) === ui.adminStatus)
+    .filter((e) => matchesAdminEventFilters(e, false))
     .filter((e) => {
       const s = e.versions.at(-1).snapshot
       if (from && s.end < from) return false
@@ -70,7 +55,6 @@ function adminPageSlice(es) {
 }
 
 function pager(page, pages) {
-  if (pages <= 1) return ''
   const nums = Array.from({ length: pages }, (_, i) => i + 1)
     .map((n) =>
       button('admin-page', String(n), `data-page="${n}" aria-current="${n === page}"`,
@@ -222,8 +206,7 @@ function serverFiltered() {
   const q = raw.replace(/^#/, '')
 
   return (tab === 'trash' ? s.trash : s.active)
-    .filter((e) => tab !== 'live' || serverStatus(e) === 'live')
-    .filter((e) => tab !== 'mine' || ui.adminStatus === 'all' || serverStatus(e) === ui.adminStatus)
+    .filter((e) => matchesAdminEventFilters(e, true))
     .filter((e) => {
       if (!from && !to) return true
       if (!e.startAt || !e.endAt) return false
@@ -250,33 +233,194 @@ const ownerOnly = (e) => (notMine(e) ? ' ' + blocked(NOT_MINE) : '')
  * 목록 응답에 버전이 없어 누를 때 미리보기로 최신 버전을 알아낸다 (main.js publish-latest)
  * 이미 게시 중이면 상태만 보여준다 — 재게시는 편집 화면 · 버전 이력에서 버전을 골라 한다.
  */
-function publishButton(e) {
-  if (e.status === 'ENDED') return button('publish-latest', '게시하기', `data-id="${e.id}" ${blocked('종료된 이벤트는 게시할 수 없어요')}`, 'btn sm ghost')
-  if (e.status === 'PUBLISHED') return button('publish-latest', '게시 중', `data-id="${e.id}" ${blocked('재게시는 편집 화면이나 버전 이력에서 할 수 있어요')}`, 'btn sm ghost')
-  if (notMine(e)) return button('publish-latest', '게시하기', `data-id="${e.id}" ${blocked(NOT_MINE)}`, 'btn sm ghost')
-  return button('publish-latest', '게시하기', `data-id="${e.id}"`, 'btn sm primary')
+function eventActionIcon(name) {
+  const paths = {
+    edit: '<path d="m16 3 5 5-12 12-6 1 1-6Z"/><path d="m14 5 5 5"/>',
+    restore: '<path d="M3 10a9 9 0 1 1 2 8M3 3v7h7"/><path d="M12 7v5l3 2"/>',
+    publish: '<path d="M12 16V3m-5 5 5-5 5 5"/><path d="M4 15v5h16v-5"/>',
+    unpublish: '<path d="M12 3v13m-5-5 5 5 5-5"/><path d="M4 17v4h16v-4"/>',
+    more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+    history: '<path d="M3 11a9 9 0 1 1 2 7M3 4v7h7"/><path d="M12 7v5l3 2"/>',
+    users: '<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4v2"/>',
+    trash: '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+  }
+
+  return `<svg viewBox="0 0 24 24" aria-hidden="true">
+    ${paths[name] || ''}
+  </svg>`
 }
 
-const serverTitleCell = (e) =>
-  `<td><h3>${esc(e.name)}</h3><small>ID ${e.id}${e.template ? ' · ' + esc(e.template) : ''}${notMine(e) ? ' · 다른 관리자' : ''}</small></td>`
+function eventActionButton(action, label, symbol, attrs, variant = '') {
+  return button(
+    action,
+    `<span class="event-action-icon">${eventActionIcon(symbol)}</span>
+     <span>${label}</span>`,
+    attrs,
+    `event-action-button ${variant}`,
+  )
+}
+
+function publishButton(e) {
+  const attrs = `data-id="${e.id}"`
+
+  if (e.status === 'PUBLISHED') {
+    return eventActionButton(
+      'unpublish',
+      '게시 내리기',
+      'unpublish',
+      attrs + ownerOnly(e),
+      'is-unpublish',
+    )
+  }
+
+  const disabled = e.status === 'ENDED'
+    ? ' ' + blocked('종료된 이벤트는 게시할 수 없어요')
+    : ownerOnly(e)
+
+  return eventActionButton(
+    'publish-latest',
+    '게시하기',
+    'publish',
+    attrs + disabled,
+    'is-publish',
+  )
+}
+
+function eventMoreMenu(e, showPage = false) {
+  const attrs = `data-id="${e.id}"${ownerOnly(e)}`
+
+  const menuButton = (action, label, symbol, extra = '') =>
+    button(
+      action,
+      `${eventActionIcon(symbol)}<span>${label}</span>`,
+      attrs,
+      `event-more-item ${extra}`,
+    )
+
+  return `
+    <details class="event-more">
+      <summary aria-label="${esc(e.name)} 관리 메뉴">
+        ${eventActionIcon('more')}
+      </summary>
+
+      <div class="event-more-popup">
+        ${showPage ? publicPageLink(e) : ''}
+        ${menuButton('versions', '버전 이력', 'history')}
+        ${menuButton('participants', '참여자', 'users')}
+        ${menuButton('delete-event', '삭제하기', 'trash', 'is-danger')}
+      </div>
+    </details>
+  `
+}
+
+function eventManagementActions(e, showPage = false) {
+  return `
+    <div class="event-management-actions">
+      ${eventActionButton(
+        'edit',
+        '편집하기',
+        'edit',
+        `data-id="${e.id}"${ownerOnly(e)}`,
+        'is-edit',
+      )}
+      ${publishButton(e)}
+      ${eventMoreMenu(e, showPage)}
+    </div>
+  `
+}
+
+function adminStatusBadge(status) {
+  const labels = {
+    draft: '미게시',
+    upcoming: '오픈 예정',
+    live: '진행 중',
+    ended: '종료',
+  }
+
+  if (!Object.hasOwn(labels, status)) return ''
+
+  return `
+    <span class="admin-status-badge is-${status}">
+      ${labels[status]}
+    </span>
+  `
+}
+
+function closingDays(e) {
+  if (!e.closingSoon || serverStatus(e) !== 'live' || !e.endAt) {
+    return null
+  }
+
+  // 한국 날짜 기준으로 남은 날짜 계산
+  const today = dayOf(new Date().toISOString())
+  const endDay = dayOf(e.endAt)
+
+  const days = Math.round(
+    (
+      Date.parse(endDay + 'T00:00:00Z')
+      - Date.parse(today + 'T00:00:00Z')
+    ) / 86400000,
+  )
+
+  return Number.isFinite(days) && days >= 0 ? days : null
+}
+
+const serverTitleCell = (e) => {
+  const days = closingDays(e)
+
+  return `
+    <td>
+      <h3 class="admin-event-title">
+        <span>${esc(e.name)}</span>
+
+        ${days !== null
+          ? `<span
+              class="admin-closing-dday"
+              aria-label="${days === 0 ? '오늘 마감' : days + '일 후 마감'}"
+            >${days === 0 ? 'D-DAY' : 'D-' + days}</span>`
+          : ''}
+      </h3>
+
+      <small>
+        ID ${e.id}${e.template ? ' · ' + esc(e.template) : ''}${notMine(e) ? ' · 다른 관리자' : ''}
+      </small>
+    </td>
+  `
+}
 
 /** 나의 이벤트 — 버전 열 대신 게시 상태 · 기간 (목록 API 에 버전 정보가 없다) */
 function serverMine(es) {
   const rows = es.map((e) =>
-    '<tr>' + serverTitleCell(e)
-    + '<td>' + badgeOf(serverStatus(e)) + (e.closingSoon ? ' <span class="badge amber">마감 임박</span>' : '')
-    + `<br><small>${serverPeriod(e)}</small></td>`
-    + '<td><div class="row">'
-    + button('versions', '버전 이력', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm')
-    + button('participants', '참여자', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm')
-    + button('edit', '편집하기', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm soft')
-    + publishButton(e)
-    + button('delete-event', '삭제하기', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm danger')
-    + '</div></td></tr>')
-  return `<table class="admin-table"><thead><tr><th>이벤트</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
-    + rows.join('')
-    + (rows.length ? '' : emptyRow(3, '검색 결과가 없습니다.'))
-    + '</tbody></table>'
+    `<tr class="${closingDays(e) !== null ? 'is-closing-soon' : ''}">`
+    + serverTitleCell(e)
+    + `<td>${adminStatusBadge(serverStatus(e))}</td>`
+    + `<td class="event-period-cell">${serverPeriod(e)}</td>`
+    + `<td>${eventManagementActions(e)}</td>`
+    + '</tr>',
+  )
+
+  return `
+    <table class="admin-table admin-event-list-table">
+      <colgroup>
+        <col class="event-title-column">
+        <col class="event-status-column">
+        <col class="event-period-column">
+        <col class="event-actions-column">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>이벤트</th>
+          <th>상태</th>
+          <th>이벤트 기간</th>
+          <th>관리</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.join('')}
+        ${rows.length ? '' : emptyRow(4, '검색 결과가 없습니다.')}
+      </tbody>
+    </table>
+  `
 }
 
 /**
@@ -291,13 +435,12 @@ const publicPageLink = (e) =>
 /** 게시중 — 기간을 보여준다. 게시 버전 번호는 목록 API 에 없다 */
 function serverLive(es) {
   const rows = es.map((e) =>
-    '<tr>' + serverTitleCell(e)
+    `<tr class="${closingDays(e) !== null ? 'is-closing-soon' : ''}">`
+    + serverTitleCell(e)
     + `<td>${serverPeriod(e)}</td>`
-    + '<td>' + badgeOf('live') + '</td>'
-    + '<td><div class="row">'
-    + publicPageLink(e)
-    + button('unpublish', '게시 내리기', `data-id="${e.id}"${ownerOnly(e)}`, 'btn sm soft')
-    + '</div></td></tr>')
+    + '<td>' + adminStatusBadge('live') + '</td>'
+    + '<td>' + eventManagementActions(e, true) + '</td></tr>')
+
   return `<table class="admin-table"><thead><tr><th>이벤트</th><th>기간</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
     + rows.join('')
     + (rows.length ? '' : emptyRow(4, '게시 중인 이벤트가 없습니다.'))
@@ -312,15 +455,48 @@ function serverLive(es) {
 function serverTrash(es) {
   const rows = es.map((e) =>
     '<tr>' + serverTitleCell(e)
-    + `<td><small>${dotted(e.updatedAt)} 변경</small></td>`
-    + '<td><div class="row">'
-    + button('restore-event', '복구', `data-id="${e.id}"`, 'btn sm soft')
-    + button('purge-event', '영구 삭제하기', `data-id="${e.id}"`, 'btn sm danger')
-    + '</div></td></tr>')
-  return `<table class="admin-table"><thead><tr><th>이벤트</th><th>마지막 변경</th><th>관리</th></tr></thead><tbody>`
-    + rows.join('')
-    + (rows.length ? '' : emptyRow(3, '휴지통이 비어 있습니다.'))
-    + '</tbody></table>'
+    + `<td><small>${dotted(e.updatedAt)}</small></td>`
+    + `<td><small>${serverPeriod(e)}</small></td>`
+    + '<td><div class="event-management-actions">'
+    + eventActionButton(
+      'restore-event',
+      '복구',
+      'restore',
+      `data-id="${e.id}"`,
+      'is-restore',
+    )
+    + eventActionButton(
+      'purge-event',
+      '영구 삭제',
+      'trash',
+      `data-id="${e.id}"`,
+      'is-purge',
+    )
+    + '</div></td></tr>',
+  )
+
+  return `
+    <table class="admin-table admin-trash-table">
+      <colgroup>
+        <col class="trash-event-column">
+        <col class="trash-updated-column">
+        <col class="trash-period-column">
+        <col class="trash-actions-column">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>이벤트</th>
+          <th>마지막 변경</th>
+          <th>이벤트 기간</th>
+          <th>관리</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.join('')}
+        ${rows.length ? '' : emptyRow(4, '휴지통이 비어 있습니다.')}
+      </tbody>
+    </table>
+  `
 }
 
 const SERVER_TABLES = { mine: serverMine, live: serverLive, trash: serverTrash }
@@ -474,21 +650,6 @@ function adminView() {
   const tab = currentTab()
   const slice = adminPageSlice(USE_SERVER ? serverFiltered() : adminFilteredEvents())
 
-  const tabs = TABS.map((t) =>
-    button('admin-tab', t.label, `data-tab="${t.key}" aria-pressed="${tab === t.key}"`,
-      tab === t.key ? 'active' : ''),
-  ).join('')
-
-  // 상태 필터는 '나의 이벤트'에서만 의미가 있다.
-  const statusFilters = tab !== 'mine' ? '' :
-    '<div class="admin-status-filters" role="group" aria-label="게시 상태 필터">'
-    + [['all', '전체'], ['draft', '미게시'], ['live', '진행 중'], ['upcoming', '오픈 예정'], ['ended', '종료']]
-        .map(([value, label]) =>
-          button('admin-status', label, `data-status="${value}" aria-pressed="${ui.adminStatus === value}"`,
-            ui.adminStatus === value ? 'active' : ''))
-        .join('')
-    + '</div>'
-
     return '<div class="container admin-events-page">'
     + '<div class="page-heading spread admin-page-heading">'
     + '<div class="admin-page-title">'
@@ -525,17 +686,7 @@ function adminView() {
       + '</p>'
     : '')
     + '<section class="admin-list-section">'
-    + '<div class="section-title spread"><div class="admin-list-tabs">' + tabs + '</div>'
-    + '<label class="search">' + icon('search')
-    + '<input id="admin-search" aria-label="관리자 이벤트 검색" placeholder="이벤트명, ID 검색" value="'
-    + esc(ui.adminQuery) + '"></label></div>'
-    + statusFilters
-    + '<div class="admin-period-filter">'
-    + '<label class="field">조회 시작<input id="admin-from" type="date" value="' + esc(ui.adminFrom || '') + '"></label>'
-    + '<label class="field">조회 종료<input id="admin-to" type="date" value="' + esc(ui.adminTo || '') + '"></label>'
-    + ((ui.adminFrom || ui.adminTo) ? button('clear-period', '기간 초기화', '', 'btn sm ghost') : '')
-    + '</div>'
-    + '<p id="admin-result-count" class="admin-result-count">' + slice.total + '개 이벤트</p>'
+    + adminFilterToolbar(tab)
     + '<div id="admin-results" class="card table-wrap">'
     + (USE_SERVER ? serverTable(tab, slice.rows) : TABLES[tab](slice.rows)) + '</div>'
     + pager(slice.page, slice.pages)
