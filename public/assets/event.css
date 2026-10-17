@@ -2489,6 +2489,413 @@ body:has(.theme-aurora) {
      남아서 밝은 색감에서는 흰 바탕 위 흰 글자였다 — 쿠폰 내용이 통째로 안 보였다 (계산값 실측) */
 .theme-aurora [data-block="coupon"].v-coupon-dashed:not(.ev-block) :is(p, li, strong) { color: var(--ev-text-main); }
 
+/* ── 20-themes/05-editorial.css ── */
+/* ── theme-editorial — 상자를 걷어내고 여백과 타이포로 짠다 ──────────────────
+ *
+ * ★★ 왜 새 테마인가 — theme-basic 은 이미 다른 이벤트들이 쓰는 기본값이다.
+ *   거기를 고치면 쓰고 있는 페이지가 전부 같이 바뀐다. 새 벌을 하나 더 두면
+ *   관리자가 골라서 비교할 수 있고, 마음에 안 들면 돌아가면 된다.
+ *
+ * ★★ 이 테마가 이기려면 **특이도가 (0,4,0) 이상**이어야 한다.
+ *   배경 변형(60-variants/80-surface.css)이 `[data-block].v-surface-card:not(.ev-block)`
+ *   = (0,3,0) 인데 **파일이 뒤에 있어서** 같은 값이면 변형이 이긴다.
+ *   "테마를 바꿨는데 카드가 그대로다" 가 여기서 난다. 그래서 테마 클래스를
+ *   두 번 적어 올린다 — 02-basic.css 가 타이포에서 쓰는 수법과 같다.
+ *
+ * ★ 글자색은 **칠을 걷을 때마다 같이 정한다.** 10-fallback 이 hero 에 흰 글씨를
+ *   박아 두므로, 배경만 투명하게 만들면 흰 바탕에 흰 글씨가 된다.
+ *
+ * ★ 사진(95-assets)은 이 파일보다 뒤다. 사진을 깐 영역의 판과 글자색은
+ *   거기가 쥐고 이 테마는 못 이긴다 — 그게 맞다. 대비를 재서 맞춰 둔 값이다.
+ */
+
+.theme-editorial {
+  /* ★★ **잉크가 팔레트 색을 머금는다.** 이 테마의 핵심 한 줄이다.
+       팔레트는 지금까지 강조색 · 바탕만 바꾸고 --ev-text-main 은 거의 안 건드렸다.
+       그래서 초록 팔레트를 골라도 제목은 남색 섞인 먹색이라 "색이 따로 논다" 는
+       말이 나왔다. 여기서 제목 잉크에 브랜드색을 28% 섞는다 —
+       초록이면 짙은 초록, 주황이면 짙은 갈빛이 되어 페이지가 한 벌로 읽힌다.
+     ★ 28% 다. 더 섞으면 대비가 떨어지고(검정 쪽이 빠진다) 덜 섞으면 티가 안 난다.
+       본문(--ev-text-sub)은 안 건드린다 — 긴 글까지 물들면 읽기 피곤하다.
+     ★ 어두운 팔레트에서는 잉크가 밝은 색이라 섞으면 더 밝아진다. 그래서
+       밝은 바탕일 때만 건다 — 아래 :where 조건. */
+  --nv-ink: color-mix(in srgb, var(--ev-primary, #16a34a) 28%, var(--ev-text-main, #0f172a));
+  --nv-rule: color-mix(in srgb, var(--ev-text-main, #0f172a) 12%, transparent);
+}
+
+/* ★ 어두운 팔레트(night · esports)는 그대로 둔다. 밝은 잉크에 색을 섞으면
+     대비가 떨어진다 — 밝은 바탕에서만 쓰는 수법이다. */
+.theme-editorial:is(.palette-night, .palette-esports) {
+  --nv-ink: var(--ev-text-main, #f5f5f4);
+}
+
+/* ── ① 페이지 — 한 장의 카드를 없애고 배경을 끝까지 잇는다 ───────── */
+
+/* ★ 위아래만 팔레트 색으로 물들이고 가운데는 비운다. 사진 한 장 깔지 않고도
+     페이지가 한 덩어리로 보인다 — 예시 이미지가 쓰는 꼴이다. */
+body:has(.theme-editorial) {
+  /* ★★ 그라데이션을 **하나도 안 쓴다.** 빛무리도 위쪽 기운도 뺐다 —
+       통신사 프로모션은 믿을 만해 보이는 게 먼저다. 바탕은 한 색이다.
+       (빛무리 두 개 → 위쪽 기운 하나 → 없음. 두 번 걸러 여기까지 왔다.) */
+  background-color: var(--ev-bg, #fcfdfc);
+  background-image: none;
+}
+
+/* ★★ 흰 판을 걷는다. theme-basic 은 여기에 배경 · 테두리 · 26px 모서리 ·
+     그림자를 줘서 "큰 흰 종이 위의 페이지" 로 보이게 한다 — 상자의 가장 바깥 겹이다. */
+.theme-editorial.ev-container,
+.theme-editorial .ev-container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 0 72px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ── ② hero — 배경을 비우고 글자만 크게 ──────────────────────── */
+
+/* ★★ base 의 그라데이션 덩어리를 치운다. 그게 "맨 위 큰 상자" 다.
+   ★ 배경을 비웠으니 **글자색을 같이 정한다.** 안 하면 10-fallback 의 흰 글씨가
+     흰 바탕에 앉는다(머리말 ③). */
+.theme-editorial.theme-editorial [data-block="hero"]:not(.ev-block) {
+  margin: 0;
+  padding: 72px 32px 52px;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ev-text-main, #0f172a);
+}
+
+.theme-editorial.theme-editorial [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(2.5rem, 7.6vw, 3.9rem);
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.04em;
+  margin: 0 0 18px;
+  color: var(--nv-ink);
+  /* ★ base 가 흰 글씨를 전제로 넣어 둔 그림자를 끈다 — 밝은 바탕에서는 때가 낀다 */
+  text-shadow: none;
+}
+
+.theme-editorial.theme-editorial [data-block="hero"]:not(.ev-block) p {
+  font-size: 1.08rem;
+  line-height: 1.75;
+  max-width: 30em;
+  color: var(--ev-text-sub, var(--ev-text-main, #334155));
+}
+
+/* ★ 뱃지 · 기간 — 흰 글씨를 전제로 한 반투명 흰 칩을 밝은 바탕용으로 바꾼다 */
+.theme-editorial.theme-editorial [data-block="hero"]:not(.ev-block) .badge {
+  background: color-mix(in srgb, var(--ev-primary, #16a34a) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ev-primary, #16a34a) 30%, transparent);
+  /* ★ 팔레트를 따라가게 둔다. primary-deep 으로 두면 어두운 팔레트(night · esports)에서
+       어두운 바탕에 어두운 글자가 된다 — 실측 1.04. 틴트 배경은 6~12% 라 잉크를 안 가린다. */
+  color: var(--ev-text-main, #0f172a);
+  letter-spacing: 0.1em;
+}
+
+.theme-editorial.theme-editorial [data-block="hero"]:not(.ev-block) [data-slot="period"] {
+  display: inline-block;
+  margin-top: 18px;
+  border: 0;
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  /* ★ muted 로 두면 밝은 팔레트(coffee · summer)에서 4.46 으로 모자란다(실측).
+       기간은 짧고 중요한 정보다 — 흐리게 할 자리가 아니다. */
+  color: var(--ev-text-main, #0f172a);
+  opacity: 1;
+}
+
+/* ── ③ 상자를 걷는다 — 이 테마의 핵심 ────────────────────────── */
+
+/* ★★ (0,4,0) 이다. 배경 변형(0,3,0)이 **뒤 파일**이라 같은 값으로는 못 이긴다.
+   ★ 칠과 테두리만 걷고 padding 은 남긴다 — 안쪽 여백까지 지우면 글이 가장자리에 붙는다.
+   ★ 글자색을 같이 되돌린다. v-surface-dark 는 흰 글씨를 쥐고 있어서
+     바탕만 투명하게 만들면 밝은 페이지에 흰 글씨가 남는다(실측에서 겪은 그 함정). */
+.theme-editorial.theme-editorial [data-block][class*="v-surface-"]:not(.ev-block) {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  /* ★★ color 만 정해서는 못 이긴다. v-surface-dark 는 영역 안에서 **토큰 자체**를
+       다시 선언한다 (--ev-text-main: #f8fafc …). 그래서 var(--ev-text-main) 을 읽으면
+       덮어쓴 흰색이 나온다 — 칠을 걷었는데 흰 글씨만 남아 1.08 까지 떨어졌다(실측).
+     ★ inherit 로 되돌린다. 커스텀 속성에도 CSS 전역 키워드가 먹어서 부모(= 페이지 루트,
+       즉 팔레트가 건 값)를 그대로 받는다. 토큰이 늘어도 여기만 보면 된다. */
+  --ev-text-main: inherit;
+  --ev-text-muted: inherit;
+  --ev-text-light: inherit;
+  --ev-surface: inherit;
+  --ev-surface-subtle: inherit;
+  --ev-border: inherit;
+  --ev-primary-light: inherit;
+  color: var(--ev-text-main, #0f172a);
+}
+.theme-editorial.theme-editorial [data-block][class*="v-surface-"]:not(.ev-block)
+  :is(h2, h3, p, li, dt, dd, .title, .benefit-name, .step-title) {
+  color: inherit;
+}
+
+/* ★ 내용 영역은 선 대신 **여백**으로 나눈다. 예시 이미지에 가로선이 없다 */
+.theme-editorial.theme-editorial :is(
+  [data-block="intro"],
+  [data-block="stats"],
+  [data-block="benefits"],
+  [data-block="audience"],
+  [data-block="steps"],
+  [data-block="schedule"],
+  [data-block="compare"],
+  [data-block="coupon"],
+  [data-block="prize"],
+  [data-block="faq"]
+):not(.ev-block) {
+  margin: 0;
+  /* ★ 띠를 뺐으니 영역 사이는 여백만으로 나뉜다. 너무 벌리면 한 페이지로 안 읽힌다 */
+  padding: 44px 32px;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ★★ 한 칸 걸러 깔던 옅은 띠를 **뺐다.** 단락은 나뉘어 보였지만 페이지가
+     줄무늬처럼 읽혔다 — 레퍼런스는 바탕이 한 장이고 항목 카드로만 나눈다.
+     나누는 일은 아래 ⑤ 의 카드가 맡는다. */
+
+/* ── ④ 소제목 — 작은 영문 칩을 버리고 큰 한글 제목으로 ──────────── */
+
+/* ★★ 숨기기만 한다. **프롬프트는 안 건드린다** —
+     생성 쪽에서 빼 버리면 다른 테마로 되돌렸을 때 영문 라벨이 영영 안 돌아온다.
+     숨긴 요소는 비용이 0 이고, 테마를 바꾸면 그대로 살아난다. */
+.theme-editorial.theme-editorial [data-block]:not(.ev-block) .sub-label {
+  display: none;
+}
+
+/* ★★ base 가 .block-header 를 가운데 정렬한다. 막대는 block 이라 왼쪽에 남아서
+     제목 따로 막대 따로가 됐다(렌더해서 봤다). 이 테마는 **왼쪽 맞춤**이다 —
+     예시 이미지도 소제목이 왼쪽에 붙어 있다. */
+.theme-editorial.theme-editorial [data-block]:not(.ev-block) .block-header {
+  text-align: left;
+  margin-bottom: 0;
+}
+
+/* ★ 제목 위에 짧은 색 막대 하나. 예시 이미지가 쓰는 표식이고
+     주제가 없는 기호라 어떤 이벤트에 붙어도 안 튄다. */
+.theme-editorial.theme-editorial [data-block]:not(.ev-block) :is(h2, .block-header .title) {
+  display: block;
+  margin: 0 0 26px;
+  font-size: clamp(1.5rem, 3.4vw, 1.9rem);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+  color: var(--nv-ink);
+}
+
+/* ★ 막대는 제목 **아래**다. 위에 두면 제목보다 막대가 먼저 읽힌다 —
+     레퍼런스는 제목을 읽고 나서 밑줄이 눈에 들어온다. */
+.theme-editorial.theme-editorial [data-block]:not(.ev-block) :is(h2, .block-header .title)::after {
+  content: "";
+  display: block;
+  width: 34px;
+  height: 3px;
+  margin-top: 12px;
+  border-radius: 2px;
+  background: var(--ev-primary, #16a34a);
+}
+
+/* ★ 02-basic 의 01 · 02 번호 칩을 쓰지 않는다 — 이 테마는 소제목에 번호를 안 붙인다 */
+.theme-editorial.theme-editorial [data-block]:not(.ev-block) :is(h2, .block-header .title)::before {
+  content: none;
+}
+
+/* ★ 가운데 정렬인 자리에서는 막대도 가운데로. 안 맞추면 제목 따로 막대 따로가 된다.
+     참여 버튼 영역은 이 테마가 가운데 정렬로 쥐고 있어서 같이 넣는다(렌더해서 봤다). */
+.theme-editorial.theme-editorial [data-block][class*="-center"]:not(.ev-block)
+  :is(h2, .block-header .title)::after {
+  margin-inline: auto;
+}
+
+/* ── ⑤ 항목 — 카드 대신 얇은 구분선 한 줄 ──────────────────────── */
+
+/* ★ 혜택 · 참여방법의 <li> 가 base 에서 카드로 그려진다. 줄로 바꾼다.
+   ★ 마지막 줄의 아래 선은 뺀다 — 영역 끝에 선이 떠 있으면 어설프다. */
+/* ★★ 가는 구분선이 아니라 **아주 연한 카드**다. 레퍼런스가 쓰는 꼴이다 —
+     상자를 없애는 게 목적이 아니라 **무거운 상자**를 없애는 게 목적이었다.
+     테두리도 그림자도 없이 바탕만 2% 눌러 둔다. 줄이 아니라 덩어리로 읽힌다. */
+.theme-editorial.theme-editorial :is([data-block="benefits"], [data-block="faq"]):not(.ev-block)
+  :is(ul, ol, dl) > :is(li, dt) {
+  background: color-mix(in srgb, var(--ev-text-main, #0f172a) 3.5%, transparent);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: none;
+  padding: 18px 20px;
+  margin-bottom: 10px;
+}
+.theme-editorial.theme-editorial :is([data-block="benefits"], [data-block="faq"]):not(.ev-block)
+  :is(ul, ol, dl) > :is(li, dt):last-child {
+  margin-bottom: 0;
+}
+
+/* ★ FAQ 답은 질문 카드 바로 아래에 붙인다 — 자기 카드를 따로 갖지 않는다 */
+.theme-editorial.theme-editorial [data-block="faq"]:not(.ev-block) dl > dd {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  margin: -4px 0 14px;
+  padding: 0 20px 0;
+  color: var(--ev-text-muted, #64748b);
+}
+
+/* ★★ 혜택은 **한 줄에 하나**다. 변형이 2~3단 격자를 걸어 두면 마지막 줄이 비어
+     어설프게 끝난다(렌더해서 봤다). 예시 이미지도 가로로 꽉 찬 줄 목록이다.
+   ★ 격자를 쓰는 변형(v-benefits-grid)을 이기려면 (0,4,0) 이상이어야 한다. */
+.theme-editorial.theme-editorial [data-block="benefits"]:not(.ev-block) :is(ul, ol) {
+  display: block;
+  grid-template-columns: none;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* ★ 아이콘을 왼쪽에 두고 글을 오른쪽에 — 줄 하나가 한 혜택이다 */
+.theme-editorial.theme-editorial [data-block="benefits"]:not(.ev-block) :is(ul, ol) > li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+/* ★ 아이콘 받침 — 네모 카드가 아니라 연한 원 */
+.theme-editorial.theme-editorial [data-block]:not(.ev-block) :is(.benefit-icon, .step-icon) {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  background: color-mix(in srgb, var(--ev-primary, #16a34a) 11%, transparent);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+/* ── ⑥ 참여 방법 — 가로 한 줄 ─────────────────────────────────── */
+
+/* ★ auto-fit 이라 단계가 2개든 4개든 맞는다. 좁아지면 저절로 쌓인다 —
+     미디어 쿼리를 따로 안 써도 된다. */
+.theme-editorial.theme-editorial [data-block="steps"]:not(.ev-block) :is(ul, ol) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.theme-editorial.theme-editorial [data-block="steps"]:not(.ev-block) :is(ul, ol) > li {
+  background: none;
+  border: 0;
+  border-bottom: 0;
+  box-shadow: none;
+  padding: 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ★ 번호를 글자 **위**로 올린다. inline 이라 "1신규 가입" 으로 붙어 있었다(렌더해서 봤다) */
+.theme-editorial.theme-editorial [data-block="steps"]:not(.ev-block) :is(ul, ol) > li .step-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 12px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ev-primary-deep, var(--ev-primary, #15803d));
+}
+
+/* ── ⑦ 참여 버튼 — 큰 알약 하나 ───────────────────────────────── */
+
+.theme-editorial.theme-editorial [data-block="cta"]:not(.ev-block) {
+  margin: 0;
+  padding: 8px 32px 56px;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  /* ★ 가운데 정렬을 뺐다. 페이지 전체가 왼쪽 맞춤인데 여기만 가운데면 끝이 흐트러진다 */
+  text-align: left;
+  color: var(--ev-text-main, #0f172a);
+}
+
+/* ★★ 가로로 꽉 찬 알약 하나. 레퍼런스의 마지막 줄이 그 꼴이고,
+     "다음에 뭘 해야 하나" 가 한눈에 보인다.
+   ★ 그림자를 뺐다 — 띄우는 효과가 믿음직해 보이는 쪽과 반대로 간다. */
+.theme-editorial.theme-editorial [data-block="cta"]:not(.ev-block)
+  :is(.btn, .cta-btn, a[data-slot="cta-link"], button) {
+  display: block;
+  width: 100%;
+  margin-top: 22px;
+  padding: 19px 28px;
+  border-radius: 999px;
+  border: 0;
+  font-size: 1.06rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-align: center;
+  background: var(--ev-primary-deep, var(--ev-primary, #15803d));
+  /* ★ 버튼은 칠을 쥐므로 잉크도 같이 쥔다 — 머리말 ③ */
+  color: #fff;
+  box-shadow: none;
+}
+
+/* ── ⑧ 유의사항 — 맨 아래, 조용하게 ───────────────────────────── */
+
+.theme-editorial.theme-editorial [data-block="notices"]:not(.ev-block) {
+  margin: 0 32px;
+  padding: 24px 0 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-top: 1px solid var(--nv-rule);
+}
+
+/* ★ 유의사항은 base 가 #fef3c7 로 **리터럴** 칠을 한다. 칠을 걷었으니
+     잉크도 같이 정해야 한다 — 안 그러면 어두운 팔레트에서 밝은 글자만 남는다
+     (02-basic 이 같은 자리에서 겪은 함정). */
+.theme-editorial.theme-editorial [data-block="notices"]:not(.ev-block) :is(p, li) {
+  font-size: 0.83rem;
+  line-height: 1.75;
+  /* ★ 글씨를 줄였으니 색까지 흐리게 하면 안 읽힌다(실측 4.46).
+       작게 쓰는 것만으로 "조용함" 은 충분하다. */
+  color: var(--ev-text-main, #0f172a);
+}
+
+/* ── ⑨ 한국어 줄바꿈 — 02-basic 과 같은 이유 ───────────────────── */
+
+/* ★ 기본값은 한국어를 글자 단위로 끊는다. 제목 칸이 좁아지면 단어가 갈라진다 */
+.theme-editorial [data-block]:not(.ev-block) :is(
+  h1, h2, h3, .title, .benefit-name, .step-title,
+  [data-block="coupon"] p, [data-block="highlight"] p
+) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* ── ⑩ 좁은 화면 ──────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .theme-editorial.theme-editorial [data-block="hero"]:not(.ev-block) { padding: 52px 20px 40px; }
+  .theme-editorial.theme-editorial [data-block]:not(.ev-block) { padding-inline: 20px; }
+  .theme-editorial.theme-editorial [data-block="notices"]:not(.ev-block) { margin-inline: 20px; }
+}
+
 /* ── 20-themes/09-common.css ── */
 /* ══════════════════════════════════════════════════════════════════
    백지 테마 공통 — 테마마다 **또 풀 필요 없는 함정**만 모은다.
@@ -2820,6 +3227,13 @@ body {
   font-weight: 800;
   color: var(--ev-primary);
   white-space: normal;
+}
+
+/* 모델이 값이 없는 필드를 빈 요소로 반환해도 아이콘 타일이나 값 알약만 남지 않게 한다. */
+.benefit-icon:empty,
+.benefit-desc:empty,
+.benefit-value:empty {
+  display: none;
 }
 
 /* ==========================================================================
@@ -8331,6 +8745,44 @@ body:has(.palette-brand) {
   margin: 0 0 14px;
   position: relative;
   z-index: 1;
+}
+
+/* ── ⑥ 내용 영역의 배경 사진 — 글자를 지키는 판 ──────────────
+ *
+ * ★★ 혜택 · 참여방법 · 쿠폰 · 경품처럼 **자기 배경이 없는 영역**이 대상이다.
+ *   항목이 그냥 <li> 라서 사진을 깔면 검은 글씨가 맨몸으로 올라간다(실측 1.2 대).
+ *   전에는 그래서 배경을 막아 뒀는데, 막는 게 아니라 되게 만드는 쪽이 맞았다.
+ *
+ * ★ 풀이는 02-page-bg.css 와 같다. **글자색은 안 건드리고 바탕만 밝게** 만든다.
+ *   판이 밝으면 원래 쓰던 어두운 글씨가 그대로 읽힌다 — 테마가 몇 벌이든 같이 먹는다.
+ *
+ * ★ 직계 자식에 깐다. 항목 하나하나가 아니다 —
+ *   백지 생성은 `.block-header` + `ul`, 템플릿은 `.block-header` + `.benefits-grid` 라
+ *   둘을 한 선택자로 덮는 자리가 직계 자식뿐이다. 사진은 그 사이와 바깥 여백으로 보인다.
+ *
+ * ★★ hero · 강조 · 참여 버튼은 **뺀다.** 그 셋은 자기 색 배경이 있어서 판이 필요 없고,
+ *   글자색은 톤(on-light · on-dark · on-mixed)이 이미 쥐고 있다 — 거기에 판을 깔면
+ *   재서 맞춰 둔 대비가 어긋난다(블록 배경 12곳 최악 6.38).
+ * ★ 유의사항은 배경 자체를 막는다(Asset.NO_SURFACE).
+ */
+[data-block]:has(> .ev-asset-bg):not([data-block="hero"], [data-block="highlight"], [data-block="cta"])
+  > :not(.ev-asset) {
+  background: rgba(255, 255, 255, .90);
+  backdrop-filter: blur(3px);
+  border-radius: var(--ev-radius-md, 14px);
+  padding: 14px 16px;
+}
+
+/* ★★ 판이 밝아졌으니 그 위의 글자도 어두워야 한다.
+ *   theme-punch · theme-aurora 처럼 **어두운 판을 전제로 흰 글씨**를 쓰는 테마가 있다 —
+ *   판만 바꾸고 글자를 안 바꾸면 흰 판에 흰 글씨가 된다(02-page-bg.css 에서 겪었다).
+ * ★ [data-block] 을 세 번 적은 건 특이도용이다. 테마가 0,3,1 로 집고 있다.
+ * ★ 강조색(--ev-primary 로 칠한 배지 · 숫자)은 안 건드린다 — :is 에 든 것만이다. */
+[data-block][data-block][data-block]:has(> .ev-asset-bg):not([data-block="hero"], [data-block="highlight"], [data-block="cta"])
+  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+  color: var(--ev-text-main, #0f172a);
+  -webkit-text-fill-color: var(--ev-text-main, #0f172a);
+  text-shadow: none;
 }
 
 /* ── 95-assets/02-page-bg.css ── */

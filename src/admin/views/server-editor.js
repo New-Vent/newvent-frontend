@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 편집 화면 — 서버 모드 (VITE_API_AUTH=on).
  *
  *   이벤트 정보   GET  /api/admin/events/{id}
@@ -71,7 +71,7 @@ const chatOf = (id) => (CHATS[id] ||= [{ role: 'assistant', text: GREETING }])
 
 // order 는 null 로 시작한다 — 아직 안 건드렸다는 뜻이다. 미리보기 순서를 그대로 쓴다
 // layout 도 null 로 시작한다. variants 는 고친 영역만 담는다 (영역 → class)
-const freshDirect = () => ({ values: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {} })
+const freshDirect = () => ({ values: {}, formats: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {}, removeBlocks: [], removeItems: {} })
 
 /** 새로 만든 직후처럼 진행 중인 작업을 들고 들어올 때 — 목록에서 열 때는 인자 없이 */
 function openServerEditor(id, { jobId = null, request = null, startError = null } = {}) {
@@ -325,16 +325,37 @@ const editable = (s) => s.preview?.editableTexts || []
 /** 바뀐 문구 · 버튼 스타일만 모아 요청 본문으로 */
 function directChanges(s) {
   const list = editable(s)
-  const edits = Object.entries(s.direct.values)
-    .map(([i, v]) => ({ index: Number(i), before: list[i]?.before, after: v }))
-    .filter((x) => x.before !== undefined && normalize(x.after) !== normalize(x.before))
+  const formats = s.direct.formats || {}
+  const indexes = new Set([...Object.keys(s.direct.values), ...Object.keys(formats)])
+  const edits = [...indexes].map((i) => ({
+    index: Number(i), before: list[i]?.before, after: s.direct.values[i] ?? list[i]?.before,
+    ...(formats[i] && Object.keys(formats[i]).length ? { format: formats[i] } : {}),
+  })).filter((x) => x.before !== undefined && (x.format || normalize(x.after) !== normalize(x.before)))
   const st = s.direct.style, on = s.direct.styleOn
   const style = {}
   if (on.background && st.background) style.background = st.background
   if (on.color && st.color) style.color = st.color
   if (st.size) style.size = st.size
   if (st.shape) style.shape = st.shape
-  return { edits, buttonStyle: Object.keys(style).length ? style : null, order: changedOrder(s), looks: changedLooks(s) }
+
+  // ★★ 제목 글자 크기 · 색. **고른 것만** 보낸다 —
+  //   안 고른 항목까지 보내면 인라인 style 이 박혀서 그 제목만 팔레트를 안 따라간다.
+  //   체크를 안 한 색은 아예 담지 않는 게 "테마를 따른다" 는 뜻이다.
+  const text = {}
+  if (on.titleColor && st.titleColor) text.titleColor = st.titleColor
+  if (on.headingColor && st.headingColor) text.headingColor = st.headingColor
+  if (st.titleSize) text.titleSize = st.titleSize
+  if (st.headingSize) text.headingSize = st.headingSize
+
+  return {
+    edits,
+    buttonStyle: Object.keys(style).length ? style : null,
+    textStyle: Object.keys(text).length ? text : null,
+    order: changedOrder(s),
+    looks: changedLooks(s),
+    removeBlocks: s.direct.removeBlocks,
+    removeItems: s.direct.removeItems,
+  }
 }
 
 /* ── 블록 순서 ──────────────────────────────────────────────── */
@@ -352,7 +373,63 @@ function blocksInHtml(html) {
 const movableBlocks = (s) => blocksInHtml(s.preview?.html).filter((k) => !PINNED_BLOCKS.includes(k))
 
 /** 화면에 보여 줄 순서. 아직 안 끌었으면 저장된 순서 그대로 */
-const currentOrder = (s) => s.direct.order || movableBlocks(s)
+const currentOrder = (s) => (s.direct.order || movableBlocks(s)).filter((k) => !s.direct.removeBlocks.includes(k))
+
+const ITEM_SELECTORS = {
+  benefits: 'ul li, .benefit-card', stats: 'ul li', prize: 'ul li', compare: 'table tr',
+  steps: 'ol li, .step-card', schedule: 'ol li', faq: 'dl dt, details summary',
+}
+const ITEM_MINIMUMS = { benefits: 1, stats: 2, prize: 1, compare: 2, steps: 2, schedule: 2, faq: 2 }
+const ADMIN_KEEP = ['hero', 'notices', 'cta']
+function blockElement(s, key) { return $('.event-frame')?.contentDocument?.querySelector('[data-block="' + key + '"]') }
+function itemElements(s, key) {
+  const block = blockElement(s, key), selector = ITEM_SELECTORS[key]
+  if (!block || !selector) return []
+  return [...new Set([...block.querySelectorAll(selector)])]
+}
+function previewDeletes(s) {
+  const doc = $('.event-frame')?.contentDocument
+  if (!doc) return
+  doc.querySelectorAll('[data-block]').forEach((el) => {
+    if (el.dataset.nvDeleteStyle !== undefined) {
+      if (el.dataset.nvDeleteStyle) el.setAttribute('style', el.dataset.nvDeleteStyle)
+      else el.removeAttribute('style')
+      el.style.removeProperty('display')
+      delete el.dataset.nvDeleteStyle
+    }
+  })
+  Object.keys(ITEM_SELECTORS).forEach((key) => itemElements(s, key).forEach((el) => {
+    if (el.dataset.nvDeleteStyle !== undefined) {
+      if (el.dataset.nvDeleteStyle) el.setAttribute('style', el.dataset.nvDeleteStyle)
+      else el.removeAttribute('style')
+      el.style.removeProperty('display')
+      delete el.dataset.nvDeleteStyle
+    }
+  }))
+  const hide = (el) => { if (!el) return; el.dataset.nvDeleteStyle = el.getAttribute('style') || ''; el.style.setProperty('display', 'none', 'important') }
+  s.direct.removeBlocks.forEach((key) => hide(blockElement(s, key)))
+  Object.entries(s.direct.removeItems).forEach(([key, indices]) => indices.forEach((index) => hide(itemElements(s, key)[index])))
+}
+function removeBlockDraft(s, key, rerender) {
+  if (ADMIN_KEEP.includes(key)) return
+  rememberDirectScroll(s)
+  s.direct.removeBlocks = s.direct.removeBlocks.includes(key) ? s.direct.removeBlocks : [...s.direct.removeBlocks, key]
+  s.direct.order = currentOrder(s)
+  previewDeletes(s); paintOrder(s); previewOrder(s); updateDirectCount(s); rerender?.()
+}
+function removeItemDraft(s, key, index, rerender) {
+  const current = s.direct.removeItems[key] || []
+  if (current.includes(index)) return
+  rememberDirectScroll(s)
+  s.direct.removeItems[key] = [...current, index]
+  previewDeletes(s); paintOrder(s); updateDirectCount(s); rerender?.()
+}
+
+/** 삭제 버튼을 눌러 다시 그려도 직접수정 패널과 페이지의 현재 위치를 유지한다. */
+function rememberDirectScroll(s) {
+  s.direct.scrollTop = $('#server-scroll')?.scrollTop ?? 0
+  s.direct.windowScrollY = window.scrollY
+}
 
 /** 바꾼 게 있으면 보낼 목록, 없으면 null */
 function changedOrder(s) {
@@ -416,8 +493,9 @@ function previewOrder(s) {
 
 /** 순서 묶음. 옮길 수 있는 블록이 둘 미만이면 아예 안 보여 준다 */
 function orderHTML(s, busy) {
-  if (movableBlocks(s).length < 2) return ''
-  return '<fieldset class="sedit-group"><legend>블록 순서</legend>'
+  const available = currentOrder(s)
+  if (available.length < 2 && !available.some((k) => !ADMIN_KEEP.includes(k) || ITEM_SELECTORS[k])) return ''
+  return '<fieldset class="sedit-group"><legend>블록 순서 · 삭제</legend>'
     + '<ol class="sorder" id="server-order">' + orderItems(s, busy) + '</ol>'
     + '<p class="helper">끌어서 옮기거나 ▲▼ 를 누르세요. 유의사항 · 참여 버튼은 늘 맨 끝이에요.</p></fieldset>'
 }
@@ -427,11 +505,18 @@ function orderItems(s, busy) {
   return list.map((k, i) => '<li class="sorder-item" draggable="' + (busy ? 'false' : 'true')
     + '" data-sorder="' + esc(k) + '">'
     + '<span class="sorder-grip" aria-hidden="true">⠿</span>'
-    + '<span class="sorder-name">' + esc(labelOf(k)) + '</span><span class="sorder-moves">'
+    + '<span class="sorder-name">' + esc(labelOf(k)) + '</span>' + (ITEM_SELECTORS[k] && itemElements(s, k).length
+      ? '<span class="sorder-items">' + itemElements(s, k).map((el, index) => ({ el, index }))
+        .filter(({ index }) => !(s.direct.removeItems[k] || []).includes(index))
+        .map(({ el, index }) => '<span class="sorder-subitem">· ' + esc(el.textContent.trim().slice(0, 60))
+        + button('server-item-delete', '×', 'data-block="' + esc(k) + '" data-index="' + index + '" aria-label="' + esc(labelOf(k)) + ' 항목 삭제" '
+          + (busy || itemElements(s, k).length - (s.direct.removeItems[k] || []).length <= (ITEM_MINIMUMS[k] || 0) ? 'disabled' : ''), 'btn sm') + '</span>').join('') + '</span>' : '')
+    + '<span class="sorder-moves">'
     + button('server-order-up', '▲', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
         + ' 위로" ' + (busy || i === 0 ? 'disabled' : ''), 'btn sm')
     + button('server-order-down', '▼', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
         + ' 아래로" ' + (busy || i === list.length - 1 ? 'disabled' : ''), 'btn sm')
+    + (ADMIN_KEEP.includes(k) ? '' : button('server-block-delete', '✕', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k)) + ' 블록 삭제" ' + (busy ? 'disabled' : ''), 'btn sm'))
     + '</span></li>').join('')
 }
 
@@ -601,12 +686,16 @@ function handleServerTool(ev) {
 async function applyDirect(rerender) {
   const s = ui.serverEditor
   if (!s?.preview || running(s) || s.busy) return
-  const { edits, buttonStyle, order, looks } = directChanges(s)
+  if ([...document.querySelectorAll('[data-text-format="size"]')].some((el) => !el.checkValidity())) {
+    toast('글자 크기는 10~96px 사이의 정수로 입력해주세요.')
+    return
+  }
+  const { edits, buttonStyle, textStyle, order, looks, removeBlocks, removeItems } = directChanges(s)
   if (hasEmptyNoticeEdit(s, edits)) {
     toast('유의사항은 빈칸으로 저장할 수 없어요. 내용을 입력해주세요.')
     return
   }
-  if (!edits.length && !buttonStyle && !order && !looks) { toast('바꾼 내용이 없어요.'); return }
+  if (!edits.length && !buttonStyle && !textStyle && !order && !looks && !removeBlocks.length && !Object.keys(removeItems).length) { toast('바꾼 내용이 없어요.'); return }
   s.busy = true
   rerender()
   try {
@@ -614,7 +703,11 @@ async function applyDirect(rerender) {
       sourceVersionId: s.preview.versionId,
       ...(edits.length ? { edits } : {}),
       ...(buttonStyle ? { buttonStyle } : {}),
+      ...(textStyle ? { textStyle } : {}),
       ...(order ? { blockOrder: order } : {}),
+      ...(removeBlocks.length ? { removeBlocks } : {}),
+      ...(Object.keys(removeItems).length ? { removeItems: Object.fromEntries(Object.entries(removeItems).map(([key, indices]) => [key,
+        indices.map((index) => ({ index, before: itemElements(s, key)[index]?.textContent.trim().replace(/\s+/g, ' ') || '' }))])) } : {}),
       ...(looks?.layout ? { layout: looks.layout } : {}),
       ...(looks && Object.keys(looks.variants).length ? { variants: looks.variants } : {}),
     })
@@ -632,6 +725,7 @@ function resetDirect(rerender) {
   const s = ui.serverEditor
   if (!s) return
   s.direct = freshDirect()
+  previewDeletes(s)
   rerender()
 }
 
@@ -669,6 +763,29 @@ const CTA_SIZE = {
   medium: { 'font-size': '18px', padding: '16px 28px', 'min-height': '52px' },
   large: { 'font-size': '22px', padding: '22px 32px', 'min-height': '64px' },
 }
+
+const textBaseStyles = new WeakMap()
+
+/** 문구별 서식은 전용 span에만 적용한다. */
+function previewItemFormats(s) {
+  const live = liveTexts(s)
+  if (!live) return
+  Object.entries(s.direct.formats || {}).forEach(([i, format]) => {
+    const node = live[i]?.node
+    if (!node) return
+    setPreviewText(node, i, node.data)
+    const holder = node.parentElement
+    if (!textBaseStyles.has(holder)) textBaseStyles.set(holder, holder.getAttribute('style') || '')
+    holder.setAttribute('style', textBaseStyles.get(holder))
+    if (format.reset) ['color', '-webkit-text-fill-color', 'font-size', 'font-weight'].forEach((key) => holder.style.removeProperty(key))
+    if (format.color) {
+      holder.style.setProperty('color', format.color)
+      holder.style.setProperty('-webkit-text-fill-color', format.color)
+    }
+    if (format.size != null) holder.style.setProperty('font-size', format.size + 'px')
+    if (format.bold != null) holder.style.setProperty('font-weight', format.bold ? '700' : '400')
+  })
+}
 const CTA_SHAPE = { square: '0', round: '12px', pill: '999px' }
 
 /** 버튼 스타일을 미리보기에 바로 — 서버 DirectEditor.applyButtonStyle 과 같은 값 */
@@ -685,9 +802,46 @@ function previewButtonStyle(s) {
   if (buttonStyle.shape) cta.style.setProperty('border-radius', CTA_SHAPE[buttonStyle.shape])
 }
 
+const TITLE_SIZE = { small: '28px', medium: '36px', large: '46px', xlarge: '58px' }
+const HEADING_SIZE = { small: '18px', medium: '22px', large: '27px', xlarge: '32px' }
+
+/**
+ * 제목 디자인을 미리보기에 바로 — 서버 DirectEditor.applyTextStyle 과 **같은 값**이다.
+ *
+ * ★★ 이게 없으면 고르고 나서 아무 일도 안 일어난다. 저장해야만 보이는데
+ *   저장 전에는 맞는지 알 수가 없다 — 참여 버튼이 이미 같은 이유로 이걸 갖고 있다.
+ * ★ 끌 때를 위해 **원래 style 을 기억해 둔다.** 안 하면 체크를 풀어도 색이 안 돌아온다.
+ * ★ -webkit-text-fill-color 도 같이 건다. 글자를 투명하게 두고 배경을 깎아 넣는 변형이
+ *   있어서(v-hero-gradient-text) color 만으로는 아무 일도 안 일어난다.
+ */
+function previewTextStyle(s) {
+  const doc = $('.event-frame')?.contentDocument
+  if (!doc) return
+  const { textStyle } = directChanges(s)
+  const paint = (els, color, size, table) => els.forEach((el) => {
+    if (el.dataset.nvBaseStyle === undefined) el.dataset.nvBaseStyle = el.getAttribute('style') || ''
+    el.setAttribute('style', el.dataset.nvBaseStyle)
+    if (color) {
+      el.style.setProperty('color', color)
+      el.style.setProperty('-webkit-text-fill-color', color)
+    }
+    if (size && table[size]) el.style.setProperty('font-size', table[size])
+  })
+  paint([...doc.querySelectorAll('[data-block="hero"] h1')],
+    textStyle?.titleColor, textStyle?.titleSize, TITLE_SIZE)
+  // ★ hero 안의 h2 는 소제목이 아니다 — 서버(applyTextStyle)와 같은 기준이다
+  paint([...doc.querySelectorAll('[data-block] h2, [data-block] .block-header .title')]
+    .filter((el) => !el.closest('[data-block="hero"]')),
+    textStyle?.headingColor, textStyle?.headingSize, HEADING_SIZE)
+}
+
 function updateDirectCount(s) {
-  const { edits, buttonStyle, order, looks } = directChanges(s)
-  const n = edits.length + (buttonStyle ? 1 : 0) + (order ? 1 : 0) + (looks?.count || 0)
+  const { edits, buttonStyle, textStyle, order, looks } = directChanges(s)
+  // ★★ textStyle 을 안 세서 **저장 버튼이 안 켜졌다.** 제목 디자인만 바꾸면
+  //   "바꾼 항목 없음" 이 뜨고 버튼이 disabled 로 남는다 — 미리보기가 아니라 이쪽이 진짜 원인이었다
+  const n = edits.length + (buttonStyle ? 1 : 0) + (textStyle ? 1 : 0)
+    + (order ? 1 : 0) + (looks?.count || 0) + s.direct.removeBlocks.length
+    + Object.values(s.direct.removeItems).reduce((sum, xs) => sum + xs.length, 0)
   const el = $('#server-direct-count')
   if (el) el.textContent = n ? '바꾼 항목 ' + n + '개' : '바꾼 항목 없음'
   const apply = $('[data-act="server-direct-apply"]')
@@ -932,34 +1086,62 @@ function assetAdd(s) {
 }
 
 /**
+ * 올린 이미지의 **고정 번호**. 서버가 행에 박아 둔 값이다 (EventAsset.seq).
+ *
+ * ★★ i + 1 로 세면 안 된다. 1번을 지우는 순간 2번이 1번이 되고,
+ *   "1번 이미지를 배경으로" 가 **다른 사진**을 가리킨다 — 제보로 올라온 문제가 그거다.
+ * ★ 옛 응답(seq 없음)에는 순서로 버틴다. 새로 올리면 서버가 번호를 준다.
+ */
+function assetNo(a, i) {
+  return a.seq ?? i + 1
+}
+
+/**
  * 올린 이미지 목록 — 입력칸 위.
  *
  * ★★ 번호가 핵심이다. 프롬프트에도 같은 번호로 실린다(Asset.promptLines) —
  *   관리자가 "2번 이미지를 배경으로" 라고 쓸 수 있는 유일한 끈이다.
+ *
+ * ★★ 페이지에 들어간 사진은 **배지로 접는다.** 전에는 흐리게만 해서 입력칸 위가
+ *   계속 사진으로 막혀 있었다. 그렇다고 목록에서 빼면 "1번 이미지 지워줘" 를 쓸 수 없다 —
+ *   번호는 살리고 자리만 비우는 쪽이 맞다. 배지를 누르면 그 사진만 다시 펼친다.
  */
 function assetStrip(s) {
   const list = s.assets || []
   if (!list.length) return ''
   const busy = running(s) || s.assetBusy
-  // ★ 페이지에 이미 들어간 것인지. 미리보기 HTML 에 그 주소가 박혀 있으면 쓰인 것이다.
-  //   번호는 그대로 둔다 — 목록에서 빼면 "2번" 이 가리키는 게 달라져서 다음 요청이 어긋난다
+  // ★ 페이지에 이미 들어간 것인지. 미리보기 HTML 에 그 주소가 박혀 있으면 쓰인 것이다
   const html = s.preview?.html || ''
   const used = (a) => html.includes(a.url)
 
-  const thumbs = list.map((a, i) => '<span class="chat-asset' + (used(a) ? ' is-used' : '') + '">'
+  const del = (a, n) => button('server-asset-delete', '×',
+    'data-id="' + esc(a.assetId) + '" aria-label="' + n + '번 이미지 지우기" ' + (busy ? 'disabled' : ''),
+    'chat-asset-x')
+
+  const thumb = (a, n, isUsed) => '<span class="chat-asset' + (isUsed ? ' is-used' : '') + '">'
     + '<img src="' + esc(a.url) + '" alt="">'
-    + '<b class="chat-asset-no">' + (i + 1) + '</b>'
-    + (used(a) ? '<b class="chat-asset-used" title="페이지에 들어가 있어요">' + icon('check') + '</b>' : '')
-    + button('server-asset-delete', '×', 'data-id="' + esc(a.assetId) + '" aria-label="' + (i + 1) + '번 이미지 지우기" ' + (busy ? 'disabled' : ''), 'chat-asset-x')
-    + '</span>').join('')
+    + '<b class="chat-asset-no">' + n + '</b>'
+    + (isUsed ? '<b class="chat-asset-used" title="페이지에 들어가 있어요">' + icon('check') + '</b>' : '')
+    + del(a, n) + '</span>'
+
+  // 들어간 사진 — 번호 + 체크만. 누르면 펼친다
+  const badge = (a, n) => button('server-asset-peek', n + icon('check'),
+    'data-id="' + esc(a.assetId) + '" title="' + n + '번 — 페이지에 들어가 있어요. 눌러서 사진 보기"'
+    + ' aria-label="' + n + '번 이미지 보기"', 'chat-asset-done')
+
+  const cells = list.map((a, i) => {
+    const n = assetNo(a, i)
+    const open = s.assetPeek === a.assetId
+    return used(a) && !open ? badge(a, n) : thumb(a, n, used(a))
+  }).join('')
 
   // ★ 안내는 **아직 안 쓴 게 있을 때만**. 다 넣고 나서도 계속 "넣으세요" 가 떠 있으면
   //   안 들어간 줄 알고 같은 말을 또 하게 된다
   const left = list.filter((a) => !used(a))
   const hint = left.length
-    ? '올리기만 해서는 안 들어가요 — "' + (list.indexOf(left[0]) + 1) + '번 이미지를 배경으로 깔아줘" 처럼 말해 주세요'
-    : '모두 페이지에 들어갔어요. 빼려면 "배경에 이미지 없애줘" 처럼 말해 주세요'
-  return '<div class="chat-assets">' + thumbs
+    ? '올리기만 해서는 안 들어가요 — "' + assetNo(left[0], list.indexOf(left[0])) + '번 이미지를 배경으로 깔아줘" 처럼 말해 주세요'
+    : '모두 페이지에 들어갔어요. 번호를 누르면 사진을 볼 수 있어요. 빼려면 "배경 이미지 없애줘" 처럼 말해 주세요'
+  return '<div class="chat-assets">' + cells
     + '<span class="helper chat-assets-hint">' + hint + '</span></div>'
 }
 
@@ -973,6 +1155,13 @@ function directPanel(s) {
   const groups = []
   list.forEach((t, i) => {
     const block = grouped ? collected[i].block : 'all'
+    if (s.direct.removeBlocks.includes(block)) return
+    if (grouped && ITEM_SELECTORS[block] && (s.direct.removeItems[block] || []).some((index) => {
+      const node = collected[i]?.node
+      const section = node?.parentElement?.closest('[data-block="' + block + '"]')
+      const item = section ? [...section.querySelectorAll(ITEM_SELECTORS[block])][index] : null
+      return item && item.contains(node)
+    })) return
     if (!groups.length || groups.at(-1).block !== block) groups.push({ block, items: [] })
     groups.at(-1).items.push({ ...t, index: i })
   })
@@ -985,7 +1174,7 @@ function directPanel(s) {
     const input = '<textarea rows="1" data-autogrow ' + attrs + '></textarea>'
     // 번호 = 서버 editableTexts 의 index (직접 수정 요청에 그대로 실린다)
     return '<div class="sedit-item"><span class="sedit-no' + (changed ? ' changed' : '') + '" data-sedit-no="' + t.index
-      + '" title="문구 번호 ' + t.index + '">' + t.index + '</span>' + input + '</div>'
+      + '" title="문구 번호 ' + t.index + '">' + t.index + '</span><div>' + input + itemFormatHTML(s, t, busy) + '</div></div>'
   }
   const fields = groups.map((g) => '<fieldset class="sedit-group"><legend>'
     + esc(g.block === 'all' ? '문구' : BLOCK_LABELS[g.block] || g.block) + '</legend>' + g.items.map(field).join('') + '</fieldset>').join('')
@@ -1000,16 +1189,44 @@ function directPanel(s) {
     + color('background', '배경색', '#0284c7') + color('color', '글자색', '#ffffff')
     + select('size', '크기', [['small', '작게'], ['medium', '보통'], ['large', '크게']])
     + select('shape', '모양', [['square', '각지게'], ['round', '둥글게'], ['pill', '알약형']]) + '</div></fieldset>' : ''
+
+  /**
+   * ★★ 제목 글자 크기 · 색. 모델이 못 하는 자리라서 여기 있다 —
+   *   글자 크기와 색은 CSS 가 쥐고 있어서, 모델에게 시키면 "강조했습니다" 라고
+   *   보고하고 화면은 그대로다(실측). 관리자가 고른 값을 인라인으로 박는 길만 확실하다.
+   * ★ 색은 체크를 해야 들어간다. 안 하면 테마를 따른다 — 참여 버튼과 같은 약속이다.
+   */
+  const TSIZES = [['small', '작게'], ['medium', '보통'], ['large', '크게'], ['xlarge', '아주 크게']]
+  const textForm = '<fieldset class="sedit-group"><legend>제목 디자인</legend><div class="sedit-style">'
+    + color('titleColor', '큰 제목 색', '#0f172a') + select('titleSize', '큰 제목 크기', TSIZES)
+    + color('headingColor', '소제목 색', '#15803d') + select('headingSize', '소제목 크기', TSIZES)
+    + '</div><p class="helper" style="margin:8px 0 0">색을 직접 고르면 그 제목은 분위기 · 색감을 바꿔도 그대로예요. 체크를 풀면 다시 따라갑니다.</p></fieldset>'
+
   return '<div class="server-scroll" id="server-scroll">'
-    + '<p class="workspace-tip">미리보기에서 문구를 누르면 해당 칸으로 이동하고, 영역에 마우스를 올리면 순서 · 모양을 바꿀 수 있어요. 기간 · 유의사항은 서버가 채우는 자리라 고칠 수 없어요.</p>'
+    + '<p class="workspace-tip">문구를 선택해 글자색 · 크기 · 굵기를 바꿀 수 있어요. 블록·항목 삭제는 위의 순서·삭제 도구를 사용해주세요. 기간은 서버가 채우고 유의사항은 수정만 가능해요.</p>'
     + looksHTML(s, busy)
     + orderHTML(s, busy)
     + (grouped ? '' : '<p class="helper" style="margin-bottom:10px">영역 구분을 불러오지 못해 문구를 순서대로 보여줘요.</p>')
-    + '<div id="server-direct">' + fields + styleForm + '</div></div>'
+    + '<div id="server-direct">' + fields + textForm + styleForm + '</div></div>'
     + '<div class="server-foot"><div class="foot-row" style="margin-top:0"><span class="helper" id="server-direct-count"></span>'
     + '<div class="row" style="gap:6px">' + button('server-direct-reset', '되돌리기', dis, 'btn sm')
     + button('server-direct-apply', s.busy ? '저장하는 중…' : '변경 저장', 'disabled', 'btn primary sm') + '</div></div>'
     + '<p class="helper" style="margin-top:6px;font-weight:500">저장하면 새 버전이 만들어져요.</p></div>'
+}
+
+function itemFormatHTML(s, t, busy) {
+  const patch = s.direct.formats?.[t.index] || {}
+  const saved = patch.reset ? {} : t.format || {}
+  const color = patch.color || saved.color || '#222222'
+  const size = patch.size ?? (saved['font-size'] ? parseInt(saved['font-size'], 10) : '')
+  const bold = patch.bold ?? (saved['font-weight'] ? Number(saved['font-weight']) >= 600 : null)
+  const attrs = ' data-text-index="' + t.index + '" ' + (busy ? 'disabled' : '')
+  return '<details class="sedit-format"><summary>문구 서식</summary><div class="sedit-format-tools">'
+    + '<label>글자색 <input type="color" data-text-format="color" value="' + esc(color) + '"' + attrs + '></label>'
+    + '<label>크기(px) <input type="number" min="10" max="96" step="1" placeholder="기본" data-text-format="size" value="' + esc(size) + '"' + attrs + '></label>'
+    + '<label>굵기 <select data-text-format="bold"' + attrs + '><option value="">그대로</option><option value="true" ' + (bold === true ? 'selected' : '') + '>굵게</option><option value="false" ' + (bold === false ? 'selected' : '') + '>보통</option></select></label>'
+    + button('server-text-format-reset', '서식 초기화', 'data-index="' + t.index + '" ' + (busy ? 'disabled' : ''), 'btn sm')
+    + '</div><span class="helper">서식 초기화는 문구별 서식만 제거해요. 변경 저장 시 새 버전에 반영돼요.</span></details>'
 }
 
 function sidePanel(s) {
@@ -1275,6 +1492,12 @@ function afterServerRender() {
   // 대화는 최신 말이 보이게 맨 아래로
   const scroller = $('#server-scroll')
   if (scroller && s.tab === 'chat') scroller.scrollTop = scroller.scrollHeight
+  if (scroller && s.tab === 'direct' && s.direct.scrollTop != null) {
+    scroller.scrollTop = s.direct.scrollTop
+    requestAnimationFrame(() => {
+      if (ui.serverEditor === s && s.tab === 'direct') window.scrollTo(0, s.direct.windowScrollY || 0)
+    })
+  }
   document.querySelectorAll('textarea[data-autogrow]').forEach((el) => {
     if (el.dataset.sedit !== undefined) {
       const index = Number(el.dataset.sedit)
@@ -1288,7 +1511,7 @@ function afterServerRender() {
     // 미리보기 도구줄이 올린 영역에 보여 줄 것을 여기서 묻는다 (frame.js 의 server-edit 모드)
     if (frame) frame.nvTools = (key) => toolsOf(s, key)
     // 고치던 값 · 바꾼 순서 · 배치가 남아 있으면 (탭 전환 · 기기 전환) 새 iframe 에도 다시 입힌다
-    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewOrder(s); previewLooks(s) }, { once: true })
+    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewTextStyle(s); previewItemFormats(s); previewOrder(s); previewLooks(s); previewDeletes(s) }, { once: true })
   } else {
     // 고른 영역 외곽선 — 새 iframe(새 버전 · 기기 전환)에도 다시 입힌다
     const frame = $('.event-frame')
@@ -1452,9 +1675,21 @@ async function runRagExamples() {
       return true
     case 'server-order-up': if (s) nudgeBlock(s, b.dataset.block, -1); return true
     case 'server-order-down': if (s) nudgeBlock(s, b.dataset.block, 1); return true
+    case 'server-block-delete': if (s && !running(s) && !s.busy) removeBlockDraft(s, b.dataset.block, rerender); return true
+    case 'server-item-delete': if (s && !running(s) && !s.busy) removeItemDraft(s, b.dataset.block, Number(b.dataset.index), rerender); return true
     case 'server-asset-delete': if (s) removeAsset(s, b.dataset.id, rerender); return true
+    // ★ 접어 둔 사진을 하나만 펼친다. 같은 걸 또 누르면 다시 접는다
+    case 'server-asset-peek':
+      if (s) { s.assetPeek = s.assetPeek === b.dataset.id ? null : b.dataset.id; rerender() }
+      return true
     case 'server-direct-apply': applyDirect(rerender); return true
     case 'server-direct-reset': resetDirect(rerender); return true
+    case 'server-text-format-reset':
+      if (s && !running(s) && !s.busy) {
+        (s.direct.formats ||= {})[b.dataset.index] = { reset: true }
+        rerender()
+      }
+      return true
     case 'server-publish': openPublish(); return true
     case 'server-publish-confirm': confirmPublish(rerender); return true
     case 'server-end': openEndEvent(); return true
@@ -1476,6 +1711,19 @@ function handleServerInput(ev) {
   const s = ui.serverEditor
   const t = ev.target
   if (!s) return false
+  if (t.dataset.textFormat !== undefined) {
+    if (running(s) || s.busy) return true
+    const i = Number(t.dataset.textIndex), key = t.dataset.textFormat
+    if (!editable(s)[i]) return true
+    if (key === 'size' && t.value !== '' && !t.checkValidity()) return true
+    const format = (s.direct.formats ||= {})[i] ||= {}
+    if (t.value === '') delete format[key]
+    else format[key] = key === 'size' ? Number(t.value) : key === 'bold' ? t.value === 'true' : t.value
+    previewItemFormats(s)
+    highlight(s, i, false)
+    updateDirectCount(s)
+    return true
+  }
   if (t.id === 'server-prompt') { onServerPromptInput(t.value); return true }
   if (t.id === 'server-chat') { onChatInput(t.value); return true }
   if (t.id === 'server-publish-version') { onPublishPick(t.value); return true }
@@ -1508,6 +1756,7 @@ function handleServerInput(ev) {
       if (box && !box.checked && t.type === 'color') { box.checked = true; s.direct.styleOn[t.dataset.sstyle] = true }
     }
     previewButtonStyle(s)
+    previewTextStyle(s)
     updateDirectCount(s)
     return true
   }
@@ -1548,12 +1797,35 @@ async function uploadPicked(s, file, rerender) {
 }
 
 /** ★ 이미 게시된 페이지가 이 이미지를 쓰고 있으면 그 자리가 깨진다. 서버가 막지 않는다 */
+/**
+ * ★★ 페이지가 쓰고 있는 사진은 못 지운다.
+ *
+ *   제보: 썸네일 × 로 먼저 지우고 "1번 이미지 없애줘" 했더니
+ *   "아직 올린 이미지가 없어요" 가 나왔다. 행이 사라져서 번호가 가리킬 대상이 없는데
+ *   **페이지의 <img> 는 그대로** 남아 있었다 — 뺄 방법이 사라진 것이다.
+ *
+ * ★ 지우는 쪽을 막는 게 맞다. 버튼 하나가 페이지를 고치게 두면 되돌리기가 헷갈린다.
+ *   순서를 알려 주면 관리자가 두 걸음으로 끝낼 수 있다.
+ */
+function usedInPage(s, assetId) {
+  const a = (s.assets || []).find((x) => String(x.assetId) === String(assetId))
+  return !!a && (s.preview?.html || '').includes(a.url)
+}
+
 async function removeAsset(s, assetId, rerender) {
+  if (usedInPage(s, assetId)) {
+    const a = (s.assets || []).find((x) => String(x.assetId) === String(assetId))
+    const n = assetNo(a, (s.assets || []).indexOf(a))
+    toast('이 사진은 지금 페이지에 쓰이고 있어요. 먼저 "' + n + '번 이미지 지워줘" 로 페이지에서 뺀 다음 지워 주세요.')
+    return
+  }
   s.assetBusy = true
   rerender()
   try {
     await deleteAsset(s.id, assetId)
     s.assets = (s.assets || []).filter((a) => String(a.assetId) !== String(assetId))
+    // ★ 펼쳐 둔 게 바로 그거였으면 접어 둔 상태도 지운다 — 없는 id 가 남아 있으면 안 된다
+    if (String(s.assetPeek) === String(assetId)) s.assetPeek = null
   } catch (e) {
     toast(e?.message || '이미지를 지우지 못했어요.')
   } finally {
@@ -1624,8 +1896,11 @@ function handleServerSubmit(ev, rerender) {
 /** 직접 수정 칸에 들어가면 미리보기에서 그 문구를 비춘다 */
 function handleServerFocus(ev) {
   const s = ui.serverEditor
-  if (!s || ev.target.dataset?.sedit === undefined) return
-  highlight(s, Number(ev.target.dataset.sedit), true)
+  const index = ev.target.dataset?.sedit ?? ev.target.dataset?.textIndex
+  if (!s || index === undefined) return
+  const controls = ev.target.closest?.('.sedit-item')?.querySelector('.sedit-format')
+  if (controls) controls.open = true
+  highlight(s, Number(index), true)
 }
 
 /** 미리보기에서 누른 글자 → 그 칸으로 */
