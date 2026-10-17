@@ -319,19 +319,21 @@
 .metrics.admin-status-metrics {grid-template-columns: repeat(4, minmax(0, 1fr));}
 @media (max-width: 760px) {.metrics.admin-status-metrics {grid-template-columns: repeat(2, minmax(0, 1fr));}}
 /* RAG 품질 추이 — 주간 막대. 높이 % 로 그려 차트 라이브러리를 쓰지 않는다 */
-.trend-legend{display:flex;gap:18px;margin:0 0 10px;font-size:12px;color:var(--muted)}
-.trend-legend span{display:flex;align-items:center;gap:6px}
-.sw{width:11px;height:11px;border-radius:3px}
+.trend-legend{display:flex;gap:28px;margin:0 0 10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.trend-legend span{display:flex;align-items:center;gap:7px}
+.trend-legend b{font-weight:700;color:var(--ink)}
+.sw{width:13px;height:13px;border-radius:4px}
 .sw-total{background:var(--sky)}
 .sw-rag{background:var(--green)}
-.trend{display:flex;gap:24px;align-items:flex-end;padding:14px 4px 0;border-bottom:1px solid var(--line)}
-.trend-col{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:58px}
-.trend-week{font-size:11px;color:var(--muted)}
-.trend-value{font-size:12px;color:var(--ink)}
-.trend-value span{color:var(--green);font-weight:600}
-.trend-bar{position:relative;width:34px;height:150px;border-radius:8px 8px 0 0;background:#f1eef6}
-/* 툴팁 — 브라우저 기본 title 은 1초 지연·일부 환경에서 안 뜨므로 CSS 로 즉시 표시한다 */
-.trend-tip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);padding:8px 10px;border-radius:8px;background:var(--ink);color:#fff;font-size:11px;white-space:nowrap;z-index:5;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.trend{display:flex;gap:28px;align-items:flex-end;padding:14px 4px 0;border-bottom:1px solid var(--line)}
+.trend-col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:78px}
+.trend-week{font-size:13px;color:var(--muted)}
+.trend-bar{position:relative;width:52px;height:200px;border-radius:8px 8px 0 0;background:#f1eef6}
+/* 툴팁 — 브라우저 기본 title 은 1초 지연·일부 환경에서 안 뜨므로 CSS 로 즉시 표시한다.
+   한 줄 요약이 아니라 주간 범위 + 세로 나열 카드로, 큰 막대에 어울리게 넉넉히 만든다 */
+.trend-tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);min-width:170px;padding:12px 14px;border-radius:10px;background:var(--ink);color:#fff;font-size:13px;line-height:1.65;z-index:5;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.22)}
+.trend-tip em{display:block;font-style:normal;font-weight:700;margin-bottom:5px;color:#c9d2e8}
+.trend-tip span{display:block}
 .trend-bar:hover .trend-tip,.trend-bar:focus-visible .trend-tip{display:block}
 .trend-fill{position:absolute;bottom:0;left:0;width:100%;min-height:2px;border-radius:8px 8px 0 0;background:var(--sky);display:flex;align-items:flex-end}
 .trend-rag{width:100%;border-radius:8px 8px 0 0;background:var(--green)}
@@ -354,9 +356,11 @@
 .rag-log-meta{font-size:11px;color:var(--muted);margin:0 0 3px;line-height:1.7}
 .rag-log-fail{font-size:11px;color:#99651d;margin:0;line-height:1.7}
 
-/* 품질 추이 — 사용률·증감 한 줄. 막대 아래 작은 글자라 색은 muted 로 통일 */
-.trend-rate{font-size:10px;color:var(--muted)}
-.trend-delta{font-size:12px;color:var(--ink);margin:0 0 10px}
+/* 품질 추이 — 증감 한 줄. 사용률·수치는 툴팁으로 옮겨져 .trend-rate 는 폐지 */
+.trend-delta{font-size:13px;color:var(--ink);margin:0 0 10px}
+/* 차트 아래 설명 — 공용 .helper 는 10px 라 안 보여서, 이 페이지에서만 살짝 키우고
+   옅은 배경 칩으로 묶어 눈에 띄게 한다 */
+.card .trend-helper{font-size:13px;line-height:1.85;color:#4b5162;background:#f6f5fa;border-radius:8px;padding:11px 14px;margin:12px 0 0}
 
 /* 추천·검색 모달 행 — 왼쪽 텍스트 묶음 + 오른쪽 세로 중앙 [복사] */
 .rag-rec-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}

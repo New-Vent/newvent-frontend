@@ -3,8 +3,9 @@
  *
  *   주간 추이  GET /api/admin/rag/quality-trend?weeks=8
  *
- * 주간 막대 — 파란색이 전체 호출, 안쪽 초록색이 그중 RAG 를 쓴 호출.
- * 막대 아래 사용률 %, 범례 아래 지난주 대비 증감을 붙인다 (같은 응답으로 계산 — 추가 요청 없음).
+ * 주간 막대 — 파란색이 전체 호출, 안쪽 초록색이 그중 RAG 참고 사례를 실어 넣은 호출.
+ * 막대 밖엔 주 시작 날짜만 두고 자세한 수치는 hover 툴팁에서 세로로 요약해 보여준다.
+ * 범례 아래 지난주 대비 증감을 붙인다 (같은 응답으로 계산 — 추가 요청 없음).
  * 차트 라이브러리 없이 div 높이로 그린다 (프로덕션 의존성 제로 원칙).
  */
 
@@ -28,6 +29,17 @@ const maxOf = (rows, pick) => rows.reduce((m, r) => Math.max(m, pick(r) || 0), 0
 
 /** '2026-10-05' → '10/05'. 백엔드가 월요일 시작 날짜를 준다 */
 const weekLabel = (iso) => String(iso ?? '').slice(5).replace('-', '/')
+
+/** '2026-10-05' → '10/05-10/11'. 툴팁용 주간 범위 — 시작 +6일 (월요일~일요일) */
+const weekRange = (iso) => {
+  const s = String(iso ?? '').slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return String(iso ?? '')
+  const end = new Date(s + 'T00:00:00Z')
+  end.setUTCDate(end.getUTCDate() + 6)
+  const m = String(end.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(end.getUTCDate()).padStart(2, '0')
+  return weekLabel(s) + '-' + m + '/' + d
+}
 
 /** 사용률 % — 분모 0 이면 '-' */
 const rate = (rag, total) => (total > 0 ? Math.round((rag / total) * 100) + '%' : '-')
@@ -63,36 +75,42 @@ export function dashboardRagView() {
   }
 
   const legend = '<p class="trend-legend">'
-    + '<span><i class="sw sw-total"></i>전체 호출</span>'
-    + '<span><i class="sw sw-rag"></i>그중 RAG 사용</span></p>'
+    + '<span><i class="sw sw-total"></i><b>전체 호출</b> — 그 주에 생성을 부른 횟수</span>'
+    + '<span><i class="sw sw-rag"></i><b>그중 RAG 참고</b> — 안쪽 초록 막대, 참고 사례를 실어 넣은 호출</span>'
+    + '</p>'
   const maxCalls = Math.max(1, maxOf(rows, (r) => r.totalCalls))
   const cols = rows.map((r) => {
     const total = r.totalCalls || 0
     const rag = Math.min(total, r.ragUsedCalls || 0)
     const usage = rate(rag, total)
-    const tip = esc(weekLabel(r.weekStart) + ' — 전체 ' + total + '회 · RAG ' + rag + '회 · 사용률 ' + usage + ' · 청크 ' + (r.chunkCount || 0) + '개')
+    // 툴팁 본문은 세로로 쌓아 보여주고, aria-label 은 스크린리더용 한 줄 요약으로 둔다
+    const aria = esc(weekRange(r.weekStart) + ' — 전체 ' + total + '회 · 그중 RAG 참고 ' + rag + '회 · 사용률 ' + usage + ' · 청크 ' + (r.chunkCount || 0) + '개')
     return '<div class="trend-col">'
       + '<small class="trend-week">' + esc(weekLabel(r.weekStart)) + '</small>'
-      + '<strong class="trend-value">' + total + '<span> / ' + rag + '</span></strong>'
-      + '<div class="trend-bar" tabindex="0" aria-label="' + tip + '">'
-      + '<span class="trend-tip">' + tip + '</span>'
+      + '<div class="trend-bar" tabindex="0" aria-label="' + aria + '">'
+      + '<span class="trend-tip">'
+      + '<em>' + esc(weekRange(r.weekStart)) + '</em>'
+      + '<span>전체 ' + total + '회</span>'
+      + '<span>그중 RAG 참고 ' + rag + '회</span>'
+      + '<span>사용률 ' + usage + '</span>'
+      + '<span>청크 ' + (r.chunkCount || 0) + '개</span>'
+      + '</span>'
       + '<span class="trend-fill" style="height:' + Math.round((total / maxCalls) * 100) + '%">'
       + '<span class="trend-rag" style="height:' + (total ? Math.round((rag / total) * 100) : 0) + '%"></span>'
       + '</span></div>'
-      + '<small class="trend-rate">사용률 ' + usage + '</small>'
       + '</div>'
   }).join('')
 
   const d = weekDelta(rows)
   const delta = d
-    ? '<p class="trend-delta">이번 주 RAG 사용 ' + d.last + '회 · 지난주 대비 '
+    ? '<p class="trend-delta">이번 주 RAG 참고 ' + d.last + '회 · 지난주 대비 '
       + (d.diff === 0 ? '변동 없음' : (d.diff > 0 ? '+' + d.diff + '회' : d.diff + '회')) + '</p>'
     : ''
 
   return '<div class="container">' + head + legend + delta
     + '<div class="card"><div class="trend">' + cols + '</div>'
-    + '<p class="helper">막대 높이는 주간 전체 호출 수, 안쪽 초록색은 RAG 를 쓴 호출이에요. '
-    + '막대 위 숫자는 전체 / RAG 사용 회수, 아래는 사용률이에요. '
-    + '막대에 마우스를 올리면 사용률과 청크 수가 자세히 보여요. '
+    + '<p class="helper trend-helper">막대 높이는 그 주 전체 호출 수, 안쪽 초록은 그중 RAG 참고 사례를 실어 넣은 호출이에요. '
+    + '막대에 마우스를 올리면 주간 범위와 전체·RAG 참고 회수, 사용률, 그 주에 사용된 청크 수가 세로로 요약돼요. '
+    + '막대 밖 날짜는 주의 시작일이에요. '
     + '이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p></div></div>'
 }
