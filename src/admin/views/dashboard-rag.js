@@ -69,14 +69,17 @@ export function dashboardRagView() {
   const cols = rows.map((r) => {
     const total = r.totalCalls || 0
     const rag = Math.min(total, r.ragUsedCalls || 0)
+    const usage = rate(rag, total)
+    const tip = esc(weekLabel(r.weekStart) + ' — 전체 ' + total + '회 · RAG ' + rag + '회 · 사용률 ' + usage + ' · 청크 ' + (r.chunkCount || 0) + '개')
     return '<div class="trend-col">'
       + '<small class="trend-week">' + esc(weekLabel(r.weekStart)) + '</small>'
       + '<strong class="trend-value">' + total + '<span> / ' + rag + '</span></strong>'
-      + '<div class="trend-bar" title="' + esc(weekLabel(r.weekStart)) + ' — 전체 ' + total + '회 · RAG ' + rag + '회 · 청크 ' + (r.chunkCount || 0) + '개">'
+      + '<div class="trend-bar" tabindex="0" aria-label="' + tip + '">'
+      + '<span class="trend-tip">' + tip + '</span>'
       + '<span class="trend-fill" style="height:' + Math.round((total / maxCalls) * 100) + '%">'
       + '<span class="trend-rag" style="height:' + (total ? Math.round((rag / total) * 100) : 0) + '%"></span>'
       + '</span></div>'
-      + '<small class="trend-rate">사용률 ' + rate(rag, total) + '</small>'
+      + '<small class="trend-rate">사용률 ' + usage + '</small>'
       + '</div>'
   }).join('')
 
@@ -89,6 +92,7 @@ export function dashboardRagView() {
   return '<div class="container">' + head + legend + delta
     + '<div class="card"><div class="trend">' + cols + '</div>'
     + '<p class="helper">막대 높이는 주간 전체 호출 수, 안쪽 초록색은 RAG 를 쓴 호출이에요. '
-    + '막대 위 숫자는 전체 / RAG 사용 회수, 아래는 사용률이에요. 마우스를 올리면 청크 수도 보여요. '
+    + '막대 위 숫자는 전체 / RAG 사용 회수, 아래는 사용률이에요. '
+    + '막대에 마우스를 올리면 사용률과 청크 수가 자세히 보여요. '
     + '이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p></div></div>'
 }
