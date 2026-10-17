@@ -24,7 +24,7 @@ async function setup({ upload, remove } = {}) {
     event: { id: 7, name: '이벤트', status: 'DRAFT' },
     preview: { versionId: 12, versionNo: 3, html: HTML, editableTexts: [] },
     versions: [],
-    direct: { values: {}, style: {}, styleOn: {}, order: null },
+    direct: { values: {}, style: {}, styleOn: {}, order: null, removeBlocks: [], removeItems: {} },
     assets: [{ assetId: 'a1', url: 'https://cdn.test/a1.png', bytes: 1024 }],
     assetBusy: false,
   }
@@ -77,18 +77,18 @@ const file = (size, name = 'dog.png') => ({ size, name })
 
 test('문구별 서식과 삭제를 같은 기준 버전의 한 요청으로 저장한다', async () => {
   const h = await setup()
-  h.s.preview.editableTexts = [{ index: 0, before: '첫째', deleteDepth: 0 }, { index: 1, before: '둘째', deleteDepth: 0 }]
+  h.s.preview.editableTexts = [{ index: 0, before: '첫째' }, { index: 1, before: '둘째' }]
   h.s.direct.formats = { 0: { color: '#d60076', size: 24, bold: true } }
   h.s.direct.values = { 0: '첫째\n수정' }
-  h.s.direct.deleted = { 1: true }
+  h.s.direct.removeItems = { benefits: [1] }
   h.module.namespace.handleServerClick('server-direct-apply', {}, () => {})
   await h.settle()
   assert.equal(h.edited.length, 1)
   assert.equal(h.edited[0][1].sourceVersionId, 12)
   assert.deepEqual(h.edited[0][1].edits, [
     { index: 0, before: '첫째', after: '첫째\n수정', format: { color: '#d60076', size: 24, bold: true } },
-    { index: 1, before: '둘째', after: '둘째', delete: true },
   ])
+  assert.deepEqual(h.edited[0][1].removeItems, { benefits: [{ index: 1, before: '' }] })
 })
 
 test('서식 초기화도 저장 대상이고 문구를 바꾸지 않는다', async () => {
@@ -98,28 +98,6 @@ test('서식 초기화도 저장 대상이고 문구를 바꾸지 않는다', as
   h.module.namespace.handleServerClick('server-direct-apply', {}, () => {})
   await h.settle()
   assert.deepEqual(h.edited[0][1].edits, [{ index: 0, before: '첫째', after: '첫째', format: { reset: true } }])
-})
-
-test('삭제 확인을 취소하면 유지하고 삭제 취소 후에는 요청에 담지 않는다', async () => {
-  const h = await setup()
-  h.s.preview.editableTexts = [{ index: 0, before: '첫째', deleteDepth: 0 }, { index: 1, before: '유의사항', deleteDepth: null }]
-  const oldWindow = globalThis.window
-  try {
-    globalThis.window = { confirm: () => false }
-    const click = (i) => h.module.namespace.handleServerClick('server-text-delete', { dataset: { index: String(i) } }, () => {})
-    click(0)
-    assert.ok(!h.s.direct.deleted[0])
-    globalThis.window.confirm = () => true
-    click(0)
-    assert.equal(h.s.direct.deleted[0], true)
-    click(0)
-    assert.equal(h.s.direct.deleted[0], false)
-    click(1)
-    assert.ok(!h.s.direct.deleted[1])
-    h.module.namespace.handleServerClick('server-direct-apply', {}, () => {})
-    await h.settle()
-    assert.equal(h.edited.length, 0)
-  } finally { globalThis.window = oldWindow }
 })
 
 test('문구 크기의 잘못된 입력은 반영하지 않고 유효한 입력만 저장한다', async () => {
