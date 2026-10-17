@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 편집 화면 — 서버 모드 (VITE_API_AUTH=on).
  *
  *   이벤트 정보   GET  /api/admin/events/{id}
@@ -71,7 +71,7 @@ const chatOf = (id) => (CHATS[id] ||= [{ role: 'assistant', text: GREETING }])
 
 // order 는 null 로 시작한다 — 아직 안 건드렸다는 뜻이다. 미리보기 순서를 그대로 쓴다
 // layout 도 null 로 시작한다. variants 는 고친 영역만 담는다 (영역 → class)
-const freshDirect = () => ({ values: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {}, removeBlocks: [], removeItems: {} })
+const freshDirect = () => ({ values: {}, formats: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {}, removeBlocks: [], removeItems: {} })
 
 /** 새로 만든 직후처럼 진행 중인 작업을 들고 들어올 때 — 목록에서 열 때는 인자 없이 */
 function openServerEditor(id, { jobId = null, request = null, startError = null } = {}) {
@@ -325,9 +325,12 @@ const editable = (s) => s.preview?.editableTexts || []
 /** 바뀐 문구 · 버튼 스타일만 모아 요청 본문으로 */
 function directChanges(s) {
   const list = editable(s)
-  const edits = Object.entries(s.direct.values)
-    .map(([i, v]) => ({ index: Number(i), before: list[i]?.before, after: v }))
-    .filter((x) => x.before !== undefined && normalize(x.after) !== normalize(x.before))
+  const formats = s.direct.formats || {}
+  const indexes = new Set([...Object.keys(s.direct.values), ...Object.keys(formats)])
+  const edits = [...indexes].map((i) => ({
+    index: Number(i), before: list[i]?.before, after: s.direct.values[i] ?? list[i]?.before,
+    ...(formats[i] && Object.keys(formats[i]).length ? { format: formats[i] } : {}),
+  })).filter((x) => x.before !== undefined && (x.format || normalize(x.after) !== normalize(x.before)))
   const st = s.direct.style, on = s.direct.styleOn
   const style = {}
   if (on.background && st.background) style.background = st.background
@@ -389,11 +392,19 @@ function previewDeletes(s) {
   if (!doc) return
   doc.querySelectorAll('[data-block]').forEach((el) => {
     if (el.dataset.nvDeleteStyle !== undefined) {
-      el.setAttribute('style', el.dataset.nvDeleteStyle); delete el.dataset.nvDeleteStyle
+      if (el.dataset.nvDeleteStyle) el.setAttribute('style', el.dataset.nvDeleteStyle)
+      else el.removeAttribute('style')
+      el.style.removeProperty('display')
+      delete el.dataset.nvDeleteStyle
     }
   })
   Object.keys(ITEM_SELECTORS).forEach((key) => itemElements(s, key).forEach((el) => {
-    if (el.dataset.nvDeleteStyle !== undefined) { el.setAttribute('style', el.dataset.nvDeleteStyle); delete el.dataset.nvDeleteStyle }
+    if (el.dataset.nvDeleteStyle !== undefined) {
+      if (el.dataset.nvDeleteStyle) el.setAttribute('style', el.dataset.nvDeleteStyle)
+      else el.removeAttribute('style')
+      el.style.removeProperty('display')
+      delete el.dataset.nvDeleteStyle
+    }
   }))
   const hide = (el) => { if (!el) return; el.dataset.nvDeleteStyle = el.getAttribute('style') || ''; el.style.setProperty('display', 'none', 'important') }
   s.direct.removeBlocks.forEach((key) => hide(blockElement(s, key)))
@@ -675,6 +686,10 @@ function handleServerTool(ev) {
 async function applyDirect(rerender) {
   const s = ui.serverEditor
   if (!s?.preview || running(s) || s.busy) return
+  if ([...document.querySelectorAll('[data-text-format="size"]')].some((el) => !el.checkValidity())) {
+    toast('글자 크기는 10~96px 사이의 정수로 입력해주세요.')
+    return
+  }
   const { edits, buttonStyle, textStyle, order, looks, removeBlocks, removeItems } = directChanges(s)
   if (hasEmptyNoticeEdit(s, edits)) {
     toast('유의사항은 빈칸으로 저장할 수 없어요. 내용을 입력해주세요.')
@@ -747,6 +762,29 @@ const CTA_SIZE = {
   small: { 'font-size': '14px', padding: '10px 20px', 'min-height': '40px' },
   medium: { 'font-size': '18px', padding: '16px 28px', 'min-height': '52px' },
   large: { 'font-size': '22px', padding: '22px 32px', 'min-height': '64px' },
+}
+
+const textBaseStyles = new WeakMap()
+
+/** 문구별 서식은 전용 span에만 적용한다. */
+function previewItemFormats(s) {
+  const live = liveTexts(s)
+  if (!live) return
+  Object.entries(s.direct.formats || {}).forEach(([i, format]) => {
+    const node = live[i]?.node
+    if (!node) return
+    setPreviewText(node, i, node.data)
+    const holder = node.parentElement
+    if (!textBaseStyles.has(holder)) textBaseStyles.set(holder, holder.getAttribute('style') || '')
+    holder.setAttribute('style', textBaseStyles.get(holder))
+    if (format.reset) ['color', '-webkit-text-fill-color', 'font-size', 'font-weight'].forEach((key) => holder.style.removeProperty(key))
+    if (format.color) {
+      holder.style.setProperty('color', format.color)
+      holder.style.setProperty('-webkit-text-fill-color', format.color)
+    }
+    if (format.size != null) holder.style.setProperty('font-size', format.size + 'px')
+    if (format.bold != null) holder.style.setProperty('font-weight', format.bold ? '700' : '400')
+  })
 }
 const CTA_SHAPE = { square: '0', round: '12px', pill: '999px' }
 
@@ -1136,7 +1174,7 @@ function directPanel(s) {
     const input = '<textarea rows="1" data-autogrow ' + attrs + '></textarea>'
     // 번호 = 서버 editableTexts 의 index (직접 수정 요청에 그대로 실린다)
     return '<div class="sedit-item"><span class="sedit-no' + (changed ? ' changed' : '') + '" data-sedit-no="' + t.index
-      + '" title="문구 번호 ' + t.index + '">' + t.index + '</span>' + input + '</div>'
+      + '" title="문구 번호 ' + t.index + '">' + t.index + '</span><div>' + input + itemFormatHTML(s, t, busy) + '</div></div>'
   }
   const fields = groups.map((g) => '<fieldset class="sedit-group"><legend>'
     + esc(g.block === 'all' ? '문구' : BLOCK_LABELS[g.block] || g.block) + '</legend>' + g.items.map(field).join('') + '</fieldset>').join('')
@@ -1165,7 +1203,7 @@ function directPanel(s) {
     + '</div><p class="helper" style="margin:8px 0 0">색을 직접 고르면 그 제목은 분위기 · 색감을 바꿔도 그대로예요. 체크를 풀면 다시 따라갑니다.</p></fieldset>'
 
   return '<div class="server-scroll" id="server-scroll">'
-    + '<p class="workspace-tip">미리보기에서 문구를 누르면 해당 칸으로 이동하고, 영역에 마우스를 올리면 순서 · 모양을 바꿀 수 있어요. 기간 · 유의사항은 서버가 채우는 자리라 고칠 수 없어요.</p>'
+    + '<p class="workspace-tip">문구를 선택해 글자색 · 크기 · 굵기를 바꿀 수 있어요. 블록·항목 삭제는 위의 순서·삭제 도구를 사용해주세요. 기간은 서버가 채우고 유의사항은 수정만 가능해요.</p>'
     + looksHTML(s, busy)
     + orderHTML(s, busy)
     + (grouped ? '' : '<p class="helper" style="margin-bottom:10px">영역 구분을 불러오지 못해 문구를 순서대로 보여줘요.</p>')
@@ -1174,6 +1212,21 @@ function directPanel(s) {
     + '<div class="row" style="gap:6px">' + button('server-direct-reset', '되돌리기', dis, 'btn sm')
     + button('server-direct-apply', s.busy ? '저장하는 중…' : '변경 저장', 'disabled', 'btn primary sm') + '</div></div>'
     + '<p class="helper" style="margin-top:6px;font-weight:500">저장하면 새 버전이 만들어져요.</p></div>'
+}
+
+function itemFormatHTML(s, t, busy) {
+  const patch = s.direct.formats?.[t.index] || {}
+  const saved = patch.reset ? {} : t.format || {}
+  const color = patch.color || saved.color || '#222222'
+  const size = patch.size ?? (saved['font-size'] ? parseInt(saved['font-size'], 10) : '')
+  const bold = patch.bold ?? (saved['font-weight'] ? Number(saved['font-weight']) >= 600 : null)
+  const attrs = ' data-text-index="' + t.index + '" ' + (busy ? 'disabled' : '')
+  return '<details class="sedit-format"><summary>문구 서식</summary><div class="sedit-format-tools">'
+    + '<label>글자색 <input type="color" data-text-format="color" value="' + esc(color) + '"' + attrs + '></label>'
+    + '<label>크기(px) <input type="number" min="10" max="96" step="1" placeholder="기본" data-text-format="size" value="' + esc(size) + '"' + attrs + '></label>'
+    + '<label>굵기 <select data-text-format="bold"' + attrs + '><option value="">그대로</option><option value="true" ' + (bold === true ? 'selected' : '') + '>굵게</option><option value="false" ' + (bold === false ? 'selected' : '') + '>보통</option></select></label>'
+    + button('server-text-format-reset', '서식 초기화', 'data-index="' + t.index + '" ' + (busy ? 'disabled' : ''), 'btn sm')
+    + '</div><span class="helper">서식 초기화는 문구별 서식만 제거해요. 변경 저장 시 새 버전에 반영돼요.</span></details>'
 }
 
 function sidePanel(s) {
@@ -1458,7 +1511,7 @@ function afterServerRender() {
     // 미리보기 도구줄이 올린 영역에 보여 줄 것을 여기서 묻는다 (frame.js 의 server-edit 모드)
     if (frame) frame.nvTools = (key) => toolsOf(s, key)
     // 고치던 값 · 바꾼 순서 · 배치가 남아 있으면 (탭 전환 · 기기 전환) 새 iframe 에도 다시 입힌다
-    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewTextStyle(s); previewOrder(s); previewLooks(s); previewDeletes(s) }, { once: true })
+    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewTextStyle(s); previewItemFormats(s); previewOrder(s); previewLooks(s); previewDeletes(s) }, { once: true })
   } else {
     // 고른 영역 외곽선 — 새 iframe(새 버전 · 기기 전환)에도 다시 입힌다
     const frame = $('.event-frame')
@@ -1631,6 +1684,12 @@ async function runRagExamples() {
       return true
     case 'server-direct-apply': applyDirect(rerender); return true
     case 'server-direct-reset': resetDirect(rerender); return true
+    case 'server-text-format-reset':
+      if (s && !running(s) && !s.busy) {
+        (s.direct.formats ||= {})[b.dataset.index] = { reset: true }
+        rerender()
+      }
+      return true
     case 'server-publish': openPublish(); return true
     case 'server-publish-confirm': confirmPublish(rerender); return true
     case 'server-end': openEndEvent(); return true
@@ -1652,6 +1711,19 @@ function handleServerInput(ev) {
   const s = ui.serverEditor
   const t = ev.target
   if (!s) return false
+  if (t.dataset.textFormat !== undefined) {
+    if (running(s) || s.busy) return true
+    const i = Number(t.dataset.textIndex), key = t.dataset.textFormat
+    if (!editable(s)[i]) return true
+    if (key === 'size' && t.value !== '' && !t.checkValidity()) return true
+    const format = (s.direct.formats ||= {})[i] ||= {}
+    if (t.value === '') delete format[key]
+    else format[key] = key === 'size' ? Number(t.value) : key === 'bold' ? t.value === 'true' : t.value
+    previewItemFormats(s)
+    highlight(s, i, false)
+    updateDirectCount(s)
+    return true
+  }
   if (t.id === 'server-prompt') { onServerPromptInput(t.value); return true }
   if (t.id === 'server-chat') { onChatInput(t.value); return true }
   if (t.id === 'server-publish-version') { onPublishPick(t.value); return true }
@@ -1824,8 +1896,11 @@ function handleServerSubmit(ev, rerender) {
 /** 직접 수정 칸에 들어가면 미리보기에서 그 문구를 비춘다 */
 function handleServerFocus(ev) {
   const s = ui.serverEditor
-  if (!s || ev.target.dataset?.sedit === undefined) return
-  highlight(s, Number(ev.target.dataset.sedit), true)
+  const index = ev.target.dataset?.sedit ?? ev.target.dataset?.textIndex
+  if (!s || index === undefined) return
+  const controls = ev.target.closest?.('.sedit-item')?.querySelector('.sedit-format')
+  if (controls) controls.open = true
+  highlight(s, Number(index), true)
 }
 
 /** 미리보기에서 누른 글자 → 그 칸으로 */
