@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 편집 화면 — 서버 모드 (VITE_API_AUTH=on).
  *
  *   이벤트 정보   GET  /api/admin/events/{id}
@@ -392,11 +392,19 @@ function previewDeletes(s) {
   if (!doc) return
   doc.querySelectorAll('[data-block]').forEach((el) => {
     if (el.dataset.nvDeleteStyle !== undefined) {
-      el.setAttribute('style', el.dataset.nvDeleteStyle); delete el.dataset.nvDeleteStyle
+      if (el.dataset.nvDeleteStyle) el.setAttribute('style', el.dataset.nvDeleteStyle)
+      else el.removeAttribute('style')
+      el.style.removeProperty('display')
+      delete el.dataset.nvDeleteStyle
     }
   })
   Object.keys(ITEM_SELECTORS).forEach((key) => itemElements(s, key).forEach((el) => {
-    if (el.dataset.nvDeleteStyle !== undefined) { el.setAttribute('style', el.dataset.nvDeleteStyle); delete el.dataset.nvDeleteStyle }
+    if (el.dataset.nvDeleteStyle !== undefined) {
+      if (el.dataset.nvDeleteStyle) el.setAttribute('style', el.dataset.nvDeleteStyle)
+      else el.removeAttribute('style')
+      el.style.removeProperty('display')
+      delete el.dataset.nvDeleteStyle
+    }
   }))
   const hide = (el) => { if (!el) return; el.dataset.nvDeleteStyle = el.getAttribute('style') || ''; el.style.setProperty('display', 'none', 'important') }
   s.direct.removeBlocks.forEach((key) => hide(blockElement(s, key)))
