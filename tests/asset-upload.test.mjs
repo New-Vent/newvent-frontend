@@ -373,3 +373,20 @@ test('★ 제목 디자인 미리보기 함수가 있다', async () => {
   // 고르는 자리마다 미리보기를 다시 그린다
   assert.match(h.source, /previewButtonStyle\(s\)\s+previewTextStyle\(s\)/)
 })
+
+test('★ select 의 change 이벤트로 제목 크기와 문구 서식을 반영한다', async () => {
+  const h = await setup()
+  h.s.preview.editableTexts = [{ index: 0, before: '첫째' }]
+
+  // 1. 큰 제목 크기 select change
+  const titleSelect = { dataset: { sstyle: 'titleSize' }, value: 'large' }
+  const handled1 = h.module.namespace.handleServerChange({ target: titleSelect }, () => {})
+  assert.equal(handled1, true)
+  assert.equal(h.s.direct.style.titleSize, 'large')
+
+  // 2. 문구 굵기 select change
+  const boldSelect = { dataset: { textFormat: 'bold', textIndex: '0' }, value: 'true' }
+  const handled2 = h.module.namespace.handleServerChange({ target: boldSelect }, () => {})
+  assert.equal(handled2, true)
+  assert.equal(h.s.direct.formats[0].bold, true)
+})

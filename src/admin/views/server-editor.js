@@ -686,8 +686,10 @@ function handleServerTool(ev) {
 async function applyDirect(rerender) {
   const s = ui.serverEditor
   if (!s?.preview || running(s) || s.busy) return
-  if ([...document.querySelectorAll('[data-text-format="size"]')].some((el) => !el.checkValidity())) {
+  const invalidSize = [...document.querySelectorAll('[data-text-format="size"]')].find((el) => el.value !== '' && !el.checkValidity())
+  if (invalidSize) {
     toast('글자 크기는 10~96px 사이의 정수로 입력해주세요.')
+    invalidSize.focus()
     return
   }
   const { edits, buttonStyle, textStyle, order, looks, removeBlocks, removeItems } = directChanges(s)
@@ -743,7 +745,7 @@ function liveTexts(s) {
   const cached = previewTextNodes.get(doc)
   if (cached?.versionId === s.preview.versionId && cached.list.every((t) => t.node.isConnected)) return cached.list
   const list = doc ? collectTexts(doc.body) : []
-  if (list.length !== editable(s).length) return null
+  if (!list.length) return null
   previewTextNodes.set(doc, { versionId: s.preview.versionId, list })
   return list
 }
@@ -773,7 +775,8 @@ function previewItemFormats(s) {
   Object.entries(s.direct.formats || {}).forEach(([i, format]) => {
     const node = live[i]?.node
     if (!node) return
-    setPreviewText(node, i, node.data)
+    const textVal = s.direct.values[i] ?? node.data
+    setPreviewText(node, i, textVal)
     const holder = node.parentElement
     if (!textBaseStyles.has(holder)) textBaseStyles.set(holder, holder.getAttribute('style') || '')
     holder.setAttribute('style', textBaseStyles.get(holder))
@@ -782,8 +785,8 @@ function previewItemFormats(s) {
       holder.style.setProperty('color', format.color)
       holder.style.setProperty('-webkit-text-fill-color', format.color)
     }
-    if (format.size != null) holder.style.setProperty('font-size', format.size + 'px')
-    if (format.bold != null) holder.style.setProperty('font-weight', format.bold ? '700' : '400')
+    if (format.size != null && format.size !== '') holder.style.setProperty('font-size', format.size + 'px')
+    if (format.bold != null && format.bold !== '') holder.style.setProperty('font-weight', format.bold ? '700' : '400')
   })
 }
 const CTA_SHAPE = { square: '0', round: '12px', pill: '999px' }
@@ -1511,7 +1514,13 @@ function afterServerRender() {
     // 미리보기 도구줄이 올린 영역에 보여 줄 것을 여기서 묻는다 (frame.js 의 server-edit 모드)
     if (frame) frame.nvTools = (key) => toolsOf(s, key)
     // 고치던 값 · 바꾼 순서 · 배치가 남아 있으면 (탭 전환 · 기기 전환) 새 iframe 에도 다시 입힌다
-    if (frame) frame.addEventListener('load', () => { replayDirect(s); previewButtonStyle(s); previewTextStyle(s); previewItemFormats(s); previewOrder(s); previewLooks(s); previewDeletes(s) }, { once: true })
+    const applyAll = () => {
+      replayDirect(s); previewButtonStyle(s); previewTextStyle(s); previewItemFormats(s); previewOrder(s); previewLooks(s); previewDeletes(s)
+    }
+    if (frame) {
+      if (frame.contentDocument?.readyState === 'complete') applyAll()
+      frame.addEventListener('load', applyAll, { once: true })
+    }
   } else {
     // 고른 영역 외곽선 — 새 iframe(새 버전 · 기기 전환)에도 다시 입힌다
     const frame = $('.event-frame')
@@ -1687,6 +1696,8 @@ async function runRagExamples() {
     case 'server-text-format-reset':
       if (s && !running(s) && !s.busy) {
         (s.direct.formats ||= {})[b.dataset.index] = { reset: true }
+        previewItemFormats(s)
+        updateDirectCount(s)
         rerender()
       }
       return true
@@ -1771,7 +1782,11 @@ function handleServerInput(ev) {
 function handleServerChange(ev, rerender) {
   const s = ui.serverEditor
   const t = ev.target
-  if (!s || t.id !== 'server-asset-file') return false
+  if (!s) return false
+  if (t.dataset?.textFormat !== undefined || t.dataset?.sstyle !== undefined || t.dataset?.sstyleOn !== undefined) {
+    return handleServerInput(ev)
+  }
+  if (t.id !== 'server-asset-file') return false
   const file = t.files?.[0]
   // ★ 비워야 같은 파일을 다시 고를 수 있다 — 안 비우면 두 번째 선택에서 change 가 안 난다
   t.value = ''
