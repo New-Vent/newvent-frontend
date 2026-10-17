@@ -46,7 +46,7 @@
      "할인 쿠 / 폰을 제공합니다" 로 끊겼다(실측) — 그래서 둘을 따로 적는다.
    ★ overflow-wrap: anywhere 는 안전망. 한 단어가 칸보다 길 때만 글자 단위로
      돌아간다(안 넣으면 그 단어가 칸 밖으로 삐져나간다). */
-:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block]:not(.ev-block) :is(
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch, .theme-brutalist, .theme-papercraft) [data-block]:not(.ev-block) :is(
   h1, h2, h3, .title, .benefit-name, .step-title,
   [data-block="coupon"] p, [data-block="highlight"] p
 ) {
@@ -69,6 +69,6 @@
    padding-left 를 줄이면 이모지가 <strong>1등</strong> 을 그대로 덮는다 —
    실제로 겪었다. 52px 은 테마가 바꿀 값이 아니라 base 가 정한 **제약**이라
    여기서 못 박는다. 테마가 padding 단축속성을 쓰다 깜빡해도 이게 덮는다. */
-:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block="prize"]:not(.ev-block) li {
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch, .theme-brutalist, .theme-papercraft) [data-block="prize"]:not(.ev-block) li {
   padding-left: 52px;
 }

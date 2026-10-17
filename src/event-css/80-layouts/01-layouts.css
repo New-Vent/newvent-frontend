@@ -477,3 +477,132 @@
 .ev-container.event-page.layout-focus > [data-block="hero"].v-hero-split:not(.ev-block) { grid-template-columns: 1fr; text-align: center; }
 .ev-container.event-page.layout-focus > [data-block="hero"].v-hero-split:not(.ev-block) h1 { grid-row: auto; }
 .ev-container.event-page.layout-focus > [data-block="hero"].v-hero-split:not(.ev-block) > :not(h1) { grid-column: 1; }
+
+/* ── 확장 배치 4종 — 검토 A등급 (registry/Layout.java MASONRY · TIMELINE · L_SHAPE · CTA_RAIL) ─────────────
+ *
+ *   layout-masonry   벽돌 — 내용 영역을 2단에 높이대로 쌓는다 (column-count)
+ *   layout-timeline  가운데 세로선 + 좌우 번갈아 (zigzag 에 가운데 선을 더한 꼴)
+ *   layout-l-shape   소개를 뺀 첫 내용 영역은 왼쪽에 길게, 나머지는 오른쪽에 쌓는다
+ *   layout-cta-rail  참여 영역(cta)을 오른쪽 칸에 두고 따라오게 한다
+ *
+ * ★ "내용 영역" 은 위 배치들과 같은 목록이다. hero · 띠 배너 · 유의사항 · 참여 버튼은 한 줄을 다 쓴다
+ * ★ 번갈아 고르기는 :nth-child(… of …) 로 한다 — 사이에 hero · 띠 배너가 끼어도 내용 영역만 센다
+ * ★ 좁으면(640px 아래) 전부 세로 한 줄로 돌아간다 — 기본 배치(stack)와 같다
+ */
+
+.ev-container.event-page:is(.layout-masonry, .layout-timeline, .layout-l-shape, .layout-cta-rail) {
+  max-width: 1120px;
+  overflow: clip;
+}
+
+/* 벽돌 — 2단. 단을 나누는 영역은 한 줄을 다 쓴다(column-span) */
+@media (min-width: 641px) {
+  .ev-container.event-page.layout-masonry {
+    display: block;
+    column-count: 2;
+    column-gap: 18px;
+  }
+  .ev-container.event-page.layout-masonry > * { column-span: all; }
+  .ev-container.event-page.layout-masonry > :is(
+    [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block) {
+    column-span: none;
+    display: block;
+    margin: 0 9px 18px;
+    border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+    border-radius: 20px;
+    break-inside: avoid;
+  }
+}
+
+/* 타임라인 — 컨테이너 가운데에 선을 긋고, 내용 영역을 좌우로 번갈아 놓는다
+ * ★ 칸을 칠한다 — basic 은 내용 영역의 칠을 걷어서, 칠하지 않으면 가운데 선이 카드 위로 비친다.
+ *   칠하면 글자색도 같이 쥔다 (테마 머리말 ①: 표면을 칠하면 글자도 쥔다) */
+@media (min-width: 641px) {
+  .ev-container.event-page.layout-timeline {
+    max-width: 1000px;
+    background-image: linear-gradient(var(--ev-primary-light), var(--ev-primary-light));
+    background-size: 3px 100%;
+    background-position: 50% 0;
+    background-repeat: no-repeat;
+  }
+  .ev-container.event-page.layout-timeline > :is(
+    [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block) {
+    position: relative;
+    width: calc(50% - 34px);
+    margin: 0 0 22px 18px;
+    border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+    border-radius: 20px;
+    background-color: var(--ev-surface);
+    color: var(--ev-text-main);
+  }
+  .ev-container.event-page.layout-timeline > :nth-child(even of :is(
+    [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block)) {
+    margin-left: calc(50% + 16px);
+  }
+  .ev-container.event-page.layout-timeline > [data-block="hero"]:not(.ev-block) { margin-bottom: 26px; }
+}
+
+/* L자 — 2열 격자. 첫 내용 영역이 왼쪽 세 줄을 차지하고, 뒤의 영역이 오른쪽에 쌓인다(dense) */
+@media (min-width: 641px) {
+  .ev-container.event-page.layout-l-shape {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-auto-flow: row dense;
+    column-gap: 18px;
+    align-items: start;
+  }
+  .ev-container.event-page.layout-l-shape > * { grid-column: 1 / -1; min-width: 0; }
+  .ev-container.event-page.layout-l-shape > :is(
+    [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block) {
+    grid-column: 2;
+    margin: 0 9px 18px 0;
+    border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+    border-radius: 20px;
+  }
+  /* ★ 큰 칸은 소개(intro)를 뺀 첫 내용 영역이다. 소개는 문단 한둘이라 큰 칸이 거의 비었다 (미리보기 실측) */
+  .ev-container.event-page.layout-l-shape > :nth-child(1 of :is(
+    [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block)) {
+    grid-column: 1;
+    grid-row: span 3;
+    margin-left: 9px;
+  }
+}
+
+/* 참여 레일 — 오른쪽 칸에 cta 를 세우고 따라오게 한다(sticky).
+ * ★ 행 간격(row-gap)을 0 으로 둔다 — cta 가 빈 줄 여럿에 걸쳐 있어서 간격을 주면 그만큼 왼쪽이 벌어진다. 간격은 영역의 margin 이 맡는다
+ * ★ overflow: clip 은 스크롤 상자를 만들지 않아 sticky 가 산다 (hidden 이면 죽는다) */
+@media (min-width: 761px) {
+  .ev-container.event-page.layout-cta-rail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    column-gap: 20px;
+    row-gap: 0;
+    align-items: start;
+  }
+  .ev-container.event-page.layout-cta-rail > * { grid-column: 1; min-width: 0; }
+  .ev-container.event-page.layout-cta-rail > [data-block="hero"]:not(.ev-block) { grid-column: 1 / -1; margin-bottom: 18px; }
+  .ev-container.event-page.layout-cta-rail > [data-block="cta"]:not(.ev-block) {
+    grid-column: 2;
+    grid-row: 2 / span 40;
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    margin: 0 9px 0 0;
+    padding: 22px 18px;
+    border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+    border-radius: 20px;
+    background: var(--ev-surface);
+    box-shadow: var(--ev-shadow-lg);
+  }
+  .ev-container.event-page.layout-cta-rail > [data-block="cta"]:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) { display: block; width: 100%; }
+}

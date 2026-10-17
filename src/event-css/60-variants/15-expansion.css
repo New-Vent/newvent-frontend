@@ -1,0 +1,1019 @@
+/* ── 확장 변형 — 요청문이 이름을 부를 때만 프롬프트에 실린다 ─────────────────
+ *
+ * 백엔드 registry/Variant.java 의 core=false 항목과 짝이다 (1차 채택 36개 — 비교표 3개는 70-components/06-compare.css).
+ * 후보 목록과 출처: newvent-backend docs/registry-candidates.json · 검토 문서 레지스트리_확장_검토.md
+ *
+ * ★ 색은 전부 팔레트 변수(--ev-*)로 쓴다. 고정 색은 포스트잇 · 복주머니 · 메달처럼 색이 곧 모양인 것만.
+ * ★ 움직이는 것(v-cta-shine · v-cta-pulse-ring)은 99-a11y 의 prefers-reduced-motion 이 멈춘다.
+ *   멈춘 상태에서 장식만 안 보이고 버튼은 그대로다.
+ * ★ 모델이 쓰지 않는 글자(VS · STEP · ★)는 CSS content 로만 붙인다 — 값을 지어내지 않는다.
+ */
+
+/* ── hero ── */
+
+[data-block="hero"].v-hero-badge-top:not(.ev-block) .badge {
+  padding: 7px 16px;
+  border: 0;
+  background: var(--ev-accent-tag);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+[data-block="hero"].v-hero-diagonal:not(.ev-block) {
+  padding-bottom: 76px;
+  border-radius: 20px 20px 0 0;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 44px), 0 100%);
+}
+
+[data-block="hero"].v-hero-stripe-bg:not(.ev-block) {
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0 14px, transparent 14px 28px),
+    var(--ev-gradient-hero);
+}
+
+[data-block="hero"].v-hero-brutal:not(.ev-block) {
+  margin-right: 10px;
+  margin-bottom: 30px;
+  border: 4px solid var(--ev-text-main);
+  border-radius: 6px;
+  background: var(--ev-primary-light);
+  color: var(--ev-text-main);
+  box-shadow: 10px 10px 0 var(--ev-text-main);
+}
+/* ★ 밝은 hero 다 — 테마(basic · aurora)의 "밝은 hero 변형" 목록에도 이름을 넣었다(커튼 · 어두운 막을 안 그린다).
+     글자색은 여기서 정한다. 테마가 hero 글자를 흰색으로 박는다 */
+[data-block="hero"].v-hero-brutal:not(.ev-block) h1 { color: var(--ev-text-main); font-weight: 900; letter-spacing: -0.04em; text-shadow: none; }
+[data-block="hero"].v-hero-brutal:not(.ev-block) p { color: var(--ev-text-main); opacity: 1; }
+[data-block="hero"].v-hero-brutal:not(.ev-block) .badge {
+  border: 2px solid var(--ev-text-main);
+  border-radius: 4px;
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  font-weight: 800;
+}
+
+[data-block="hero"].v-hero-retro:not(.ev-block) {
+  border: 3px double var(--ev-primary);
+  background:
+    repeating-conic-gradient(from 0deg at 50% 120%, rgba(0, 0, 0, 0.04) 0 6deg, transparent 6deg 12deg),
+    var(--ev-bg);
+  color: var(--ev-text-main);
+  text-align: center;
+}
+[data-block="hero"].v-hero-retro:not(.ev-block) h1 {
+  color: var(--ev-primary);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 3px 3px 0 var(--ev-accent-tag);
+}
+[data-block="hero"].v-hero-retro:not(.ev-block) p { color: var(--ev-text-main); opacity: 1; }
+[data-block="hero"].v-hero-retro:not(.ev-block) .badge { border: 1px solid var(--ev-primary); background: transparent; color: var(--ev-primary); box-shadow: none; }
+
+[data-block="hero"].v-hero-paper-cut:not(.ev-block) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding-bottom: 84px;
+}
+[data-block="hero"].v-hero-paper-cut:not(.ev-block)::before,
+[data-block="hero"].v-hero-paper-cut:not(.ev-block)::after {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  z-index: -1;
+  background: var(--ev-primary-light);
+  box-shadow: 0 -6px 14px rgba(0, 0, 0, 0.14);
+}
+[data-block="hero"].v-hero-paper-cut:not(.ev-block)::before { height: 64px; opacity: 0.3; border-radius: 60% 40% 0 0 / 70% 60% 0 0; }
+[data-block="hero"].v-hero-paper-cut:not(.ev-block)::after { height: 34px; opacity: 0.5; border-radius: 40% 60% 0 0 / 60% 80% 0 0; }
+
+/* ── highlight ── */
+
+[data-block="highlight"].v-highlight-speech:not(.ev-block) {
+  position: relative;
+  margin-bottom: 30px;
+  border-radius: 22px;
+}
+[data-block="highlight"].v-highlight-speech:not(.ev-block)::after {
+  content: "";
+  position: absolute;
+  left: 34px;
+  bottom: -14px;
+  border: 14px solid transparent;
+  border-bottom: 0;
+  border-top-color: var(--ev-primary);
+}
+
+[data-block="highlight"].v-highlight-postit:not(.ev-block) {
+  padding: 22px 24px;
+  border-radius: 2px;
+  background: #fff59d;
+  color: #3f3a1d;
+  text-align: left;
+  box-shadow: 0 12px 18px -6px rgba(0, 0, 0, 0.22);
+  transform: rotate(-1.5deg);
+}
+
+[data-block="highlight"].v-highlight-tape:not(.ev-block) {
+  position: relative;
+  margin-top: 14px;
+  padding-top: 26px;
+  border-radius: 4px;
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  box-shadow: var(--ev-shadow-md);
+}
+[data-block="highlight"].v-highlight-tape:not(.ev-block)::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 110px;
+  height: 26px;
+  margin-left: -55px;
+  background: var(--ev-primary);
+  opacity: 0.35;
+  transform: rotate(-3deg);
+}
+
+[data-block="highlight"].v-highlight-sticker:not(.ev-block) {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 18px 30px;
+  border: 3px dashed rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  box-shadow: 0 0 0 5px var(--ev-primary), 0 12px 24px var(--ev-primary-glow);
+  transform: rotate(-3deg);
+}
+
+/* ── intro ── */
+
+[data-block="intro"].v-intro-letter:not(.ev-block) {
+  position: relative;
+  padding: 24px 24px 24px 48px;
+  background: repeating-linear-gradient(to bottom, var(--ev-surface) 0 31px, var(--ev-border) 31px 32px);
+  background-origin: content-box;
+  line-height: 32px;
+}
+[data-block="intro"].v-intro-letter:not(.ev-block)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 32px;
+  width: 2px;
+  background: var(--ev-accent-tag);
+  opacity: 0.45;
+}
+[data-block="intro"].v-intro-letter:not(.ev-block) :is(h2, p) { margin: 0; line-height: 32px; }
+
+[data-block="intro"].v-intro-icon-row:not(.ev-block) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+[data-block="intro"].v-intro-icon-row:not(.ev-block) h2 { grid-column: 1 / -1; margin: 0; }
+[data-block="intro"].v-intro-icon-row:not(.ev-block) p {
+  position: relative;
+  margin: 0;
+  padding: 14px 16px 14px 44px;
+  border-radius: 12px;
+  background: var(--ev-primary-light);
+}
+[data-block="intro"].v-intro-icon-row:not(.ev-block) p::before {
+  content: "✦";
+  position: absolute;
+  left: 16px;
+  top: 13px;
+  color: var(--ev-primary);
+  font-size: 1.1rem;
+}
+
+/* ── benefits ── (ul 리셋은 04-benefits.css 의 [class*="v-benefits-"]) */
+
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) ul {
+  padding: 16px 20px 28px;
+  background: var(--ev-surface-subtle);
+  font-variant-numeric: tabular-nums;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 16px 100%;
+          mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 16px 100%;
+}
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 12px;
+  margin: 0;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px dashed var(--ev-border-focus);
+  border-radius: 0;
+  background: none;
+}
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) li:last-child { border-bottom: 0; }
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) .benefit-name { flex: 1; font-weight: 700; }
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) .benefit-value { font-weight: 800; }
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) .benefit-desc { order: 3; flex-basis: 100%; color: var(--ev-text-muted); font-size: 0.85rem; }
+
+[data-block="benefits"].v-benefits-tag:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 10px;
+  padding: 14px 18px 14px 42px;
+  border: 0;
+  border-radius: 0 12px 12px 0;
+  background: var(--ev-primary-light);
+  clip-path: polygon(22px 0, 100% 0, 100% 100%, 22px 100%, 0 50%);
+}
+[data-block="benefits"].v-benefits-tag:not(.ev-block) li::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--ev-surface);
+  box-shadow: inset 0 0 0 2px var(--ev-primary);
+}
+
+[data-block="benefits"].v-benefits-badge-corner:not(.ev-block) li {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 12px;
+  padding: 16px 44px 16px 18px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+}
+[data-block="benefits"].v-benefits-badge-corner:not(.ev-block) li:first-child { border-color: var(--ev-accent-tag); }
+[data-block="benefits"].v-benefits-badge-corner:not(.ev-block) li:first-child::after {
+  content: "★";
+  position: absolute;
+  top: 12px;
+  right: -30px;
+  width: 100px;
+  padding: 3px 0;
+  background: var(--ev-accent-tag);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  transform: rotate(45deg);
+}
+
+[data-block="benefits"].v-benefits-stack:not(.ev-block) ul { padding-top: 6px; }
+[data-block="benefits"].v-benefits-stack:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 -10px;
+  padding: 16px 18px 24px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  background: var(--ev-surface);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+  transform: rotate(-1deg);
+}
+[data-block="benefits"].v-benefits-stack:not(.ev-block) li:nth-child(even) { background: var(--ev-primary-light); transform: rotate(1deg); }
+[data-block="benefits"].v-benefits-stack:not(.ev-block) li:last-child { margin-bottom: 0; padding-bottom: 16px; }
+
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li {
+  margin: 0 0 10px;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 14px;
+}
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(1) { background: color-mix(in srgb, var(--ev-primary) 10%, var(--ev-surface)); }
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(2) { background: color-mix(in srgb, var(--ev-primary) 22%, var(--ev-surface)); }
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(3) { background: color-mix(in srgb, var(--ev-primary) 36%, var(--ev-surface)); }
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(n+4) { background: var(--ev-primary); color: #fff; }
+/* ★ 진한 칸에서는 설명 · 값 글자가 테마의 흐린 색으로 남아 안 읽혔다 (미리보기 실측) */
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(n+4) :is(.benefit-name, .benefit-desc, .benefit-value, .benefit-tag) { color: #fff; opacity: 1; }
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(n+4) :is(.benefit-value, .benefit-tag) { background: rgba(255, 255, 255, 0.2); }
+
+/* ── stats ── */
+
+[data-block="stats"].v-stats-big-number:not(.ev-block) li:first-child {
+  grid-column: 1 / -1;
+  padding: 26px 16px;
+  background: var(--ev-gradient-cta);
+  color: rgba(255, 255, 255, 0.9);
+}
+[data-block="stats"].v-stats-big-number:not(.ev-block) li:first-child strong { color: #fff; font-size: 3.4rem; line-height: 1.05; }
+
+[data-block="stats"].v-stats-divided:not(.ev-block) ul { display: flex; flex-wrap: wrap; gap: 12px 0; }
+[data-block="stats"].v-stats-divided:not(.ev-block) li {
+  flex: 1 1 110px;
+  padding: 6px 12px;
+  border-left: 1px solid var(--ev-border);
+  border-radius: 0;
+  background: none;
+}
+[data-block="stats"].v-stats-divided:not(.ev-block) li:first-child { border-left: 0; }
+
+[data-block="stats"].v-stats-badge:not(.ev-block) ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+[data-block="stats"].v-stats-badge:not(.ev-block) li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 132px;
+  height: 132px;
+  padding: 12px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  box-shadow: 0 0 0 6px var(--ev-primary-light);
+}
+[data-block="stats"].v-stats-badge:not(.ev-block) li strong { color: #fff; font-size: 1.5rem; }
+
+/* ── prize ── (기본 아이콘 🎁 · 🏆 는 50-blocks/03-prize.css 의 li::before) */
+
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(1)::before { content: "🥇"; }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(2)::before { content: "🥈"; }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(3)::before { content: "🥉"; }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(1) { background: color-mix(in srgb, #f59e0b 16%, var(--ev-surface)); font-size: 1.05rem; }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(2) { background: color-mix(in srgb, #94a3b8 18%, var(--ev-surface)); }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(3) { background: color-mix(in srgb, #b45309 14%, var(--ev-surface)); }
+
+[data-block="prize"].v-prize-showcase:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 18px 14px;
+}
+[data-block="prize"].v-prize-showcase:not(.ev-block) li {
+  margin: 0;
+  padding: 48px 12px 20px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px 14px 4px 4px;
+  background: var(--ev-surface);
+  text-align: center;
+  box-shadow: 0 10px 0 -4px var(--ev-primary-light), 0 12px 0 -4px var(--ev-border);
+}
+[data-block="prize"].v-prize-showcase:not(.ev-block) li:nth-child(n)::before { left: 50%; top: 24px; transform: translate(-50%, -50%); font-size: 1.7rem; }
+
+[data-block="prize"].v-prize-lucky-bag:not(.ev-block) li {
+  border-left: 3px solid #f59e0b;
+  background: color-mix(in srgb, #dc2626 7%, var(--ev-surface));
+}
+[data-block="prize"].v-prize-lucky-bag:not(.ev-block) li:nth-child(n)::before {
+  content: "";
+  left: 14px;
+  width: 24px;
+  height: 26px;
+  border-radius: 40% 40% 50% 50% / 30% 30% 70% 70%;
+  background: radial-gradient(circle at 50% 62%, #fde68a 0 3px, transparent 3.5px), #dc2626;
+  box-shadow: inset 0 6px 0 -2px #f59e0b;
+}
+
+/* ── coupon ── (기본 티켓 모양 · mask 는 50-blocks/04-coupon.css) */
+
+[data-block="coupon"].v-coupon-barcode:not(.ev-block)::after {
+  content: "";
+  display: block;
+  height: 34px;
+  margin-top: 14px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg,
+    currentColor 0 2px, transparent 2px 4px, currentColor 4px 5px, transparent 5px 8px,
+    currentColor 8px 11px, transparent 11px 13px);
+  opacity: 0.5;
+}
+
+[data-block="coupon"].v-coupon-boarding-pass:not(.ev-block) {
+  padding-right: 124px;
+  -webkit-mask: radial-gradient(circle at calc(100% - 100px) 0, transparent 12px, #000 12.5px) top / 100% 51% no-repeat,
+                radial-gradient(circle at calc(100% - 100px) 100%, transparent 12px, #000 12.5px) bottom / 100% 51% no-repeat;
+          mask: radial-gradient(circle at calc(100% - 100px) 0, transparent 12px, #000 12.5px) top / 100% 51% no-repeat,
+                radial-gradient(circle at calc(100% - 100px) 100%, transparent 12px, #000 12.5px) bottom / 100% 51% no-repeat;
+}
+[data-block="coupon"].v-coupon-boarding-pass:not(.ev-block)::after {
+  content: "✈";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  border-left: 2px dashed rgba(255, 255, 255, 0.5);
+  font-size: 2rem;
+}
+
+[data-block="coupon"].v-coupon-stamp-card:not(.ev-block)::after {
+  content: "";
+  display: block;
+  height: 36px;
+  margin-top: 16px;
+  background: radial-gradient(circle, transparent 13px, rgba(255, 255, 255, 0.75) 13.5px 15px, transparent 15.5px) left / 44px 36px repeat-x;
+}
+
+/* ── steps ── */
+
+[data-block="steps"].v-steps-stepper:not(.ev-block) ol { display: flex; list-style: none; margin: 0; padding: 0; counter-reset: nv-step; }
+[data-block="steps"].v-steps-stepper:not(.ev-block) li {
+  counter-increment: nv-step;
+  position: relative;
+  flex: 1;
+  margin: 0;
+  padding: 46px 6px 0;
+  text-align: center;
+}
+[data-block="steps"].v-steps-stepper:not(.ev-block) li::before {
+  content: counter(nv-step);
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  margin-left: -18px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 800;
+  line-height: 36px;
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+[data-block="steps"].v-steps-stepper:not(.ev-block) li::after {
+  content: "";
+  position: absolute;
+  top: 17px;
+  left: calc(50% + 18px);
+  right: calc(-50% + 18px);
+  height: 2px;
+  background: var(--ev-primary-light);
+}
+[data-block="steps"].v-steps-stepper:not(.ev-block) li:last-child::after { display: none; }
+[data-block="steps"].v-steps-stepper:not(.ev-block) .step-title { font-weight: 700; }
+[data-block="steps"].v-steps-stepper:not(.ev-block) .step-desc { color: var(--ev-text-muted); font-size: 0.85rem; }
+
+[data-block="steps"].v-steps-badge:not(.ev-block) ol { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; counter-reset: nv-step; }
+[data-block="steps"].v-steps-badge:not(.ev-block) li {
+  counter-increment: nv-step;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--ev-border);
+  border-radius: 12px;
+  background: var(--ev-surface);
+}
+[data-block="steps"].v-steps-badge:not(.ev-block) li::before {
+  content: "STEP " counter(nv-step, decimal-leading-zero);
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+[data-block="steps"].v-steps-numbers-big:not(.ev-block) ol { list-style: none; margin: 0; padding: 0; counter-reset: nv-step; }
+[data-block="steps"].v-steps-numbers-big:not(.ev-block) li {
+  counter-increment: nv-step;
+  position: relative;
+  overflow: hidden;
+  min-height: 76px;
+  margin: 0 0 10px;
+  padding: 18px 18px 18px 86px;
+  border-radius: 14px;
+  background: var(--ev-surface-subtle);
+}
+[data-block="steps"].v-steps-numbers-big:not(.ev-block) li::before {
+  content: counter(nv-step);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  color: var(--ev-primary);
+  font-size: 4.2rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  opacity: 0.22;
+  transform: translateY(-50%);
+}
+
+/* ── schedule ── (기본 타임라인 점은 50-blocks/05-schedule.css 의 li::before) */
+
+/* ★ 테마(basic · bloom)가 일정을 "왼쪽 라벨 표" 로 바꾸고 점을 끈다 — 로드맵은 그걸 전부 되돌려야 선 · 점이 선다 (미리보기 실측) */
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) ol {
+  display: flex;
+  overflow-x: auto;
+  padding: 12px 0 6px;
+  border: 0;
+  border-radius: 0;
+}
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) li {
+  position: relative;
+  display: block;
+  flex: 1 0 140px;
+  margin: 0;
+  padding: 22px 10px 0;
+  border: 0;
+  border-top: 3px solid var(--ev-primary-light);
+  border-radius: 0;
+  background: transparent;
+  text-align: center;
+}
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) li:first-child { border-top: 3px solid var(--ev-primary-light); }
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) li::before {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) li strong {
+  display: block;
+  flex: none;
+  margin: 0 0 4px;
+  padding: 0;
+  background: none;
+  color: var(--ev-primary);
+}
+
+[data-block="schedule"].v-schedule-ticket:not(.ev-block) ol { display: grid; gap: 12px; border: 0; border-radius: 0; overflow: visible; }
+[data-block="schedule"].v-schedule-ticket:not(.ev-block) li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 14px 22px;
+  border-left: 0;
+  border-radius: 12px;
+  background: var(--ev-primary-light);
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 9px, #000 9.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 9px, #000 9.5px) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle at 0 50%, transparent 9px, #000 9.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 9px, #000 9.5px) right / 51% 100% no-repeat;
+}
+[data-block="schedule"].v-schedule-ticket:not(.ev-block) li::before { display: none; }
+[data-block="schedule"].v-schedule-ticket:not(.ev-block) li strong {
+  flex: 0 0 auto;
+  margin: 0;
+  padding-right: 12px;
+  border-right: 2px dashed var(--ev-primary);
+  color: var(--ev-primary-hover);
+}
+
+/* ── faq ── (목록형 dl. 펼침형 details 는 70-components 의 아코디언) */
+
+[data-block="faq"].v-faq-two-col:not(.ev-block) dl { column-count: 2; column-gap: 24px; }
+[data-block="faq"].v-faq-two-col:not(.ev-block) dt { break-after: avoid; }
+[data-block="faq"].v-faq-two-col:not(.ev-block) dd { break-before: avoid; break-inside: avoid; }
+
+[data-block="faq"].v-faq-sidebar:not(.ev-block) {
+  display: grid;
+  grid-template-columns: minmax(120px, 32%) 1fr;
+  gap: 0 22px;
+  align-items: start;
+}
+[data-block="faq"].v-faq-sidebar:not(.ev-block) h2 {
+  margin: 0;
+  padding-right: 16px;
+  border-right: 3px solid var(--ev-primary);
+  font-size: 1.3rem;
+}
+[data-block="faq"].v-faq-sidebar:not(.ev-block) dl dt:first-of-type { padding-top: 0; border-top: 0; }
+
+/* ── cta ── */
+
+[data-block="cta"].v-cta-shine:not(.ev-block) :is(.btn, a, button) {
+  position: relative;
+  overflow: hidden;
+  background: var(--ev-gradient-cta);
+}
+[data-block="cta"].v-cta-shine:not(.ev-block) :is(.btn, a, button)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: nv-cta-shine 3.2s ease-in-out infinite;
+}
+@keyframes nv-cta-shine {
+  0%, 60% { left: -60%; }
+  100% { left: 130%; }
+}
+
+[data-block="cta"].v-cta-pulse-ring:not(.ev-block) :is(.btn, a, button) { position: relative; }
+[data-block="cta"].v-cta-pulse-ring:not(.ev-block) :is(.btn, a, button)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: nv-cta-ring 2s ease-out infinite;
+}
+@keyframes nv-cta-ring {
+  0% { box-shadow: 0 0 0 0 var(--ev-primary); opacity: 0.6; }
+  100% { box-shadow: 0 0 0 16px var(--ev-primary); opacity: 0; }
+}
+
+[data-block="cta"].v-cta-brutal:not(.ev-block) :is(.btn, a, button) {
+  border: 3px solid var(--ev-text-main);
+  border-radius: 6px;
+  background: var(--ev-primary);
+  color: #fff;
+  box-shadow: 6px 6px 0 var(--ev-text-main);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+[data-block="cta"].v-cta-brutal:not(.ev-block) :is(.btn, a, button):hover { transform: translate(2px, 2px); box-shadow: 4px 4px 0 var(--ev-text-main); }
+[data-block="cta"].v-cta-brutal:not(.ev-block) :is(.btn, a, button):active { transform: translate(6px, 6px); box-shadow: 0 0 0 var(--ev-text-main); }
+
+/* ── 확장 2차 — 검토 A등급 17종 (registry-candidates.json priority 1) ───────────────
+ * ★ hero 의 ::before · ::after 는 쓰지 않는다 — 종이 오림 · 흩날림 · 테마(aurora)가 이미 쓴다.
+ *   블롭 · 메시 · 질감은 배경 여러 겹으로 그린다
+ */
+
+/* hero */
+[data-block="hero"].v-hero-mesh:not(.ev-block) {
+  background:
+    radial-gradient(at 18% 22%, color-mix(in srgb, var(--ev-accent-tag) 70%, transparent) 0, transparent 52%),
+    radial-gradient(at 82% 8%, color-mix(in srgb, var(--ev-primary-light) 55%, transparent) 0, transparent 46%),
+    radial-gradient(at 70% 92%, color-mix(in srgb, var(--ev-primary) 80%, transparent) 0, transparent 55%),
+    var(--ev-gradient-hero);
+}
+
+[data-block="hero"].v-hero-grain:not(.ev-block) {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    var(--ev-gradient-hero);
+}
+
+[data-block="hero"].v-hero-blob:not(.ev-block) {
+  background:
+    radial-gradient(circle at 94% 8%, color-mix(in srgb, var(--ev-accent-tag) 55%, transparent) 0 92px, transparent 93px),
+    radial-gradient(circle at 104% 46%, color-mix(in srgb, var(--ev-primary-light) 30%, transparent) 0 60px, transparent 61px),
+    radial-gradient(circle at 4% 102%, color-mix(in srgb, var(--ev-primary-light) 32%, transparent) 0 120px, transparent 121px),
+    var(--ev-gradient-hero);
+}
+
+[data-block="hero"].v-hero-zigzag-edge:not(.ev-block) {
+  padding-bottom: 72px;
+  border-radius: 20px 20px 0 0;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 28px 100%;
+          mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 28px 100%;
+}
+
+/* highlight */
+[data-block="highlight"].v-highlight-gradient-border:not(.ev-block) {
+  border: 3px solid transparent;
+  background:
+    linear-gradient(var(--ev-surface), var(--ev-surface)) padding-box,
+    var(--ev-gradient-cta) border-box;
+  color: var(--ev-text-main);
+  box-shadow: none;
+}
+[data-block="highlight"].v-highlight-gradient-border:not(.ev-block) p:first-child { color: var(--ev-primary-hover); }
+
+/* 반반 — 문단마다 칠한다. 한 문단이 경계를 넘으면 반은 안 읽힌다 */
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 0;
+  overflow: hidden;
+  background: var(--ev-primary-light);
+  text-align: left;
+}
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) p {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 16px 20px;
+}
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) p:first-child { background: var(--ev-primary); color: #fff; }
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) p + p { color: var(--ev-primary-hover); font-size: 0.95rem; opacity: 1; }
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) p:only-child { grid-column: 1 / -1; justify-content: center; }
+
+/* benefits (ul 리셋은 04-benefits.css 의 [class*="v-benefits-"]) */
+[data-block="benefits"].v-benefits-brutal:not(.ev-block) li {
+  margin: 0 6px 16px 0;
+  padding: 16px 18px;
+  border: 3px solid var(--ev-text-main);
+  border-radius: 6px;
+  background: var(--ev-surface);
+  box-shadow: 5px 5px 0 var(--ev-text-main);
+}
+
+/* 벽돌 — 칸 높이가 제각각이어도 위로 붙는다 (세로로 먼저 채운다) */
+/* ★ display: block — 테마(basic)가 ul 을 grid 로 만든다. column-count 는 grid · flex 에서 듣지 않는다 (미리보기 실측) */
+[data-block="benefits"].v-benefits-masonry:not(.ev-block) ul { display: block; column-count: 2; column-gap: 12px; }
+[data-block="benefits"].v-benefits-masonry:not(.ev-block) li {
+  display: block;
+  margin: 0 0 12px;
+  padding: 16px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+  break-inside: avoid;
+}
+
+[data-block="benefits"].v-benefits-gift:not(.ev-block) li {
+  position: relative;
+  margin: 18px 0 14px;
+  padding: 22px 18px 16px;
+  border: 0;
+  border-top: 8px solid var(--ev-accent-tag);
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 4px), color-mix(in srgb, var(--ev-accent-tag) 35%, transparent) calc(50% - 4px) calc(50% + 4px), transparent calc(50% + 4px)) top / 100% 18px no-repeat,
+    var(--ev-primary-light);
+}
+[data-block="benefits"].v-benefits-gift:not(.ev-block) li::after {
+  content: "🎀";
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  font-size: 1.5rem;
+  transform: translateX(-50%);
+}
+
+/* stats */
+[data-block="stats"].v-stats-flip:not(.ev-block) li strong {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: linear-gradient(#1f2937 0 49%, #0b1220 49% 51%, #1f2937 51%);
+  color: #f9fafb;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 0 #0b1220;
+}
+
+/* coupon — 흰 영수증. 기본 티켓 mask 를 톱니 mask 로 바꾼다 */
+[data-block="coupon"].v-coupon-receipt:not(.ev-block) {
+  padding-bottom: 34px;
+  border-radius: 6px 6px 0 0;
+  /* ★ 순백이면 흰 컨테이너 위에서 톱니가 안 보인다 — 아주 옅게 물들인다. 그림자 · 테두리는 mask 가 같이 자른다 */
+  background: color-mix(in srgb, var(--ev-primary) 6%, #fff);
+  color: #111827;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+          mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+  font-variant-numeric: tabular-nums;
+}
+[data-block="coupon"].v-coupon-receipt:not(.ev-block) h2 { color: #6b7280; opacity: 1; }
+[data-block="coupon"].v-coupon-receipt:not(.ev-block) p { color: var(--ev-primary-hover); }
+[data-block="coupon"].v-coupon-receipt:not(.ev-block) ul { border-top: 2px dashed #d1d5db; color: #374151; opacity: 1; }
+
+/* steps — 만화 칸 */
+[data-block="steps"].v-steps-comic:not(.ev-block) ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: nv-step;
+}
+[data-block="steps"].v-steps-comic:not(.ev-block) li {
+  counter-increment: nv-step;
+  position: relative;
+  margin: 0;
+  padding: 34px 16px 16px;
+  border: 3px solid var(--ev-text-main);
+  border-radius: 4px;
+  background: var(--ev-surface);
+  box-shadow: 4px 4px 0 var(--ev-text-main);
+}
+[data-block="steps"].v-steps-comic:not(.ev-block) li::before {
+  content: "#" counter(nv-step);
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  padding: 2px 10px;
+  background: var(--ev-text-main);
+  color: var(--ev-surface);
+  font-size: 12px;
+  font-weight: 900;
+}
+[data-block="steps"].v-steps-comic:not(.ev-block) .step-title { font-weight: 800; }
+
+/* schedule — 가운데 세로선, 좌우 번갈아. 테마(basic · bloom)의 "라벨 표" 를 되돌린다 (로드맵과 같은 이유) */
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) ol {
+  position: relative;
+  display: block;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) ol::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--ev-primary-light);
+}
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li {
+  position: relative;
+  display: block;
+  width: 50%;
+  margin: 0;
+  padding: 4px 26px 20px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: right;
+}
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li:nth-child(even) { margin-left: 50%; padding: 4px 0 20px 26px; text-align: left; }
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 6px;
+  right: -7px;
+  left: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li:nth-child(even)::before { right: auto; left: -7px; }
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li strong {
+  display: block;
+  flex: none;
+  margin: 0 0 2px;
+  padding: 0;
+  background: none;
+  color: var(--ev-primary);
+  width: auto;
+  text-align: inherit;
+}
+
+/* faq (목록형 dl) */
+[data-block="faq"].v-faq-grid-cards:not(.ev-block) dl { column-count: 3; column-gap: 12px; }
+[data-block="faq"].v-faq-grid-cards:not(.ev-block) dt {
+  margin: 0;
+  padding: 16px 16px 4px;
+  border: 0;
+  border-radius: 14px 14px 0 0;
+  background: var(--ev-primary-light);
+  break-after: avoid;
+}
+[data-block="faq"].v-faq-grid-cards:not(.ev-block) dd {
+  margin: 0 0 12px;
+  padding: 4px 16px 16px;
+  border: 0;
+  border-radius: 0 0 14px 14px;
+  background: var(--ev-primary-light);
+  font-size: 0.9rem;
+  break-before: avoid;
+  break-inside: avoid;
+}
+
+[data-block="faq"].v-faq-highlight-top:not(.ev-block) dt:nth-of-type(-n+3) {
+  margin-top: 10px;
+  padding: 16px 18px 4px;
+  border: 0;
+  border-radius: 14px 14px 0 0;
+  background: var(--ev-primary-light);
+  font-size: 1.08rem;
+}
+[data-block="faq"].v-faq-highlight-top:not(.ev-block) dd:nth-of-type(-n+3) {
+  margin: 0 0 4px;
+  padding: 4px 18px 16px;
+  border-radius: 0 0 14px 14px;
+  background: var(--ev-primary-light);
+}
+[data-block="faq"].v-faq-highlight-top:not(.ev-block) dt:nth-of-type(n+4) { font-size: 0.92rem; }
+[data-block="faq"].v-faq-highlight-top:not(.ev-block) dd:nth-of-type(n+4) { font-size: 0.86rem; }
+
+/* cta */
+[data-block="cta"].v-cta-stamp:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) {
+  border: 3px dashed rgba(255, 255, 255, 0.75);
+  border-radius: 12px;
+  background: var(--ev-primary);
+  color: #fff;
+  outline: 3px solid var(--ev-primary);
+  outline-offset: 3px;
+  letter-spacing: 0.06em;
+  transform: rotate(-3deg);
+}
+
+[data-block="cta"].v-cta-ticket:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) {
+  padding: 16px 44px;
+  border-radius: 10px;
+  background: var(--ev-gradient-cta);
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 10px, #000 10.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 10px, #000 10.5px) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle at 0 50%, transparent 10px, #000 10.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 10px, #000 10.5px) right / 51% 100% no-repeat;
+}
+
+@media (max-width: 560px) {
+  [data-block="benefits"].v-benefits-masonry:not(.ev-block) ul { column-count: 1; }
+  [data-block="faq"].v-faq-grid-cards:not(.ev-block) dl { column-count: 1; }
+  [data-block="highlight"].v-highlight-split-color:not(.ev-block) { grid-template-columns: 1fr; }
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) ol::before { left: 7px; }
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li,
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li:nth-child(even) { width: auto; margin-left: 0; padding: 4px 0 18px 30px; text-align: left; }
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li::before,
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li:nth-child(even)::before { right: auto; left: 0; }
+}
+
+/* ── 움직임 (Group.MOTION) — 전부 확장, 요청문이 부를 때만 ─────────────────────
+ * ★ 움직임 줄이기 설정이면 99-a11y 가 animation 을 끈다 — 등장 효과는 그냥 보이고, 흩날림은 멈춘 무늬로 남는다 (실제 화면 확인)
+ * ★ transform 이 아니라 translate · scale 속성을 쓴다. 변형(포스트잇 · 스티커)이 transform 으로 기울여 둔 것을 덮지 않는다
+ * ★ 스크롤 등장(reveal)이 있으면 영역이 보일 때 돈다 — :not(.ev-reveal-pending)
+ */
+
+[data-block].v-anim-fade-up:not(.ev-block):not(.ev-reveal-pending) { animation: nv-anim-fade-up 0.7s ease-out both; }
+[data-block].v-anim-zoom-in:not(.ev-block):not(.ev-reveal-pending) { animation: nv-anim-zoom-in 0.6s ease-out both; }
+[data-block].v-anim-stagger:not(.ev-block):not(.ev-reveal-pending) :is(li, dt, dd, p, tr) { animation: nv-anim-fade-up 0.5s ease-out both; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(2), [data-block].v-anim-stagger:not(.ev-block) dd:nth-of-type(1) { animation-delay: 0.08s; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(3) { animation-delay: 0.16s; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(4) { animation-delay: 0.24s; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(5) { animation-delay: 0.32s; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(n+6) { animation-delay: 0.4s; }
+@keyframes nv-anim-fade-up { from { opacity: 0; translate: 0 24px; } to { opacity: 1; translate: 0 0; } }
+@keyframes nv-anim-zoom-in { from { opacity: 0; scale: 0.94; } to { opacity: 1; scale: 1; } }
+
+/* cta 버튼 강조 — 공유 버튼(.ev-share-btn)은 빼고 참여 버튼만 */
+[data-block="cta"].v-anim-pulse:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) { animation: nv-anim-pulse 2.4s ease-in-out infinite; }
+[data-block="cta"].v-anim-heart-beat:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) { animation: nv-anim-heart-beat 1.6s ease-in-out infinite; }
+@keyframes nv-anim-pulse { 50% { scale: 1.05; } }
+@keyframes nv-anim-heart-beat { 0%, 70%, 100% { scale: 1; } 14%, 42% { scale: 1.09; } 28% { scale: 1; } }
+
+/* hero 흩날림 — ::after 한 겹. 배경 위치를 무늬 크기의 정수배만큼 옮겨 이음매 없이 되풀이한다
+ * ★ hero 의 ::after 를 쓰는 변형(종이 오림 · 테마 aurora 의 결)과 같이 고르면 이쪽이 이긴다 */
+[data-block="hero"]:is(.v-anim-snowfall, .v-anim-petal-fall, .v-anim-leaf-fall):not(.ev-block) { position: relative; overflow: hidden; }
+[data-block="hero"]:is(.v-anim-snowfall, .v-anim-petal-fall, .v-anim-leaf-fall):not(.ev-block)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+[data-block="hero"].v-anim-snowfall:not(.ev-block)::after {
+  background:
+    radial-gradient(circle, #fff 0 2px, rgba(148, 163, 184, 0.55) 2.5px 3px, transparent 3.5px) 0 0 / 120px 120px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 1.5px, transparent 2px) 40px 60px / 80px 80px,
+    radial-gradient(circle, #fff 0 3px, rgba(148, 163, 184, 0.45) 3.5px 4px, transparent 4.5px) 130px 30px / 200px 200px;
+  animation: nv-anim-snow 16s linear infinite;
+}
+@keyframes nv-anim-snow { to { background-position: 120px 1200px, 120px 860px, 330px 2030px; } }
+
+[data-block="hero"].v-anim-petal-fall:not(.ev-block)::after {
+  background:
+    radial-gradient(5px 3px at 50% 50%, #f9a8d4 0 90%, transparent 100%) 0 0 / 140px 140px,
+    radial-gradient(4px 6px at 50% 50%, #fbcfe8 0 90%, transparent 100%) 60px 40px / 110px 110px,
+    radial-gradient(6px 4px at 50% 50%, #f472b6 0 90%, transparent 100%) 20px 90px / 190px 190px;
+  opacity: 0.9;
+  animation: nv-anim-petal 18s linear infinite;
+}
+@keyframes nv-anim-petal { to { background-position: 280px 1400px, -50px 1140px, 400px 1990px; } }
+
+[data-block="hero"].v-anim-leaf-fall:not(.ev-block)::after {
+  background:
+    radial-gradient(6px 4px at 50% 50%, #f59e0b 0 90%, transparent 100%) 0 0 / 150px 150px,
+    radial-gradient(4px 7px at 50% 50%, #ea580c 0 90%, transparent 100%) 70px 50px / 120px 120px,
+    radial-gradient(7px 5px at 50% 50%, #b45309 0 90%, transparent 100%) 30px 100px / 210px 210px;
+  opacity: 0.9;
+  animation: nv-anim-leaf 20s linear infinite;
+}
+@keyframes nv-anim-leaf { to { background-position: -150px 1500px, 190px 1250px, -180px 2200px; } }
+
+/* ── 좁은 화면 ── */
+
+@media (max-width: 560px) {
+  [data-block="hero"].v-hero-brutal:not(.ev-block) { margin-right: 6px; box-shadow: 6px 6px 0 var(--ev-text-main); }
+  [data-block="coupon"].v-coupon-boarding-pass:not(.ev-block) { padding-right: 96px; }
+  [data-block="coupon"].v-coupon-boarding-pass:not(.ev-block)::after { width: 72px; font-size: 1.6rem; }
+  [data-block="faq"].v-faq-two-col:not(.ev-block) dl { column-count: 1; }
+  [data-block="faq"].v-faq-sidebar:not(.ev-block) { grid-template-columns: 1fr; }
+  [data-block="faq"].v-faq-sidebar:not(.ev-block) h2 { margin-bottom: 10px; padding: 0 0 8px; border-right: 0; border-bottom: 3px solid var(--ev-primary); }
+  [data-block="steps"].v-steps-stepper:not(.ev-block) ol { flex-direction: column; }
+  [data-block="steps"].v-steps-stepper:not(.ev-block) li { padding: 6px 0 18px 50px; text-align: left; }
+  [data-block="steps"].v-steps-stepper:not(.ev-block) li::before { left: 0; margin-left: 0; }
+  [data-block="steps"].v-steps-stepper:not(.ev-block) li::after { top: 40px; bottom: 0; left: 17px; right: auto; width: 2px; height: auto; }
+}

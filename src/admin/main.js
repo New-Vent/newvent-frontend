@@ -605,6 +605,7 @@ document.addEventListener('click', (ev) => {
   // ── 만들기 화면 RAG (기획 단계) — 모달이라 다시 그리지 않는다 ──
   if(handleCreateRagClick(a,b))return;
   if(a==='device'){ui.mobile=b.dataset.mode==='mobile';render();return;}
+  if(a==='preview-fit'){ui.fit=!ui.fit;render();return;}
   if(a==='block'){   ui.block=b.dataset.block;showSelectedTarget(currentEvent());applySelection();refreshButtonEditor();refreshContentEditor();   const frame=$('.event-frame[data-mode="editor"]'),block=frame?.contentDocument?.querySelector('[data-block="'+ui.block+'"]');   const canvas=$('.canvas');if(block&&canvas)canvas.scrollTo({top:block.offsetTop,behavior:'smooth'});   if(ui.block==='notices')toast('유의사항은 수정 대상에서 제외돼요.');return;  }
   if(a==='reset-button-style'){if(!requestPending()){delete currentDraft().snapshot.buttonStyle;updateEditor();refreshButtonEditor();}return;}
   if(a==='save'){saveVersion();return;}

@@ -1,0 +1,133 @@
+/* ═══════════════════════════════════════════════════════════════════
+   theme-brutalist — 브루탈 · 스트리트. **선이 디자인이다.**
+   registry/Theme.java BRUTALIST (Tone.LIGHT)
+
+   ★ 무엇으로 만드나
+     두꺼운 잉크 테두리(3~4px) · 흐림 없는 어긋난 그림자 · 직각 모서리 · 굵은 소제목 알약.
+     색은 팔레트에서 받는다 — 테마는 선 · 그림자 · 모서리만 쥔다.
+     잉크 색은 var(--ev-text-main) 이다. 어두운 팔레트에서는 잉크가 밝아져 밝은 선이 된다 (night · esports 실측 기준)
+
+   ★ 09-common 체크리스트
+     ① 줄바꿈 · ③ 경품 자리 — 09-common 에 이름을 넣었다
+     ② 일정 점 — 넣지 않았다. 이 테마는 base 의 세로 타임라인을 그대로 쓴다
+     ⑦ 팔레트 읽기 — body:has(.theme-brutalist)
+     ⑧ 칠하면 잉크도 쥔다 — 내용 영역 · 소제목 알약은 배경과 글자를 같이 정한다
+     ⑨ 띠 배너 — 배경을 안 건드린다 (테두리 · 그림자만)
+   ★ hero 는 배경을 그대로 둔다 — 팔레트 그라데이션 위 흰 글자가 base 의 계약이다
+   ═══════════════════════════════════════════════════════════════════ */
+
+body:has(.theme-brutalist) {
+  background-color: var(--ev-bg, #f4f4f0);
+  background-image:
+    linear-gradient(var(--ev-border, rgba(0, 0, 0, 0.08)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ev-border, rgba(0, 0, 0, 0.08)) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.theme-brutalist.ev-container,
+.theme-brutalist .ev-container {
+  max-width: 800px;
+  margin: 40px auto 64px;
+  padding: 18px 22px 22px 18px;
+  background: var(--ev-surface, #fff);
+  color: var(--ev-text-main);
+  border: 4px solid var(--ev-text-main);
+  border-radius: 0;
+  box-shadow: 12px 12px 0 var(--ev-text-main);
+}
+
+/* ── hero ── */
+.theme-brutalist [data-block="hero"]:not(.ev-block) {
+  margin: 0 0 22px;
+  padding: 60px 30px 52px;
+  border: 3px solid var(--ev-text-main);
+  border-radius: 0;
+}
+.theme-brutalist.theme-brutalist [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(2.3rem, 7vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+.theme-brutalist [data-block="hero"]:not(.ev-block) .badge {
+  border: 2px solid currentColor;
+  border-radius: 0;
+  font-weight: 800;
+}
+
+/* ── 내용 영역 — 잉크 상자 ── */
+.theme-brutalist :is(
+  [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="compare"],
+  [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+):not(.ev-block) {
+  margin: 0 6px 24px 0;
+  padding: 22px;
+  border: 3px solid var(--ev-text-main);
+  border-radius: 0;
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  box-shadow: 6px 6px 0 var(--ev-text-main);
+}
+
+/* 소제목 — 기울어진 알약. 칠하므로 글자도 쥔다
+ * ★ 바탕은 잉크(--ev-text-main), 글자는 표면색이다 — primary 바탕 + 흰 글자로 두었더니
+ *   어두운 팔레트(night 의 금색 primary)에서 흰 글자가 노란 바탕에 앉아 안 읽혔다 (미리보기 실측).
+ *   잉크 ↔ 표면은 밝은 · 어두운 팔레트 모두 본문 대비 그대로다. 팔레트 색은 그림자로 남긴다 */
+.theme-brutalist [data-block]:not(.ev-block) h2 {
+  display: inline-block;
+  margin: 0 0 16px;
+  padding: 4px 12px;
+  border: 3px solid var(--ev-text-main);
+  background: var(--ev-text-main);
+  color: var(--ev-surface);
+  box-shadow: 4px 4px 0 var(--ev-primary);
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  transform: rotate(-1.2deg);
+}
+
+/* 띠 배너 · 유의사항 */
+.theme-brutalist [data-block="highlight"]:not(.ev-block) {
+  border: 3px solid var(--ev-text-main);
+  border-radius: 0;
+  box-shadow: 6px 6px 0 var(--ev-text-main);
+  margin: 0 6px 24px 0;
+}
+.theme-brutalist [data-block="notices"]:not(.ev-block) {
+  border: 3px dashed var(--ev-text-main);
+  border-radius: 0;
+}
+
+/* 혜택 · 경품 항목 */
+.theme-brutalist [data-block="benefits"]:not(.ev-block) li {
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  border: 2px solid var(--ev-text-main);
+  border-radius: 0;
+  background: var(--ev-primary-light);
+  color: var(--ev-text-main);
+}
+.theme-brutalist [data-block="prize"]:not(.ev-block) li { border: 2px solid var(--ev-text-main); border-radius: 0; }
+.theme-brutalist [data-block="stats"]:not(.ev-block) li { border: 2px solid var(--ev-text-main); border-radius: 0; }
+
+/* 자주 묻는 질문 */
+.theme-brutalist [data-block="faq"]:not(.ev-block) dt { border-top: 2px solid var(--ev-text-main); }
+
+/* 참여 버튼 — 눌리는 상자 */
+.theme-brutalist [data-block="cta"]:not(.ev-block) :is(.btn, button) {
+  border: 3px solid var(--ev-text-main);
+  border-radius: 0;
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 6px 6px 0 var(--ev-text-main);
+  transition: translate 0.1s, box-shadow 0.1s;
+}
+.theme-brutalist [data-block="cta"]:not(.ev-block) :is(.btn, button):hover { translate: 2px 2px; box-shadow: 4px 4px 0 var(--ev-text-main); }
+
+@media (max-width: 560px) {
+  .theme-brutalist.ev-container,
+  .theme-brutalist .ev-container { margin: 16px 10px 32px; padding: 12px; box-shadow: 6px 6px 0 var(--ev-text-main); }
+  .theme-brutalist [data-block="hero"]:not(.ev-block) { padding: 44px 20px 40px; }
+}

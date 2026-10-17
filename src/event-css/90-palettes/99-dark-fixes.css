@@ -1,14 +1,14 @@
 /* 어두운 팔레트 — 밝은 배경을 전제로 만든 폴백 색을 맞춘다 */
-.palette-night :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
-.palette-night [data-block="hero"].v-hero-minimal:not(.ev-block) h1,
-.palette-night [data-block="intro"].v-intro-lead:not(.ev-block) p:first-of-type { color: var(--ev-primary); }
-.palette-night [data-block="cta"]:not(.v-cta-outline, .v-cta-gradient-border, .ev-block) :is(.btn, a, button) { color: #111; }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="hero"].v-hero-minimal:not(.ev-block) h1,
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="intro"].v-intro-lead:not(.ev-block) p:first-of-type { color: var(--ev-primary); }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="cta"]:not(.v-cta-outline, .v-cta-gradient-border, .ev-block) :is(.btn, a, button) { color: #111; }
 
 /* 어두운 팔레트 보정 */
-.palette-night [data-block="faq"].v-faq-brutal:not(.ev-block) summary { color: #111; }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="faq"].v-faq-brutal:not(.ev-block) summary { color: #111; }
 /* 기본 · 줄무늬 머리글만 브랜드색(금색) 바탕이라 글씨를 어둡게. 나머지 변형은 바탕이 어둡다 */
-.palette-night [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #111; }
-.palette-night [data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child :last-child { color: #111; }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #111; }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child :last-child { color: #111; }
 
 /* esports 도 어두운 팔레트 — night 와 같은 보정 */
 .palette-esports :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
@@ -19,40 +19,57 @@
 
 /* ★ 위 두 줄은 "머리글 바탕이 브랜드색(금색 · 네온)이라 글자를 어둡게" 다. 어두운 표(v-compare-dark)는
      머리글 바탕이 #111827 이라 그 어두운 글자가 그대로 묻혔다 — 머리글이 통째로 안 보였다 (계산값 실측) */
-:is(.palette-night, .palette-esports) [data-block="compare"].v-compare-dark:not(.ev-block) th { color: #f9fafb; }
+:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="compare"].v-compare-dark:not(.ev-block) th { color: #f9fafb; }
 
 /* 밝은 템플릿에 어두운 팔레트를 붙였을 때 — 글자와 배경 중 한쪽만 고정된 곳을 팔레트에 맞춘다 (#211)
  * night · esports 는 글자색(--ev-text-main · --ev-text-muted)을 밝게 바꾼다.
  * 그런데 일부 템플릿 카드는 배경이 #ffffff 로 고정돼 있어 흰 카드 위에 밝은 글자가 된다.
  * 반대로 vip 의 단계 번호는 글자가 #b45309 로 고정돼 어두운 카드 위에서 흐려진다.
  * 밝은 팔레트와 팔레트 없음일 때는 바뀌지 않는다 (이 규칙은 어두운 팔레트에만 걸린다). */
-.theme-sports:is(.palette-night, .palette-esports) :is(.sp-prize-sub, .sp-ticket) {
+.theme-sports:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.sp-prize-sub, .sp-ticket) {
   background: var(--ev-surface);
   /* border-left 는 빨간 포인트 테두리라 그대로 둔다 — 세 변만 바꾼다 */
   border-top-color: var(--ev-border);
   border-right-color: var(--ev-border);
   border-bottom-color: var(--ev-border);
 }
-.theme-vip:is(.palette-night, .palette-esports) .vp-step-num { color: var(--ev-primary); }
+.theme-vip:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .vp-step-num { color: var(--ev-primary); }
+
+/* ★ 어두운 팔레트에서 **흰 바탕 위에** 쓰는 진한 포인트색.
+ *   전에는 --ev-primary-deep(hover 에 검정 22%)을 썼다. 그런데 hover 는 테마(basic · bloom)가
+ *   **어두운 카드 위 글자**로도 쓴다 — 밝아야 한다. deep 은 hover 에서 나오므로 같이 밝아져
+ *   흰 카드 위에서 모자랐다 (dracula 등은 둘을 동시에 맞출 hover 가 없었다 — 생성기 실측).
+ *   흰 바탕용은 이 값 하나로 따로 낸다. hover 에 검정을 더 섞는다 */
+:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) {
+  --nv-dark-ink: color-mix(in oklab, var(--ev-primary-hover) 58%, black);
+  /* aurora 의 혜택 값 — 어두운 카드 위라 검정을 섞지 않은 원래 2차색 (20-themes/04-aurora.css) */
+  --nv-accent-ink: var(--ev-accent-tag, var(--ev-primary));
+}
 
 /* 밝은 템플릿 × 어두운 팔레트 — 포인트색 위의 글자 (#207)
  * night · esports 의 기본색은 밝은 노랑 · 초록이라, 흰 글자를 얹은 채움(버튼 · 번호 배지)이 안 읽힌다.
  * 위의 #211 규칙과 같은 방식으로 이 두 팔레트에만 건다. */
-.theme-sports:is(.palette-night, .palette-esports) :is(.sp-cta-btn, .sp-vote-btn.active),
-.theme-launch:is(.palette-night, .palette-esports) :is(.lc-cta-btn, .lc-timeline-badge, .lc-form-btn),
-.theme-holiday:is(.palette-night, .palette-esports) :is(.hl-gift-ribbon, .hl-step-num),
-:is(.theme-holiday, .theme-vip, .theme-launch):is(.palette-night, .palette-esports) .cta-btn { color: #111111; }
+.theme-sports:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.sp-cta-btn, .sp-vote-btn.active),
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.lc-cta-btn, .lc-timeline-badge, .lc-form-btn),
+.theme-holiday:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.hl-gift-ribbon, .hl-step-num),
+:is(.theme-holiday, .theme-vip, .theme-launch):is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .cta-btn { color: #111111; }
 /* holiday 의 리본 · 단계 번호는 진한 채움(hover · deep)이 아니라 밝은 기본색 위에 어두운 글자로 */
-.theme-holiday:is(.palette-night, .palette-esports) { --tpl-ribbon: var(--ev-primary); --tpl-step: var(--ev-primary); }
+.theme-holiday:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) { --tpl-ribbon: var(--ev-primary); --tpl-step: var(--ev-primary); }
 /* launch 의 타임라인 카드는 글자색까지 고정이라 흰 카드 그대로 둔다. 그 위의 포인트색 글자만 진하게 */
-.theme-launch:is(.palette-night, .palette-esports) :is(.lc-timeline-phase, .lc-gauge-percent) { color: var(--ev-primary-deep); }
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.lc-timeline-phase, .lc-gauge-percent) { color: var(--nv-dark-ink); }
 /* 마일스톤 배지는 연한 파랑(#dbeafe) 바탕이 고정이라 포인트색 대신 짙은 남색 글자 */
-.theme-launch:is(.palette-night, .palette-esports) .lc-ms-badge { color: var(--tpl-accent-ink); }
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .lc-ms-badge { color: var(--tpl-accent-ink); }
 
-/* 인증 버튼의 진한 배경에서는 흰 글자를 유지한다. */
-.theme-launch:is(.palette-night, .palette-esports) .lc-form-btn { color: #ffffff; }
+/* 인증 버튼은 흰 글자를 유지한다 — 그러려면 바탕이 진해야 한다.
+ * ★ 바탕이 --tpl-accent(launch 는 hover)라 어두운 팔레트에서는 밝은 색이었고, 흰 글자가 2.9 ~ 3.6 으로 안 읽혔다
+ *   (대비 테스트 실측 — main 의 night · esports 도 같았다). 바탕을 --nv-dark-ink 로, 올렸을 때는 더 진하게 */
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .lc-form-btn { color: #ffffff; background: var(--nv-dark-ink); }
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .lc-form-btn:hover { background: color-mix(in oklab, var(--nv-dark-ink) 80%, black); }
 /* holiday 의 복주머니 카드도 흰색 고정이다. 주황(글자 · 흰 글자 버튼)을 진한 쪽으로 */
-.theme-holiday:is(.palette-night, .palette-esports) {
-  --tpl-warm: var(--ev-primary-deep);
-  --tpl-warm-deep: color-mix(in oklab, var(--ev-primary-deep) 80%, black);
+.theme-holiday:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) {
+  --tpl-warm: var(--nv-dark-ink);
+  --tpl-warm-deep: color-mix(in oklab, var(--nv-dark-ink) 80%, black);
 }
+/* vip 쿠폰 카드도 밝은 바탕(#fafaf9) 고정이다. 95 의 --ev-primary-deep 은 hover 에서 나와 어두운 팔레트에서 밝다
+ * (dracula 등 11종이 4.47 — 대비 테스트 실측). 흰 바탕용 진한 값으로 */
+.theme-vip:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .vp-coupon .benefit-value { color: var(--nv-dark-ink); }

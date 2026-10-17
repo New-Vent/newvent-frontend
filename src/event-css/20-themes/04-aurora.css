@@ -175,7 +175,7 @@ body:has(.theme-aurora) {
      보여 줄 수 있는 자리는 **hero 뿐**이다. 여기에 안 그리면 이름값이 없다.
    ★ 두 색을 **다른 각도**로 겹친다. 한 색만 쓰면 그냥 빛무리고, 각도가 같으면
      띠 하나로 보인다. 오로라는 결이 엇갈려야 커튼이 된다. */
-.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline))::before {
+.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline, .v-hero-brutal, .v-hero-retro))::before {
   content: "";
   position: absolute;
   inset: -30% -10% auto -10%;
@@ -201,7 +201,7 @@ body:has(.theme-aurora) {
 
 /* ★ 세로 결 — 오로라는 위에서 아래로 빗살 무늬가 진다.
      아주 옅게(6%) 깔아야 무늬가 아니라 **질감**으로 보인다. */
-.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline))::after {
+.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline, .v-hero-brutal, .v-hero-retro))::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -419,12 +419,20 @@ body:has(.theme-aurora) {
   line-height: 1.65;
 }
 
+/* ★★ 2차색을 **그대로** 글자색으로 쓰면 안 된다 (02-basic.css ⓪ 과 같은 이유).
+     흰 카드 위에서 summer(호박색) 2.15 · kids 2.15 · sunset 2.15 — 팔레트 18종 중 11종이 4.5 미만이었다.
+     검정을 40% 섞어 색감은 남기고 읽히게 한다 (팔레트 147종 실측 최저 5.4).
+   ★ 어두운 팔레트는 카드가 어두워 섞으면 오히려 묻힌다 — 99-dark-fixes 가 원래 색으로 되돌린다 */
+.theme-aurora {
+  --nv-accent-ink: color-mix(in oklab, var(--ev-accent-tag, var(--ev-primary)) 60%, #111);
+}
+
 .theme-aurora .benefit-value {
   display: inline-block;
   margin-top: 10px;
   font-weight: 800;
   font-size: 0.95rem;
-  color: var(--ev-accent-tag, var(--ev-primary));
+  color: var(--nv-accent-ink);
 }
 
 .theme-aurora .benefit-tag {

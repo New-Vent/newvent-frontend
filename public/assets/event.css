@@ -406,7 +406,7 @@ body:has(.theme-basic) {
       덮어써서지, 테마가 맞아서가 아니다.)
    ★ :where() 는 특이도 0 이라 0,3,0 이 유지된다. :not() 을 그냥 붙이면 0,6,0 이
      되어 변형이 hero 에 건 다른 값까지 덮는다 — aurora 띠 배너에서 겪은 그 함정이다. */
-.theme-basic [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline)) {
+.theme-basic [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline, .v-hero-brutal, .v-hero-retro)) {
   /* ★ background 를 덮지 않으므로 팔레트별 그라데이션은 그대로다 */
   box-shadow: inset 0 -90px 120px -70px rgba(0, 0, 0, 0.45);
 }
@@ -1964,7 +1964,7 @@ body:has(.theme-aurora) {
      보여 줄 수 있는 자리는 **hero 뿐**이다. 여기에 안 그리면 이름값이 없다.
    ★ 두 색을 **다른 각도**로 겹친다. 한 색만 쓰면 그냥 빛무리고, 각도가 같으면
      띠 하나로 보인다. 오로라는 결이 엇갈려야 커튼이 된다. */
-.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline))::before {
+.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline, .v-hero-brutal, .v-hero-retro))::before {
   content: "";
   position: absolute;
   inset: -30% -10% auto -10%;
@@ -1990,7 +1990,7 @@ body:has(.theme-aurora) {
 
 /* ★ 세로 결 — 오로라는 위에서 아래로 빗살 무늬가 진다.
      아주 옅게(6%) 깔아야 무늬가 아니라 **질감**으로 보인다. */
-.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline))::after {
+.theme-aurora [data-block="hero"]:not(.ev-block):where(:not(.v-hero-minimal, .v-hero-gradient-text, .v-hero-outline, .v-hero-brutal, .v-hero-retro))::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -2208,12 +2208,20 @@ body:has(.theme-aurora) {
   line-height: 1.65;
 }
 
+/* ★★ 2차색을 **그대로** 글자색으로 쓰면 안 된다 (02-basic.css ⓪ 과 같은 이유).
+     흰 카드 위에서 summer(호박색) 2.15 · kids 2.15 · sunset 2.15 — 팔레트 18종 중 11종이 4.5 미만이었다.
+     검정을 40% 섞어 색감은 남기고 읽히게 한다 (팔레트 147종 실측 최저 5.4).
+   ★ 어두운 팔레트는 카드가 어두워 섞으면 오히려 묻힌다 — 99-dark-fixes 가 원래 색으로 되돌린다 */
+.theme-aurora {
+  --nv-accent-ink: color-mix(in oklab, var(--ev-accent-tag, var(--ev-primary)) 60%, #111);
+}
+
 .theme-aurora .benefit-value {
   display: inline-block;
   margin-top: 10px;
   font-weight: 800;
   font-size: 0.95rem;
-  color: var(--ev-accent-tag, var(--ev-primary));
+  color: var(--nv-accent-ink);
 }
 
 .theme-aurora .benefit-tag {
@@ -2488,6 +2496,141 @@ body:has(.theme-aurora) {
 /* ★ 점선 쿠폰(v-coupon-dashed)은 바탕을 --ev-surface 로 바꾼다. 위 쿠폰 규칙이 본문 · 조건에 준 글자색(#fff)이
      남아서 밝은 색감에서는 흰 바탕 위 흰 글자였다 — 쿠폰 내용이 통째로 안 보였다 (계산값 실측) */
 .theme-aurora [data-block="coupon"].v-coupon-dashed:not(.ev-block) :is(p, li, strong) { color: var(--ev-text-main); }
+
+/* ── 20-themes/05-brutalist.css ── */
+/* ═══════════════════════════════════════════════════════════════════
+   theme-brutalist — 브루탈 · 스트리트. **선이 디자인이다.**
+   registry/Theme.java BRUTALIST (Tone.LIGHT)
+
+   ★ 무엇으로 만드나
+     두꺼운 잉크 테두리(3~4px) · 흐림 없는 어긋난 그림자 · 직각 모서리 · 굵은 소제목 알약.
+     색은 팔레트에서 받는다 — 테마는 선 · 그림자 · 모서리만 쥔다.
+     잉크 색은 var(--ev-text-main) 이다. 어두운 팔레트에서는 잉크가 밝아져 밝은 선이 된다 (night · esports 실측 기준)
+
+   ★ 09-common 체크리스트
+     ① 줄바꿈 · ③ 경품 자리 — 09-common 에 이름을 넣었다
+     ② 일정 점 — 넣지 않았다. 이 테마는 base 의 세로 타임라인을 그대로 쓴다
+     ⑦ 팔레트 읽기 — body:has(.theme-brutalist)
+     ⑧ 칠하면 잉크도 쥔다 — 내용 영역 · 소제목 알약은 배경과 글자를 같이 정한다
+     ⑨ 띠 배너 — 배경을 안 건드린다 (테두리 · 그림자만)
+   ★ hero 는 배경을 그대로 둔다 — 팔레트 그라데이션 위 흰 글자가 base 의 계약이다
+   ═══════════════════════════════════════════════════════════════════ */
+
+body:has(.theme-brutalist) {
+  background-color: var(--ev-bg, #f4f4f0);
+  background-image:
+    linear-gradient(var(--ev-border, rgba(0, 0, 0, 0.08)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ev-border, rgba(0, 0, 0, 0.08)) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.theme-brutalist.ev-container,
+.theme-brutalist .ev-container {
+  max-width: 800px;
+  margin: 40px auto 64px;
+  padding: 18px 22px 22px 18px;
+  background: var(--ev-surface, #fff);
+  color: var(--ev-text-main);
+  border: 4px solid var(--ev-text-main);
+  border-radius: 0;
+  box-shadow: 12px 12px 0 var(--ev-text-main);
+}
+
+/* ── hero ── */
+.theme-brutalist [data-block="hero"]:not(.ev-block) {
+  margin: 0 0 22px;
+  padding: 60px 30px 52px;
+  border: 3px solid var(--ev-text-main);
+  border-radius: 0;
+}
+.theme-brutalist.theme-brutalist [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(2.3rem, 7vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+.theme-brutalist [data-block="hero"]:not(.ev-block) .badge {
+  border: 2px solid currentColor;
+  border-radius: 0;
+  font-weight: 800;
+}
+
+/* ── 내용 영역 — 잉크 상자 ── */
+.theme-brutalist :is(
+  [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="compare"],
+  [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+):not(.ev-block) {
+  margin: 0 6px 24px 0;
+  padding: 22px;
+  border: 3px solid var(--ev-text-main);
+  border-radius: 0;
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  box-shadow: 6px 6px 0 var(--ev-text-main);
+}
+
+/* 소제목 — 기울어진 알약. 칠하므로 글자도 쥔다
+ * ★ 바탕은 잉크(--ev-text-main), 글자는 표면색이다 — primary 바탕 + 흰 글자로 두었더니
+ *   어두운 팔레트(night 의 금색 primary)에서 흰 글자가 노란 바탕에 앉아 안 읽혔다 (미리보기 실측).
+ *   잉크 ↔ 표면은 밝은 · 어두운 팔레트 모두 본문 대비 그대로다. 팔레트 색은 그림자로 남긴다 */
+.theme-brutalist [data-block]:not(.ev-block) h2 {
+  display: inline-block;
+  margin: 0 0 16px;
+  padding: 4px 12px;
+  border: 3px solid var(--ev-text-main);
+  background: var(--ev-text-main);
+  color: var(--ev-surface);
+  box-shadow: 4px 4px 0 var(--ev-primary);
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  transform: rotate(-1.2deg);
+}
+
+/* 띠 배너 · 유의사항 */
+.theme-brutalist [data-block="highlight"]:not(.ev-block) {
+  border: 3px solid var(--ev-text-main);
+  border-radius: 0;
+  box-shadow: 6px 6px 0 var(--ev-text-main);
+  margin: 0 6px 24px 0;
+}
+.theme-brutalist [data-block="notices"]:not(.ev-block) {
+  border: 3px dashed var(--ev-text-main);
+  border-radius: 0;
+}
+
+/* 혜택 · 경품 항목 */
+.theme-brutalist [data-block="benefits"]:not(.ev-block) li {
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  border: 2px solid var(--ev-text-main);
+  border-radius: 0;
+  background: var(--ev-primary-light);
+  color: var(--ev-text-main);
+}
+.theme-brutalist [data-block="prize"]:not(.ev-block) li { border: 2px solid var(--ev-text-main); border-radius: 0; }
+.theme-brutalist [data-block="stats"]:not(.ev-block) li { border: 2px solid var(--ev-text-main); border-radius: 0; }
+
+/* 자주 묻는 질문 */
+.theme-brutalist [data-block="faq"]:not(.ev-block) dt { border-top: 2px solid var(--ev-text-main); }
+
+/* 참여 버튼 — 눌리는 상자 */
+.theme-brutalist [data-block="cta"]:not(.ev-block) :is(.btn, button) {
+  border: 3px solid var(--ev-text-main);
+  border-radius: 0;
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 6px 6px 0 var(--ev-text-main);
+  transition: translate 0.1s, box-shadow 0.1s;
+}
+.theme-brutalist [data-block="cta"]:not(.ev-block) :is(.btn, button):hover { translate: 2px 2px; box-shadow: 4px 4px 0 var(--ev-text-main); }
+
+@media (max-width: 560px) {
+  .theme-brutalist.ev-container,
+  .theme-brutalist .ev-container { margin: 16px 10px 32px; padding: 12px; box-shadow: 6px 6px 0 var(--ev-text-main); }
+  .theme-brutalist [data-block="hero"]:not(.ev-block) { padding: 44px 20px 40px; }
+}
 
 /* ── 20-themes/05-editorial.css ── */
 /* ── theme-editorial — 상자를 걷어내고 여백과 타이포로 짠다 ──────────────────
@@ -2896,6 +3039,133 @@ body:has(.theme-editorial) {
   .theme-editorial.theme-editorial [data-block="notices"]:not(.ev-block) { margin-inline: 20px; }
 }
 
+/* ── 20-themes/06-papercraft.css ── */
+/* ═══════════════════════════════════════════════════════════════════
+   theme-papercraft — 종이 공예 · 아기자기. **종이를 오려 겹친 층.**
+   registry/Theme.java PAPERCRAFT (Tone.LIGHT)
+
+   ★ 무엇으로 만드나
+     카드 아래로 비치는 종이 두 장(흐림 없는 그림자 두 겹) · 큰 둥근 모서리 · 종이 결 바탕 ·
+     소제목 앞의 기울어진 색종이 조각. 그림자 색은 팔레트에서 받아 층이 팔레트 색으로 물든다.
+   ★ 가상요소를 거의 안 쓴다 — 층은 box-shadow 로 그린다. 영역의 ::before · ::after 는 변형 몫이다
+     (소제목 h2::before 만 쓴다. 변형이 h2::before 를 쓰는 곳은 없다)
+
+   ★ 09-common 체크리스트
+     ① 줄바꿈 · ③ 경품 자리 — 09-common 에 이름을 넣었다
+     ② 일정 점 — 넣지 않았다. base 의 세로 타임라인을 그대로 쓴다
+     ⑦ 팔레트 읽기 — body:has(.theme-papercraft)
+     ⑧ 칠하면 잉크도 쥔다 — 내용 영역은 배경과 글자를 같이 정한다
+   ★ hero 는 배경을 그대로 둔다 — 아래로 층만 겹친다
+   ═══════════════════════════════════════════════════════════════════ */
+
+body:has(.theme-papercraft) {
+  background-color: color-mix(in srgb, var(--ev-bg, #f6f1e7) 90%, #e9dfcc);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.theme-papercraft.ev-container,
+.theme-papercraft .ev-container {
+  --nv-paper-1: color-mix(in srgb, var(--ev-primary) 22%, var(--ev-surface));
+  --nv-paper-2: color-mix(in srgb, var(--ev-accent-tag, var(--ev-primary)) 30%, var(--ev-surface));
+  max-width: 800px;
+  margin: 40px auto 64px;
+  padding: 22px 22px 30px;
+  background: var(--ev-surface, #fff);
+  color: var(--ev-text-main);
+  border: 0;
+  border-radius: 30px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 18px 40px -12px rgba(60, 40, 10, 0.18);
+}
+
+/* ── hero — 아래로 종이 두 장 ── */
+.theme-papercraft [data-block="hero"]:not(.ev-block) {
+  margin: 0 0 40px;
+  padding: 64px 32px 56px;
+  border-radius: 24px;
+  box-shadow:
+    0 8px 0 -2px var(--nv-paper-1),
+    0 16px 0 -5px var(--nv-paper-2),
+    0 22px 30px -10px rgba(60, 40, 10, 0.22);
+}
+.theme-papercraft.theme-papercraft [data-block="hero"]:not(.ev-block) h1 {
+  font-size: clamp(2.2rem, 6.8vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.theme-papercraft [data-block="hero"]:not(.ev-block) .badge { border-radius: 10px; }
+
+/* ── 내용 영역 — 오려 낸 종이 카드 ── */
+.theme-papercraft :is(
+  [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="compare"],
+  [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+):not(.ev-block) {
+  margin: 0 4px 34px;
+  padding: 24px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ev-text-main) 6%, transparent),
+    0 6px 0 -1px var(--nv-paper-1),
+    0 12px 0 -3px var(--nv-paper-2),
+    0 16px 24px -10px rgba(60, 40, 10, 0.16);
+}
+
+/* 소제목 — 앞에 기울어진 색종이 조각 */
+.theme-papercraft [data-block]:not(.ev-block) h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 1.12rem;
+  font-weight: 800;
+}
+.theme-papercraft [data-block]:not(.ev-block) h2::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--ev-accent-tag, var(--ev-primary));
+  box-shadow: 4px 4px 0 var(--nv-paper-1);
+  transform: rotate(12deg);
+}
+
+/* 띠 배너 · 유의사항 */
+.theme-papercraft [data-block="highlight"]:not(.ev-block) {
+  border-radius: 18px;
+  box-shadow: 0 6px 0 -1px var(--nv-paper-1), 0 12px 20px -10px rgba(60, 40, 10, 0.2);
+  margin: 0 4px 30px;
+}
+.theme-papercraft [data-block="notices"]:not(.ev-block) {
+  border: 2px dashed color-mix(in srgb, var(--ev-text-main) 22%, transparent);
+  border-radius: 18px;
+}
+
+/* 혜택 항목 — 작은 종이 쪽지 */
+.theme-papercraft [data-block="benefits"]:not(.ev-block) li {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ev-primary-light);
+  color: var(--ev-text-main);
+  box-shadow: 0 3px 0 var(--nv-paper-1);
+}
+
+/* 참여 버튼 — 두툼한 종이 버튼 */
+.theme-papercraft [data-block="cta"]:not(.ev-block) :is(.btn, button) {
+  border-radius: 999px;
+  box-shadow: 0 6px 0 var(--ev-primary-hover, var(--ev-primary)), 0 12px 20px -8px rgba(60, 40, 10, 0.3);
+}
+
+@media (max-width: 560px) {
+  .theme-papercraft.ev-container,
+  .theme-papercraft .ev-container { margin: 16px 10px 32px; padding: 14px 14px 22px; border-radius: 22px; }
+  .theme-papercraft [data-block="hero"]:not(.ev-block) { padding: 44px 20px 40px; }
+}
+
 /* ── 20-themes/09-common.css ── */
 /* ══════════════════════════════════════════════════════════════════
    백지 테마 공통 — 테마마다 **또 풀 필요 없는 함정**만 모은다.
@@ -2945,7 +3215,7 @@ body:has(.theme-editorial) {
      "할인 쿠 / 폰을 제공합니다" 로 끊겼다(실측) — 그래서 둘을 따로 적는다.
    ★ overflow-wrap: anywhere 는 안전망. 한 단어가 칸보다 길 때만 글자 단위로
      돌아간다(안 넣으면 그 단어가 칸 밖으로 삐져나간다). */
-:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block]:not(.ev-block) :is(
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch, .theme-brutalist, .theme-papercraft) [data-block]:not(.ev-block) :is(
   h1, h2, h3, .title, .benefit-name, .step-title,
   [data-block="coupon"] p, [data-block="highlight"] p
 ) {
@@ -2968,7 +3238,7 @@ body:has(.theme-editorial) {
    padding-left 를 줄이면 이모지가 <strong>1등</strong> 을 그대로 덮는다 —
    실제로 겪었다. 52px 은 테마가 바꿀 값이 아니라 base 가 정한 **제약**이라
    여기서 못 박는다. 테마가 padding 단축속성을 쓰다 깜빡해도 이게 덮는다. */
-:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch) [data-block="prize"]:not(.ev-block) li {
+:is(.theme-basic, .theme-bloom, .theme-aurora, .theme-punch, .theme-brutalist, .theme-papercraft) [data-block="prize"]:not(.ev-block) li {
   padding-left: 52px;
 }
 
@@ -5326,8 +5596,8 @@ body {
 .theme-holiday .hero-badge.t-badge-green { background: #008820; }
 
 /* 페이지 바탕을 따르는 곳(유의사항 목록 · 단계 설명)은 어두운 팔레트만 뺀다 */
-:is(.theme-holiday, .theme-vip):not(:is(.palette-night, .palette-esports)) :is(.notice-list li, .step-desc),
-:is(.theme-launch, .theme-sports):not(:is(.palette-night, .palette-esports)) .notice-list li { color: #58687e; }
+:is(.theme-holiday, .theme-vip):not(:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok)) :is(.notice-list li, .step-desc),
+:is(.theme-launch, .theme-sports):not(:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok)) .notice-list li { color: #58687e; }
 
 /* ── 50-blocks/01-llm-blocks.css ── */
 /* ==========================================================================
@@ -6949,6 +7219,1027 @@ body {
 }
 [data-block="schedule"].v-schedule-cards:not(.ev-block) li::before { content: none; }
 
+/* ── 60-variants/15-expansion.css ── */
+/* ── 확장 변형 — 요청문이 이름을 부를 때만 프롬프트에 실린다 ─────────────────
+ *
+ * 백엔드 registry/Variant.java 의 core=false 항목과 짝이다 (1차 채택 36개 — 비교표 3개는 70-components/06-compare.css).
+ * 후보 목록과 출처: newvent-backend docs/registry-candidates.json · 검토 문서 레지스트리_확장_검토.md
+ *
+ * ★ 색은 전부 팔레트 변수(--ev-*)로 쓴다. 고정 색은 포스트잇 · 복주머니 · 메달처럼 색이 곧 모양인 것만.
+ * ★ 움직이는 것(v-cta-shine · v-cta-pulse-ring)은 99-a11y 의 prefers-reduced-motion 이 멈춘다.
+ *   멈춘 상태에서 장식만 안 보이고 버튼은 그대로다.
+ * ★ 모델이 쓰지 않는 글자(VS · STEP · ★)는 CSS content 로만 붙인다 — 값을 지어내지 않는다.
+ */
+
+/* ── hero ── */
+
+[data-block="hero"].v-hero-badge-top:not(.ev-block) .badge {
+  padding: 7px 16px;
+  border: 0;
+  background: var(--ev-accent-tag);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+[data-block="hero"].v-hero-diagonal:not(.ev-block) {
+  padding-bottom: 76px;
+  border-radius: 20px 20px 0 0;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 44px), 0 100%);
+}
+
+[data-block="hero"].v-hero-stripe-bg:not(.ev-block) {
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0 14px, transparent 14px 28px),
+    var(--ev-gradient-hero);
+}
+
+[data-block="hero"].v-hero-brutal:not(.ev-block) {
+  margin-right: 10px;
+  margin-bottom: 30px;
+  border: 4px solid var(--ev-text-main);
+  border-radius: 6px;
+  background: var(--ev-primary-light);
+  color: var(--ev-text-main);
+  box-shadow: 10px 10px 0 var(--ev-text-main);
+}
+/* ★ 밝은 hero 다 — 테마(basic · aurora)의 "밝은 hero 변형" 목록에도 이름을 넣었다(커튼 · 어두운 막을 안 그린다).
+     글자색은 여기서 정한다. 테마가 hero 글자를 흰색으로 박는다 */
+[data-block="hero"].v-hero-brutal:not(.ev-block) h1 { color: var(--ev-text-main); font-weight: 900; letter-spacing: -0.04em; text-shadow: none; }
+[data-block="hero"].v-hero-brutal:not(.ev-block) p { color: var(--ev-text-main); opacity: 1; }
+[data-block="hero"].v-hero-brutal:not(.ev-block) .badge {
+  border: 2px solid var(--ev-text-main);
+  border-radius: 4px;
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  font-weight: 800;
+}
+
+[data-block="hero"].v-hero-retro:not(.ev-block) {
+  border: 3px double var(--ev-primary);
+  background:
+    repeating-conic-gradient(from 0deg at 50% 120%, rgba(0, 0, 0, 0.04) 0 6deg, transparent 6deg 12deg),
+    var(--ev-bg);
+  color: var(--ev-text-main);
+  text-align: center;
+}
+[data-block="hero"].v-hero-retro:not(.ev-block) h1 {
+  color: var(--ev-primary);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 3px 3px 0 var(--ev-accent-tag);
+}
+[data-block="hero"].v-hero-retro:not(.ev-block) p { color: var(--ev-text-main); opacity: 1; }
+[data-block="hero"].v-hero-retro:not(.ev-block) .badge { border: 1px solid var(--ev-primary); background: transparent; color: var(--ev-primary); box-shadow: none; }
+
+[data-block="hero"].v-hero-paper-cut:not(.ev-block) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding-bottom: 84px;
+}
+[data-block="hero"].v-hero-paper-cut:not(.ev-block)::before,
+[data-block="hero"].v-hero-paper-cut:not(.ev-block)::after {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  z-index: -1;
+  background: var(--ev-primary-light);
+  box-shadow: 0 -6px 14px rgba(0, 0, 0, 0.14);
+}
+[data-block="hero"].v-hero-paper-cut:not(.ev-block)::before { height: 64px; opacity: 0.3; border-radius: 60% 40% 0 0 / 70% 60% 0 0; }
+[data-block="hero"].v-hero-paper-cut:not(.ev-block)::after { height: 34px; opacity: 0.5; border-radius: 40% 60% 0 0 / 60% 80% 0 0; }
+
+/* ── highlight ── */
+
+[data-block="highlight"].v-highlight-speech:not(.ev-block) {
+  position: relative;
+  margin-bottom: 30px;
+  border-radius: 22px;
+}
+[data-block="highlight"].v-highlight-speech:not(.ev-block)::after {
+  content: "";
+  position: absolute;
+  left: 34px;
+  bottom: -14px;
+  border: 14px solid transparent;
+  border-bottom: 0;
+  border-top-color: var(--ev-primary);
+}
+
+[data-block="highlight"].v-highlight-postit:not(.ev-block) {
+  padding: 22px 24px;
+  border-radius: 2px;
+  background: #fff59d;
+  color: #3f3a1d;
+  text-align: left;
+  box-shadow: 0 12px 18px -6px rgba(0, 0, 0, 0.22);
+  transform: rotate(-1.5deg);
+}
+
+[data-block="highlight"].v-highlight-tape:not(.ev-block) {
+  position: relative;
+  margin-top: 14px;
+  padding-top: 26px;
+  border-radius: 4px;
+  background: var(--ev-surface);
+  color: var(--ev-text-main);
+  box-shadow: var(--ev-shadow-md);
+}
+[data-block="highlight"].v-highlight-tape:not(.ev-block)::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 110px;
+  height: 26px;
+  margin-left: -55px;
+  background: var(--ev-primary);
+  opacity: 0.35;
+  transform: rotate(-3deg);
+}
+
+[data-block="highlight"].v-highlight-sticker:not(.ev-block) {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 18px 30px;
+  border: 3px dashed rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  box-shadow: 0 0 0 5px var(--ev-primary), 0 12px 24px var(--ev-primary-glow);
+  transform: rotate(-3deg);
+}
+
+/* ── intro ── */
+
+[data-block="intro"].v-intro-letter:not(.ev-block) {
+  position: relative;
+  padding: 24px 24px 24px 48px;
+  background: repeating-linear-gradient(to bottom, var(--ev-surface) 0 31px, var(--ev-border) 31px 32px);
+  background-origin: content-box;
+  line-height: 32px;
+}
+[data-block="intro"].v-intro-letter:not(.ev-block)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 32px;
+  width: 2px;
+  background: var(--ev-accent-tag);
+  opacity: 0.45;
+}
+[data-block="intro"].v-intro-letter:not(.ev-block) :is(h2, p) { margin: 0; line-height: 32px; }
+
+[data-block="intro"].v-intro-icon-row:not(.ev-block) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+[data-block="intro"].v-intro-icon-row:not(.ev-block) h2 { grid-column: 1 / -1; margin: 0; }
+[data-block="intro"].v-intro-icon-row:not(.ev-block) p {
+  position: relative;
+  margin: 0;
+  padding: 14px 16px 14px 44px;
+  border-radius: 12px;
+  background: var(--ev-primary-light);
+}
+[data-block="intro"].v-intro-icon-row:not(.ev-block) p::before {
+  content: "✦";
+  position: absolute;
+  left: 16px;
+  top: 13px;
+  color: var(--ev-primary);
+  font-size: 1.1rem;
+}
+
+/* ── benefits ── (ul 리셋은 04-benefits.css 의 [class*="v-benefits-"]) */
+
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) ul {
+  padding: 16px 20px 28px;
+  background: var(--ev-surface-subtle);
+  font-variant-numeric: tabular-nums;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 16px 100%;
+          mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 16px 100%;
+}
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 12px;
+  margin: 0;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px dashed var(--ev-border-focus);
+  border-radius: 0;
+  background: none;
+}
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) li:last-child { border-bottom: 0; }
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) .benefit-name { flex: 1; font-weight: 700; }
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) .benefit-value { font-weight: 800; }
+[data-block="benefits"].v-benefits-receipt:not(.ev-block) .benefit-desc { order: 3; flex-basis: 100%; color: var(--ev-text-muted); font-size: 0.85rem; }
+
+[data-block="benefits"].v-benefits-tag:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 10px;
+  padding: 14px 18px 14px 42px;
+  border: 0;
+  border-radius: 0 12px 12px 0;
+  background: var(--ev-primary-light);
+  clip-path: polygon(22px 0, 100% 0, 100% 100%, 22px 100%, 0 50%);
+}
+[data-block="benefits"].v-benefits-tag:not(.ev-block) li::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--ev-surface);
+  box-shadow: inset 0 0 0 2px var(--ev-primary);
+}
+
+[data-block="benefits"].v-benefits-badge-corner:not(.ev-block) li {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 12px;
+  padding: 16px 44px 16px 18px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+}
+[data-block="benefits"].v-benefits-badge-corner:not(.ev-block) li:first-child { border-color: var(--ev-accent-tag); }
+[data-block="benefits"].v-benefits-badge-corner:not(.ev-block) li:first-child::after {
+  content: "★";
+  position: absolute;
+  top: 12px;
+  right: -30px;
+  width: 100px;
+  padding: 3px 0;
+  background: var(--ev-accent-tag);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  transform: rotate(45deg);
+}
+
+[data-block="benefits"].v-benefits-stack:not(.ev-block) ul { padding-top: 6px; }
+[data-block="benefits"].v-benefits-stack:not(.ev-block) li {
+  position: relative;
+  margin: 0 0 -10px;
+  padding: 16px 18px 24px;
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  background: var(--ev-surface);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+  transform: rotate(-1deg);
+}
+[data-block="benefits"].v-benefits-stack:not(.ev-block) li:nth-child(even) { background: var(--ev-primary-light); transform: rotate(1deg); }
+[data-block="benefits"].v-benefits-stack:not(.ev-block) li:last-child { margin-bottom: 0; padding-bottom: 16px; }
+
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li {
+  margin: 0 0 10px;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 14px;
+}
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(1) { background: color-mix(in srgb, var(--ev-primary) 10%, var(--ev-surface)); }
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(2) { background: color-mix(in srgb, var(--ev-primary) 22%, var(--ev-surface)); }
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(3) { background: color-mix(in srgb, var(--ev-primary) 36%, var(--ev-surface)); }
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(n+4) { background: var(--ev-primary); color: #fff; }
+/* ★ 진한 칸에서는 설명 · 값 글자가 테마의 흐린 색으로 남아 안 읽혔다 (미리보기 실측) */
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(n+4) :is(.benefit-name, .benefit-desc, .benefit-value, .benefit-tag) { color: #fff; opacity: 1; }
+[data-block="benefits"].v-benefits-tiered:not(.ev-block) li:nth-child(n+4) :is(.benefit-value, .benefit-tag) { background: rgba(255, 255, 255, 0.2); }
+
+/* ── stats ── */
+
+[data-block="stats"].v-stats-big-number:not(.ev-block) li:first-child {
+  grid-column: 1 / -1;
+  padding: 26px 16px;
+  background: var(--ev-gradient-cta);
+  color: rgba(255, 255, 255, 0.9);
+}
+[data-block="stats"].v-stats-big-number:not(.ev-block) li:first-child strong { color: #fff; font-size: 3.4rem; line-height: 1.05; }
+
+[data-block="stats"].v-stats-divided:not(.ev-block) ul { display: flex; flex-wrap: wrap; gap: 12px 0; }
+[data-block="stats"].v-stats-divided:not(.ev-block) li {
+  flex: 1 1 110px;
+  padding: 6px 12px;
+  border-left: 1px solid var(--ev-border);
+  border-radius: 0;
+  background: none;
+}
+[data-block="stats"].v-stats-divided:not(.ev-block) li:first-child { border-left: 0; }
+
+[data-block="stats"].v-stats-badge:not(.ev-block) ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+[data-block="stats"].v-stats-badge:not(.ev-block) li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 132px;
+  height: 132px;
+  padding: 12px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  box-shadow: 0 0 0 6px var(--ev-primary-light);
+}
+[data-block="stats"].v-stats-badge:not(.ev-block) li strong { color: #fff; font-size: 1.5rem; }
+
+/* ── prize ── (기본 아이콘 🎁 · 🏆 는 50-blocks/03-prize.css 의 li::before) */
+
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(1)::before { content: "🥇"; }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(2)::before { content: "🥈"; }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(3)::before { content: "🥉"; }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(1) { background: color-mix(in srgb, #f59e0b 16%, var(--ev-surface)); font-size: 1.05rem; }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(2) { background: color-mix(in srgb, #94a3b8 18%, var(--ev-surface)); }
+[data-block="prize"].v-prize-medal:not(.ev-block) li:nth-child(3) { background: color-mix(in srgb, #b45309 14%, var(--ev-surface)); }
+
+[data-block="prize"].v-prize-showcase:not(.ev-block) ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 18px 14px;
+}
+[data-block="prize"].v-prize-showcase:not(.ev-block) li {
+  margin: 0;
+  padding: 48px 12px 20px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px 14px 4px 4px;
+  background: var(--ev-surface);
+  text-align: center;
+  box-shadow: 0 10px 0 -4px var(--ev-primary-light), 0 12px 0 -4px var(--ev-border);
+}
+[data-block="prize"].v-prize-showcase:not(.ev-block) li:nth-child(n)::before { left: 50%; top: 24px; transform: translate(-50%, -50%); font-size: 1.7rem; }
+
+[data-block="prize"].v-prize-lucky-bag:not(.ev-block) li {
+  border-left: 3px solid #f59e0b;
+  background: color-mix(in srgb, #dc2626 7%, var(--ev-surface));
+}
+[data-block="prize"].v-prize-lucky-bag:not(.ev-block) li:nth-child(n)::before {
+  content: "";
+  left: 14px;
+  width: 24px;
+  height: 26px;
+  border-radius: 40% 40% 50% 50% / 30% 30% 70% 70%;
+  background: radial-gradient(circle at 50% 62%, #fde68a 0 3px, transparent 3.5px), #dc2626;
+  box-shadow: inset 0 6px 0 -2px #f59e0b;
+}
+
+/* ── coupon ── (기본 티켓 모양 · mask 는 50-blocks/04-coupon.css) */
+
+[data-block="coupon"].v-coupon-barcode:not(.ev-block)::after {
+  content: "";
+  display: block;
+  height: 34px;
+  margin-top: 14px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg,
+    currentColor 0 2px, transparent 2px 4px, currentColor 4px 5px, transparent 5px 8px,
+    currentColor 8px 11px, transparent 11px 13px);
+  opacity: 0.5;
+}
+
+[data-block="coupon"].v-coupon-boarding-pass:not(.ev-block) {
+  padding-right: 124px;
+  -webkit-mask: radial-gradient(circle at calc(100% - 100px) 0, transparent 12px, #000 12.5px) top / 100% 51% no-repeat,
+                radial-gradient(circle at calc(100% - 100px) 100%, transparent 12px, #000 12.5px) bottom / 100% 51% no-repeat;
+          mask: radial-gradient(circle at calc(100% - 100px) 0, transparent 12px, #000 12.5px) top / 100% 51% no-repeat,
+                radial-gradient(circle at calc(100% - 100px) 100%, transparent 12px, #000 12.5px) bottom / 100% 51% no-repeat;
+}
+[data-block="coupon"].v-coupon-boarding-pass:not(.ev-block)::after {
+  content: "✈";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  border-left: 2px dashed rgba(255, 255, 255, 0.5);
+  font-size: 2rem;
+}
+
+[data-block="coupon"].v-coupon-stamp-card:not(.ev-block)::after {
+  content: "";
+  display: block;
+  height: 36px;
+  margin-top: 16px;
+  background: radial-gradient(circle, transparent 13px, rgba(255, 255, 255, 0.75) 13.5px 15px, transparent 15.5px) left / 44px 36px repeat-x;
+}
+
+/* ── steps ── */
+
+[data-block="steps"].v-steps-stepper:not(.ev-block) ol { display: flex; list-style: none; margin: 0; padding: 0; counter-reset: nv-step; }
+[data-block="steps"].v-steps-stepper:not(.ev-block) li {
+  counter-increment: nv-step;
+  position: relative;
+  flex: 1;
+  margin: 0;
+  padding: 46px 6px 0;
+  text-align: center;
+}
+[data-block="steps"].v-steps-stepper:not(.ev-block) li::before {
+  content: counter(nv-step);
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  margin-left: -18px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  color: #fff;
+  font-weight: 800;
+  line-height: 36px;
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+[data-block="steps"].v-steps-stepper:not(.ev-block) li::after {
+  content: "";
+  position: absolute;
+  top: 17px;
+  left: calc(50% + 18px);
+  right: calc(-50% + 18px);
+  height: 2px;
+  background: var(--ev-primary-light);
+}
+[data-block="steps"].v-steps-stepper:not(.ev-block) li:last-child::after { display: none; }
+[data-block="steps"].v-steps-stepper:not(.ev-block) .step-title { font-weight: 700; }
+[data-block="steps"].v-steps-stepper:not(.ev-block) .step-desc { color: var(--ev-text-muted); font-size: 0.85rem; }
+
+[data-block="steps"].v-steps-badge:not(.ev-block) ol { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; counter-reset: nv-step; }
+[data-block="steps"].v-steps-badge:not(.ev-block) li {
+  counter-increment: nv-step;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--ev-border);
+  border-radius: 12px;
+  background: var(--ev-surface);
+}
+[data-block="steps"].v-steps-badge:not(.ev-block) li::before {
+  content: "STEP " counter(nv-step, decimal-leading-zero);
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--ev-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+[data-block="steps"].v-steps-numbers-big:not(.ev-block) ol { list-style: none; margin: 0; padding: 0; counter-reset: nv-step; }
+[data-block="steps"].v-steps-numbers-big:not(.ev-block) li {
+  counter-increment: nv-step;
+  position: relative;
+  overflow: hidden;
+  min-height: 76px;
+  margin: 0 0 10px;
+  padding: 18px 18px 18px 86px;
+  border-radius: 14px;
+  background: var(--ev-surface-subtle);
+}
+[data-block="steps"].v-steps-numbers-big:not(.ev-block) li::before {
+  content: counter(nv-step);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  color: var(--ev-primary);
+  font-size: 4.2rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  opacity: 0.22;
+  transform: translateY(-50%);
+}
+
+/* ── schedule ── (기본 타임라인 점은 50-blocks/05-schedule.css 의 li::before) */
+
+/* ★ 테마(basic · bloom)가 일정을 "왼쪽 라벨 표" 로 바꾸고 점을 끈다 — 로드맵은 그걸 전부 되돌려야 선 · 점이 선다 (미리보기 실측) */
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) ol {
+  display: flex;
+  overflow-x: auto;
+  padding: 12px 0 6px;
+  border: 0;
+  border-radius: 0;
+}
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) li {
+  position: relative;
+  display: block;
+  flex: 1 0 140px;
+  margin: 0;
+  padding: 22px 10px 0;
+  border: 0;
+  border-top: 3px solid var(--ev-primary-light);
+  border-radius: 0;
+  background: transparent;
+  text-align: center;
+}
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) li:first-child { border-top: 3px solid var(--ev-primary-light); }
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) li::before {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+[data-block="schedule"].v-schedule-roadmap:not(.ev-block) li strong {
+  display: block;
+  flex: none;
+  margin: 0 0 4px;
+  padding: 0;
+  background: none;
+  color: var(--ev-primary);
+}
+
+[data-block="schedule"].v-schedule-ticket:not(.ev-block) ol { display: grid; gap: 12px; border: 0; border-radius: 0; overflow: visible; }
+[data-block="schedule"].v-schedule-ticket:not(.ev-block) li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 14px 22px;
+  border-left: 0;
+  border-radius: 12px;
+  background: var(--ev-primary-light);
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 9px, #000 9.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 9px, #000 9.5px) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle at 0 50%, transparent 9px, #000 9.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 9px, #000 9.5px) right / 51% 100% no-repeat;
+}
+[data-block="schedule"].v-schedule-ticket:not(.ev-block) li::before { display: none; }
+[data-block="schedule"].v-schedule-ticket:not(.ev-block) li strong {
+  flex: 0 0 auto;
+  margin: 0;
+  padding-right: 12px;
+  border-right: 2px dashed var(--ev-primary);
+  color: var(--ev-primary-hover);
+}
+
+/* ── faq ── (목록형 dl. 펼침형 details 는 70-components 의 아코디언) */
+
+[data-block="faq"].v-faq-two-col:not(.ev-block) dl { column-count: 2; column-gap: 24px; }
+[data-block="faq"].v-faq-two-col:not(.ev-block) dt { break-after: avoid; }
+[data-block="faq"].v-faq-two-col:not(.ev-block) dd { break-before: avoid; break-inside: avoid; }
+
+[data-block="faq"].v-faq-sidebar:not(.ev-block) {
+  display: grid;
+  grid-template-columns: minmax(120px, 32%) 1fr;
+  gap: 0 22px;
+  align-items: start;
+}
+[data-block="faq"].v-faq-sidebar:not(.ev-block) h2 {
+  margin: 0;
+  padding-right: 16px;
+  border-right: 3px solid var(--ev-primary);
+  font-size: 1.3rem;
+}
+[data-block="faq"].v-faq-sidebar:not(.ev-block) dl dt:first-of-type { padding-top: 0; border-top: 0; }
+
+/* ── cta ── */
+
+[data-block="cta"].v-cta-shine:not(.ev-block) :is(.btn, a, button) {
+  position: relative;
+  overflow: hidden;
+  background: var(--ev-gradient-cta);
+}
+[data-block="cta"].v-cta-shine:not(.ev-block) :is(.btn, a, button)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: nv-cta-shine 3.2s ease-in-out infinite;
+}
+@keyframes nv-cta-shine {
+  0%, 60% { left: -60%; }
+  100% { left: 130%; }
+}
+
+[data-block="cta"].v-cta-pulse-ring:not(.ev-block) :is(.btn, a, button) { position: relative; }
+[data-block="cta"].v-cta-pulse-ring:not(.ev-block) :is(.btn, a, button)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: nv-cta-ring 2s ease-out infinite;
+}
+@keyframes nv-cta-ring {
+  0% { box-shadow: 0 0 0 0 var(--ev-primary); opacity: 0.6; }
+  100% { box-shadow: 0 0 0 16px var(--ev-primary); opacity: 0; }
+}
+
+[data-block="cta"].v-cta-brutal:not(.ev-block) :is(.btn, a, button) {
+  border: 3px solid var(--ev-text-main);
+  border-radius: 6px;
+  background: var(--ev-primary);
+  color: #fff;
+  box-shadow: 6px 6px 0 var(--ev-text-main);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+[data-block="cta"].v-cta-brutal:not(.ev-block) :is(.btn, a, button):hover { transform: translate(2px, 2px); box-shadow: 4px 4px 0 var(--ev-text-main); }
+[data-block="cta"].v-cta-brutal:not(.ev-block) :is(.btn, a, button):active { transform: translate(6px, 6px); box-shadow: 0 0 0 var(--ev-text-main); }
+
+/* ── 확장 2차 — 검토 A등급 17종 (registry-candidates.json priority 1) ───────────────
+ * ★ hero 의 ::before · ::after 는 쓰지 않는다 — 종이 오림 · 흩날림 · 테마(aurora)가 이미 쓴다.
+ *   블롭 · 메시 · 질감은 배경 여러 겹으로 그린다
+ */
+
+/* hero */
+[data-block="hero"].v-hero-mesh:not(.ev-block) {
+  background:
+    radial-gradient(at 18% 22%, color-mix(in srgb, var(--ev-accent-tag) 70%, transparent) 0, transparent 52%),
+    radial-gradient(at 82% 8%, color-mix(in srgb, var(--ev-primary-light) 55%, transparent) 0, transparent 46%),
+    radial-gradient(at 70% 92%, color-mix(in srgb, var(--ev-primary) 80%, transparent) 0, transparent 55%),
+    var(--ev-gradient-hero);
+}
+
+[data-block="hero"].v-hero-grain:not(.ev-block) {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    var(--ev-gradient-hero);
+}
+
+[data-block="hero"].v-hero-blob:not(.ev-block) {
+  background:
+    radial-gradient(circle at 94% 8%, color-mix(in srgb, var(--ev-accent-tag) 55%, transparent) 0 92px, transparent 93px),
+    radial-gradient(circle at 104% 46%, color-mix(in srgb, var(--ev-primary-light) 30%, transparent) 0 60px, transparent 61px),
+    radial-gradient(circle at 4% 102%, color-mix(in srgb, var(--ev-primary-light) 32%, transparent) 0 120px, transparent 121px),
+    var(--ev-gradient-hero);
+}
+
+[data-block="hero"].v-hero-zigzag-edge:not(.ev-block) {
+  padding-bottom: 72px;
+  border-radius: 20px 20px 0 0;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 28px 100%;
+          mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 28px 100%;
+}
+
+/* highlight */
+[data-block="highlight"].v-highlight-gradient-border:not(.ev-block) {
+  border: 3px solid transparent;
+  background:
+    linear-gradient(var(--ev-surface), var(--ev-surface)) padding-box,
+    var(--ev-gradient-cta) border-box;
+  color: var(--ev-text-main);
+  box-shadow: none;
+}
+[data-block="highlight"].v-highlight-gradient-border:not(.ev-block) p:first-child { color: var(--ev-primary-hover); }
+
+/* 반반 — 문단마다 칠한다. 한 문단이 경계를 넘으면 반은 안 읽힌다 */
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 0;
+  overflow: hidden;
+  background: var(--ev-primary-light);
+  text-align: left;
+}
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) p {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 16px 20px;
+}
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) p:first-child { background: var(--ev-primary); color: #fff; }
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) p + p { color: var(--ev-primary-hover); font-size: 0.95rem; opacity: 1; }
+[data-block="highlight"].v-highlight-split-color:not(.ev-block) p:only-child { grid-column: 1 / -1; justify-content: center; }
+
+/* benefits (ul 리셋은 04-benefits.css 의 [class*="v-benefits-"]) */
+[data-block="benefits"].v-benefits-brutal:not(.ev-block) li {
+  margin: 0 6px 16px 0;
+  padding: 16px 18px;
+  border: 3px solid var(--ev-text-main);
+  border-radius: 6px;
+  background: var(--ev-surface);
+  box-shadow: 5px 5px 0 var(--ev-text-main);
+}
+
+/* 벽돌 — 칸 높이가 제각각이어도 위로 붙는다 (세로로 먼저 채운다) */
+/* ★ display: block — 테마(basic)가 ul 을 grid 로 만든다. column-count 는 grid · flex 에서 듣지 않는다 (미리보기 실측) */
+[data-block="benefits"].v-benefits-masonry:not(.ev-block) ul { display: block; column-count: 2; column-gap: 12px; }
+[data-block="benefits"].v-benefits-masonry:not(.ev-block) li {
+  display: block;
+  margin: 0 0 12px;
+  padding: 16px;
+  border: 1px solid var(--ev-border);
+  border-radius: 14px;
+  background: var(--ev-surface);
+  box-shadow: var(--ev-shadow-sm);
+  break-inside: avoid;
+}
+
+[data-block="benefits"].v-benefits-gift:not(.ev-block) li {
+  position: relative;
+  margin: 18px 0 14px;
+  padding: 22px 18px 16px;
+  border: 0;
+  border-top: 8px solid var(--ev-accent-tag);
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 4px), color-mix(in srgb, var(--ev-accent-tag) 35%, transparent) calc(50% - 4px) calc(50% + 4px), transparent calc(50% + 4px)) top / 100% 18px no-repeat,
+    var(--ev-primary-light);
+}
+[data-block="benefits"].v-benefits-gift:not(.ev-block) li::after {
+  content: "🎀";
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  font-size: 1.5rem;
+  transform: translateX(-50%);
+}
+
+/* stats */
+[data-block="stats"].v-stats-flip:not(.ev-block) li strong {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: linear-gradient(#1f2937 0 49%, #0b1220 49% 51%, #1f2937 51%);
+  color: #f9fafb;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 0 #0b1220;
+}
+
+/* coupon — 흰 영수증. 기본 티켓 mask 를 톱니 mask 로 바꾼다 */
+[data-block="coupon"].v-coupon-receipt:not(.ev-block) {
+  padding-bottom: 34px;
+  border-radius: 6px 6px 0 0;
+  /* ★ 순백이면 흰 컨테이너 위에서 톱니가 안 보인다 — 아주 옅게 물들인다. 그림자 · 테두리는 mask 가 같이 자른다 */
+  background: color-mix(in srgb, var(--ev-primary) 6%, #fff);
+  color: #111827;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+          mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+  font-variant-numeric: tabular-nums;
+}
+[data-block="coupon"].v-coupon-receipt:not(.ev-block) h2 { color: #6b7280; opacity: 1; }
+[data-block="coupon"].v-coupon-receipt:not(.ev-block) p { color: var(--ev-primary-hover); }
+[data-block="coupon"].v-coupon-receipt:not(.ev-block) ul { border-top: 2px dashed #d1d5db; color: #374151; opacity: 1; }
+
+/* steps — 만화 칸 */
+[data-block="steps"].v-steps-comic:not(.ev-block) ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: nv-step;
+}
+[data-block="steps"].v-steps-comic:not(.ev-block) li {
+  counter-increment: nv-step;
+  position: relative;
+  margin: 0;
+  padding: 34px 16px 16px;
+  border: 3px solid var(--ev-text-main);
+  border-radius: 4px;
+  background: var(--ev-surface);
+  box-shadow: 4px 4px 0 var(--ev-text-main);
+}
+[data-block="steps"].v-steps-comic:not(.ev-block) li::before {
+  content: "#" counter(nv-step);
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  padding: 2px 10px;
+  background: var(--ev-text-main);
+  color: var(--ev-surface);
+  font-size: 12px;
+  font-weight: 900;
+}
+[data-block="steps"].v-steps-comic:not(.ev-block) .step-title { font-weight: 800; }
+
+/* schedule — 가운데 세로선, 좌우 번갈아. 테마(basic · bloom)의 "라벨 표" 를 되돌린다 (로드맵과 같은 이유) */
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) ol {
+  position: relative;
+  display: block;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) ol::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--ev-primary-light);
+}
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li {
+  position: relative;
+  display: block;
+  width: 50%;
+  margin: 0;
+  padding: 4px 26px 20px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: right;
+}
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li:nth-child(even) { margin-left: 50%; padding: 4px 0 20px 26px; text-align: left; }
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 6px;
+  right: -7px;
+  left: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ev-primary);
+  box-shadow: 0 0 0 4px var(--ev-surface);
+}
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li:nth-child(even)::before { right: auto; left: -7px; }
+[data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li strong {
+  display: block;
+  flex: none;
+  margin: 0 0 2px;
+  padding: 0;
+  background: none;
+  color: var(--ev-primary);
+  width: auto;
+  text-align: inherit;
+}
+
+/* faq (목록형 dl) */
+[data-block="faq"].v-faq-grid-cards:not(.ev-block) dl { column-count: 3; column-gap: 12px; }
+[data-block="faq"].v-faq-grid-cards:not(.ev-block) dt {
+  margin: 0;
+  padding: 16px 16px 4px;
+  border: 0;
+  border-radius: 14px 14px 0 0;
+  background: var(--ev-primary-light);
+  break-after: avoid;
+}
+[data-block="faq"].v-faq-grid-cards:not(.ev-block) dd {
+  margin: 0 0 12px;
+  padding: 4px 16px 16px;
+  border: 0;
+  border-radius: 0 0 14px 14px;
+  background: var(--ev-primary-light);
+  font-size: 0.9rem;
+  break-before: avoid;
+  break-inside: avoid;
+}
+
+[data-block="faq"].v-faq-highlight-top:not(.ev-block) dt:nth-of-type(-n+3) {
+  margin-top: 10px;
+  padding: 16px 18px 4px;
+  border: 0;
+  border-radius: 14px 14px 0 0;
+  background: var(--ev-primary-light);
+  font-size: 1.08rem;
+}
+[data-block="faq"].v-faq-highlight-top:not(.ev-block) dd:nth-of-type(-n+3) {
+  margin: 0 0 4px;
+  padding: 4px 18px 16px;
+  border-radius: 0 0 14px 14px;
+  background: var(--ev-primary-light);
+}
+[data-block="faq"].v-faq-highlight-top:not(.ev-block) dt:nth-of-type(n+4) { font-size: 0.92rem; }
+[data-block="faq"].v-faq-highlight-top:not(.ev-block) dd:nth-of-type(n+4) { font-size: 0.86rem; }
+
+/* cta */
+[data-block="cta"].v-cta-stamp:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) {
+  border: 3px dashed rgba(255, 255, 255, 0.75);
+  border-radius: 12px;
+  background: var(--ev-primary);
+  color: #fff;
+  outline: 3px solid var(--ev-primary);
+  outline-offset: 3px;
+  letter-spacing: 0.06em;
+  transform: rotate(-3deg);
+}
+
+[data-block="cta"].v-cta-ticket:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) {
+  padding: 16px 44px;
+  border-radius: 10px;
+  background: var(--ev-gradient-cta);
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 10px, #000 10.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 10px, #000 10.5px) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle at 0 50%, transparent 10px, #000 10.5px) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent 10px, #000 10.5px) right / 51% 100% no-repeat;
+}
+
+@media (max-width: 560px) {
+  [data-block="benefits"].v-benefits-masonry:not(.ev-block) ul { column-count: 1; }
+  [data-block="faq"].v-faq-grid-cards:not(.ev-block) dl { column-count: 1; }
+  [data-block="highlight"].v-highlight-split-color:not(.ev-block) { grid-template-columns: 1fr; }
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) ol::before { left: 7px; }
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li,
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li:nth-child(even) { width: auto; margin-left: 0; padding: 4px 0 18px 30px; text-align: left; }
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li::before,
+  [data-block="schedule"].v-schedule-vertical-center:not(.ev-block) li:nth-child(even)::before { right: auto; left: 0; }
+}
+
+/* ── 움직임 (Group.MOTION) — 전부 확장, 요청문이 부를 때만 ─────────────────────
+ * ★ 움직임 줄이기 설정이면 99-a11y 가 animation 을 끈다 — 등장 효과는 그냥 보이고, 흩날림은 멈춘 무늬로 남는다 (실제 화면 확인)
+ * ★ transform 이 아니라 translate · scale 속성을 쓴다. 변형(포스트잇 · 스티커)이 transform 으로 기울여 둔 것을 덮지 않는다
+ * ★ 스크롤 등장(reveal)이 있으면 영역이 보일 때 돈다 — :not(.ev-reveal-pending)
+ */
+
+[data-block].v-anim-fade-up:not(.ev-block):not(.ev-reveal-pending) { animation: nv-anim-fade-up 0.7s ease-out both; }
+[data-block].v-anim-zoom-in:not(.ev-block):not(.ev-reveal-pending) { animation: nv-anim-zoom-in 0.6s ease-out both; }
+[data-block].v-anim-stagger:not(.ev-block):not(.ev-reveal-pending) :is(li, dt, dd, p, tr) { animation: nv-anim-fade-up 0.5s ease-out both; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(2), [data-block].v-anim-stagger:not(.ev-block) dd:nth-of-type(1) { animation-delay: 0.08s; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(3) { animation-delay: 0.16s; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(4) { animation-delay: 0.24s; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(5) { animation-delay: 0.32s; }
+[data-block].v-anim-stagger:not(.ev-block) :is(li, dt, tr):nth-child(n+6) { animation-delay: 0.4s; }
+@keyframes nv-anim-fade-up { from { opacity: 0; translate: 0 24px; } to { opacity: 1; translate: 0 0; } }
+@keyframes nv-anim-zoom-in { from { opacity: 0; scale: 0.94; } to { opacity: 1; scale: 1; } }
+
+/* cta 버튼 강조 — 공유 버튼(.ev-share-btn)은 빼고 참여 버튼만 */
+[data-block="cta"].v-anim-pulse:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) { animation: nv-anim-pulse 2.4s ease-in-out infinite; }
+[data-block="cta"].v-anim-heart-beat:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) { animation: nv-anim-heart-beat 1.6s ease-in-out infinite; }
+@keyframes nv-anim-pulse { 50% { scale: 1.05; } }
+@keyframes nv-anim-heart-beat { 0%, 70%, 100% { scale: 1; } 14%, 42% { scale: 1.09; } 28% { scale: 1; } }
+
+/* hero 흩날림 — ::after 한 겹. 배경 위치를 무늬 크기의 정수배만큼 옮겨 이음매 없이 되풀이한다
+ * ★ hero 의 ::after 를 쓰는 변형(종이 오림 · 테마 aurora 의 결)과 같이 고르면 이쪽이 이긴다 */
+[data-block="hero"]:is(.v-anim-snowfall, .v-anim-petal-fall, .v-anim-leaf-fall):not(.ev-block) { position: relative; overflow: hidden; }
+[data-block="hero"]:is(.v-anim-snowfall, .v-anim-petal-fall, .v-anim-leaf-fall):not(.ev-block)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+[data-block="hero"].v-anim-snowfall:not(.ev-block)::after {
+  background:
+    radial-gradient(circle, #fff 0 2px, rgba(148, 163, 184, 0.55) 2.5px 3px, transparent 3.5px) 0 0 / 120px 120px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 1.5px, transparent 2px) 40px 60px / 80px 80px,
+    radial-gradient(circle, #fff 0 3px, rgba(148, 163, 184, 0.45) 3.5px 4px, transparent 4.5px) 130px 30px / 200px 200px;
+  animation: nv-anim-snow 16s linear infinite;
+}
+@keyframes nv-anim-snow { to { background-position: 120px 1200px, 120px 860px, 330px 2030px; } }
+
+[data-block="hero"].v-anim-petal-fall:not(.ev-block)::after {
+  background:
+    radial-gradient(5px 3px at 50% 50%, #f9a8d4 0 90%, transparent 100%) 0 0 / 140px 140px,
+    radial-gradient(4px 6px at 50% 50%, #fbcfe8 0 90%, transparent 100%) 60px 40px / 110px 110px,
+    radial-gradient(6px 4px at 50% 50%, #f472b6 0 90%, transparent 100%) 20px 90px / 190px 190px;
+  opacity: 0.9;
+  animation: nv-anim-petal 18s linear infinite;
+}
+@keyframes nv-anim-petal { to { background-position: 280px 1400px, -50px 1140px, 400px 1990px; } }
+
+[data-block="hero"].v-anim-leaf-fall:not(.ev-block)::after {
+  background:
+    radial-gradient(6px 4px at 50% 50%, #f59e0b 0 90%, transparent 100%) 0 0 / 150px 150px,
+    radial-gradient(4px 7px at 50% 50%, #ea580c 0 90%, transparent 100%) 70px 50px / 120px 120px,
+    radial-gradient(7px 5px at 50% 50%, #b45309 0 90%, transparent 100%) 30px 100px / 210px 210px;
+  opacity: 0.9;
+  animation: nv-anim-leaf 20s linear infinite;
+}
+@keyframes nv-anim-leaf { to { background-position: -150px 1500px, 190px 1250px, -180px 2200px; } }
+
+/* ── 좁은 화면 ── */
+
+@media (max-width: 560px) {
+  [data-block="hero"].v-hero-brutal:not(.ev-block) { margin-right: 6px; box-shadow: 6px 6px 0 var(--ev-text-main); }
+  [data-block="coupon"].v-coupon-boarding-pass:not(.ev-block) { padding-right: 96px; }
+  [data-block="coupon"].v-coupon-boarding-pass:not(.ev-block)::after { width: 72px; font-size: 1.6rem; }
+  [data-block="faq"].v-faq-two-col:not(.ev-block) dl { column-count: 1; }
+  [data-block="faq"].v-faq-sidebar:not(.ev-block) { grid-template-columns: 1fr; }
+  [data-block="faq"].v-faq-sidebar:not(.ev-block) h2 { margin-bottom: 10px; padding: 0 0 8px; border-right: 0; border-bottom: 3px solid var(--ev-primary); }
+  [data-block="steps"].v-steps-stepper:not(.ev-block) ol { flex-direction: column; }
+  [data-block="steps"].v-steps-stepper:not(.ev-block) li { padding: 6px 0 18px 50px; text-align: left; }
+  [data-block="steps"].v-steps-stepper:not(.ev-block) li::before { left: 0; margin-left: 0; }
+  [data-block="steps"].v-steps-stepper:not(.ev-block) li::after { top: 40px; bottom: 0; left: 17px; right: auto; width: 2px; height: auto; }
+}
+
 /* ── 60-variants/80-surface.css ── */
 /* ── 배경 변형 (intro · benefits · audience · steps · faq) ─────────────── */
 
@@ -7124,6 +8415,123 @@ body {
 [data-block]:is(.v-surface-blue, .v-surface-green, .v-surface-yellow, .v-surface-orange,
                 .v-surface-red, .v-surface-purple, .v-surface-pink, .v-surface-gray):not(.ev-block) :is(.benefit-desc, .step-desc, td:first-child) {
   color: var(--ev-text-muted);
+}
+
+/* ── 60-variants/85-surface-expansion.css ── */
+/* ── 배경 확장 — 무늬 · 질감 · 경계 (registry/Variant.java 의 SURFACE, core=false) ──────────
+ *
+ * 요청문이 이름을 부를 때만 프롬프트에 실린다 ("겨울 눈송이" → v-surface-snow).
+ * 80-surface 뒤에 둔다 — 같은 특이도면 이쪽이 이긴다. 블록 변형(01~15)보다는 뒤라 배경이 변형의 배경을 덮는다.
+ *
+ * ★ 칸 모양(테두리 · 둥글기 · 여백)은 80-surface 의 카드와 같게 맞춘다 — 배경만 바꿔 끼우는 것처럼 보여야 한다
+ * ★ 색은 팔레트 변수로 칠한다. 계절 무늬(눈 · 꽃잎 · 낙엽)와 크라프트지만 색이 곧 무늬라 고정 색이고,
+ *   그 위 글자는 이 파일이 정한다 (크라프트지 — 어두운 글자)
+ * ★ 무늬는 SVG data URI 다. 이 파일은 우리가 쓴 CSS 라 정화와 무관하다 (모델은 class 이름만 고른다)
+ * ★ 섹션의 ::before · ::after 는 쓰지 않는다 — 블록 변형(v-intro-letter 등)이 쓴다
+ */
+
+[data-block]:is(
+  .v-surface-snow, .v-surface-petals, .v-surface-leaves, .v-surface-hearts, .v-surface-stars,
+  .v-surface-hanji, .v-surface-paper, .v-surface-kraft, .v-surface-grid, .v-surface-confetti,
+  .v-surface-grain, .v-surface-notebook
+):not(.ev-block) {
+  background-color: var(--ev-surface);
+  border: 1px solid var(--ev-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+/* 계절 무늬 — 연하게. 글자 아래 깔려도 읽혀야 한다 */
+[data-block].v-surface-snow:not(.ev-block) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cg fill='none' stroke='%2393c5fd' stroke-width='1.4' stroke-linecap='round' opacity='.55'%3E%3Cpath d='M16 8v16M8 16h16M10.5 10.5l11 11M21.5 10.5l-11 11'/%3E%3Cpath d='M48 38v12M42 44h12M43.8 39.8l8.4 8.4M52.2 39.8l-8.4 8.4'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-block].v-surface-petals:not(.ev-block) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cg fill='%23f9a8d4' opacity='.5'%3E%3Cellipse cx='16' cy='18' rx='6' ry='3.5' transform='rotate(-30 16 18)'/%3E%3Cellipse cx='52' cy='50' rx='5' ry='3' transform='rotate(25 52 50)'/%3E%3Cellipse cx='58' cy='14' rx='3.5' ry='2.2' transform='rotate(60 58 14)'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-block].v-surface-leaves:not(.ev-block) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg opacity='.45'%3E%3Cpath d='M14 26c4-10 14-12 18-12-1 9-8 17-18 12z' fill='%23f59e0b'/%3E%3Cpath d='M54 62c3-8 11-10 14-10-1 7-6 13-14 10z' fill='%23ea580c'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-block].v-surface-hearts:not(.ev-block) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M14 20c-3-4-9-2-8 3 1 3 8 8 8 8s7-5 8-8c1-5-5-7-8-3z' fill='%23fb7185' opacity='.35'/%3E%3Cpath d='M42 44c-2-2.6-6-1.3-5.3 2 .6 2 5.3 5.3 5.3 5.3s4.7-3.3 5.3-5.3c.7-3.3-3.3-4.6-5.3-2z' fill='%23fb7185' opacity='.3'/%3E%3C/svg%3E");
+}
+[data-block].v-surface-stars:not(.ev-block) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cg fill='%23fbbf24' opacity='.45'%3E%3Cpath d='M15 6l2.4 5.6 6 .5-4.6 4 1.4 5.9L15 19l-5.2 3 1.4-5.9-4.6-4 6-.5z'/%3E%3Cpath d='M45 38l1.5 3.5 3.8.3-2.9 2.5.9 3.7-3.3-2-3.3 2 .9-3.7-2.9-2.5 3.8-.3z'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-block].v-surface-confetti:not(.ev-block) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cg opacity='.5'%3E%3Crect x='10' y='12' width='8' height='4' rx='1' fill='%23f472b6' transform='rotate(25 14 14)'/%3E%3Crect x='60' y='20' width='8' height='4' rx='1' fill='%2360a5fa' transform='rotate(-35 64 22)'/%3E%3Crect x='34' y='58' width='8' height='4' rx='1' fill='%23facc15' transform='rotate(60 38 60)'/%3E%3Ccircle cx='76' cy='70' r='2.5' fill='%2334d399'/%3E%3Ccircle cx='22' cy='78' r='2' fill='%23a78bfa'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* 종이 · 질감 */
+[data-block].v-surface-grain:not(.ev-block),
+[data-block].v-surface-paper:not(.ev-block) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-block].v-surface-paper:not(.ev-block) {
+  background-color: color-mix(in srgb, var(--ev-surface) 92%, #e7dcc4);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 16px -8px rgba(0, 0, 0, 0.18);
+}
+[data-block].v-surface-hanji:not(.ev-block) {
+  background-color: color-mix(in srgb, var(--ev-surface) 88%, #efe6d2);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .25' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .25  0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+[data-block].v-surface-kraft:not(.ev-block) {
+  border-color: #b08a5e;
+  background-color: #c9a57a;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color: #2b1d0e;
+}
+/* ★ 크라프트지는 바탕이 고정 갈색이다 — 글자를 테마 · 팔레트가 아니라 여기서 쥔다 (밝은 글자 팔레트에서 사라진다) */
+[data-block].v-surface-kraft:not(.ev-block) :is(h2, p, li, dt, dd, strong, .benefit-name, .benefit-desc, .step-title, .step-desc) { color: #2b1d0e; }
+
+/* 선 */
+[data-block].v-surface-grid:not(.ev-block) {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--ev-primary) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--ev-primary) 10%, transparent) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+[data-block].v-surface-notebook:not(.ev-block) {
+  padding-left: 40px;
+  background-image:
+    linear-gradient(90deg, transparent 27px, color-mix(in srgb, var(--ev-accent-tag) 45%, transparent) 27px 29px, transparent 29px),
+    repeating-linear-gradient(to bottom, transparent 0 27px, color-mix(in srgb, var(--ev-primary) 16%, transparent) 27px 28px);
+}
+
+/* 경계 — mask 로 가장자리를 판다. 테두리는 같이 잘리므로 쓰지 않는다 */
+[data-block]:is(.v-surface-wave-top, .v-surface-wave-bottom, .v-surface-zigzag):not(.ev-block) {
+  border: 0;
+  border-radius: 0;
+  margin-bottom: 16px;
+  background: var(--ev-primary-light);
+}
+[data-block].v-surface-wave-top:not(.ev-block) {
+  padding: 34px 22px 22px;
+  -webkit-mask: radial-gradient(11px at 50% 0, #0000 98%, #000) 50% 0 / 22px 100%;
+          mask: radial-gradient(11px at 50% 0, #0000 98%, #000) 50% 0 / 22px 100%;
+}
+[data-block].v-surface-wave-bottom:not(.ev-block) {
+  padding: 22px 22px 34px;
+  -webkit-mask: radial-gradient(11px at 50% 100%, #0000 98%, #000) 50% 0 / 22px 100%;
+          mask: radial-gradient(11px at 50% 100%, #0000 98%, #000) 50% 0 / 22px 100%;
+}
+[data-block].v-surface-zigzag:not(.ev-block) {
+  padding: 32px 22px;
+  -webkit-mask:
+    conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / 18px 51% repeat-x,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 18px 51% repeat-x;
+          mask:
+    conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / 18px 51% repeat-x,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 18px 51% repeat-x;
+}
+
+[data-block].v-surface-brutal:not(.ev-block) {
+  margin: 0 8px 22px 0;
+  padding: 22px;
+  border: 3px solid var(--ev-text-main);
+  border-radius: 4px;
+  background: var(--ev-surface);
+  box-shadow: 7px 7px 0 var(--ev-text-main);
 }
 
 /* ── 60-variants/90-responsive.css ── */
@@ -7547,6 +8955,47 @@ body {
 @media (max-width: 420px) {
   :where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) table { min-width: 0; table-layout: fixed; font-size: 0.82rem; }
   :where(.event-page, .ev-container) [data-block="compare"]:not(.ev-block) :is(th, td) { padding: 8px 6px; word-break: keep-all; overflow-wrap: anywhere; }
+}
+
+/* ── 확장 — 요청문이 이름을 부를 때만 프롬프트에 실린다 (registry/Variant.java core=false) ── */
+
+/* 가격 카드 — 첫 열(항목 이름)은 그대로, 나머지 열을 떨어진 카드처럼 */
+[data-block="compare"].v-compare-pricing:not(.ev-block) table { border-spacing: 10px 0; }
+[data-block="compare"].v-compare-pricing:not(.ev-block) tr:nth-child(n) td:not(:first-child) { background: var(--ev-surface-subtle); }
+[data-block="compare"].v-compare-pricing:not(.ev-block) tr:first-child :is(th, td):first-child { background: transparent; color: var(--ev-text-muted); }
+[data-block="compare"].v-compare-pricing:not(.ev-block) tr:first-child :is(th, td):not(:first-child) {
+  padding-top: 16px;
+  border-radius: 12px 12px 0 0;
+  background: var(--ev-primary);
+  color: #fff;
+}
+[data-block="compare"].v-compare-pricing:not(.ev-block) tr:last-child td:not(:first-child) { padding-bottom: 16px; border-radius: 0 0 12px 12px; }
+
+/* 체크 표 — 값 칸의 ✓ · ✗ 를 크게. 값은 모델이 요청문에서 옮긴 것이고 CSS 는 크기만 바꾼다 */
+[data-block="compare"].v-compare-check-matrix:not(.ev-block) td:not(:first-child) { color: var(--ev-primary); font-size: 1.2rem; font-weight: 800; }
+[data-block="compare"].v-compare-check-matrix:not(.ev-block) :is(th, td) { border-bottom: 1px solid var(--ev-border); }
+[data-block="compare"].v-compare-check-matrix:not(.ev-block) tr:nth-child(even) td { background: transparent; }
+
+/* VS — 둘째 · 셋째 열을 다른 색으로 맞세우고 머리글 사이에 VS */
+[data-block="compare"].v-compare-vs:not(.ev-block) tr:first-child th:nth-child(2) { position: relative; }
+[data-block="compare"].v-compare-vs:not(.ev-block) tr:first-child th:nth-child(3) { background: var(--ev-text-main); color: var(--ev-surface); }
+[data-block="compare"].v-compare-vs:not(.ev-block) tr:first-child th:nth-child(2)::after {
+  content: "VS";
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  border-radius: 50%;
+  background: var(--ev-accent-tag);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 32px;
+  text-align: center;
+  box-shadow: 0 0 0 3px var(--ev-surface);
 }
 
 /* ── 70-components/07-behaviors.css ── */
@@ -8133,6 +9582,135 @@ body {
 .ev-container.event-page.layout-focus > [data-block="hero"].v-hero-split:not(.ev-block) h1 { grid-row: auto; }
 .ev-container.event-page.layout-focus > [data-block="hero"].v-hero-split:not(.ev-block) > :not(h1) { grid-column: 1; }
 
+/* ── 확장 배치 4종 — 검토 A등급 (registry/Layout.java MASONRY · TIMELINE · L_SHAPE · CTA_RAIL) ─────────────
+ *
+ *   layout-masonry   벽돌 — 내용 영역을 2단에 높이대로 쌓는다 (column-count)
+ *   layout-timeline  가운데 세로선 + 좌우 번갈아 (zigzag 에 가운데 선을 더한 꼴)
+ *   layout-l-shape   소개를 뺀 첫 내용 영역은 왼쪽에 길게, 나머지는 오른쪽에 쌓는다
+ *   layout-cta-rail  참여 영역(cta)을 오른쪽 칸에 두고 따라오게 한다
+ *
+ * ★ "내용 영역" 은 위 배치들과 같은 목록이다. hero · 띠 배너 · 유의사항 · 참여 버튼은 한 줄을 다 쓴다
+ * ★ 번갈아 고르기는 :nth-child(… of …) 로 한다 — 사이에 hero · 띠 배너가 끼어도 내용 영역만 센다
+ * ★ 좁으면(640px 아래) 전부 세로 한 줄로 돌아간다 — 기본 배치(stack)와 같다
+ */
+
+.ev-container.event-page:is(.layout-masonry, .layout-timeline, .layout-l-shape, .layout-cta-rail) {
+  max-width: 1120px;
+  overflow: clip;
+}
+
+/* 벽돌 — 2단. 단을 나누는 영역은 한 줄을 다 쓴다(column-span) */
+@media (min-width: 641px) {
+  .ev-container.event-page.layout-masonry {
+    display: block;
+    column-count: 2;
+    column-gap: 18px;
+  }
+  .ev-container.event-page.layout-masonry > * { column-span: all; }
+  .ev-container.event-page.layout-masonry > :is(
+    [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block) {
+    column-span: none;
+    display: block;
+    margin: 0 9px 18px;
+    border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+    border-radius: 20px;
+    break-inside: avoid;
+  }
+}
+
+/* 타임라인 — 컨테이너 가운데에 선을 긋고, 내용 영역을 좌우로 번갈아 놓는다
+ * ★ 칸을 칠한다 — basic 은 내용 영역의 칠을 걷어서, 칠하지 않으면 가운데 선이 카드 위로 비친다.
+ *   칠하면 글자색도 같이 쥔다 (테마 머리말 ①: 표면을 칠하면 글자도 쥔다) */
+@media (min-width: 641px) {
+  .ev-container.event-page.layout-timeline {
+    max-width: 1000px;
+    background-image: linear-gradient(var(--ev-primary-light), var(--ev-primary-light));
+    background-size: 3px 100%;
+    background-position: 50% 0;
+    background-repeat: no-repeat;
+  }
+  .ev-container.event-page.layout-timeline > :is(
+    [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block) {
+    position: relative;
+    width: calc(50% - 34px);
+    margin: 0 0 22px 18px;
+    border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+    border-radius: 20px;
+    background-color: var(--ev-surface);
+    color: var(--ev-text-main);
+  }
+  .ev-container.event-page.layout-timeline > :nth-child(even of :is(
+    [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block)) {
+    margin-left: calc(50% + 16px);
+  }
+  .ev-container.event-page.layout-timeline > [data-block="hero"]:not(.ev-block) { margin-bottom: 26px; }
+}
+
+/* L자 — 2열 격자. 첫 내용 영역이 왼쪽 세 줄을 차지하고, 뒤의 영역이 오른쪽에 쌓인다(dense) */
+@media (min-width: 641px) {
+  .ev-container.event-page.layout-l-shape {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-auto-flow: row dense;
+    column-gap: 18px;
+    align-items: start;
+  }
+  .ev-container.event-page.layout-l-shape > * { grid-column: 1 / -1; min-width: 0; }
+  .ev-container.event-page.layout-l-shape > :is(
+    [data-block="intro"], [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block) {
+    grid-column: 2;
+    margin: 0 9px 18px 0;
+    border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+    border-radius: 20px;
+  }
+  /* ★ 큰 칸은 소개(intro)를 뺀 첫 내용 영역이다. 소개는 문단 한둘이라 큰 칸이 거의 비었다 (미리보기 실측) */
+  .ev-container.event-page.layout-l-shape > :nth-child(1 of :is(
+    [data-block="stats"], [data-block="benefits"], [data-block="prize"], [data-block="coupon"],
+    [data-block="compare"], [data-block="audience"], [data-block="steps"], [data-block="schedule"], [data-block="faq"]
+  ):not(.ev-block)) {
+    grid-column: 1;
+    grid-row: span 3;
+    margin-left: 9px;
+  }
+}
+
+/* 참여 레일 — 오른쪽 칸에 cta 를 세우고 따라오게 한다(sticky).
+ * ★ 행 간격(row-gap)을 0 으로 둔다 — cta 가 빈 줄 여럿에 걸쳐 있어서 간격을 주면 그만큼 왼쪽이 벌어진다. 간격은 영역의 margin 이 맡는다
+ * ★ overflow: clip 은 스크롤 상자를 만들지 않아 sticky 가 산다 (hidden 이면 죽는다) */
+@media (min-width: 761px) {
+  .ev-container.event-page.layout-cta-rail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    column-gap: 20px;
+    row-gap: 0;
+    align-items: start;
+  }
+  .ev-container.event-page.layout-cta-rail > * { grid-column: 1; min-width: 0; }
+  .ev-container.event-page.layout-cta-rail > [data-block="hero"]:not(.ev-block) { grid-column: 1 / -1; margin-bottom: 18px; }
+  .ev-container.event-page.layout-cta-rail > [data-block="cta"]:not(.ev-block) {
+    grid-column: 2;
+    grid-row: 2 / span 40;
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    margin: 0 9px 0 0;
+    padding: 22px 18px;
+    border: 1px solid var(--ev-border, rgba(0, 0, 0, 0.08));
+    border-radius: 20px;
+    background: var(--ev-surface);
+    box-shadow: var(--ev-shadow-lg);
+  }
+  .ev-container.event-page.layout-cta-rail > [data-block="cta"]:not(.ev-block) :is(.btn, a, button):not(.ev-share-btn) { display: block; width: 100%; }
+}
+
 /* ── 90-palettes/01-base-set.css ── */
 /* ★★ 팔레트 변수를 body 에서도 읽을 수 있게 한다.
      팔레트 class 는 .ev-container 에 붙는다(서버가 hero 에서 옮긴다 — PageShell.hoist).
@@ -8335,6 +9913,1290 @@ body:has(.palette-brand) {
   --ev-bg: #fff8fb; --ev-surface: #ffffff; --ev-surface-subtle: #fff0f7; --ev-border: #f8d3e6;
 }
 
+/* ── 90-palettes/03-expansion.css ── */
+/* 팔레트 확장 — registry/Palette.java 와 짝 (후보 목록: newvent-backend docs/registry-candidates.json)
+ * ★★ 생성 파일이다 — 직접 고치지 않는다. 원본: scripts/build-palettes.mjs 의 색 명세
+ * ★ 01 · 02 와 같은 변수 11개(어두우면 text-* 3개 더). 값은 생성기로 맞췄다 —
+ *   밝은 팔레트: primary 는 흰 바탕 4.5 이상, hover 는 흰 글자 5.7 이상 (README 「팔레트 연결」 기준)
+ *   어두운 팔레트: primary · hover · 2차색이 카드 · 영역 바탕 · 알약 위 4.6 이상, 버튼의 #111 글자 4.6 이상
+ * ★ 어두운 팔레트는 99-dark-fixes 의 night 보정을 같이 받는다 (목록도 이 생성기가 맞춘다) */
+
+/* ── 밝은 팔레트 ── */
+
+.palette-retro,
+body:has(.palette-retro) {
+  --ev-primary: #b4442f; --ev-primary-hover: #993a28; --ev-primary-light: #f9f0ee;
+  --ev-primary-glow: rgba(180, 68, 47, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #3b1d14 0%, #7a2e1f 55%, #c2603f 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #c26654 0%, #b4442f 100%);
+  --ev-accent-tag: #c9a227;
+  --ev-bg: #fdf9f9; --ev-surface: #ffffff; --ev-surface-subtle: #fbf4f3; --ev-border: #f0dad5;
+}
+
+.palette-lemonade,
+body:has(.palette-lemonade) {
+  --ev-primary: #4d7c0f; --ev-primary-hover: #41690d; --ev-primary-light: #f1f5ec;
+  --ev-primary-glow: rgba(77, 124, 15, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #3f3a05 0%, #a16207 55%, #facc15 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #6d943a 0%, #4d7c0f 100%);
+  --ev-accent-tag: #facc15;
+  --ev-bg: #fafbf8; --ev-surface: #ffffff; --ev-surface-subtle: #f4f7f1; --ev-border: #dbe5cf;
+}
+
+.palette-aqua,
+body:has(.palette-aqua) {
+  --ev-primary: #0e7490; --ev-primary-hover: #0c637a; --ev-primary-light: #ecf4f6;
+  --ev-primary-glow: rgba(14, 116, 144, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #083344 0%, #0e7490 55%, #2dd4bf 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #398da4 0%, #0e7490 100%);
+  --ev-accent-tag: #22d3ee;
+  --ev-bg: #f8fbfc; --ev-surface: #ffffff; --ev-surface-subtle: #f1f7f8; --ev-border: #cfe3e9;
+}
+
+.palette-emerald,
+body:has(.palette-emerald) {
+  --ev-primary: #047857; --ev-primary-hover: #03664a; --ev-primary-light: #ebf4f2;
+  --ev-primary-glow: rgba(4, 120, 87, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #022c22 0%, #065f46 55%, #10b981 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #319075 0%, #047857 100%);
+  --ev-accent-tag: #34d399;
+  --ev-bg: #f7fbfa; --ev-surface: #ffffff; --ev-surface-subtle: #f0f7f5; --ev-border: #cde4dd;
+}
+
+.palette-cupcake,
+body:has(.palette-cupcake) {
+  --ev-primary: #c2416c; --ev-primary-hover: #a5375c; --ev-primary-light: #faf0f3;
+  --ev-primary-glow: rgba(194, 65, 108, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #5b1a34 0%, #a33a63 55%, #f49cbb 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cd6386 0%, #c2416c 100%);
+  --ev-accent-tag: #5eead4;
+  --ev-bg: #fdf9fb; --ev-surface: #ffffff; --ev-surface-subtle: #fbf4f6; --ev-border: #f3d9e2;
+}
+
+.palette-bumblebee,
+body:has(.palette-bumblebee) {
+  --ev-primary: #a16207; --ev-primary-hover: #895306; --ev-primary-light: #f7f2eb;
+  --ev-primary-glow: rgba(161, 98, 7, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1c1917 0%, #78350f 55%, #eab308 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #b27e34 0%, #a16207 100%);
+  --ev-accent-tag: #111827;
+  --ev-bg: #fcfaf8; --ev-surface: #ffffff; --ev-surface-subtle: #f9f6f0; --ev-border: #ece0cd;
+}
+
+.palette-corporate,
+body:has(.palette-corporate) {
+  --ev-primary: #1d4ed8; --ev-primary-hover: #1942b8; --ev-primary-light: #edf1fc;
+  --ev-primary-glow: rgba(29, 78, 216, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #3b82f6 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #466edf 0%, #1d4ed8 100%);
+  --ev-accent-tag: #64748b;
+  --ev-bg: #f8fafe; --ev-surface: #ffffff; --ev-surface-subtle: #f1f4fd; --ev-border: #d2dcf7;
+}
+
+.palette-garden,
+body:has(.palette-garden) {
+  --ev-primary: #be185d; --ev-primary-hover: #a2144f; --ev-primary-light: #faedf2;
+  --ev-primary-glow: rgba(190, 24, 93, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #3f0d24 0%, #9d174d 55%, #4ade80 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ca427a 0%, #be185d 100%);
+  --ev-accent-tag: #16a34a;
+  --ev-bg: #fdf8fa; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f5; --ev-border: #f2d1df;
+}
+
+.palette-fantasy,
+body:has(.palette-fantasy) {
+  --ev-primary: #7e22ce; --ev-primary-hover: #6b1daf; --ev-primary-light: #f5edfb;
+  --ev-primary-glow: rgba(126, 34, 206, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2e1065 0%, #6b21a8 55%, #60a5fa 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #954ad7 0%, #7e22ce 100%);
+  --ev-accent-tag: #38bdf8;
+  --ev-bg: #fbf8fe; --ev-surface: #ffffff; --ev-surface-subtle: #f7f2fc; --ev-border: #e5d3f5;
+}
+
+.palette-cmyk,
+body:has(.palette-cmyk) {
+  --ev-primary: #0e7490; --ev-primary-hover: #0c637a; --ev-primary-light: #ecf4f6;
+  --ev-primary-glow: rgba(14, 116, 144, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #083344 0%, #be185d 55%, #eab308 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #398da4 0%, #0e7490 100%);
+  --ev-accent-tag: #db2777;
+  --ev-bg: #f8fbfc; --ev-surface: #ffffff; --ev-surface-subtle: #f1f7f8; --ev-border: #cfe3e9;
+}
+
+.palette-acid,
+body:has(.palette-acid) {
+  --ev-primary: #4d7c0f; --ev-primary-hover: #41690d; --ev-primary-light: #f1f5ec;
+  --ev-primary-glow: rgba(77, 124, 15, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1a2e05 0%, #65a30d 55%, #d946ef 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #6d943a 0%, #4d7c0f 100%);
+  --ev-accent-tag: #d946ef;
+  --ev-bg: #fafbf8; --ev-surface: #ffffff; --ev-surface-subtle: #f4f7f1; --ev-border: #dbe5cf;
+}
+
+.palette-wireframe,
+body:has(.palette-wireframe) {
+  --ev-primary: #27272a; --ev-primary-hover: #212124; --ev-primary-light: #eeeeee;
+  --ev-primary-glow: rgba(39, 39, 42, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #18181b 0%, #3f3f46 55%, #a1a1aa 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #4e4e50 0%, #27272a 100%);
+  --ev-accent-tag: #a1a1aa;
+  --ev-bg: #f9f9f9; --ev-surface: #ffffff; --ev-surface-subtle: #f2f2f2; --ev-border: #d4d4d4;
+}
+
+.palette-caramel,
+body:has(.palette-caramel) {
+  --ev-primary: #9a5b13; --ev-primary-hover: #834d10; --ev-primary-light: #f7f2ec;
+  --ev-primary-glow: rgba(154, 91, 19, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2d1a0b 0%, #7c4a14 55%, #c88a3a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ac793d 0%, #9a5b13 100%);
+  --ev-accent-tag: #d6a35c;
+  --ev-bg: #fcfaf8; --ev-surface: #ffffff; --ev-surface-subtle: #f9f5f1; --ev-border: #ebded0;
+}
+
+.palette-silk,
+body:has(.palette-silk) {
+  --ev-primary: #7c6a55; --ev-primary-hover: #695a48; --ev-primary-light: #f5f3f1;
+  --ev-primary-glow: rgba(124, 106, 85, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2e2a24 0%, #5c5144 55%, #a8977f 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #948574 0%, #7c6a55 100%);
+  --ev-accent-tag: #c8b79e;
+  --ev-bg: #fbfbfa; --ev-surface: #ffffff; --ev-surface-subtle: #f7f6f5; --ev-border: #e5e1dd;
+}
+
+.palette-zinc,
+body:has(.palette-zinc) {
+  --ev-primary: #3f3f46; --ev-primary-hover: #36363c; --ev-primary-light: #f0f0f0;
+  --ev-primary-glow: rgba(63, 63, 70, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #09090b 0%, #27272a 55%, #71717a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #626267 0%, #3f3f46 100%);
+  --ev-accent-tag: #a1a1aa;
+  --ev-bg: #f9f9f9; --ev-surface: #ffffff; --ev-surface-subtle: #f3f3f4; --ev-border: #d9d9da;
+}
+
+.palette-slate,
+body:has(.palette-slate) {
+  --ev-primary: #334e68; --ev-primary-hover: #2b4258; --ev-primary-light: #eff1f3;
+  --ev-primary-glow: rgba(51, 78, 104, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0f1c2e 0%, #243b55 55%, #5b7fa6 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #586e83 0%, #334e68 100%);
+  --ev-accent-tag: #7dd3fc;
+  --ev-bg: #f9fafa; --ev-surface: #ffffff; --ev-surface-subtle: #f3f4f6; --ev-border: #d6dce1;
+}
+
+.palette-stone,
+body:has(.palette-stone) {
+  --ev-primary: #57534e; --ev-primary-hover: #4a4742; --ev-primary-light: #f2f1f1;
+  --ev-primary-glow: rgba(87, 83, 78, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1c1917 0%, #44403c 55%, #a8a29e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #75726e 0%, #57534e 100%);
+  --ev-accent-tag: #a8a29e;
+  --ev-bg: #fafafa; --ev-surface: #ffffff; --ev-surface-subtle: #f5f5f4; --ev-border: #dddddc;
+}
+
+.palette-rose,
+body:has(.palette-rose) {
+  --ev-primary: #be123c; --ev-primary-hover: #a20f33; --ev-primary-light: #faecef;
+  --ev-primary-glow: rgba(190, 18, 60, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #4c0519 0%, #9f1239 55%, #f43f5e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ca3d5f 0%, #be123c 100%);
+  --ev-accent-tag: #fb7185;
+  --ev-bg: #fdf8f9; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f3; --ev-border: #f2d0d8;
+}
+
+.palette-violet,
+body:has(.palette-violet) {
+  --ev-primary: #6d28d9; --ev-primary-hover: #5d22b8; --ev-primary-light: #f3eefc;
+  --ev-primary-glow: rgba(109, 40, 217, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2e1065 0%, #5b21b6 55%, #8b5cf6 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #874fe0 0%, #6d28d9 100%);
+  --ev-accent-tag: #a78bfa;
+  --ev-bg: #fbf9fe; --ev-surface: #ffffff; --ev-surface-subtle: #f6f2fd; --ev-border: #e2d4f7;
+}
+
+.palette-orange,
+body:has(.palette-orange) {
+  --ev-primary: #c2410c; --ev-primary-hover: #a5370a; --ev-primary-light: #faf0ec;
+  --ev-primary-glow: rgba(194, 65, 12, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #431407 0%, #9a3412 55%, #f97316 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cd6338 0%, #c2410c 100%);
+  --ev-accent-tag: #fb923c;
+  --ev-bg: #fdf9f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf4f0; --ev-border: #f3d9ce;
+}
+
+.palette-chuseok,
+body:has(.palette-chuseok) {
+  --ev-primary: #a16207; --ev-primary-hover: #895306; --ev-primary-light: #f7f2eb;
+  --ev-primary-glow: rgba(161, 98, 7, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0b1437 0%, #1e3a8a 55%, #eab308 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #b27e34 0%, #a16207 100%);
+  --ev-accent-tag: #1e3a8a;
+  --ev-bg: #fcfaf8; --ev-surface: #ffffff; --ev-surface-subtle: #f9f6f0; --ev-border: #ece0cd;
+}
+
+.palette-pepero,
+body:has(.palette-pepero) {
+  --ev-primary: #7c2d12; --ev-primary-hover: #69260f; --ev-primary-light: #f5eeec;
+  --ev-primary-glow: rgba(124, 45, 18, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2b1208 0%, #6b2d16 55%, #ec4899 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #94533d 0%, #7c2d12 100%);
+  --ev-accent-tag: #ec4899;
+  --ev-bg: #fbf9f8; --ev-surface: #ffffff; --ev-surface-subtle: #f7f2f1; --ev-border: #e5d5d0;
+}
+
+.palette-rainy,
+body:has(.palette-rainy) {
+  --ev-primary: #3b5b7a; --ev-primary-hover: #324d68; --ev-primary-light: #eff2f4;
+  --ev-primary-glow: rgba(59, 91, 122, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1b2838 0%, #33506b 55%, #7896b2 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #5e7992 0%, #3b5b7a 100%);
+  --ev-accent-tag: #7dd3fc;
+  --ev-bg: #f9fafb; --ev-surface: #ffffff; --ev-surface-subtle: #f3f5f7; --ev-border: #d8dee4;
+}
+
+.palette-cherry,
+body:has(.palette-cherry) {
+  --ev-primary: #be185d; --ev-primary-hover: #a2144f; --ev-primary-light: #faedf2;
+  --ev-primary-glow: rgba(190, 24, 93, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #500724 0%, #be185d 55%, #f9a8d4 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ca427a 0%, #be185d 100%);
+  --ev-accent-tag: #f9a8d4;
+  --ev-bg: #fdf8fa; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f5; --ev-border: #f2d1df;
+}
+
+.palette-suneung,
+body:has(.palette-suneung) {
+  --ev-primary: #c2410c; --ev-primary-hover: #a5370a; --ev-primary-light: #faf0ec;
+  --ev-primary-glow: rgba(194, 65, 12, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #172554 0%, #1e3a8a 55%, #f97316 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cd6338 0%, #c2410c 100%);
+  --ev-accent-tag: #1e3a8a;
+  --ev-bg: #fdf9f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf4f0; --ev-border: #f3d9ce;
+}
+
+.palette-childrens-day,
+body:has(.palette-childrens-day) {
+  --ev-primary: #0369a1; --ev-primary-hover: #035989; --ev-primary-light: #ebf3f7;
+  --ev-primary-glow: rgba(3, 105, 161, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0c4a6e 0%, #0284c7 55%, #4ade80 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3084b2 0%, #0369a1 100%);
+  --ev-accent-tag: #facc15;
+  --ev-bg: #f7fbfc; --ev-surface: #ffffff; --ev-surface-subtle: #f0f6f9; --ev-border: #cde1ec;
+}
+
+.palette-early-spring,
+body:has(.palette-early-spring) {
+  --ev-primary: #4d7c0f; --ev-primary-hover: #41690d; --ev-primary-light: #f1f5ec;
+  --ev-primary-glow: rgba(77, 124, 15, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1a2e05 0%, #4d7c0f 55%, #a3e635 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #6d943a 0%, #4d7c0f 100%);
+  --ev-accent-tag: #fde047;
+  --ev-bg: #fafbf8; --ev-surface: #ffffff; --ev-surface-subtle: #f4f7f1; --ev-border: #dbe5cf;
+}
+
+.palette-monsoon,
+body:has(.palette-monsoon) {
+  --ev-primary: #1e3a5f; --ev-primary-hover: #1a3151; --ev-primary-light: #edeff2;
+  --ev-primary-glow: rgba(30, 58, 95, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0b1726 0%, #1e3a5f 55%, #3b6e99 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #475d7c 0%, #1e3a5f 100%);
+  --ev-accent-tag: #38bdf8;
+  --ev-bg: #f8f9fa; --ev-surface: #ffffff; --ev-surface-subtle: #f2f3f5; --ev-border: #d2d8df;
+}
+
+.palette-heatwave,
+body:has(.palette-heatwave) {
+  --ev-primary: #b42318; --ev-primary-hover: #991e14; --ev-primary-light: #f9eded;
+  --ev-primary-glow: rgba(180, 35, 24, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #3b0505 0%, #dc2626 55%, #fb923c 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #c24b42 0%, #b42318 100%);
+  --ev-accent-tag: #facc15;
+  --ev-bg: #fdf8f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf2f1; --ev-border: #f0d3d1;
+}
+
+.palette-first-snow,
+body:has(.palette-first-snow) {
+  --ev-primary: #475569; --ev-primary-hover: #3c4859; --ev-primary-light: #f0f1f3;
+  --ev-primary-glow: rgba(71, 85, 105, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1e293b 0%, #475569 55%, #cbd5e1 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #687484 0%, #475569 100%);
+  --ev-accent-tag: #cbd5e1;
+  --ev-bg: #f9fafb; --ev-surface: #ffffff; --ev-surface-subtle: #f4f5f6; --ev-border: #dadde1;
+}
+
+.palette-foliage,
+body:has(.palette-foliage) {
+  --ev-primary: #9f1d2b; --ev-primary-hover: #871925; --ev-primary-light: #f7edee;
+  --ev-primary-glow: rgba(159, 29, 43, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2a0a0a 0%, #7f1d1d 55%, #d9480f 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #b04651 0%, #9f1d2b 100%);
+  --ev-accent-tag: #f59e0b;
+  --ev-bg: #fcf8f9; --ev-surface: #ffffff; --ev-surface-subtle: #f9f1f2; --ev-border: #ecd2d5;
+}
+
+.palette-seollal,
+body:has(.palette-seollal) {
+  --ev-primary: #be185d; --ev-primary-hover: #a2144f; --ev-primary-light: #faedf2;
+  --ev-primary-glow: rgba(190, 24, 93, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #7f1d1d 0%, #be185d 55%, #2563eb 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ca427a 0%, #be185d 100%);
+  --ev-accent-tag: #16a34a;
+  --ev-bg: #fdf8fa; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f5; --ev-border: #f2d1df;
+}
+
+.palette-dano,
+body:has(.palette-dano) {
+  --ev-primary: #15803d; --ev-primary-hover: #126d34; --ev-primary-light: #ecf5ef;
+  --ev-primary-glow: rgba(21, 128, 61, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #052e16 0%, #166534 55%, #dc2626 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3f9760 0%, #15803d 100%);
+  --ev-accent-tag: #dc2626;
+  --ev-bg: #f8fbf9; --ev-surface: #ffffff; --ev-surface-subtle: #f1f7f3; --ev-border: #d0e6d8;
+}
+
+.palette-hangul-day,
+body:has(.palette-hangul-day) {
+  --ev-primary: #292524; --ev-primary-hover: #231f1f; --ev-primary-light: #eeeeed;
+  --ev-primary-glow: rgba(41, 37, 36, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0c0a09 0%, #292524 55%, #78716c 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #504c4b 0%, #292524 100%);
+  --ev-accent-tag: #a16207;
+  --ev-bg: #f9f8f8; --ev-surface: #ffffff; --ev-surface-subtle: #f2f2f2; --ev-border: #d4d3d3;
+}
+
+.palette-parents-day,
+body:has(.palette-parents-day) {
+  --ev-primary: #be123c; --ev-primary-hover: #a20f33; --ev-primary-light: #faecef;
+  --ev-primary-glow: rgba(190, 18, 60, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #4c0519 0%, #be123c 55%, #fb7185 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ca3d5f 0%, #be123c 100%);
+  --ev-accent-tag: #16a34a;
+  --ev-bg: #fdf8f9; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f3; --ev-border: #f2d0d8;
+}
+
+.palette-teachers-day,
+body:has(.palette-teachers-day) {
+  --ev-primary: #be185d; --ev-primary-hover: #a2144f; --ev-primary-light: #faedf2;
+  --ev-primary-glow: rgba(190, 24, 93, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #14532d 0%, #166534 55%, #ec4899 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ca427a 0%, #be185d 100%);
+  --ev-accent-tag: #15803d;
+  --ev-bg: #fdf8fa; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f5; --ev-border: #f2d1df;
+}
+
+.palette-white-day,
+body:has(.palette-white-day) {
+  --ev-primary: #4f6d9a; --ev-primary-hover: #435d83; --ev-primary-light: #f1f3f7;
+  --ev-primary-glow: rgba(79, 109, 154, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #334155 0%, #64748b 55%, #e0f2fe 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #6f87ac 0%, #4f6d9a 100%);
+  --ev-accent-tag: #e2e8f0;
+  --ev-bg: #fafbfc; --ev-surface: #ffffff; --ev-surface-subtle: #f4f6f9; --ev-border: #dce2eb;
+}
+
+.palette-graduation,
+body:has(.palette-graduation) {
+  --ev-primary: #be185d; --ev-primary-hover: #a2144f; --ev-primary-light: #faedf2;
+  --ev-primary-glow: rgba(190, 24, 93, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #172554 0%, #3b2a7a 55%, #ec4899 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ca427a 0%, #be185d 100%);
+  --ev-accent-tag: #1e3a8a;
+  --ev-bg: #fdf8fa; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f5; --ev-border: #f2d1df;
+}
+
+.palette-worldcup,
+body:has(.palette-worldcup) {
+  --ev-primary: #b91c1c; --ev-primary-hover: #9d1818; --ev-primary-light: #f9eded;
+  --ev-primary-glow: rgba(185, 28, 28, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #450a0a 0%, #b91c1c 55%, #ef4444 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #c64545 0%, #b91c1c 100%);
+  --ev-accent-tag: #1d4ed8;
+  --ev-bg: #fdf8f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f1; --ev-border: #f1d2d2;
+}
+
+.palette-baseball,
+body:has(.palette-baseball) {
+  --ev-primary: #166534; --ev-primary-hover: #13562c; --ev-primary-light: #ecf3ef;
+  --ev-primary-glow: rgba(22, 101, 52, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #052e16 0%, #166534 55%, #22c55e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #408159 0%, #166534 100%);
+  --ev-accent-tag: #dc2626;
+  --ev-bg: #f8faf9; --ev-surface: #ffffff; --ev-surface-subtle: #f1f6f3; --ev-border: #d0e0d6;
+}
+
+.palette-easter,
+body:has(.palette-easter) {
+  --ev-primary: #7e22ce; --ev-primary-hover: #6b1daf; --ev-primary-light: #f5edfb;
+  --ev-primary-glow: rgba(126, 34, 206, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #4c1d95 0%, #7e22ce 55%, #5eead4 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #954ad7 0%, #7e22ce 100%);
+  --ev-accent-tag: #fde047;
+  --ev-bg: #fbf8fe; --ev-surface: #ffffff; --ev-surface-subtle: #f7f2fc; --ev-border: #e5d3f5;
+}
+
+.palette-st-patrick,
+body:has(.palette-st-patrick) {
+  --ev-primary: #15803d; --ev-primary-hover: #126d34; --ev-primary-light: #ecf5ef;
+  --ev-primary-glow: rgba(21, 128, 61, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #052e16 0%, #15803d 55%, #ca8a04 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3f9760 0%, #15803d 100%);
+  --ev-accent-tag: #ca8a04;
+  --ev-bg: #f8fbf9; --ev-surface: #ffffff; --ev-surface-subtle: #f1f7f3; --ev-border: #d0e6d8;
+}
+
+.palette-diwali,
+body:has(.palette-diwali) {
+  --ev-primary: #a16207; --ev-primary-hover: #895306; --ev-primary-light: #f7f2eb;
+  --ev-primary-glow: rgba(161, 98, 7, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #431407 0%, #c2410c 55%, #facc15 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #b27e34 0%, #a16207 100%);
+  --ev-accent-tag: #ea580c;
+  --ev-bg: #fcfaf8; --ev-surface: #ffffff; --ev-surface-subtle: #f9f6f0; --ev-border: #ece0cd;
+}
+
+.palette-y2k,
+body:has(.palette-y2k) {
+  --ev-primary: #c026d3; --ev-primary-hover: #a320b3; --ev-primary-light: #faeefb;
+  --ev-primary-glow: rgba(192, 38, 211, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #3b0764 0%, #a21caf 55%, #7dd3fc 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cb4ddb 0%, #c026d3 100%);
+  --ev-accent-tag: #7dd3fc;
+  --ev-bg: #fdf8fe; --ev-surface: #ffffff; --ev-surface-subtle: #fbf2fc; --ev-border: #f2d4f6;
+}
+
+.palette-vintage,
+body:has(.palette-vintage) {
+  --ev-primary: #6b5b2a; --ev-primary-hover: #5b4d24; --ev-primary-light: #f3f2ee;
+  --ev-primary-glow: rgba(107, 91, 42, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2b2410 0%, #5c4f24 55%, #a38f55 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #867950 0%, #6b5b2a 100%);
+  --ev-accent-tag: #a16207;
+  --ev-bg: #fbfaf9; --ev-surface: #ffffff; --ev-surface-subtle: #f6f5f2; --ev-border: #e1ded4;
+}
+
+.palette-earth,
+body:has(.palette-earth) {
+  --ev-primary: #7c5a2c; --ev-primary-hover: #694d25; --ev-primary-light: #f5f2ee;
+  --ev-primary-glow: rgba(124, 90, 44, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #291d0e 0%, #5c4321 55%, #8a7d3a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #947852 0%, #7c5a2c 100%);
+  --ev-accent-tag: #65a30d;
+  --ev-bg: #fbfaf9; --ev-surface: #ffffff; --ev-surface-subtle: #f7f5f2; --ev-border: #e5ded5;
+}
+
+.palette-ocean-deep,
+body:has(.palette-ocean-deep) {
+  --ev-primary: #0c4a6e; --ev-primary-hover: #0a3f5e; --ev-primary-light: #ecf1f3;
+  --ev-primary-glow: rgba(12, 74, 110, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #04121f 0%, #0c4a6e 55%, #0e7490 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #386b88 0%, #0c4a6e 100%);
+  --ev-accent-tag: #14b8a6;
+  --ev-bg: #f8fafb; --ev-surface: #ffffff; --ev-surface-subtle: #f0f4f6; --ev-border: #cedbe2;
+}
+
+.palette-candy,
+body:has(.palette-candy) {
+  --ev-primary: #db2777; --ev-primary-hover: #ba2165; --ev-primary-light: #fceef4;
+  --ev-primary-glow: rgba(219, 39, 119, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #831843 0%, #db2777 55%, #38bdf8 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #e14e8f 0%, #db2777 100%);
+  --ev-accent-tag: #38bdf8;
+  --ev-bg: #fef9fb; --ev-surface: #ffffff; --ev-surface-subtle: #fdf2f7; --ev-border: #f8d4e4;
+}
+
+.palette-matcha,
+body:has(.palette-matcha) {
+  --ev-primary: #5b7042; --ev-primary-hover: #4d5f38; --ev-primary-light: #f2f4f0;
+  --ev-primary-glow: rgba(91, 112, 66, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1f2a17 0%, #4a5d36 55%, #a3b18a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #798a64 0%, #5b7042 100%);
+  --ev-accent-tag: #d9c79e;
+  --ev-bg: #fafbf9; --ev-surface: #ffffff; --ev-surface-subtle: #f5f6f4; --ev-border: #dee2d9;
+}
+
+.palette-peach,
+body:has(.palette-peach) {
+  --ev-primary: #c2410c; --ev-primary-hover: #a5370a; --ev-primary-light: #faf0ec;
+  --ev-primary-glow: rgba(194, 65, 12, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #4a1d10 0%, #c2410c 55%, #fb923c 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cd6338 0%, #c2410c 100%);
+  --ev-accent-tag: #fda4af;
+  --ev-bg: #fdf9f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf4f0; --ev-border: #f3d9ce;
+}
+
+.palette-burgundy,
+body:has(.palette-burgundy) {
+  --ev-primary: #881337; --ev-primary-hover: #74102f; --ev-primary-light: #f5ecef;
+  --ev-primary-glow: rgba(136, 19, 55, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2a0410 0%, #6b0f2a 55%, #9f1239 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #9d3d5b 0%, #881337 100%);
+  --ev-accent-tag: #ca8a04;
+  --ev-bg: #fbf8f9; --ev-surface: #ffffff; --ev-surface-subtle: #f8f1f3; --ev-border: #e7d0d7;
+}
+
+.palette-monochrome-blue,
+body:has(.palette-monochrome-blue) {
+  --ev-primary: #1d4ed8; --ev-primary-hover: #1942b8; --ev-primary-light: #edf1fc;
+  --ev-primary-glow: rgba(29, 78, 216, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #172554 0%, #1e40af 55%, #60a5fa 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #466edf 0%, #1d4ed8 100%);
+  --ev-accent-tag: #93c5fd;
+  --ev-bg: #f8fafe; --ev-surface: #ffffff; --ev-surface-subtle: #f1f4fd; --ev-border: #d2dcf7;
+}
+
+.palette-sepia,
+body:has(.palette-sepia) {
+  --ev-primary: #7c4a1e; --ev-primary-hover: #693f1a; --ev-primary-light: #f5f1ed;
+  --ev-primary-glow: rgba(124, 74, 30, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2a1a0c 0%, #5e3a1a 55%, #a37650 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #946b47 0%, #7c4a1e 100%);
+  --ev-accent-tag: #c8a27a;
+  --ev-bg: #fbfaf8; --ev-surface: #ffffff; --ev-surface-subtle: #f7f4f2; --ev-border: #e5dbd2;
+}
+
+.palette-high-contrast,
+body:has(.palette-high-contrast) {
+  --ev-primary: #0b3d91; --ev-primary-hover: #09347b; --ev-primary-light: #ebeff6;
+  --ev-primary-glow: rgba(11, 61, 145, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #000000 0%, #0b1f4d 55%, #0b3d91 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3760a5 0%, #0b3d91 100%);
+  --ev-accent-tag: #000000;
+  --ev-bg: #f8f9fc; --ev-surface: #ffffff; --ev-surface-subtle: #f0f3f8; --ev-border: #ced8e9;
+}
+
+.palette-colorblind-safe,
+body:has(.palette-colorblind-safe) {
+  --ev-primary: #1d4ed8; --ev-primary-hover: #1942b8; --ev-primary-light: #edf1fc;
+  --ev-primary-glow: rgba(29, 78, 216, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e40af 55%, #ea580c 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #466edf 0%, #1d4ed8 100%);
+  --ev-accent-tag: #ea580c;
+  --ev-bg: #f8fafe; --ev-surface: #ffffff; --ev-surface-subtle: #f1f4fd; --ev-border: #d2dcf7;
+}
+
+.palette-catppuccin-latte,
+body:has(.palette-catppuccin-latte) {
+  --ev-primary: #7c3aed; --ev-primary-hover: #6931c9; --ev-primary-light: #f5effe;
+  --ev-primary-glow: rgba(124, 58, 237, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #4c1d95 0%, #7c3aed 55%, #04a5e5 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #945df0 0%, #7c3aed 100%);
+  --ev-accent-tag: #ea76cb;
+  --ev-bg: #fbf9fe; --ev-surface: #ffffff; --ev-surface-subtle: #f7f3fe; --ev-border: #e5d8fb;
+}
+
+.palette-nord-aurora,
+body:has(.palette-nord-aurora) {
+  --ev-primary: #56779e; --ev-primary-hover: #496586; --ev-primary-light: #f1f4f7;
+  --ev-primary-glow: rgba(86, 119, 158, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2e3440 0%, #4c566a 55%, #88c0d0 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #748faf 0%, #56779e 100%);
+  --ev-accent-tag: #b48ead;
+  --ev-bg: #fafbfd; --ev-surface: #ffffff; --ev-surface-subtle: #f5f7f9; --ev-border: #dde4ec;
+}
+
+.palette-nord,
+body:has(.palette-nord) {
+  --ev-primary: #4c6a8c; --ev-primary-hover: #415a77; --ev-primary-light: #f1f3f6;
+  --ev-primary-glow: rgba(76, 106, 140, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2e3440 0%, #3b4252 55%, #5e81ac 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #6c85a1 0%, #4c6a8c 100%);
+  --ev-accent-tag: #88c0d0;
+  --ev-bg: #fafbfc; --ev-surface: #ffffff; --ev-surface-subtle: #f4f6f8; --ev-border: #dbe1e8;
+}
+
+.palette-solarized-light,
+body:has(.palette-solarized-light) {
+  --ev-primary: #0f766e; --ev-primary-hover: #0d645e; --ev-primary-light: #ecf4f3;
+  --ev-primary-glow: rgba(15, 118, 110, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #002b36 0%, #073642 55%, #2aa198 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3a8f88 0%, #0f766e 100%);
+  --ev-accent-tag: #cb4b16;
+  --ev-bg: #f8fbfb; --ev-surface: #ffffff; --ev-surface-subtle: #f1f7f6; --ev-border: #cfe4e2;
+}
+
+.palette-rose-pine-dawn,
+body:has(.palette-rose-pine-dawn) {
+  --ev-primary: #a6435f; --ev-primary-hover: #8d3951; --ev-primary-light: #f8f0f2;
+  --ev-primary-glow: rgba(166, 67, 95, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #3b2033 0%, #7a3b52 55%, #d7827e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #b6657c 0%, #a6435f 100%);
+  --ev-accent-tag: #286983;
+  --ev-bg: #fcf9fa; --ev-surface: #ffffff; --ev-surface-subtle: #faf4f5; --ev-border: #edd9df;
+}
+
+.palette-everforest,
+body:has(.palette-everforest) {
+  --ev-primary: #4d7c4f; --ev-primary-hover: #416943; --ev-primary-light: #f1f5f1;
+  --ev-primary-glow: rgba(77, 124, 79, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1e2a21 0%, #3d5a40 55%, #7fa36f 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #6d946f 0%, #4d7c4f 100%);
+  --ev-accent-tag: #d6a54a;
+  --ev-bg: #fafbfa; --ev-surface: #ffffff; --ev-surface-subtle: #f4f7f4; --ev-border: #dbe5dc;
+}
+
+.palette-tomato,
+body:has(.palette-tomato) {
+  --ev-primary: #c2310f; --ev-primary-hover: #a52a0d; --ev-primary-light: #faefec;
+  --ev-primary-glow: rgba(194, 49, 15, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #450a0a 0%, #b42b0f 55%, #f0573a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cd563a 0%, #c2310f 100%);
+  --ev-accent-tag: #fb923c;
+  --ev-bg: #fdf9f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf3f1; --ev-border: #f3d6cf;
+}
+
+.palette-plum,
+body:has(.palette-plum) {
+  --ev-primary: #86198f; --ev-primary-hover: #72157a; --ev-primary-light: #f5edf6;
+  --ev-primary-glow: rgba(134, 25, 143, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #3b0b3f 0%, #701a75 55%, #c026d3 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #9c42a3 0%, #86198f 100%);
+  --ev-accent-tag: #e879f9;
+  --ev-bg: #fbf8fc; --ev-surface: #ffffff; --ev-surface-subtle: #f8f1f8; --ev-border: #e7d1e9;
+}
+
+.palette-iris,
+body:has(.palette-iris) {
+  --ev-primary: #4338ca; --ev-primary-hover: #3930ac; --ev-primary-light: #f0effb;
+  --ev-primary-glow: rgba(67, 56, 202, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1e1b4b 0%, #3730a3 55%, #6366f1 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #655cd4 0%, #4338ca 100%);
+  --ev-accent-tag: #a5b4fc;
+  --ev-bg: #f9f9fd; --ev-surface: #ffffff; --ev-surface-subtle: #f4f3fc; --ev-border: #d9d7f4;
+}
+
+.palette-jade,
+body:has(.palette-jade) {
+  --ev-primary: #047857; --ev-primary-hover: #03664a; --ev-primary-light: #ebf4f2;
+  --ev-primary-glow: rgba(4, 120, 87, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #022c22 0%, #047857 55%, #34d399 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #319075 0%, #047857 100%);
+  --ev-accent-tag: #6ee7b7;
+  --ev-bg: #f7fbfa; --ev-surface: #ffffff; --ev-surface-subtle: #f0f7f5; --ev-border: #cde4dd;
+}
+
+.palette-grass,
+body:has(.palette-grass) {
+  --ev-primary: #15803d; --ev-primary-hover: #126d34; --ev-primary-light: #ecf5ef;
+  --ev-primary-glow: rgba(21, 128, 61, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #052e16 0%, #15803d 55%, #4ade80 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3f9760 0%, #15803d 100%);
+  --ev-accent-tag: #bef264;
+  --ev-bg: #f8fbf9; --ev-surface: #ffffff; --ev-surface-subtle: #f1f7f3; --ev-border: #d0e6d8;
+}
+
+.palette-mint,
+body:has(.palette-mint) {
+  --ev-primary: #0c8379; --ev-primary-hover: #0a6f67; --ev-primary-light: #ecf5f4;
+  --ev-primary-glow: rgba(12, 131, 121, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #134e4a 0%, #14b8a6 55%, #99f6e4 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #389991 0%, #0c8379 100%);
+  --ev-accent-tag: #a7f3d0;
+  --ev-bg: #f8fcfb; --ev-surface: #ffffff; --ev-surface-subtle: #f0f8f7; --ev-border: #cee6e4;
+}
+
+.palette-bronze,
+body:has(.palette-bronze) {
+  --ev-primary: #7a5c3e; --ev-primary-hover: #684e35; --ev-primary-light: #f4f2f0;
+  --ev-primary-glow: rgba(122, 92, 62, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1c1a14 0%, #4a4632 55%, #7f9c8a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #927961 0%, #7a5c3e 100%);
+  --ev-accent-tag: #4f8a78;
+  --ev-bg: #fbfaf9; --ev-surface: #ffffff; --ev-surface-subtle: #f7f5f3; --ev-border: #e4ded8;
+}
+
+.palette-gold,
+body:has(.palette-gold) {
+  --ev-primary: #8a6a0a; --ev-primary-hover: #755a09; --ev-primary-light: #f6f3eb;
+  --ev-primary-glow: rgba(138, 106, 10, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1c1505 0%, #6b4f04 55%, #ca8a04 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #9f8536 0%, #8a6a0a 100%);
+  --ev-accent-tag: #eab308;
+  --ev-bg: #fbfbf8; --ev-surface: #ffffff; --ev-surface-subtle: #f8f6f0; --ev-border: #e8e1ce;
+}
+
+.palette-teal,
+body:has(.palette-teal) {
+  --ev-primary: #0f766e; --ev-primary-hover: #0d645e; --ev-primary-light: #ecf4f3;
+  --ev-primary-glow: rgba(15, 118, 110, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #042f2e 0%, #115e59 55%, #14b8a6 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3a8f88 0%, #0f766e 100%);
+  --ev-accent-tag: #2dd4bf;
+  --ev-bg: #f8fbfb; --ev-surface: #ffffff; --ev-surface-subtle: #f1f7f6; --ev-border: #cfe4e2;
+}
+
+.palette-lime,
+body:has(.palette-lime) {
+  --ev-primary: #4d7c0f; --ev-primary-hover: #41690d; --ev-primary-light: #f1f5ec;
+  --ev-primary-glow: rgba(77, 124, 15, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1a2e05 0%, #3f6212 55%, #84cc16 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #6d943a 0%, #4d7c0f 100%);
+  --ev-accent-tag: #bef264;
+  --ev-bg: #fafbf8; --ev-surface: #ffffff; --ev-surface-subtle: #f4f7f1; --ev-border: #dbe5cf;
+}
+
+.palette-amber,
+body:has(.palette-amber) {
+  --ev-primary: #b45309; --ev-primary-hover: #994708; --ev-primary-light: #f9f1eb;
+  --ev-primary-glow: rgba(180, 83, 9, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #451a03 0%, #92400e 55%, #f59e0b 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #c27235 0%, #b45309 100%);
+  --ev-accent-tag: #fbbf24;
+  --ev-bg: #fdfaf8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf5f0; --ev-border: #f0ddce;
+}
+
+.palette-sky,
+body:has(.palette-sky) {
+  --ev-primary: #0369a1; --ev-primary-hover: #035989; --ev-primary-light: #ebf3f7;
+  --ev-primary-glow: rgba(3, 105, 161, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #082f49 0%, #0369a1 55%, #38bdf8 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3084b2 0%, #0369a1 100%);
+  --ev-accent-tag: #7dd3fc;
+  --ev-bg: #f7fbfc; --ev-surface: #ffffff; --ev-surface-subtle: #f0f6f9; --ev-border: #cde1ec;
+}
+
+.palette-fuchsia,
+body:has(.palette-fuchsia) {
+  --ev-primary: #a21caf; --ev-primary-hover: #8a1895; --ev-primary-light: #f8edf9;
+  --ev-primary-glow: rgba(162, 28, 175, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #4a044e 0%, #a21caf 55%, #e879f9 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #b345bd 0%, #a21caf 100%);
+  --ev-accent-tag: #f0abfc;
+  --ev-bg: #fcf8fd; --ev-surface: #ffffff; --ev-surface-subtle: #f9f1fa; --ev-border: #ecd2ef;
+}
+
+.palette-m3-baseline,
+body:has(.palette-m3-baseline) {
+  --ev-primary: #6750a4; --ev-primary-hover: #58448b; --ev-primary-light: #f3f1f8;
+  --ev-primary-glow: rgba(103, 80, 164, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #21005d 0%, #4f378b 55%, #7f67be 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #8270b4 0%, #6750a4 100%);
+  --ev-accent-tag: #7d5260;
+  --ev-bg: #fafafc; --ev-surface: #ffffff; --ev-surface-subtle: #f6f5fa; --ev-border: #e1dced;
+}
+
+.palette-dancheong,
+body:has(.palette-dancheong) {
+  --ev-primary: #0f766e; --ev-primary-hover: #0d645e; --ev-primary-light: #ecf4f3;
+  --ev-primary-glow: rgba(15, 118, 110, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #042f2e 0%, #0f766e 55%, #d97706 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3a8f88 0%, #0f766e 100%);
+  --ev-accent-tag: #c2410c;
+  --ev-bg: #f8fbfb; --ev-surface: #ffffff; --ev-surface-subtle: #f1f7f6; --ev-border: #cfe4e2;
+}
+
+.palette-obangsaek,
+body:has(.palette-obangsaek) {
+  --ev-primary: #1d4ed8; --ev-primary-hover: #1942b8; --ev-primary-light: #edf1fc;
+  --ev-primary-glow: rgba(29, 78, 216, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #111111 0%, #1d4ed8 55%, #eab308 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #466edf 0%, #1d4ed8 100%);
+  --ev-accent-tag: #dc2626;
+  --ev-bg: #f8fafe; --ev-surface: #ffffff; --ev-surface-subtle: #f1f4fd; --ev-border: #d2dcf7;
+}
+
+.palette-hanbok,
+body:has(.palette-hanbok) {
+  --ev-primary: #1e3a8a; --ev-primary-hover: #1a3175; --ev-primary-light: #edeff6;
+  --ev-primary-glow: rgba(30, 58, 138, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #172554 0%, #1e3a8a 55%, #f472b6 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #475d9f 0%, #1e3a8a 100%);
+  --ev-accent-tag: #f9a8d4;
+  --ev-bg: #f8f9fb; --ev-surface: #ffffff; --ev-surface-subtle: #f2f3f8; --ev-border: #d2d8e8;
+}
+
+.palette-celadon,
+body:has(.palette-celadon) {
+  --ev-primary: #3f7a6b; --ev-primary-hover: #36685b; --ev-primary-light: #f0f4f3;
+  --ev-primary-glow: rgba(63, 122, 107, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1b3a33 0%, #3f7a6b 55%, #8fb8a8 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #629286 0%, #3f7a6b 100%);
+  --ev-accent-tag: #a7c4b5;
+  --ev-bg: #f9fbfb; --ev-surface: #ffffff; --ev-surface-subtle: #f3f7f6; --ev-border: #d9e4e1;
+}
+
+.palette-baekja,
+body:has(.palette-baekja) {
+  --ev-primary: #1e3a8a; --ev-primary-hover: #1a3175; --ev-primary-light: #edeff6;
+  --ev-primary-glow: rgba(30, 58, 138, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #172554 0%, #1e3a8a 55%, #94a3b8 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #475d9f 0%, #1e3a8a 100%);
+  --ev-accent-tag: #cbd5e1;
+  --ev-bg: #f8f9fb; --ev-surface: #ffffff; --ev-surface-subtle: #f2f3f8; --ev-border: #d2d8e8;
+}
+
+.palette-jeju,
+body:has(.palette-jeju) {
+  --ev-primary: #c2410c; --ev-primary-hover: #a5370a; --ev-primary-light: #faf0ec;
+  --ev-primary-glow: rgba(194, 65, 12, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1c1917 0%, #44403c 55%, #f97316 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cd6338 0%, #c2410c 100%);
+  --ev-accent-tag: #0e7490;
+  --ev-bg: #fdf9f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf4f0; --ev-border: #f3d9ce;
+}
+
+.palette-busan,
+body:has(.palette-busan) {
+  --ev-primary: #155e75; --ev-primary-hover: #125063; --ev-primary-light: #ecf2f4;
+  --ev-primary-glow: rgba(21, 94, 117, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #083344 0%, #155e75 55%, #e7c9a0 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3f7b8e 0%, #155e75 100%);
+  --ev-accent-tag: #d6b98c;
+  --ev-bg: #f8fafb; --ev-surface: #ffffff; --ev-surface-subtle: #f1f5f7; --ev-border: #d0dfe3;
+}
+
+.palette-hanok,
+body:has(.palette-hanok) {
+  --ev-primary: #7c4a1e; --ev-primary-hover: #693f1a; --ev-primary-light: #f5f1ed;
+  --ev-primary-glow: rgba(124, 74, 30, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1c1917 0%, #44403c 55%, #a16207 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #946b47 0%, #7c4a1e 100%);
+  --ev-accent-tag: #78716c;
+  --ev-bg: #fbfaf8; --ev-surface: #ffffff; --ev-surface-subtle: #f7f4f2; --ev-border: #e5dbd2;
+}
+
+.palette-boknal,
+body:has(.palette-boknal) {
+  --ev-primary: #9c6b30; --ev-primary-hover: #855b29; --ev-primary-light: #f7f3ee;
+  --ev-primary-glow: rgba(156, 107, 48, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2a1e0e 0%, #6b5427 55%, #e6d3a3 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ae8655 0%, #9c6b30 100%);
+  --ev-accent-tag: #4d7c0f;
+  --ev-bg: #fcfbf9; --ev-surface: #ffffff; --ev-surface-subtle: #f9f6f3; --ev-border: #ebe1d6;
+}
+
+.palette-gwangbokjeol,
+body:has(.palette-gwangbokjeol) {
+  --ev-primary: #1d4ed8; --ev-primary-hover: #1942b8; --ev-primary-light: #edf1fc;
+  --ev-primary-glow: rgba(29, 78, 216, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #172554 0%, #1d4ed8 55%, #dc2626 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #466edf 0%, #1d4ed8 100%);
+  --ev-accent-tag: #dc2626;
+  --ev-bg: #f8fafe; --ev-surface: #ffffff; --ev-surface-subtle: #f1f4fd; --ev-border: #d2dcf7;
+}
+
+.palette-kimjang,
+body:has(.palette-kimjang) {
+  --ev-primary: #b91c1c; --ev-primary-hover: #9d1818; --ev-primary-light: #f9eded;
+  --ev-primary-glow: rgba(185, 28, 28, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #3b0a0a 0%, #991b1b 55%, #65a30d 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #c64545 0%, #b91c1c 100%);
+  --ev-accent-tag: #84cc16;
+  --ev-bg: #fdf8f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f1; --ev-border: #f1d2d2;
+}
+
+.palette-back-to-school,
+body:has(.palette-back-to-school) {
+  --ev-primary: #0369a1; --ev-primary-hover: #035989; --ev-primary-light: #ebf3f7;
+  --ev-primary-glow: rgba(3, 105, 161, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0c4a6e 0%, #0369a1 55%, #facc15 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3084b2 0%, #0369a1 100%);
+  --ev-accent-tag: #facc15;
+  --ev-bg: #f7fbfc; --ev-surface: #ffffff; --ev-surface-subtle: #f0f6f9; --ev-border: #cde1ec;
+}
+
+.palette-summer-vacation,
+body:has(.palette-summer-vacation) {
+  --ev-primary: #be123c; --ev-primary-hover: #a20f33; --ev-primary-light: #faecef;
+  --ev-primary-glow: rgba(190, 18, 60, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0c4a6e 0%, #0284c7 55%, #f43f5e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ca3d5f 0%, #be123c 100%);
+  --ev-accent-tag: #16a34a;
+  --ev-bg: #fdf8f9; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f3; --ev-border: #f2d0d8;
+}
+
+.palette-singles-day,
+body:has(.palette-singles-day) {
+  --ev-primary: #b91c1c; --ev-primary-hover: #9d1818; --ev-primary-light: #f9eded;
+  --ev-primary-glow: rgba(185, 28, 28, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #450a0a 0%, #b91c1c 55%, #eab308 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #c64545 0%, #b91c1c 100%);
+  --ev-accent-tag: #eab308;
+  --ev-bg: #fdf8f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf1f1; --ev-border: #f1d2d2;
+}
+
+.palette-cyber-monday,
+body:has(.palette-cyber-monday) {
+  --ev-primary: #1d4ed8; --ev-primary-hover: #1942b8; --ev-primary-light: #edf1fc;
+  --ev-primary-glow: rgba(29, 78, 216, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #020617 0%, #1e3a8a 55%, #22d3ee 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #466edf 0%, #1d4ed8 100%);
+  --ev-accent-tag: #22d3ee;
+  --ev-bg: #f8fafe; --ev-surface: #ffffff; --ev-surface-subtle: #f1f4fd; --ev-border: #d2dcf7;
+}
+
+.palette-thanksgiving,
+body:has(.palette-thanksgiving) {
+  --ev-primary: #b45309; --ev-primary-hover: #994708; --ev-primary-light: #f9f1eb;
+  --ev-primary-glow: rgba(180, 83, 9, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2b1208 0%, #7c2d12 55%, #d97706 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #c27235 0%, #b45309 100%);
+  --ev-accent-tag: #7c2d12;
+  --ev-bg: #fdfaf8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf5f0; --ev-border: #f0ddce;
+}
+
+.palette-citrus,
+body:has(.palette-citrus) {
+  --ev-primary: #c2410c; --ev-primary-hover: #a5370a; --ev-primary-light: #faf0ec;
+  --ev-primary-glow: rgba(194, 65, 12, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #431407 0%, #ea580c 55%, #facc15 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cd6338 0%, #c2410c 100%);
+  --ev-accent-tag: #84cc16;
+  --ev-bg: #fdf9f8; --ev-surface: #ffffff; --ev-surface-subtle: #fbf4f0; --ev-border: #f3d9ce;
+}
+
+.palette-berry,
+body:has(.palette-berry) {
+  --ev-primary: #7e22ce; --ev-primary-hover: #6b1daf; --ev-primary-light: #f5edfb;
+  --ev-primary-glow: rgba(126, 34, 206, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2e1065 0%, #6b21a8 55%, #e11d48 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #954ad7 0%, #7e22ce 100%);
+  --ev-accent-tag: #e11d48;
+  --ev-bg: #fbf8fe; --ev-surface: #ffffff; --ev-surface-subtle: #f7f2fc; --ev-border: #e5d3f5;
+}
+
+.palette-lagoon,
+body:has(.palette-lagoon) {
+  --ev-primary: #0b5d5e; --ev-primary-hover: #094f50; --ev-primary-light: #ebf2f2;
+  --ev-primary-glow: rgba(11, 93, 94, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #032b2c 0%, #0b5d5e 55%, #f2c48d 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #377a7b 0%, #0b5d5e 100%);
+  --ev-accent-tag: #f2c48d;
+  --ev-bg: #f8fafa; --ev-surface: #ffffff; --ev-surface-subtle: #f0f5f5; --ev-border: #cedfdf;
+}
+
+.palette-desert,
+body:has(.palette-desert) {
+  --ev-primary: #8a6a3c; --ev-primary-hover: #755a33; --ev-primary-light: #f6f3ef;
+  --ev-primary-glow: rgba(138, 106, 60, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2b2213 0%, #7a5f36 55%, #e3c992 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #9f855f 0%, #8a6a3c 100%);
+  --ev-accent-tag: #c2410c;
+  --ev-bg: #fbfbf9; --ev-surface: #ffffff; --ev-surface-subtle: #f8f6f3; --ev-border: #e8e1d8;
+}
+
+.palette-tropical,
+body:has(.palette-tropical) {
+  --ev-primary: #15803d; --ev-primary-hover: #126d34; --ev-primary-light: #ecf5ef;
+  --ev-primary-glow: rgba(21, 128, 61, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #052e16 0%, #15803d 55%, #fbbf24 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #3f9760 0%, #15803d 100%);
+  --ev-accent-tag: #f472b6;
+  --ev-bg: #f8fbf9; --ev-surface: #ffffff; --ev-surface-subtle: #f1f7f3; --ev-border: #d0e6d8;
+}
+
+.palette-nordic,
+body:has(.palette-nordic) {
+  --ev-primary: #2f5d50; --ev-primary-hover: #284f44; --ev-primary-light: #eef2f1;
+  --ev-primary-glow: rgba(47, 93, 80, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #1a2e28 0%, #2f5d50 55%, #94a3a0 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #547a70 0%, #2f5d50 100%);
+  --ev-accent-tag: #d4c4a8;
+  --ev-bg: #f9fafa; --ev-surface: #ffffff; --ev-surface-subtle: #f3f5f5; --ev-border: #d5dfdc;
+}
+
+.palette-terracotta,
+body:has(.palette-terracotta) {
+  --ev-primary: #a8441f; --ev-primary-hover: #8f3a1a; --ev-primary-light: #f8f0ed;
+  --ev-primary-glow: rgba(168, 68, 31, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2e130a 0%, #8a3a1c 55%, #d2734a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #b86647 0%, #a8441f 100%);
+  --ev-accent-tag: #e8c39e;
+  --ev-bg: #fcf9f8; --ev-surface: #ffffff; --ev-surface-subtle: #faf4f2; --ev-border: #eedad2;
+}
+
+.palette-lavender-fog,
+body:has(.palette-lavender-fog) {
+  --ev-primary: #6b5b95; --ev-primary-hover: #5b4d7f; --ev-primary-light: #f3f2f7;
+  --ev-primary-glow: rgba(107, 91, 149, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2a2440 0%, #5b4d82 55%, #a99bd0 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #8679a8 0%, #6b5b95 100%);
+  --ev-accent-tag: #c4b5fd;
+  --ev-bg: #fbfafc; --ev-surface: #ffffff; --ev-surface-subtle: #f6f5f9; --ev-border: #e1deea;
+}
+
+.palette-mocha-mousse,
+body:has(.palette-mocha-mousse) {
+  --ev-primary: #7a5541; --ev-primary-hover: #684837; --ev-primary-light: #f4f1f0;
+  --ev-primary-glow: rgba(122, 85, 65, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #2a1c14 0%, #5e4232 55%, #a47e68 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #927463 0%, #7a5541 100%);
+  --ev-accent-tag: #c8a58f;
+  --ev-bg: #fbfaf9; --ev-surface: #ffffff; --ev-surface-subtle: #f7f5f4; --ev-border: #e4ddd9;
+}
+
+.palette-electric,
+body:has(.palette-electric) {
+  --ev-primary: #1d4ed8; --ev-primary-hover: #1942b8; --ev-primary-light: #edf1fc;
+  --ev-primary-glow: rgba(29, 78, 216, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0b1437 0%, #1d4ed8 55%, #22d3ee 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #466edf 0%, #1d4ed8 100%);
+  --ev-accent-tag: #facc15;
+  --ev-bg: #f8fafe; --ev-surface: #ffffff; --ev-surface-subtle: #f1f4fd; --ev-border: #d2dcf7;
+}
+
+.palette-sorbet,
+body:has(.palette-sorbet) {
+  --ev-primary: #db2777; --ev-primary-hover: #ba2165; --ev-primary-light: #fceef4;
+  --ev-primary-glow: rgba(219, 39, 119, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #831843 0%, #db2777 55%, #fde047 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #e14e8f 0%, #db2777 100%);
+  --ev-accent-tag: #86efac;
+  --ev-bg: #fef9fb; --ev-surface: #ffffff; --ev-surface-subtle: #fdf2f7; --ev-border: #f8d4e4;
+}
+
+.palette-ink,
+body:has(.palette-ink) {
+  --ev-primary: #1c1917; --ev-primary-hover: #181514; --ev-primary-light: #ededec;
+  --ev-primary-glow: rgba(28, 25, 23, 0.25);
+  --ev-gradient-hero: linear-gradient(135deg, #0c0a09 0%, #1c1917 55%, #57534e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #454241 0%, #1c1917 100%);
+  --ev-accent-tag: #b91c1c;
+  --ev-bg: #f8f8f8; --ev-surface: #ffffff; --ev-surface-subtle: #f1f1f1; --ev-border: #d2d1d1;
+}
+
+/* ── 어두운 팔레트 ── */
+
+.palette-cyberpunk,
+body:has(.palette-cyberpunk) {
+  --ev-primary: #facc15; --ev-primary-hover: #d5ad12; --ev-primary-light: #302910;
+  --ev-primary-glow: rgba(250, 204, 21, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #0a0a0f 0%, #1a1033 55%, #be185d 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #fbd53f 0%, #d5ad12 100%);
+  --ev-accent-tag: #ef62a8;
+  --ev-bg: #0a0a0f; --ev-surface: #19191d; --ev-surface-subtle: #252529; --ev-border: #3b3b3f;
+  --ev-text-main: #fffdf6; --ev-text-muted: #a7a7a9; --ev-text-light: #7d7d80;
+}
+
+.palette-synthwave,
+body:has(.palette-synthwave) {
+  --ev-primary: #f472b6; --ev-primary-hover: #d5649f; --ev-primary-light: #321439;
+  --ev-primary-glow: rgba(244, 114, 182, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #0d0221 0%, #2b0b5a 55%, #a21caf 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #f68bc3 0%, #d5649f 100%);
+  --ev-accent-tag: #22d3ee;
+  --ev-bg: #0d0221; --ev-surface: #1c112e; --ev-surface-subtle: #281e39; --ev-border: #3d354d;
+  --ev-text-main: #fff9fc; --ev-text-muted: #a8a4af; --ev-text-light: #7f7989;
+}
+
+.palette-halloween,
+body:has(.palette-halloween) {
+  --ev-primary: #fb923c; --ev-primary-hover: #d57c33; --ev-primary-light: #322015;
+  --ev-primary-glow: rgba(251, 146, 60, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #0a0a0a 0%, #1c1022 55%, #c2410c 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #fca65f 0%, #d57c33 100%);
+  --ev-accent-tag: #b46ef7;
+  --ev-bg: #0c0a0d; --ev-surface: #1b191c; --ev-surface-subtle: #272528; --ev-border: #3d3b3d;
+  --ev-text-main: #fffbf7; --ev-text-muted: #a8a7a8; --ev-text-light: #7e7d7f;
+}
+
+.palette-dracula,
+body:has(.palette-dracula) {
+  --ev-primary: #c098f9; --ev-primary-hover: #b891ee; --ev-primary-light: #38324a;
+  --ev-primary-glow: rgba(192, 152, 249, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #191a21 0%, #282a36 55%, #6272a4 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cbabfa 0%, #b891ee 100%);
+  --ev-accent-tag: #ff79c6;
+  --ev-bg: #1e1f29; --ev-surface: #2c2c36; --ev-surface-subtle: #373841; --ev-border: #4b4c54;
+  --ev-text-main: #fcfbff; --ev-text-muted: #aeaeb2; --ev-text-light: #88888e;
+}
+
+.palette-luxury,
+body:has(.palette-luxury) {
+  --ev-primary: #d6b25e; --ev-primary-hover: #b69750; --ev-primary-light: #2b2517;
+  --ev-primary-glow: rgba(214, 178, 94, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #000000 0%, #141414 55%, #3a3222 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ddc07b 0%, #b69750 100%);
+  --ev-accent-tag: #e7d3a3;
+  --ev-bg: #0a0a0a; --ev-surface: #191919; --ev-surface-subtle: #252525; --ev-border: #3b3b3b;
+  --ev-text-main: #fdfcf9; --ev-text-muted: #a7a7a7; --ev-text-light: #7d7d7d;
+}
+
+.palette-business,
+body:has(.palette-business) {
+  --ev-primary: #7aa2f7; --ev-primary-hover: #6f93e0; --ev-primary-light: #1d2942;
+  --ev-primary-glow: rgba(122, 162, 247, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #0b1220 0%, #13203a 55%, #1e3a8a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #92b3f8 0%, #6f93e0 100%);
+  --ev-accent-tag: #94a3b8;
+  --ev-bg: #0b1220; --ev-surface: #1a202d; --ev-surface-subtle: #262c39; --ev-border: #3c414d;
+  --ev-text-main: #fafbff; --ev-text-muted: #a7aaaf; --ev-text-light: #7e8189;
+}
+
+.palette-dim,
+body:has(.palette-dim) {
+  --ev-primary: #9fb4d8; --ev-primary-hover: #92a5c6; --ev-primary-light: #31394b;
+  --ev-primary-glow: rgba(159, 180, 216, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #1a1f2b 0%, #252b3a 55%, #3b4560 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #b0c2df 0%, #92a5c6 100%);
+  --ev-accent-tag: #c4b5fd;
+  --ev-bg: #1c2130; --ev-surface: #2a2e3c; --ev-surface-subtle: #353947; --ev-border: #494d59;
+  --ev-text-main: #fbfcfd; --ev-text-muted: #adafb4; --ev-text-light: #878991;
+}
+
+.palette-abyss,
+body:has(.palette-abyss) {
+  --ev-primary: #2dd4bf; --ev-primary-hover: #26b4a2; --ev-primary-light: #092d33;
+  --ev-primary-glow: rgba(45, 212, 191, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #010b14 0%, #04223a 55%, #0e4a6e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #53dccb 0%, #26b4a2 100%);
+  --ev-accent-tag: #60a5fa;
+  --ev-bg: #020d18; --ev-surface: #111c26; --ev-surface-subtle: #1e2831; --ev-border: #353d46;
+  --ev-text-main: #f7fdfc; --ev-text-muted: #a4a8ac; --ev-text-light: #797f85;
+}
+
+.palette-blackfriday,
+body:has(.palette-blackfriday) {
+  --ev-primary: #ff5e6e; --ev-primary-hover: #ef5867; --ev-primary-light: #30171b;
+  --ev-primary-glow: rgba(255, 94, 110, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #000000 0%, #1a0505 55%, #b91c1c 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ff7b88 0%, #ef5867 100%);
+  --ev-accent-tag: #facc15;
+  --ev-bg: #09090b; --ev-surface: #18181a; --ev-surface-subtle: #242426; --ev-border: #3a3a3c;
+  --ev-text-main: #fff9f9; --ev-text-muted: #a6a6a7; --ev-text-light: #7d7d7e;
+}
+
+.palette-black-day,
+body:has(.palette-black-day) {
+  --ev-primary: #d6a35c; --ev-primary-hover: #b68b4e; --ev-primary-light: #2c2216;
+  --ev-primary-glow: rgba(214, 163, 92, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #0c0a09 0%, #1c1410 55%, #5c3a1e 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ddb479 0%, #b68b4e 100%);
+  --ev-accent-tag: #a8a29e;
+  --ev-bg: #0c0a09; --ev-surface: #1b1918; --ev-surface-subtle: #272524; --ev-border: #3d3b3a;
+  --ev-text-main: #fdfbf8; --ev-text-muted: #a8a7a6; --ev-text-light: #7e7d7d;
+}
+
+.palette-neon-night,
+body:has(.palette-neon-night) {
+  --ev-primary: #f472b6; --ev-primary-hover: #d3639e; --ev-primary-light: #2c1727;
+  --ev-primary-glow: rgba(244, 114, 182, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #05050a 0%, #140a2a 55%, #7e22ce 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #f68bc3 0%, #d3639e 100%);
+  --ev-accent-tag: #38bdf8;
+  --ev-bg: #06060c; --ev-surface: #15151b; --ev-surface-subtle: #212127; --ev-border: #38383d;
+  --ev-text-main: #fff9fc; --ev-text-muted: #a5a5a8; --ev-text-light: #7b7b7e;
+}
+
+.palette-sakura-night,
+body:has(.palette-sakura-night) {
+  --ev-primary: #f9a8d4; --ev-primary-hover: #d48fb4; --ev-primary-light: #322940;
+  --ev-primary-glow: rgba(249, 168, 212, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #0b1028 0%, #1e1b4b 55%, #9d174d 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #fab8dc 0%, #d48fb4 100%);
+  --ev-accent-tag: #c4b5fd;
+  --ev-bg: #0c1124; --ev-surface: #1b1f31; --ev-surface-subtle: #272b3c; --ev-border: #3d4150;
+  --ev-text-main: #fffcfd; --ev-text-muted: #a8a9b0; --ev-text-light: #7e818b;
+}
+
+.palette-catppuccin-mocha,
+body:has(.palette-catppuccin-mocha) {
+  --ev-primary: #cba6f7; --ev-primary-hover: #b695dd; --ev-primary-light: #3a344e;
+  --ev-primary-glow: rgba(203, 166, 247, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #11111b 0%, #1e1e2e 55%, #45475a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #d4b6f8 0%, #b695dd 100%);
+  --ev-accent-tag: #f5c2e7;
+  --ev-bg: #1e1e2e; --ev-surface: #2c2c3b; --ev-surface-subtle: #373745; --ev-border: #4b4b58;
+  --ev-text-main: #fdfbff; --ev-text-muted: #aeaeb4; --ev-text-light: #888890;
+}
+
+.palette-solarized-dark,
+body:has(.palette-solarized-dark) {
+  --ev-primary: #e0b341; --ev-primary-hover: #cda43b; --ev-primary-light: #244138;
+  --ev-primary-glow: rgba(224, 179, 65, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #001e26 0%, #002b36 55%, #073642 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #e6c163 0%, #cda43b 100%);
+  --ev-accent-tag: #63bab3;
+  --ev-bg: #002b36; --ev-surface: #0f3842; --ev-surface-subtle: #1c424c; --ev-border: #33555e;
+  --ev-text-main: #fefcf7; --ev-text-muted: #a3b3b7; --ev-text-light: #788f94;
+}
+
+.palette-gruvbox,
+body:has(.palette-gruvbox) {
+  --ev-primary: #fabd2f; --ev-primary-hover: #dba629; --ev-primary-light: #4a4029;
+  --ev-primary-glow: rgba(250, 189, 47, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #1d2021 0%, #282828 55%, #504945 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #fbc954 0%, #dba629 100%);
+  --ev-accent-tag: #fe9744;
+  --ev-bg: #282828; --ev-surface: #353535; --ev-surface-subtle: #404040; --ev-border: #535353;
+  --ev-text-main: #fffcf7; --ev-text-muted: #b2b2b2; --ev-text-light: #8d8d8d;
+}
+
+.palette-rose-pine,
+body:has(.palette-rose-pine) {
+  --ev-primary: #ebbcba; --ev-primary-hover: #c8a09e; --ev-primary-light: #3b313c;
+  --ev-primary-glow: rgba(235, 188, 186, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #191724 0%, #1f1d2e 55%, #403d52 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #efc8c6 0%, #c8a09e 100%);
+  --ev-accent-tag: #9ccfd8;
+  --ev-bg: #191724; --ev-surface: #272531; --ev-surface-subtle: #32313c; --ev-border: #474550;
+  --ev-text-main: #fefcfc; --ev-text-muted: #acabb0; --ev-text-light: #85848b;
+}
+
+.palette-tokyo-night,
+body:has(.palette-tokyo-night) {
+  --ev-primary: #81a7f7; --ev-primary-hover: #7a9ee9; --ev-primary-light: #2a3147;
+  --ev-primary-glow: rgba(129, 167, 247, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #16161e 0%, #1a1b26 55%, #24283b 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #98b7f8 0%, #7a9ee9 100%);
+  --ev-accent-tag: #bb9af7;
+  --ev-bg: #1a1b26; --ev-surface: #282933; --ev-surface-subtle: #33343e; --ev-border: #484951;
+  --ev-text-main: #fafbff; --ev-text-muted: #adadb1; --ev-text-light: #86868c;
+}
+
+.palette-kanagawa,
+body:has(.palette-kanagawa) {
+  --ev-primary: #e6c384; --ev-primary-hover: #c4a670; --ev-primary-light: #3f3937;
+  --ev-primary-glow: rgba(230, 195, 132, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #16161d 0%, #1f1f28 55%, #2a2a37 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #ebce9a 0%, #c4a670 100%);
+  --ev-accent-tag: #8aa6dc;
+  --ev-bg: #1f1f28; --ev-surface: #2c2c35; --ev-surface-subtle: #383840; --ev-border: #4c4c53;
+  --ev-text-main: #fefdfa; --ev-text-muted: #aeaeb2; --ev-text-light: #88888d;
+}
+
+.palette-one-dark,
+body:has(.palette-one-dark) {
+  --ev-primary: #85c1f4; --ev-primary-hover: #7eb7e7; --ev-primary-light: #374453;
+  --ev-primary-glow: rgba(133, 193, 244, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #1e2127 0%, #282c34 55%, #3e4451 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #9bccf6 0%, #7eb7e7 100%);
+  --ev-accent-tag: #d7a1e7;
+  --ev-bg: #282c34; --ev-surface: #353940; --ev-surface-subtle: #40434a; --ev-border: #53565d;
+  --ev-text-main: #fafdff; --ev-text-muted: #b2b3b6; --ev-text-light: #8d8f93;
+}
+
+.palette-seoul-night,
+body:has(.palette-seoul-night) {
+  --ev-primary: #fbbf24; --ev-primary-hover: #d5a21f; --ev-primary-light: #2e2920;
+  --ev-primary-glow: rgba(251, 191, 36, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #050a1a 0%, #0b1736 55%, #1e3a8a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #fccb4b 0%, #d5a21f 100%);
+  --ev-accent-tag: #60a5fa;
+  --ev-bg: #070d1f; --ev-surface: #161c2c; --ev-surface-subtle: #222838; --ev-border: #393d4c;
+  --ev-text-main: #fffcf6; --ev-text-muted: #a6a8ae; --ev-text-light: #7c7f88;
+}
+
+.palette-daeboreum,
+body:has(.palette-daeboreum) {
+  --ev-primary: #fde68a; --ev-primary-hover: #d7c475; --ev-primary-light: #2e2e2a;
+  --ev-primary-glow: rgba(253, 230, 138, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #050816 0%, #0f172a 55%, #1e293b 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #fdeb9f 0%, #d7c475 100%);
+  --ev-accent-tag: #93c5fd;
+  --ev-bg: #070b18; --ev-surface: #161a26; --ev-surface-subtle: #222631; --ev-border: #393c46;
+  --ev-text-main: #fffefa; --ev-text-muted: #a6a7ac; --ev-text-light: #7c7e85;
+}
+
+.palette-chilseok,
+body:has(.palette-chilseok) {
+  --ev-primary: #c4b5fd; --ev-primary-hover: #a79ad7; --ev-primary-light: #262447;
+  --ev-primary-glow: rgba(196, 181, 253, 0.3);
+  --ev-gradient-hero: linear-gradient(135deg, #050520 0%, #14123a 55%, #3b2a7a 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #cfc2fd 0%, #a79ad7 100%);
+  --ev-accent-tag: #f9a8d4;
+  --ev-bg: #080824; --ev-surface: #171731; --ev-surface-subtle: #23233c; --ev-border: #393950;
+  --ev-text-main: #fdfcff; --ev-text-muted: #a6a6b0; --ev-text-light: #7c7c8b;
+}
+
 /* ── 90-palettes/95-template-accent.css ── */
 /* 팔레트를 템플릿 전용 포인트색(--tpl-*)에 연결한다 (#207)
  *
@@ -8433,21 +11295,21 @@ body:has(.palette-brand) {
  * (summer 4.10 · pastel 4.23). 템플릿 안에서는 밝은 바탕 위 글자 규칙(hover)을 따른다.
  * sale 과 같은 이유로 루트가 아니라 바로 아래 자식에 건다. 템플릿 자신의 어두운 영역은 --tpl-* 를 쓰므로 영향이 없다.
  * night · esports 는 기본색이 밝아서 제외한다. */
-:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports)) > * {
+:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok)) > * {
   --ev-primary: var(--ev-primary-hover);
 }
 
 /* ── 공유 CTA 버튼 ──
  * 팔레트의 CTA 그라데이션은 밝은 쪽 끝 때문에 18종 중 9종이 흰 글자 · 어두운 글자 어느 쪽도 4.5 에 못 미친다.
  * 밝은 템플릿 4종은 hover → deep 의 진한 그라데이션과 흰 글자를 쓴다 (밝은 팔레트 한정 — night · esports 는 99 에서) */
-:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports)) {
+:is(.theme-sports, .theme-holiday, .theme-vip, .theme-launch)[class*="palette-"]:not(:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok)) {
   --ev-gradient-cta: linear-gradient(135deg, var(--ev-primary-hover), var(--ev-primary-deep));
 }
 /* 40-templates/07-refinements.css 는 holiday · vip · launch 의 .cta-btn 글자를 템플릿 자기 그라데이션에 맞춰 어둡게 고정해 둔다 */
 :is(.theme-holiday, .theme-vip, .theme-launch)[class*="palette-"] .cta-btn { color: #ffffff; }
 
 /* holiday 고유 CTA도 흰 글자에 맞는 진한 팔레트 그라데이션을 사용한다. */
-.theme-holiday[class*="palette-"]:not(:is(.palette-night, .palette-esports)) [data-block="cta"] .cta-btn {
+.theme-holiday[class*="palette-"]:not(:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok)) [data-block="cta"] .cta-btn {
   background: var(--ev-gradient-cta);
   color: #ffffff;
 }
@@ -8487,16 +11349,16 @@ body:has(.palette-brand) {
 
 /* ── 90-palettes/99-dark-fixes.css ── */
 /* 어두운 팔레트 — 밝은 배경을 전제로 만든 폴백 색을 맞춘다 */
-.palette-night :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
-.palette-night [data-block="hero"].v-hero-minimal:not(.ev-block) h1,
-.palette-night [data-block="intro"].v-intro-lead:not(.ev-block) p:first-of-type { color: var(--ev-primary); }
-.palette-night [data-block="cta"]:not(.v-cta-outline, .v-cta-gradient-border, .ev-block) :is(.btn, a, button) { color: #111; }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="hero"].v-hero-minimal:not(.ev-block) h1,
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="intro"].v-intro-lead:not(.ev-block) p:first-of-type { color: var(--ev-primary); }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="cta"]:not(.v-cta-outline, .v-cta-gradient-border, .ev-block) :is(.btn, a, button) { color: #111; }
 
 /* 어두운 팔레트 보정 */
-.palette-night [data-block="faq"].v-faq-brutal:not(.ev-block) summary { color: #111; }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="faq"].v-faq-brutal:not(.ev-block) summary { color: #111; }
 /* 기본 · 줄무늬 머리글만 브랜드색(금색) 바탕이라 글씨를 어둡게. 나머지 변형은 바탕이 어둡다 */
-.palette-night [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #111; }
-.palette-night [data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child :last-child { color: #111; }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="compare"]:not(.v-compare-bordered, .v-compare-highlight, .v-compare-minimal, .ev-block) th { color: #111; }
+:is(.palette-night, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="compare"].v-compare-highlight:not(.ev-block) tr:first-child :last-child { color: #111; }
 
 /* esports 도 어두운 팔레트 — night 와 같은 보정 */
 .palette-esports :where([data-block]:not(.ev-block)) { color: var(--ev-text-main); }
@@ -8507,43 +11369,60 @@ body:has(.palette-brand) {
 
 /* ★ 위 두 줄은 "머리글 바탕이 브랜드색(금색 · 네온)이라 글자를 어둡게" 다. 어두운 표(v-compare-dark)는
      머리글 바탕이 #111827 이라 그 어두운 글자가 그대로 묻혔다 — 머리글이 통째로 안 보였다 (계산값 실측) */
-:is(.palette-night, .palette-esports) [data-block="compare"].v-compare-dark:not(.ev-block) th { color: #f9fafb; }
+:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) [data-block="compare"].v-compare-dark:not(.ev-block) th { color: #f9fafb; }
 
 /* 밝은 템플릿에 어두운 팔레트를 붙였을 때 — 글자와 배경 중 한쪽만 고정된 곳을 팔레트에 맞춘다 (#211)
  * night · esports 는 글자색(--ev-text-main · --ev-text-muted)을 밝게 바꾼다.
  * 그런데 일부 템플릿 카드는 배경이 #ffffff 로 고정돼 있어 흰 카드 위에 밝은 글자가 된다.
  * 반대로 vip 의 단계 번호는 글자가 #b45309 로 고정돼 어두운 카드 위에서 흐려진다.
  * 밝은 팔레트와 팔레트 없음일 때는 바뀌지 않는다 (이 규칙은 어두운 팔레트에만 걸린다). */
-.theme-sports:is(.palette-night, .palette-esports) :is(.sp-prize-sub, .sp-ticket) {
+.theme-sports:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.sp-prize-sub, .sp-ticket) {
   background: var(--ev-surface);
   /* border-left 는 빨간 포인트 테두리라 그대로 둔다 — 세 변만 바꾼다 */
   border-top-color: var(--ev-border);
   border-right-color: var(--ev-border);
   border-bottom-color: var(--ev-border);
 }
-.theme-vip:is(.palette-night, .palette-esports) .vp-step-num { color: var(--ev-primary); }
+.theme-vip:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .vp-step-num { color: var(--ev-primary); }
+
+/* ★ 어두운 팔레트에서 **흰 바탕 위에** 쓰는 진한 포인트색.
+ *   전에는 --ev-primary-deep(hover 에 검정 22%)을 썼다. 그런데 hover 는 테마(basic · bloom)가
+ *   **어두운 카드 위 글자**로도 쓴다 — 밝아야 한다. deep 은 hover 에서 나오므로 같이 밝아져
+ *   흰 카드 위에서 모자랐다 (dracula 등은 둘을 동시에 맞출 hover 가 없었다 — 생성기 실측).
+ *   흰 바탕용은 이 값 하나로 따로 낸다. hover 에 검정을 더 섞는다 */
+:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) {
+  --nv-dark-ink: color-mix(in oklab, var(--ev-primary-hover) 58%, black);
+  /* aurora 의 혜택 값 — 어두운 카드 위라 검정을 섞지 않은 원래 2차색 (20-themes/04-aurora.css) */
+  --nv-accent-ink: var(--ev-accent-tag, var(--ev-primary));
+}
 
 /* 밝은 템플릿 × 어두운 팔레트 — 포인트색 위의 글자 (#207)
  * night · esports 의 기본색은 밝은 노랑 · 초록이라, 흰 글자를 얹은 채움(버튼 · 번호 배지)이 안 읽힌다.
  * 위의 #211 규칙과 같은 방식으로 이 두 팔레트에만 건다. */
-.theme-sports:is(.palette-night, .palette-esports) :is(.sp-cta-btn, .sp-vote-btn.active),
-.theme-launch:is(.palette-night, .palette-esports) :is(.lc-cta-btn, .lc-timeline-badge, .lc-form-btn),
-.theme-holiday:is(.palette-night, .palette-esports) :is(.hl-gift-ribbon, .hl-step-num),
-:is(.theme-holiday, .theme-vip, .theme-launch):is(.palette-night, .palette-esports) .cta-btn { color: #111111; }
+.theme-sports:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.sp-cta-btn, .sp-vote-btn.active),
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.lc-cta-btn, .lc-timeline-badge, .lc-form-btn),
+.theme-holiday:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.hl-gift-ribbon, .hl-step-num),
+:is(.theme-holiday, .theme-vip, .theme-launch):is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .cta-btn { color: #111111; }
 /* holiday 의 리본 · 단계 번호는 진한 채움(hover · deep)이 아니라 밝은 기본색 위에 어두운 글자로 */
-.theme-holiday:is(.palette-night, .palette-esports) { --tpl-ribbon: var(--ev-primary); --tpl-step: var(--ev-primary); }
+.theme-holiday:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) { --tpl-ribbon: var(--ev-primary); --tpl-step: var(--ev-primary); }
 /* launch 의 타임라인 카드는 글자색까지 고정이라 흰 카드 그대로 둔다. 그 위의 포인트색 글자만 진하게 */
-.theme-launch:is(.palette-night, .palette-esports) :is(.lc-timeline-phase, .lc-gauge-percent) { color: var(--ev-primary-deep); }
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) :is(.lc-timeline-phase, .lc-gauge-percent) { color: var(--nv-dark-ink); }
 /* 마일스톤 배지는 연한 파랑(#dbeafe) 바탕이 고정이라 포인트색 대신 짙은 남색 글자 */
-.theme-launch:is(.palette-night, .palette-esports) .lc-ms-badge { color: var(--tpl-accent-ink); }
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .lc-ms-badge { color: var(--tpl-accent-ink); }
 
-/* 인증 버튼의 진한 배경에서는 흰 글자를 유지한다. */
-.theme-launch:is(.palette-night, .palette-esports) .lc-form-btn { color: #ffffff; }
+/* 인증 버튼은 흰 글자를 유지한다 — 그러려면 바탕이 진해야 한다.
+ * ★ 바탕이 --tpl-accent(launch 는 hover)라 어두운 팔레트에서는 밝은 색이었고, 흰 글자가 2.9 ~ 3.6 으로 안 읽혔다
+ *   (대비 테스트 실측 — main 의 night · esports 도 같았다). 바탕을 --nv-dark-ink 로, 올렸을 때는 더 진하게 */
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .lc-form-btn { color: #ffffff; background: var(--nv-dark-ink); }
+.theme-launch:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .lc-form-btn:hover { background: color-mix(in oklab, var(--nv-dark-ink) 80%, black); }
 /* holiday 의 복주머니 카드도 흰색 고정이다. 주황(글자 · 흰 글자 버튼)을 진한 쪽으로 */
-.theme-holiday:is(.palette-night, .palette-esports) {
-  --tpl-warm: var(--ev-primary-deep);
-  --tpl-warm-deep: color-mix(in oklab, var(--ev-primary-deep) 80%, black);
+.theme-holiday:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) {
+  --tpl-warm: var(--nv-dark-ink);
+  --tpl-warm-deep: color-mix(in oklab, var(--nv-dark-ink) 80%, black);
 }
+/* vip 쿠폰 카드도 밝은 바탕(#fafaf9) 고정이다. 95 의 --ev-primary-deep 은 hover 에서 나와 어두운 팔레트에서 밝다
+ * (dracula 등 11종이 4.47 — 대비 테스트 실측). 흰 바탕용 진한 값으로 */
+.theme-vip:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok) .vp-coupon .benefit-value { color: var(--nv-dark-ink); }
 
 /* ── 95-assets/01-assets.css ── */
 /* 95-assets — 관리자가 올린 이미지(.ev-asset)
