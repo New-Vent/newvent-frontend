@@ -500,24 +500,41 @@ function orderHTML(s, busy) {
     + '<p class="helper">끌어서 옮기거나 ▲▼ 를 누르세요. 유의사항 · 참여 버튼은 늘 맨 끝이에요.</p></fieldset>'
 }
 
+/**
+ * ★ 한 줄은 [끌기 · 이름 · ▲▼× ] 이고, 항목 목록은 그 **아래 줄 전체 폭**에 둔다 (editor.css .sorder-items).
+ *   예전에는 항목이 이름과 버튼 사이에 끼어 이름 칸이 한 글자 폭으로 눌렸다("혜/택").
+ * ★ 삭제 단추는 블록 · 항목이 같은 모양(×, .sorder-del)이다. 못 지우는 항목은 왜인지 title 로 말한다.
+ */
 function orderItems(s, busy) {
   const list = currentOrder(s)
   return list.map((k, i) => '<li class="sorder-item" draggable="' + (busy ? 'false' : 'true')
     + '" data-sorder="' + esc(k) + '">'
     + '<span class="sorder-grip" aria-hidden="true">⠿</span>'
-    + '<span class="sorder-name">' + esc(labelOf(k)) + '</span>' + (ITEM_SELECTORS[k] && itemElements(s, k).length
-      ? '<span class="sorder-items">' + itemElements(s, k).map((el, index) => ({ el, index }))
-        .filter(({ index }) => !(s.direct.removeItems[k] || []).includes(index))
-        .map(({ el, index }) => '<span class="sorder-subitem">· ' + esc(el.textContent.trim().slice(0, 60))
-        + button('server-item-delete', '×', 'data-block="' + esc(k) + '" data-index="' + index + '" aria-label="' + esc(labelOf(k)) + ' 항목 삭제" '
-          + (busy || itemElements(s, k).length - (s.direct.removeItems[k] || []).length <= (ITEM_MINIMUMS[k] || 0) ? 'disabled' : ''), 'btn sm') + '</span>').join('') + '</span>' : '')
+    + '<span class="sorder-name">' + esc(labelOf(k)) + '</span>'
     + '<span class="sorder-moves">'
     + button('server-order-up', '▲', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
         + ' 위로" ' + (busy || i === 0 ? 'disabled' : ''), 'btn sm')
     + button('server-order-down', '▼', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
         + ' 아래로" ' + (busy || i === list.length - 1 ? 'disabled' : ''), 'btn sm')
-    + (ADMIN_KEEP.includes(k) ? '' : button('server-block-delete', '✕', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k)) + ' 블록 삭제" ' + (busy ? 'disabled' : ''), 'btn sm'))
-    + '</span></li>').join('')
+    + (ADMIN_KEEP.includes(k) ? '' : button('server-block-delete', '×', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
+        + ' 블록 삭제" title="' + esc(labelOf(k)) + ' 블록 삭제" ' + (busy ? 'disabled' : ''), 'btn sm sorder-del'))
+    + '</span>' + itemRows(s, k, busy) + '</li>').join('')
+}
+
+/** 블록 안의 항목 — 한 줄에 하나, 길면 말줄임(전체 문구는 title). 최소 개수에 닿으면 지울 수 없다 */
+function itemRows(s, k, busy) {
+  if (!ITEM_SELECTORS[k]) return ''
+  const items = itemElements(s, k)
+  if (!items.length) return ''
+  const removed = s.direct.removeItems[k] || []
+  const atMinimum = items.length - removed.length <= (ITEM_MINIMUMS[k] || 0)
+  const why = atMinimum ? labelOf(k) + ' 항목은 최소 ' + (ITEM_MINIMUMS[k] || 0) + '개가 필요해요' : labelOf(k) + ' 항목 삭제'
+  return '<span class="sorder-items">' + items.map((el, index) => ({ text: el.textContent.trim().replace(/\s+/g, ' '), index }))
+    .filter(({ index }) => !removed.includes(index))
+    .map(({ text, index }) => '<span class="sorder-subitem"><span class="sorder-subtext" title="' + esc(text) + '">' + esc(text) + '</span>'
+      + button('server-item-delete', '×', 'data-block="' + esc(k) + '" data-index="' + index + '" aria-label="' + esc(labelOf(k))
+        + ' 항목 삭제" title="' + esc(why) + '" ' + (busy || atMinimum ? 'disabled' : ''), 'btn sm sorder-del') + '</span>').join('')
+    + '</span>'
 }
 
 /** 목록만 다시 그린다 — 전체를 그리면 고치던 문구 칸의 포커스가 날아간다 */
@@ -608,16 +625,51 @@ const variantSelect = (s, k, b, dis) => '<select data-svariant="' + esc(k) + '" 
  * 모양을 아이콘으로 — 맨 앞이 기본 모양(class 없음)이다.
  * 항목이 모자라 못 쓰는 모양은 흐리게 그린다. disabled 로 막지 않는다 — 눌렀을 때 이유를 알려 준다
  */
-const variantPicks = (s, k, b, dis) => '<div class="lay-picks var-picks" role="group" aria-label="' + esc(labelOf(k)) + ' 모양">'
+const variantPicks = (s, k, b, dis) => '<div class="var-fold"><div class="lay-picks var-picks" role="group" aria-label="' + esc(labelOf(k)) + ' 모양">'
   + [{ cssClass: '', desc: '기본 모양' }, ...b.variants].map((v) => {
     const on = variantNow(s, k) === v.cssClass
     return '<button type="button" class="lay-pick' + (on ? ' active' : '') + (v.blocked ? ' blocked' : '') + '" data-act="server-variant" data-block="' + esc(k)
       + '" data-variant="' + esc(v.cssClass) + '" aria-pressed="' + on + '"' + (v.blocked ? ' aria-disabled="true"' : '')
       + ' title="' + esc(v.blocked || v.desc) + '" ' + dis + '>' + variantIcon(v.cssClass) + '<span>' + esc(shortName(v.cssClass, v.desc)) + '</span></button>'
-  }).join('') + '</div>'
+  }).join('') + '</div><button type="button" class="var-more" data-act="server-variant-more" data-block="' + esc(k) + '" hidden></button></div>'
+
+/** 펼쳐 둔 영역 — 다시 그려도 펼친 채로 둔다 */
+const openLooks = new Set()
 
 /**
- * 모양을 고를 수 있는 영역만. 아이콘을 그려 둔 영역(제목·소개 · 혜택 · 참여 방법 · 참여 버튼)은 아이콘으로,
+ * 아이콘이 한 줄을 넘으면 첫 줄만 보이고 '더 보기'를 단다.
+ * ★ 한 줄에 몇 개 들어가는지는 패널 너비에 따라 달라서 그린 뒤 실제 위치로 잰다.
+ * ★ 지금 고른 모양이 접힌 쪽에 있으면 첫 줄 끝으로 당겨 보인다 (CSS order) — 고른 것이 안 보이면 안 된다.
+ *   펼치면 원래 순서로 돌아간다
+ */
+function foldLooks() {
+  document.querySelectorAll('#server-looks .var-fold').forEach((fold) => {
+    const picks = fold.querySelector('.var-picks'), more = fold.querySelector('.var-more')
+    const items = [...picks.children]
+    picks.classList.remove('folded')
+    picks.style.maxHeight = ''
+    items.forEach((el) => { el.style.order = '' })
+    const tops = [...new Set(items.map((el) => el.offsetTop))].sort((a, b) => a - b)
+    if (tops.length <= 1) { more.hidden = true; return }
+    const shown = items.filter((el) => el.offsetTop < tops[1]).length
+    const open = openLooks.has(more.dataset.block)
+    if (!open) {
+      const active = items.findIndex((el) => el.classList.contains('active'))
+      if (active >= shown) {
+        items.forEach((el, i) => { el.style.order = String(i * 2) })
+        items[active].style.order = String((shown - 1) * 2 - 1)
+      }
+      picks.classList.add('folded')
+      picks.style.maxHeight = items[0].offsetHeight + 'px'
+    }
+    more.hidden = false
+    more.textContent = open ? '접기' : '더 보기 (' + (items.length - shown) + ')'
+    more.setAttribute('aria-expanded', String(open))
+  })
+}
+
+/**
+ * 모양을 고를 수 있는 영역만. 아이콘을 그려 둔 영역(제목·소개 · 혜택 · 경품 · 참여 방법 · 일정 · 자주 묻는 질문 · 참여 버튼)은 아이콘으로,
  * 나머지는 이름 목록으로 보여 준다
  */
 function lookRows(s, busy) {
@@ -654,6 +706,8 @@ function paintLooks(s) {
     el.classList.toggle('active', on)
     el.setAttribute('aria-pressed', String(on))
   })
+  // 미리보기 도구줄에서 접힌 쪽 모양을 골랐을 수 있다 — 고른 것을 다시 보이게
+  foldLooks()
 }
 
 /**
@@ -1184,11 +1238,17 @@ function directPanel(s) {
   const hasCta = /data-slot="cta-link"/.test(s.preview.html)
   const st = s.direct.style, on = s.direct.styleOn
   const dis = busy ? 'disabled' : ''
-  const color = (k, label, def) => '<label class="check"><input type="checkbox" data-sstyle-on="' + k + '" ' + (on[k] ? 'checked' : '') + ' ' + dis + '>' + label + '</label>'
-    + '<input type="color" data-sstyle="' + k + '" value="' + esc(st[k] || def) + '" ' + dis + ' aria-label="' + label + '">'
-  const select = (k, label, opts) => '<span>' + label + '</span><select data-sstyle="' + k + '" ' + dis + ' aria-label="' + label + '"><option value="">그대로</option>'
-    + opts.map(([v, t]) => '<option value="' + v + '" ' + (st[k] === v ? 'selected' : '') + '>' + t + '</option>').join('') + '</select>'
-  const styleForm = hasCta ? '<fieldset class="sedit-group"><legend>참여 버튼 디자인</legend><div class="sedit-style">'
+  // ★ 한 줄 = 설정 하나. 색은 [직접 지정 스위치 · 색 칸], 크기 · 모양은 한 번에 보이는 단추 줄(라디오)이다.
+  //   값은 예전과 같은 data-sstyle · data-sstyle-on 으로 읽는다 — 라디오도 change 의 t.value 가 고른 값이다
+  const color = (k, label, def) => '<div class="sstyle-row"><span class="sstyle-label">' + label + '</span><span class="sstyle-ctl">'
+    + '<label class="sstyle-toggle" title="켜면 고른 색을, 끄면 테마 색을 따라요"><input type="checkbox" role="switch" data-sstyle-on="' + k + '" '
+    + (on[k] ? 'checked' : '') + ' ' + dis + ' aria-label="' + label + ' 직접 지정"><span class="sstyle-state"></span></label>'
+    + '<input type="color" data-sstyle="' + k + '" value="' + esc(st[k] || def) + '" ' + dis + ' aria-label="' + label + '"></span></div>'
+  const select = (k, label, opts) => '<div class="sstyle-row stack"><span class="sstyle-label">' + label + '</span>'
+    + '<div class="sstyle-seg" role="radiogroup" aria-label="' + label + '">'
+    + [['', '그대로'], ...opts].map(([v, t]) => '<label><input type="radio" name="sstyle-' + k + '" data-sstyle="' + k + '" value="' + v + '" '
+      + ((st[k] || '') === v ? 'checked' : '') + ' ' + dis + '><span>' + t + '</span></label>').join('') + '</div></div>'
+  const styleForm = hasCta ? '<fieldset class="sedit-group"><legend>참여 버튼 디자인</legend><div class="sstyle-list">'
     + color('background', '배경색', '#0284c7') + color('color', '글자색', '#ffffff')
     + select('size', '크기', [['small', '작게'], ['medium', '보통'], ['large', '크게']])
     + select('shape', '모양', [['square', '각지게'], ['round', '둥글게'], ['pill', '알약형']]) + '</div></fieldset>' : ''
@@ -1200,10 +1260,10 @@ function directPanel(s) {
    * ★ 색은 체크를 해야 들어간다. 안 하면 테마를 따른다 — 참여 버튼과 같은 약속이다.
    */
   const TSIZES = [['small', '작게'], ['medium', '보통'], ['large', '크게'], ['xlarge', '아주 크게']]
-  const textForm = '<fieldset class="sedit-group"><legend>제목 디자인</legend><div class="sedit-style">'
+  const textForm = '<fieldset class="sedit-group"><legend>제목 디자인</legend><div class="sstyle-list">'
     + color('titleColor', '큰 제목 색', '#0f172a') + select('titleSize', '큰 제목 크기', TSIZES)
     + color('headingColor', '소제목 색', '#15803d') + select('headingSize', '소제목 크기', TSIZES)
-    + '</div><p class="helper" style="margin:8px 0 0">색을 직접 고르면 그 제목은 분위기 · 색감을 바꿔도 그대로예요. 체크를 풀면 다시 따라갑니다.</p></fieldset>'
+    + '</div><p class="helper sstyle-help">색을 직접 지정하면 분위기 · 색감을 바꿔도 그 색이 유지돼요. 스위치를 끄면 다시 테마 색을 따라가요.</p></fieldset>'
 
   return '<div class="server-scroll" id="server-scroll">'
     + '<p class="workspace-tip">문구를 선택해 글자색 · 크기 · 굵기를 바꿀 수 있어요. 블록·항목 삭제는 위의 순서·삭제 도구를 사용해주세요. 기간은 서버가 채우고 유의사항은 수정만 가능해요.</p>'
@@ -1249,7 +1309,8 @@ function previewPanel(s) {
   const p = s.preview
   const published = (s.versions || []).find((v) => v.published)
   const body = p
-    ? '<div class="canvas"><div class="canvas-frame ' + (ui.mobile ? 'mobile' : '') + '">'
+    // ★ fit — 페이지 전체를 한 화면에 줄여 보여 준다. 줄이는 계산은 preview/frame.js 의 fitCanvasFrame
+    ? '<div class="canvas"><div class="canvas-frame ' + (ui.mobile ? 'mobile' : '') + (ui.fit ? ' fit' : '') + '">'
       + serverFrame(p.html, '이벤트 미리보기', s.tab === 'direct' ? 'server-edit' : 'server-select') + '</div></div>'
     : '<div class="empty"><strong>아직 만들어진 페이지가 없어요</strong><p>왼쪽에서 페이지를 만들어보세요.</p></div>'
   return '<div class="studio-preview-column"><section class="panel"><div class="preview-controls"><div class="row wrap"><span>미리보기</span>'
@@ -1258,6 +1319,8 @@ function previewPanel(s) {
     + (published ? '<span class="badge green">게시 v' + published.versionNo + '</span>' : '')
     + (p && s.tab === 'chat' ? '<span class="pick-guide">' + icon('sparkle') + '영역을 눌러 고칠 곳을 고르세요</span>' : '')
     + '</div><div class="device-controls">'
+    + (p ? button('preview-fit', icon('layers') + '<span>전체 보기</span>', 'aria-pressed="' + !!ui.fit
+        + '" title="페이지 전체를 한 화면에 맞춰 봐요"', 'btn sm fit-toggle ' + (ui.fit ? 'active' : '')) : '')
     + button('device', icon('desktop'), 'data-mode="desktop" aria-label="데스크톱 미리보기"', 'btn sm ' + (!ui.mobile ? 'active' : ''))
     + button('device', icon('phone'), 'data-mode="mobile" aria-label="모바일 미리보기"', 'btn sm ' + (ui.mobile ? 'active' : ''))
     + '</div></div>' + body + '</section></div>'
@@ -1510,6 +1573,7 @@ function afterServerRender() {
   })
   if (s.tab === 'direct') {
     updateDirectCount(s)
+    foldLooks()
     const frame = $('.event-frame')
     // 미리보기 도구줄이 올린 영역에 보여 줄 것을 여기서 묻는다 (frame.js 의 server-edit 모드)
     if (frame) frame.nvTools = (key) => toolsOf(s, key)
@@ -1679,6 +1743,13 @@ async function runRagExamples() {
       return true
     case 'server-layout': if (s && !running(s) && !s.busy) pickLayout(s, b.dataset.layout); return true
     case 'server-variant': if (s && !running(s) && !s.busy) pickVariant(s, b.dataset.block, b.dataset.variant || ''); return true
+    case 'server-variant-more': {
+      const key = b.dataset.block
+      if (openLooks.has(key)) openLooks.delete(key)
+      else openLooks.add(key)
+      foldLooks()
+      return true
+    }
     case 'server-gen-layout':
       if (s && !running(s)) { s.genLayout = b.dataset.layout || ''; markPick($('#server-gen-layouts'), s.genLayout) }
       return true

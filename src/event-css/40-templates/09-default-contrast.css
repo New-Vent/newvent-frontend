@@ -43,5 +43,5 @@
 .theme-holiday .hero-badge.t-badge-green { background: #008820; }
 
 /* 페이지 바탕을 따르는 곳(유의사항 목록 · 단계 설명)은 어두운 팔레트만 뺀다 */
-:is(.theme-holiday, .theme-vip):not(:is(.palette-night, .palette-esports)) :is(.notice-list li, .step-desc),
-:is(.theme-launch, .theme-sports):not(:is(.palette-night, .palette-esports)) .notice-list li { color: #58687e; }
+:is(.theme-holiday, .theme-vip):not(:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok)) :is(.notice-list li, .step-desc),
+:is(.theme-launch, .theme-sports):not(:is(.palette-night, .palette-esports, .palette-cyberpunk, .palette-synthwave, .palette-halloween, .palette-dracula, .palette-luxury, .palette-business, .palette-dim, .palette-abyss, .palette-blackfriday, .palette-black-day, .palette-neon-night, .palette-sakura-night, .palette-catppuccin-mocha, .palette-solarized-dark, .palette-gruvbox, .palette-rose-pine, .palette-tokyo-night, .palette-kanagawa, .palette-one-dark, .palette-seoul-night, .palette-daeboreum, .palette-chilseok)) .notice-list li { color: #58687e; }

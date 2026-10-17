@@ -20,6 +20,10 @@ const GLYPHS = {
   'layout-zigzag':   [[2, 2, 20, 5], [2, 9, 14, 3.5], [8, 14, 14, 3.5], [2, 19, 14, 3]],
   'layout-full':     [[0, 2, 24, 6], [0, 9.5, 24, 3.5], [0, 14.5, 24, 3.5], [0, 19.5, 24, 2.5]],
   'layout-focus':    [[6, 2, 12, 5], [6, 9, 12, 3.5], [6, 14, 12, 3.5], [6, 19, 12, 3]],
+  'layout-masonry':  [[2, 2, 20, 5], [2, 9, 9, 7], [13, 9, 9, 4], [13, 15, 9, 7], [2, 18, 9, 4]],
+  'layout-timeline': [[2, 2, 20, 5], [11.5, 8, 1, 14], [2, 9, 8, 4], [14, 13.5, 8, 4], [2, 18, 8, 4]],
+  'layout-l-shape':  [[2, 2, 20, 5], [2, 9, 11, 13], [15, 9, 7, 3.5], [15, 14, 7, 3.5], [15, 19, 7, 3]],
+  'layout-cta-rail': [[2, 2, 20, 5], [2, 9, 13, 3.5], [2, 14, 13, 3.5], [2, 19, 13, 3], [17, 9, 5, 6]],
 }
 
 /** 생성 화면의 선택지 — min 은 이 배치가 걸리려면 있어야 하는 내용 영역 수 (Layout.minContentBlocks) */
@@ -33,6 +37,10 @@ const LAYOUTS = [
   { cssClass: 'layout-zigzag', label: '지그재그', hint: '영역을 좌우로 번갈아 놓아요.', min: 2 },
   { cssClass: 'layout-full', label: '풀블리드', hint: '영역마다 화면 폭을 끝까지 써요.', min: 0 },
   { cssClass: 'layout-focus', label: '포커스', hint: '폭을 좁혀 가운데 한 줄로 놓아요.', min: 0 },
+  { cssClass: 'layout-masonry', label: '벽돌', hint: '높이가 다른 칸을 2단에 빈틈없이 쌓아요.', min: 3 },
+  { cssClass: 'layout-timeline', label: '타임라인', hint: '가운데 선을 두고 영역을 좌우로 번갈아 놓아요.', min: 2 },
+  { cssClass: 'layout-l-shape', label: 'L자', hint: '대표 영역을 왼쪽에 길게, 나머지는 오른쪽에 쌓아요.', min: 3 },
+  { cssClass: 'layout-cta-rail', label: '참여 레일', hint: '참여 버튼을 오른쪽 칸에 두고 따라오게 해요.', min: 1 },
 ]
 
 const STACK = 'layout-stack'

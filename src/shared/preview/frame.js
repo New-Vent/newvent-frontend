@@ -12,6 +12,7 @@ import { applySelection, refreshButtonEditor, refreshContentEditor } from '@shar
 import { currentParticipation, eventById } from '@shared/selectors.js'
 import { state, ui } from '@shared/state.js'
 import { toast } from '@shared/ui/toast.js'
+import { hasVariantIcons, shortName, variantIcon } from '@shared/variant-icons.js'
 
 // ResizeObserver delivery must finish before writing layout-affecting styles.
 function observeLayout(target, update) {
@@ -31,10 +32,12 @@ function observeLayout(target, update) {
  *   누른 것은 nv-tool 이벤트로 올린다 — 여기는 그리고 알리기만 한다 (상태를 갖지 않는다).
  * ★ 도구줄은 body 바로 아래에 둔다. [data-block] 밖이라 직접 수정 문구 목록(collectTexts)에 안 잡힌다.
  * ★ iframe 에는 스크립트가 없다(sandbox). 이 리스너들은 호스트의 것이다.
+ * ★ 모양은 '모양' 단추를 누르면 아래로 펼치는 창에서 고른다 — 옆 패널과 같은 아이콘(variant-icons.js).
+ *   아이콘을 안 그린 영역은 같은 창에 이름 목록으로 나온다. 창이 열려 있는 동안은 다른 영역에 올려도 도구줄이 따라가지 않는다
  */
 function bindTools(frame,doc){
  const bar=doc.createElement('div');bar.className='nv-tools';bar.hidden=true;doc.body.appendChild(bar);
- let over=null;
+ let over=null,menu=false;
  const safe=t=>String(t??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
  const emit=(tool,value)=>{if(over)frame.dispatchEvent(new CustomEvent('nv-tool',{bubbles:true,detail:{block:over.dataset.block,tool,value}}));};
  const place=()=>{const r=over.getBoundingClientRect(),w=doc.defaultView,width=doc.documentElement.clientWidth;
@@ -46,17 +49,74 @@ function bindTools(frame,doc){
   bar.hidden=!info;if(!info)return;
   over.classList.add('nv-tool-hover');
   const btn=(tool,label,title,off,on,value)=>'<button type="button" data-tool="'+tool+'"'+(value?' data-value="'+value+'"':'')+' title="'+safe(title)+'"'+(off?' aria-disabled="true"':'')+(on?' class="on"':'')+'>'+label+'</button>';
+  const all=info.variants?[{cssClass:'',desc:'기본 모양'},...info.variants]:[];
+  const now=all.find(v=>v.cssClass===(info.variant||''))||all[0];
+  const icons=info.variants&&hasVariantIcons(info.variants);
+  if(!info.variants)menu=false;
+  // 고르는 창 — 아이콘 칸, 아이콘이 없는 영역은 이름 줄. 못 쓰는 모양은 흐리게 두고 누르면 이유가 뜬다(편집 화면)
+  const pick=v=>{const on=v===now,name=icons?shortName(v.cssClass,v.desc):v.desc;
+   return '<button type="button" class="nv-pick'+(on?' on':'')+(v.blocked?' off':'')+'" data-tool="variant" data-value="'+safe(v.cssClass)+'" title="'+safe(v.blocked||v.desc)+'" aria-pressed="'+on+'">'
+    +(icons?variantIcon(v.cssClass):'')+'<span>'+safe(name)+'</span></button>';};
   bar.innerHTML='<b>'+safe(info.label)+'</b>'
    +(info.move?'<i></i>'+btn('up','▲','위로',!info.move.up)+btn('down','▼','아래로',!info.move.down):'')
-   +(info.variants?'<i></i><select aria-label="'+safe(info.label)+' 모양"><option value="">기본 모양</option>'+info.variants.map(v=>'<option value="'+safe(v.cssClass)+'"'+(v.cssClass===info.variant?' selected':'')+(v.blocked?' disabled':'')+'>'+safe(v.desc)+(v.blocked?' (항목 부족)':'')+'</option>').join('')+'</select>':'');
+   +(info.variants?'<i></i><button type="button" class="nv-look'+(menu?' on':'')+'" data-tool="menu" title="'+safe(now.desc)+'" aria-expanded="'+menu+'">'
+     +(icons?variantIcon(now.cssClass):'')+'<span>'+safe(icons?shortName(now.cssClass,now.desc):now.desc)+'</span><em>▾</em></button>'
+     +(menu?'<div class="nv-menu'+(icons?'':' list')+'" role="group" aria-label="'+safe(info.label)+' 모양"><p>모양 고르기 <small>'+all.length+'개</small></p><div>'+all.map(pick).join('')+'</div></div>':''):'');
   place();
+  // 페이지 아래쪽 영역이면 창을 위로 연다 — iframe 은 페이지 높이만큼이라 아래로 열면 잘린다
+  const m=bar.querySelector('.nv-menu');
+  // ★ 문서 높이(scrollHeight)와 비교하면 안 된다 — 열린 창이 그 높이를 늘린다. 페이지 상자 끝과 비교한다
+  const page=(doc.querySelector('.ev-container')||doc.body).getBoundingClientRect();
+  if(m&&m.getBoundingClientRect().bottom>page.bottom&&bar.getBoundingClientRect().top-page.top>m.offsetHeight+6)m.classList.add('up');
  };
- doc.addEventListener('mouseover',ev=>{if(ev.target.closest('.nv-tools'))return;const b=ev.target.closest('[data-block]');if(b===over)return;over=b;draw();});
- doc.addEventListener('mouseleave',()=>{over=null;draw();});
- doc.addEventListener('change',ev=>{const sel=ev.target.closest?.('.nv-tools select');if(sel)emit('variant',sel.value);});
+ const close=()=>{if(!menu)return;menu=false;draw();};
+ doc.addEventListener('mouseover',ev=>{if(menu||ev.target.closest('.nv-tools'))return;const b=ev.target.closest('[data-block]');if(b===over)return;over=b;draw();});
+ doc.addEventListener('mouseleave',()=>{if(menu)return;over=null;draw();});
+ doc.addEventListener('keydown',ev=>{if(ev.key==='Escape')close();});
  // 편집 화면이 순서 · 배치 · 모양을 바꾼 뒤 부른다 — 옮겨진 영역을 따라가고 눌린 표시를 다시 그린다
- frame.nvToolsRefresh=()=>{if(doc.activeElement?.closest?.('.nv-tools select'))place();else draw();};
- return {click(ev){const b=ev.target.closest('.nv-tools button');if(!b)return;ev.preventDefault();ev.stopPropagation();if(b.getAttribute('aria-disabled')==='true')return;emit(b.dataset.tool,b.dataset.value);}};
+ frame.nvToolsRefresh=()=>draw();
+ return {
+  click(ev){const b=ev.target.closest('.nv-tools button');if(!b){if(!ev.target.closest('.nv-tools'))close();return;}
+   ev.preventDefault();ev.stopPropagation();if(b.getAttribute('aria-disabled')==='true')return;
+   if(b.dataset.tool==='menu'){menu=!menu;draw();return;}
+   if(b.dataset.tool==='variant')menu=false;
+   emit(b.dataset.tool,b.dataset.value);},
+  // 창이 열려 있을 때 바깥을 누르면 닫기만 한다 — 그 클릭으로 문구 칸을 고르지 않는다
+  open:()=>menu,close,
+ };
+}
+
+/**
+ * 편집 화면 미리보기의 「전체 보기」 — 페이지 전체가 미리보기 칸 높이에 들어오게 줄인다.
+ *
+ * ★ iframe 은 원래 폭(w) 그대로 그리고 transform 으로만 줄인다. 폭을 줄이면 페이지가
+ *   모바일처럼 다시 배치돼서 "전체를 본다" 가 아니게 된다 — 썸네일(.thumb)과 같은 수법이다.
+ * ★ 칸(.canvas-frame)의 크기를 줄어든 크기로 맞춘다. transform 은 자리를 안 줄여서, 안 맞추면 빈 스크롤이 남는다.
+ * ★ 높이가 정해진 편집 화면(.workspace — .canvas 가 flex:1)에서만 한다. 다른 곳은 칸 높이가
+ *   내용을 따라가서, 줄일수록 칸도 줄어드는 되먹임이 생긴다.
+ * ★ 클릭 · 도구줄은 iframe 안 좌표라 줄여도 그대로 동작한다.
+ */
+function fitCanvasFrame(box){
+ if(box.dataset.fitBound)return;
+ const canvas=box.parentElement,frame=box.querySelector('iframe');
+ if(!canvas?.closest('.workspace')||!frame)return;
+ box.dataset.fitBound='true';
+ const fit=()=>{
+  if(!box.isConnected)return;
+  const cs=getComputedStyle(canvas);
+  const w=box.classList.contains('mobile')?390:canvas.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+  const room=canvas.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+  const h=frame.offsetHeight;
+  if(w<=0||h<=0||room<=0)return;
+  const r=Math.min(1,room/h);
+  frame.style.width=w+'px';
+  frame.style.transformOrigin='0 0';
+  frame.style.transform=r<1?'scale('+r+')':'';
+  box.style.width=Math.floor(w*r)+'px';
+  box.style.height=Math.floor(h*r)+'px';
+ };
+ observeLayout(canvas,fit);
+ observeLayout(frame,fit);
 }
 
 function bindFrame(frame){
@@ -85,7 +145,7 @@ function bindFrame(frame){
  if(mode==='server-edit'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   const tools=bindTools(frame,doc);
-  doc.addEventListener('click',ev=>{if(ev.target.closest('.nv-tools')){tools.click(ev);return;}ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
+  doc.addEventListener('click',ev=>{if(ev.target.closest('.nv-tools')){tools.click(ev);return;}if(tools.open()){ev.preventDefault();ev.stopPropagation();tools.close();return;}ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
  }
  // 서버 편집 화면의 AI 대화 — 누른 영역(data-block)을 편집 화면에 알린다. 유의사항은 서버 소유라 고를 수 없다
  if(mode==='server-select'){
@@ -267,6 +327,7 @@ function hydrate(root=document){
   }
  });
  root.querySelectorAll('.event-frame').forEach(frame=>{frame.onload=()=>bindFrame(frame);bindFrame(frame);});
+ root.querySelectorAll('.canvas-frame.fit').forEach(fitCanvasFrame);
 }
 
 /**

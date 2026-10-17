@@ -13,7 +13,9 @@
     "preview": "vite preview",
     "preview:admin": "cross-env APP=admin vite preview",
     "css": "node scripts/build-event-css.mjs",
-    "css:check": "node scripts/build-event-css.mjs --check"
+    "css:check": "node scripts/build-event-css.mjs --check",
+    "palettes": "node scripts/build-palettes.mjs",
+    "palettes:check": "node scripts/build-palettes.mjs --check"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
