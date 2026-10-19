@@ -206,10 +206,33 @@ function serverEventView() {
     return '<div class="container"><div class="empty"><h3>불러오는 중…</h3></div></div>'
   }
   if (ui.serverEventState === 'error' || !e) {
-    return '<div class="container empty"><h3>이벤트를 불러오지 못했어요</h3>'
-      + '<p>' + esc(ui.serverEventError || '') + '</p>'
-      + button('reload-event', '다시 시도', '', 'btn primary')
-      + button('route', '목록으로', 'data-route="home"', 'btn') + '</div>'
+    return `
+      <div class="container">
+        <section class="event-error" aria-labelledby="event-error-title">
+          <div class="event-error-icon" aria-hidden="true">
+            ${icon('search')}
+          </div>
+
+          <h1 id="event-error-title">이벤트를 불러오지 못했어요</h1>
+          <p>${esc(ui.serverEventError || '잠시 후 다시 시도해주세요.')}</p>
+
+          <div class="event-error-actions">
+            ${button(
+              'reload-event',
+              '다시 시도',
+              '',
+              'btn event-error-retry',
+            )}
+            ${button(
+              'route',
+              '목록으로',
+              'data-route="home"',
+              'btn event-error-back',
+            )}
+          </div>
+        </section>
+      </div>
+    `
   }
   if (!e.publishedHtml) {
     return '<div class="container empty"><h3>아직 게시되지 않은 이벤트입니다</h3>'
@@ -217,19 +240,24 @@ function serverEventView() {
   }
 
   return '<div class="container">'
-    + button('route', icon('back') + '이벤트 목록', 'data-route="home"', 'backlink')
+    + button('route', icon('back') + '이벤트 목록', 'data-route="home"', 'btn event-list-back')
     + '<div class="detail-layout"><div class="detail-frame">'
     // live — 페이지 안의 「참여하기」(data-slot="cta-link")를 호스트가 받는다.
     // 그 밖의 클릭은 readonly 와 똑같이 막는다 (frame.js 의 bindFrame 참고)
     + serverFrame(e.publishedHtml, esc(e.title), isUpcomingEvent(e) ? 'readonly' : 'live', e.id)
     + '</div><aside class="detail-side card">'
-    + '<div class="spread">' + (isUpcomingEvent(e) ? '<span class="badge">오픈 예정</span>' : '<span class="badge green">진행 중</span>')
-    + (e.closingSoon ? '<span class="badge pink">마감 임박</span>' : '') + '</div>'
+    + '<div class="spread detail-status-row">'
+    + '<span class="event-progress '
+    + (isUpcomingEvent(e) ? 'upcoming' : 'live') + '">'
+    + '<span aria-hidden="true">●</span> '
+    + (isUpcomingEvent(e) ? '오픈 예정' : '진행 중')
+    + '</span>'
+    + (e.closingSoon ? '<span class="badge event-closing-badge">마감 임박</span>' : '') + '</div>'
     + '<h1>' + esc(e.title) + '</h1>'
     + '<dl class="facts">'
     + '<div class="fact"><dt>이벤트 기간</dt><dd>'
     + shortDate(e.startDate.slice(0, 10))
-    + '<br>~ ' + shortDate(e.endDate.slice(0, 10))
+    + ' ~ ' + shortDate(e.endDate.slice(0, 10))
     + '</dd></div>'
     + '<div class="fact"><dt>참여 대상</dt><dd>'
     + esc(participationGradeLabel(e.grade))

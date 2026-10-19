@@ -50,9 +50,9 @@ export function accountView() {
     : current.name
 
   return `
-    <div class="container narrow">
+    <div class="container narrow user-account-page">
       <div class="page-heading">
-        <span class="eyebrow">MY ACCOUNT</span>
+        <span class="eyebrow">나의 계정</span>
         <h1>내 정보</h1>
         <p>${esc(me.name)}님의 계정 정보를 관리합니다.</p>
       </div>
@@ -73,7 +73,7 @@ export function accountView() {
 
         <div class="activity-stat">
           <span>이용 중인 요금제</span>
-          <strong style="font-size:20px">${esc(planLabel)}</strong>
+          <strong>${esc(planLabel)}</strong>
         </div>
       </section>
 

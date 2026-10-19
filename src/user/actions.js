@@ -112,12 +112,14 @@ async function showResult(participationId, eventId) {
       '나의 참여 결과',
       html,
       button('close', '닫기')
-        + button(
-            'route',
-            '내 혜택에서 보기',
-            'data-route="my"',
-            'btn primary',
-          ),
+        + (ui.route !== 'my'
+          ? button(
+              'route',
+              '내 혜택에서 보기',
+              'data-route="my"',
+              'btn primary',
+            )
+          : ''),
     )
   } catch (error) {
     if (!loading?.isConnected) return
@@ -146,7 +148,7 @@ function participate(e,choice){
  if(e.templateId==='tpl-5'){result='사전예약 신청 접수';}
  const now=new Date(),hm=now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'});
  const p={id:'PT-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),eventId:e.id,userId:USER_ID,day:DEMO_DATE,at:shortDate(DEMO_DATE)+' '+hm,title:published(e).title,state:status,result,reward,selection,version:e.publishedVersion};
- state.db.participations.push(p);persist();render();showResult(p.id);
+ state.db.participations.push(p);persist();document.dispatchEvent(new Event('nv-user-render'));showResult(p.id);
 }
 
 export { showLoginPrompt, showResult, participate }

@@ -23,16 +23,59 @@ import { button } from '@shared/ui/controls.js'
 
 /* ───────────── 서버 모드 ───────────── */
 
+function myParticipationBadge(eventId) {
+  if (!ui.logged || ui.homeParticipations?.state !== 'done') return ''
+
+  const participation =
+    ui.homeParticipations.byEvent[String(eventId)]
+
+  if (!participation) return ''
+
+  const pending = participation.resultStatus === 'PENDING'
+
+  return '<span class="event-my-status'
+    + (pending ? ' pending' : '') + '">'
+    + (pending ? '결과 대기' : '참여 완료')
+    + '</span>'
+}
+
 /** 서버 목록 항목 → 카드. 있는 값만 쓴다. */
 function serverCard(e) {
-  const period = shortDate(e.startDate.slice(0, 10)) + ' ~ ' + shortDate(e.endDate.slice(0, 10))
-  return '<article class="event-card"><button class="card-link" data-act="event" data-id="' + esc(e.id) + '">'
+  const period = shortDate(e.startDate.slice(0, 10))
+    + ' ~ ' + shortDate(e.endDate.slice(0, 10))
+
+  const progress = progressOf(e, Date.now())
+  const progressLabel = {
+    live: '진행 중',
+    upcoming: '오픈 예정',
+    ended: '종료',
+  }[progress]
+
+  return '<article class="event-card">'
+    + '<button class="card-link" data-act="event" data-id="' + esc(e.id) + '">'
     + '<div style="position:relative">' + serverThumb(e)
-    + (e.closingSoon ? '<span class="thumb-badge badge pink">마감 임박</span>' : '')
+    + (e.closingSoon
+      ? '<span class="thumb-badge badge event-closing-badge">마감 임박</span>'
+      : '')
     + '</div>'
-    + '<div class="event-body"><h3>' + esc(e.title) + '</h3>'
-    + '<div class="event-bottom"><span>' + period + '</span>'
-    + '<span class="card-action">자세히 보기' + icon('arrow') + '</span></div></div>'
+    + '<div class="event-body">'
+    + '<div class="event-status-row">'
+    + '<div class="event-progress ' + progress + '">'
+    + '<span aria-hidden="true">●</span> ' + progressLabel
+    + '</div>'
+    + myParticipationBadge(e.id)
+    + '</div>'
+    + '<h3>' + esc(e.title) + '</h3>'
+    + '<p class="event-period">' + period + '</p>'
+    + '<div class="event-bottom">'
+    + '<span>' + (progress === 'live'
+      ? '이벤트 진행 중'
+      : progress === 'upcoming'
+        ? '오픈 예정 이벤트'
+        : '종료된 이벤트') + '</span>'
+    + '<span class="card-action">자세히 보기' + icon('arrow') + '</span>'
+    + '</div>'
+    + '</div>'
     + '</button></article>'
 }
 
@@ -40,10 +83,72 @@ function serverCard(e) {
  * 목록 응답에 HTML 이 오면 미리보기를, 없으면 자리표시자를 그린다.
  * 백엔드가 thumbnailHtml(hero 블록만) 또는 publishedHtml 을 주면 자동으로 켜진다.
  */
+function eventThumbnailHtml(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const hero = doc.querySelector('[data-block="hero"]')
+
+  if (!hero) return html
+
+  // 기존 테마를 유지하면서 첫 배너만 남긴다.
+  const container = hero.closest('.ev-container')
+
+  if (container) {
+    container.replaceChildren(hero)
+  } else {
+    doc.body.replaceChildren(hero)
+  }
+
+  const style = doc.createElement('style')
+  style.textContent = `
+    html,
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 720px !important;
+      overflow: hidden !important;
+    }
+
+    .ev-container {
+      box-sizing: border-box !important;
+      width: 720px !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    [data-block="hero"] {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      max-width: none !important;
+      height: 440px !important;
+      min-height: 440px !important;
+      max-height: 440px !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      overflow: hidden !important;
+      align-content: center !important;
+    }
+  `
+
+  doc.body.appendChild(style)
+  return doc.body.outerHTML
+}
+
 function serverThumb(e) {
   const html = e.thumbnailHtml || e.publishedHtml
-  if (html) return '<div class="thumb">' + serverFrame(html, '이벤트 미리보기') + '</div>'
-  return '<div class="thumb thumb-empty" aria-hidden="true">' + icon('gift') + '</div>'
+
+  if (html) {
+    return '<div class="thumb">'
+      + serverFrame(eventThumbnailHtml(html), '이벤트 미리보기')
+      + '</div>'
+  }
+
+  return '<div class="thumb thumb-empty" aria-hidden="true">'
+    + icon('gift')
+    + '</div>'
 }
 
 function progressOf(event, now) {
@@ -127,11 +232,86 @@ function resultsHTML() {
   return USE_SERVER ? serverResults() : mockResults()
 }
 
+function serverHero() {
+  const featured = (ui.serverEvents || []).slice(0, 3)
+
+  if (!featured.length) return ''
+
+  const index = ((ui.hero || 0) % featured.length + featured.length)
+    % featured.length
+  const event = featured[index]
+
+  return `
+    <section class="hero user-featured" aria-label="추천 이벤트">
+      <div class="hero-copy">
+        <span class="eyebrow">NEWVENT 추천</span>
+        <h1>오늘의 작은 참여가<br><em>특별한 혜택으로.</em></h1>
+        <p>
+          일상에 즐거움을 더할<br>
+          이벤트를 만나보세요.
+        </p>
+
+        ${button(
+          'event',
+          '추천 이벤트 만나기 ' + icon('arrow'),
+          'data-id="' + esc(event.id) + '"',
+          'btn primary',
+        )}
+
+        <div class="hero-controls">
+          ${button(
+            'hero-prev',
+            icon('back'),
+            'aria-label="이전 추천 이벤트"'
+              + (featured.length === 1 ? ' disabled' : ''),
+            'icon-btn',
+          )}
+          <strong aria-live="polite">
+            ${String(index + 1).padStart(2, '0')}
+          </strong>
+          <span class="line"></span>
+          <span>${String(featured.length).padStart(2, '0')}</span>
+          ${button(
+            'hero-next',
+            icon('arrow'),
+            'aria-label="다음 추천 이벤트"'
+              + (featured.length === 1 ? ' disabled' : ''),
+            'icon-btn',
+          )}
+        </div>
+      </div>
+
+      <div class="hero-preview">
+        <div class="preview-bar">
+          <i></i><i></i><i></i>
+          <span>NEWVENT PICK</span>
+        </div>
+
+        ${serverThumb(event)}
+
+        <div class="hero-caption">
+          ${icon('gift')}
+          <span>${esc(event.title)}</span>
+          ${button(
+            'event',
+            icon('arrow'),
+            'data-id="' + esc(event.id)
+              + '" aria-label="추천 이벤트 상세 보기"',
+            'icon-btn',
+          )}
+        </div>
+      </div>
+    </section>
+  `
+}
+
 function homeView() {
   const heading =
-    '<div class="page-heading"><span class="eyebrow">FIND YOUR EVENT</span>'
-    + '<h1>오늘은 어떤 즐거움을 만나볼까요?</h1>'
-    + '<p>진행 중인 이벤트를 살펴보고 참여해보세요.</p></div>'
+    '<div class="page-heading">'
+    + '<span class="eyebrow">이벤트 모아보기</span>'
+    + '<h1>어떤 이벤트에 참여해볼까요?</h1>'
+    + '<p>진행 중인 이벤트와 오픈 예정 이벤트를 확인하세요.</p>'
+    + '</div>'
 
   const search =
     '<div class="section-title spread"><div></div><label class="search">' + icon('search')
@@ -147,8 +327,17 @@ function homeView() {
         + '<div class="empty"><h3>이벤트를 불러오지 못했어요</h3><p>' + esc(ui.serverEventsError || '') + '</p>'
         + button('reload-events', '다시 시도', '', 'btn soft') + '</div></div>'
     }
-    return '<div class="container">' + heading + search
-      + '<div id="event-results">' + serverResults() + '</div></div>'
+
+    return '<div class="container">'
+      + serverHero()
+      + '<section id="events-section" class="user-events-section">'
+      + '<div class="user-events-heading">'
+      + heading
+      + search
+      + '</div>'
+      + '<div id="event-results">' + serverResults() + '</div>'
+      + '</section>'
+      + '</div>'
   }
 
   // 목업 — 추천 히어로까지 보여준다
@@ -157,7 +346,7 @@ function homeView() {
     return '<div class="container"><div class="empty"><h3>게시된 이벤트가 없어요</h3><p>관리자가 이벤트를 게시하면 이곳에서 확인할 수 있어요.</p></div></div>'
   }
   const e = featured[ui.hero % featured.length]
-  return '<div class="container"><section class="hero"><div class="hero-copy"><span class="eyebrow">YOUR EVERYDAY EVENT</span><h1>작은 참여,<br><em>기분 좋은 혜택.</em></h1><p>취향에 맞는 이벤트를 만나고,<br>나만의 즐거운 순간을 만들어보세요.</p>'+button('event','추천 이벤트 만나기 '+icon('arrow'),'data-id="'+e.id+'"','btn primary')+'<div class="hero-controls">'+button('hero-prev',icon('back'),'aria-label="이전 추천 이벤트"','icon-btn')+'<strong>'+String(ui.hero%featured.length+1).padStart(2,'0')+'</strong><span class="line"></span><span>'+String(featured.length).padStart(2,'0')+'</span>'+button('hero-next',icon('arrow'),'aria-label="다음 추천 이벤트"','icon-btn')+'</div></div><div class="hero-preview"><div class="preview-bar"><i></i><i></i><i></i><span>NEWVENT PICK</span></div>'+thumb(e)+'<div class="hero-caption">'+icon('gift')+'<span>'+esc(published(e).title)+'</span>'+button('event',icon('arrow'),'data-id="'+e.id+'" aria-label="추천 이벤트 상세 보기"','icon-btn')+'</div></div></section>'+activity()
+  return '<div class="container"><section class="hero"><div class="hero-copy"><span class="eyebrow">YOUR EVERYDAY EVENT</span><h1>작은 참여,<br><em>기분 좋은 혜택</em></h1><p>취향에 맞는 이벤트를 만나고,<br>나만의 즐거운 순간을 만들어보세요.</p>'+button('event','추천 이벤트 만나기 '+icon('arrow'),'data-id="'+e.id+'"','btn primary')+'<div class="hero-controls">'+button('hero-prev',icon('back'),'aria-label="이전 추천 이벤트"','icon-btn')+'<strong>'+String(ui.hero%featured.length+1).padStart(2,'0')+'</strong><span class="line"></span><span>'+String(featured.length).padStart(2,'0')+'</span>'+button('hero-next',icon('arrow'),'aria-label="다음 추천 이벤트"','icon-btn')+'</div></div><div class="hero-preview"><div class="preview-bar"><i></i><i></i><i></i><span>NEWVENT PICK</span></div>'+thumb(e)+'<div class="hero-caption">'+icon('gift')+'<span>'+esc(published(e).title)+'</span>'+button('event',icon('arrow'),'data-id="'+e.id+'" aria-label="추천 이벤트 상세 보기"','icon-btn')+'</div></div></section>'+activity()
    +'<section id="events-section">'+search+'<div id="event-results">'+mockResults()+'</div></section></div>'
 }
 

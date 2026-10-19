@@ -20,7 +20,7 @@ import { homeView, refreshResults } from './views/home.js'
 import { eventView } from './views/event.js'
 import { myView } from './views/my.js'
 import { loginView } from './views/login.js'
-import { firstSignupError, signupView } from './views/signup.js'
+import { signupView } from './views/signup.js'
 import { accountView } from './views/account.js'
 import { showLoginPrompt, showResult } from './actions.js'
 
@@ -64,6 +64,8 @@ function displayName() {
 
 /** 로그인 · 새로고침 복구 뒤 내 정보를 읽는다. 실패해도 로그인 상태는 유지한다 (이름만 기본값) */
 async function loadMe() {
+  ui.homeParticipations = null
+
   ui.serverMe = null
   ui.serverMeError = null
 
@@ -82,25 +84,84 @@ async function loadMe() {
 }
 
 function header() {
-  $('#header').innerHTML =
-    '<div class="container">' +
-    '<a class="brand" href="/" data-link aria-label="NewVent 홈">' +
-    '<span class="brand-mark"></span><span>New<b>Vent</b></span></a>' +
-    '<nav class="nav" aria-label="주 메뉴">' +
-    button('route', '이벤트', 'data-route="home"', ui.route === 'home' || ui.route === 'event' ? 'active' : '') +
-    button('route', '내 혜택', 'data-route="my"', ui.route === 'my' ? 'active' : '') +
-    (ui.logged ? button('route', '내 정보', 'data-route="account"', ui.route === 'account' ? 'active' : '') : '') +
-    '</nav><div class="account">' +
-    (ui.logged
-      ? '<span class="avatar">' + icon('user') + '</span><span class="name">' + esc(displayName()) + '님</span>' +
-        button('logout', '로그아웃', '', 'btn ghost sm')
-      : button('route', '로그인', 'data-route="login"', 'btn soft sm') +
-        button('route', '회원가입', 'data-route="signup"', 'btn sm')) +
-    '</div></div>'
+  const me = AUTH_ENABLED ? ui.serverMe : state.db.me
+  const name = me?.name || displayName()
+  const gradeNames = {
+    NORMAL: '일반',
+    EXCELLENT: '우수',
+    BEST: '최우수',
+  }
+  const grade = AUTH_ENABLED
+    ? gradeNames[me?.membershipGrade] || '확인 중'
+    : me?.grade || '일반'
 
-  $('#footer').innerHTML =
-    '<div class="container spread"><span class="brand">New<b>Vent</b></span>' +
-    '<p>데모 데이터로 동작하는 화면입니다. 실제 경품은 지급되지 않습니다.</p></div>'
+  $('#header').innerHTML = `
+    <div class="container user-header-inner">
+      <a class="brand user-brand" href="/" data-link aria-label="NewVent 홈">
+        <img src="/assets/newvent-logo.png" alt="NewVent" width="180" height="40">
+      </a>
+
+      <nav class="user-nav" aria-label="주 메뉴">
+        <a href="/" data-link
+           class="user-nav-link ${['home', 'event'].includes(ui.route) ? 'active' : ''}"
+           ${['home', 'event'].includes(ui.route) ? 'aria-current="page"' : ''}>
+          이벤트
+        </a>
+        <a href="/my" data-link
+           class="user-nav-link ${ui.route === 'my' ? 'active' : ''}"
+           ${ui.route === 'my' ? 'aria-current="page"' : ''}>
+          내 혜택
+        </a>
+      </nav>
+
+      <div class="user-account">
+        ${ui.logged ? `
+          <details class="user-account-menu">
+            <summary class="user-account-trigger">
+              <span class="user-avatar">${icon('user')}</span>
+              <span class="user-account-name">${esc(name)}님</span>
+              <svg class="user-account-chevron" width="14" height="14"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.8" aria-hidden="true">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </summary>
+
+            <div class="user-account-dropdown">
+              <div class="user-account-info">
+                <div class="user-account-info-heading">
+                  <strong>${esc(name)}님</strong>
+                  <span class="user-grade">${esc(grade)} 등급</span>
+                </div>
+                <span>${esc(me?.email || '이메일 정보 없음')}</span>
+              </div>
+              <a href="/account" data-link class="user-account-item">
+                ${icon('user')}
+                <span>내 정보</span>
+              </a>
+              <button type="button" data-act="logout"
+                      class="user-account-item user-account-logout">
+                ${icon('logout')}
+                <span>로그아웃</span>
+              </button>
+            </div>
+          </details>
+        ` : `
+          ${button('route', '로그인', 'data-route="login"', 'btn soft sm')}
+          ${button('route', '회원가입', 'data-route="signup"', 'btn primary sm')}
+        `}
+      </div>
+    </div>
+  `
+
+  $('#footer').innerHTML = `
+    <div class="container spread">
+      <a class="brand user-brand" href="/" data-link aria-label="NewVent 홈">
+        <img src="/assets/newvent-logo.png" alt="NewVent" width="180" height="40">
+      </a>
+      <p>데모 데이터로 동작하는 화면입니다. 실제 경품은 지급되지 않습니다.</p>
+    </div>
+  `
 }
 
 /* ───────────── 서버 모드 데이터 ─────────────
@@ -205,11 +266,63 @@ function ensureMy(rerender) {
   )
 }
 
+/** 홈 카드용 참여 상태 — 내 혜택 페이지네이션과 별도로 조회 */
+function ensureHomeParticipations(rerender) {
+  if (!USE_SERVER || !ui.logged) return
+  if (ui.homeParticipations) return
+
+  const request = {
+    state: 'loading',
+    byEvent: {},
+  }
+
+  ui.homeParticipations = request
+
+  const isCurrent = () =>
+    ui.logged && ui.homeParticipations === request
+
+  async function loadAll() {
+    const byEvent = {}
+
+    for (let page = 0; ; page++) {
+      if (!isCurrent()) return
+
+      const data = await loadParticipations({
+        filter: 'ALL',
+        page,
+        size: 50,
+      })
+
+      if (!isCurrent()) return
+
+      for (const participation of data.items) {
+        byEvent[String(participation.eventId)] = participation
+      }
+
+      if (!data.items.length || page + 1 >= data.totalPages) break
+    }
+
+    if (!isCurrent()) return
+
+    request.byEvent = byEvent
+    request.state = 'done'
+
+    if (ui.route === 'home') rerender()
+  }
+
+  loadAll().catch(() => {
+    if (!isCurrent()) return
+    request.state = 'error'
+  })
+}
 
 function render(scroll = false) {
   state.observers.forEach((x) => x.disconnect())
   state.observers = []
-  if (ui.route === 'home') ensureEvents(() => render())
+  if (ui.route === 'home') {
+    ensureEvents(() => render())
+    ensureHomeParticipations(() => render())
+  }
   if (ui.route === 'event') {
     ensureEvent(ui.activeId, () => render())
     ensureParticipationStatus(ui.activeId, () => render())
@@ -224,6 +337,7 @@ function render(scroll = false) {
 
 const router = createRouter(ROUTES, (match) => {
   ui.route = match.name
+  if (match.name === 'home') ui.homeParticipations = null
   if (match.params.id) ui.activeId = match.params.id
   render(true)
 })
@@ -237,6 +351,32 @@ function navigate(route, id) {
 
 // 이식한 뷰들이 @shared/navigate.js 를 통해 이걸 부른다.
 setNavigate(navigate)
+
+// 사용자 메뉴: 바깥 클릭 또는 메뉴 항목 선택 시 닫기
+document.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element)) return
+
+  const menu = document.querySelector('.user-account-menu[open]')
+  if (!menu) return
+
+  if (
+    !menu.contains(event.target)
+    || event.target.closest('.user-account-item')
+  ) {
+    menu.open = false
+  }
+})
+
+// Escape로 메뉴를 닫고 사용자 버튼으로 포커스를 돌린다.
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return
+
+  const menu = document.querySelector('.user-account-menu[open]')
+  if (!menu) return
+
+  menu.open = false
+  menu.querySelector('summary')?.focus()
+})
 
 document.addEventListener('click', (ev) => {
   const b = ev.target.closest('[data-act], a[data-link]')
@@ -476,6 +616,7 @@ async function submitFromPage(frame, { eventId, payload }) {
     // 내 혜택은 다음에 들어갈 때 서버에서 다시 읽는다
     ui.serverMy = null
     ui.serverMyState = null
+    ui.homeParticipations = null
     render()
     toast(made.resultData?.status === 'WON' ? '당첨되었어요!' : '참여가 접수되었어요.')
   } catch (e) {
@@ -518,6 +659,7 @@ async function submitParticipation(form) {
     // 내 혜택은 다음에 들어갈 때 서버에서 다시 읽는다
     ui.serverMy = null
     ui.serverMyState = null
+    ui.homeParticipations = null
     render()
     toast(s.result.status === 'WON' ? '당첨되었어요!' : '참여가 접수되었어요.')
   } catch (e) {
@@ -533,40 +675,6 @@ async function submitParticipation(form) {
     const box = document.querySelector('#participate-form .create-error')
     if (box) box.textContent = e?.message || '참여하지 못했어요.'
     else toast(e?.message || '참여하지 못했어요.')
-  }
-}
-
-
-/**
- * 서버 회원가입 — 성공해도 **로그인되지 않는다.**
- * 응답이 토큰이 아니라 만들어진 회원이라서, 아이디를 채워 둔 로그인 화면으로 보낸다.
- *
- * 중복만 코드로 구분된다 (대소문자만 달라도 중복이다).
- *   USER409-0 아이디 · USER409-1 이메일
- */
-async function serverSignup(form, values, fail) {
-  const submit = form.querySelector('button[type="submit"]')
-  if (submit?.disabled) return
-  if (submit) { submit.disabled = true; submit.textContent = '가입하는 중…' }
-
-  try {
-    const me = await signUp({
-      loginId: values.loginId,
-      password: values.password,
-      name: values.name,
-      email: values.email,
-      // 안 적었으면 아예 보내지 않는다 — 빈 문자열을 저장하지 않게.
-      ...(values.phone ? { phone: values.phone } : {}),
-    })
-    ui.signup = null
-    ui.loginHint = me.loginId
-    navigate('login')
-    toast(me.name + '님, 가입했어요. 이제 로그인해주세요.')
-  } catch (e) {
-    if (submit) { submit.disabled = false; submit.textContent = '가입하기' }
-    if (e?.code === 'USER409-0') return fail('이미 사용 중인 아이디예요. 대소문자만 다른 아이디도 쓸 수 없어요.', 'loginId')
-    if (e?.code === 'USER409-1') return fail('이미 사용 중인 이메일이에요. 대소문자만 다른 이메일도 쓸 수 없어요.', 'email')
-    fail(e?.message || '가입하지 못했어요. 입력한 내용을 다시 확인해주세요.', 'loginId')
   }
 }
 
@@ -595,6 +703,7 @@ async function logout() {
   ui.serverParticipation = null
   ui.serverGrades = null
   ui.participated = null
+  ui.homeParticipations = null
   navigate('home')
   toast('로그아웃했어요.')
 }
@@ -876,6 +985,8 @@ $('#overlay').addEventListener('click', (ev) => {
 ui.role = 'user'
 
 // 서버 인증 사용 여부는 AUTH_ENABLED (@shared/api.js). 꺼져 있으면 목업 로그인 상태로 돈다.
+
+document.addEventListener('nv-user-render', () => render())
 
 async function start() {
   if (AUTH_ENABLED) {
