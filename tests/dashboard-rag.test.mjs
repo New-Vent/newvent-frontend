@@ -92,15 +92,15 @@ test('재색인 기록이 없으면 툴팁 표시 없이 빈 안내를 보여준
   assert.doesNotMatch(html, /<span class="tip-flag">그 주에 전체 재색인 실행/)
 })
 
-test('전체 재색인 카드가 추이와 이력 사이에 온다', async () => {
+test('전체 재색인 카드가 차트보다 위에 온다', async () => {
   const h = await setup()
   await new Promise((r) => h.ns.ensureDashboard(r))
   const html = h.ns.dashboardRagView()
   const action = html.indexOf('RAG 전체 재색인')
   const trend = html.indexOf('막대 밖 날짜는')
   const history = html.indexOf('재색인 이력')
-  // 관찰(추이) → 행동(실행) → 설명(이력) 순서다
-  assert.ok(action > trend && action < history, '실행 카드가 추이 뒤 이력 앞에 있어야 한다')
+  // 실행(맨 위) → 관찰(추이) → 설명(이력) 순서다
+  assert.ok(action < trend && action < history && trend < history, '실행 카드가 차트 앞, 이력은 차트 뒤여야 한다')
   // 버튼 — 실행 전이면 누를 수 있다
   assert.ok(h.buttons.some((b) => b.action === 'rag-reindex-all' && b.label === '전체 재색인' && !b.attrs.includes('disabled')))
 })

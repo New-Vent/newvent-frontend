@@ -159,18 +159,19 @@ export function dashboardRagView() {
       + (d.diff === 0 ? '변동 없음' : (d.diff > 0 ? '+' + d.diff + '회' : d.diff + '회')) + '</p>'
     : ''
 
-  return '<div class="container">' + head + legend + delta
+  return '<div class="container">' + head
+    + reindexActionCard()
+    + legend + delta
     + '<div class="card"><div class="trend">' + cols + '</div>'
     + '<p class="helper trend-helper">막대 높이는 그 주 전체 호출 수, 안쪽 초록은 그중 RAG 참고 사례를 실어 넣은 호출이에요. '
     + '막대에 마우스를 올리면 주간 범위와 전체·RAG 참고 회수, 사용률, 그 주에 사용된 청크 수가 세로로 요약돼요. '
     + '그 주에 전체 재색인을 돌렸으면 청크 수가 일제히 바뀌니 말줄에 "그 주에 전체 재색인 실행" 표시가 붙어요. '
     + '막대 밖 날짜는 주의 시작일이고, 이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p></div>'
-    + reindexActionCard()
     + reindexCard(ui.ragReindexLogs)
     + '</div>'
 }
 
-/** 전체 재색인 실행 카드 — 관찰(추이)→행동(실행)의 짝. 이벤트 범위 재색인은 버전 이력 화면에 남는다 */
+/** 전체 재색인 실행 카드 — 들어오면 바로 누를 수 있게 차트 위 맨 앞에 둔다 */
 function reindexActionCard() {
   const st = ui.ragReindexAll
   const running = !!st?.running
