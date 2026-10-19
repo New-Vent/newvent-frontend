@@ -16,7 +16,7 @@ import { createRouter } from '@shared/router.js'
 import { setNavigate } from '@shared/navigate.js'
 import { initialDatabase, PLANS, gradeOfPlan } from '@shared/mock/fixtures.js'
 
-import { homeView, refreshResults } from './views/home.js'
+import { homeView, refreshResults, refreshHero } from './views/home.js'
 import { eventView } from './views/event.js'
 import { myView } from './views/my.js'
 import { loginView } from './views/login.js'
@@ -460,14 +460,9 @@ document.addEventListener('click', (ev) => {
     logout()
     return
   }
-  if (a === 'hero-prev') {
-    ui.hero = (ui.hero || 0) - 1
-    render()
-    return
-  }
-  if (a === 'hero-next') {
-    ui.hero = (ui.hero || 0) + 1
-    render()
+  if (a === 'hero-prev' || a === 'hero-next') {
+    ui.hero = (ui.hero || 0) + (a === 'hero-prev' ? -1 : 1)
+    if (!refreshHero()) render()
     return
   }
   if (a === 'filter') {
