@@ -203,6 +203,16 @@
 .server-scroll .workspace-tip{padding:0 0 12px;margin-bottom:12px}
 .sedit-group{border:0;padding:0;margin:0 0 16px;min-width:0}
 .sedit-group legend{padding:0;margin-bottom:8px;font-size:11px;font-weight:800;color:var(--sky);letter-spacing:.02em}
+.sedit-subhead{padding:0;margin:0 0 8px;font-size:11px;font-weight:800;color:var(--sky);letter-spacing:.02em}
+/* 직접 수정 — 배치·모양·디자인은 접어 두고 문구가 먼저 보이게 */
+.sedit-fold{margin:0 0 10px;border:1px solid #ece9f1;border-radius:10px;background:#faf9fc;overflow:hidden}
+.sedit-fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:11px 12px;font-size:12px;font-weight:800;color:var(--ink)}
+.sedit-fold>summary::-webkit-details-marker{display:none}
+.sedit-fold>summary::before{content:'▸';display:inline-block;color:var(--muted);transition:transform .15s}
+.sedit-fold[open]>summary{border-bottom:1px solid #ece9f1;color:var(--sky)}
+.sedit-fold[open]>summary::before{transform:rotate(90deg);color:var(--sky)}
+.sedit-fold-mark{margin-left:auto;padding:2px 8px;border-radius:999px;background:#e8f6fd;color:#0377ad;font-size:10px;font-weight:800}
+.sedit-fold-body{padding:12px}
 .sedit-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:start}
 .sedit-item+.sedit-item{margin-top:6px}
 .sedit-format{margin:4px 0 12px;font-size:12px}

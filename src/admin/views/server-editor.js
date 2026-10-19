@@ -72,7 +72,12 @@ const chatOf = (id) => (CHATS[id] ||= [{ role: 'assistant', text: GREETING }])
 
 // order 는 null 로 시작한다 — 아직 안 건드렸다는 뜻이다. 미리보기 순서를 그대로 쓴다
 // layout 도 null 로 시작한다. variants 는 고친 영역만 담는다 (영역 → class)
-const freshDirect = () => ({ values: {}, formats: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {}, removeBlocks: [], removeItems: {} })
+const freshDirect = () => ({
+  values: {}, formats: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {},
+  removeBlocks: [], removeItems: {},
+  // 직접 수정 접기 상태 — 다시 그려도 열림/닫힘을 유지 (looks · order · title · button)
+  folds: {},
+})
 
 /** 새로 만든 직후처럼 진행 중인 작업을 들고 들어올 때 — 목록에서 열 때는 인자 없이 */
 function openServerEditor(id, { jobId = null, request = null, startError = null } = {}) {
@@ -515,13 +520,12 @@ function previewOrder(s) {
   marks.forEach((m, i) => m.replaceWith(sorted[i]))
 }
 
-/** 순서 묶음. 옮길 수 있는 블록이 둘 미만이면 아예 안 보여 준다 */
+/** 순서 묶음. 옮길 수 있는 블록이 둘 미만이면 아예 안 보여 준다. 접기 토글 안에 넣는다. */
 function orderHTML(s, busy) {
   const available = currentOrder(s)
   if (available.length < 2 && !available.some((k) => !ADMIN_KEEP.includes(k) || ITEM_SELECTORS[k])) return ''
-  return '<fieldset class="sedit-group"><legend>블록 순서 · 삭제</legend>'
-    + '<ol class="sorder" id="server-order">' + orderItems(s, busy) + '</ol>'
-    + '<p class="helper">끌어서 옮기거나 ▲▼ 를 누르세요. 유의사항 · 참여 버튼은 늘 맨 끝이에요.</p></fieldset>'
+  return '<ol class="sorder" id="server-order">' + orderItems(s, busy) + '</ol>'
+    + '<p class="helper">끌어서 옮기거나 ▲▼ 를 누르세요. 유의사항 · 참여 버튼은 늘 맨 끝이에요.</p>'
 }
 
 /**
@@ -703,19 +707,37 @@ function lookRows(s, busy) {
     : '<div class="look-row"><span class="look-name">' + esc(labelOf(k)) + '</span>' + variantSelect(s, k, b, dis) + '</div>')).join('')
 }
 
-/** 배치 · 모양 묶음 — 직접 수정 패널 맨 위 */
+/** 배치 · 모양 본문 — 직접 수정에서는 접기(토글) 안에 넣는다 */
 function looksHTML(s, busy) {
   const L = looksOf(s)
   if (!L) return ''
   if (L.template) {
-    return '<fieldset class="sedit-group"><legend>페이지 배치</legend>'
-      + '<p class="helper">템플릿으로 만든 페이지는 배치 · 모양을 바꿀 수 없어요. 문구와 순서는 바꿀 수 있어요.</p></fieldset>'
+    return '<p class="helper">템플릿으로 만든 페이지는 배치 · 모양을 바꿀 수 없어요. 문구와 순서는 바꿀 수 있어요.</p>'
   }
-  return '<fieldset class="sedit-group"><legend>페이지 배치</legend><div id="server-layouts">'
+  return '<div class="sedit-group"><div class="sedit-subhead">페이지 배치</div><div id="server-layouts">'
     + layoutPicks('server-layout', layoutNow(s), layoutOptions(s), busy) + '</div>'
-    + '<p class="helper">흐린 배치는 지금 영역 수로는 쓸 수 없어요. 누르면 이유를 알려드려요.</p></fieldset>'
-    + '<fieldset class="sedit-group"><legend>영역 모양</legend><div class="look-rows" id="server-looks">' + lookRows(s, busy) + '</div>'
-    + '<p class="helper">미리보기에서 영역에 마우스를 올려도 바꿀 수 있어요.</p></fieldset>'
+    + '<p class="helper">흐린 배치는 지금 영역 수로는 쓸 수 없어요. 누르면 이유를 알려드려요.</p></div>'
+    + '<div class="sedit-group"><div class="sedit-subhead">영역 모양</div><div class="look-rows" id="server-looks">' + lookRows(s, busy) + '</div>'
+    + '<p class="helper">미리보기에서 영역에 마우스를 올려도 바꿀 수 있어요.</p></div>'
+}
+
+/** 자주 안 쓰는 설정은 접어 두고, 문구 수정이 먼저 보이게 */
+function foldSection(s, key, title, body, mark) {
+  if (!body) return ''
+  const open = s.direct.folds?.[key] ? ' open' : ''
+  const badge = mark ? ' <span class="sedit-fold-mark">' + esc(mark) + '</span>' : ''
+  return '<details class="sedit-fold" data-fold="' + key + '"' + open + '>'
+    + '<summary>' + title + badge + '</summary><div class="sedit-fold-body">' + body + '</div></details>'
+}
+
+function bindDirectFolds(s) {
+  document.querySelectorAll('details.sedit-fold[data-fold]').forEach((el) => {
+    el.addEventListener('toggle', () => {
+      if (ui.serverEditor !== s || !s.direct) return
+      s.direct.folds = s.direct.folds || {}
+      s.direct.folds[el.dataset.fold] = el.open
+    })
+  })
 }
 
 function paintLooks(s) {
@@ -1272,10 +1294,10 @@ function directPanel(s) {
     + '<div class="sstyle-seg" role="radiogroup" aria-label="' + label + '">'
     + [['', '그대로'], ...opts].map(([v, t]) => '<label><input type="radio" name="sstyle-' + k + '" data-sstyle="' + k + '" value="' + v + '" '
       + ((st[k] || '') === v ? 'checked' : '') + ' ' + dis + '><span>' + t + '</span></label>').join('') + '</div></div>'
-  const styleForm = hasCta ? '<fieldset class="sedit-group"><legend>참여 버튼 디자인</legend><div class="sstyle-list">'
+  const styleBody = hasCta ? '<div class="sstyle-list">'
     + color('background', '배경색', '#0284c7') + color('color', '글자색', '#ffffff')
     + select('size', '크기', [['small', '작게'], ['medium', '보통'], ['large', '크게']])
-    + select('shape', '모양', [['square', '각지게'], ['round', '둥글게'], ['pill', '알약형']]) + '</div></fieldset>' : ''
+    + select('shape', '모양', [['square', '각지게'], ['round', '둥글게'], ['pill', '알약형']]) + '</div>' : ''
 
   /**
    * ★★ 제목 글자 크기 · 색. 모델이 못 하는 자리라서 여기 있다 —
@@ -1284,17 +1306,27 @@ function directPanel(s) {
    * ★ 색은 체크를 해야 들어간다. 안 하면 테마를 따른다 — 참여 버튼과 같은 약속이다.
    */
   const TSIZES = [['small', '작게'], ['medium', '보통'], ['large', '크게'], ['xlarge', '아주 크게']]
-  const textForm = '<fieldset class="sedit-group"><legend>제목 디자인</legend><div class="sstyle-list">'
+  const textBody = '<div class="sstyle-list">'
     + color('titleColor', '큰 제목 색', '#0f172a') + select('titleSize', '큰 제목 크기', TSIZES)
     + color('headingColor', '소제목 색', '#15803d') + select('headingSize', '소제목 크기', TSIZES)
-    + '</div><p class="helper sstyle-help">색을 직접 지정하면 분위기 · 색감을 바꿔도 그 색이 유지돼요. 스위치를 끄면 다시 테마 색을 따라가요.</p></fieldset>'
+    + '</div><p class="helper sstyle-help">색을 직접 지정하면 분위기 · 색감을 바꿔도 그 색이 유지돼요. 스위치를 끄면 다시 테마 색을 따라가요.</p>'
+
+  // 문구가 먼저, 배치·모양·디자인은 접기 — 꼭 고칠 문구가 가려지지 않게
+  const dirty = directChanges(s)
+  const looksMark = dirty.looks ? '변경됨' : ''
+  const orderMark = dirty.order ? '변경됨' : ''
+  const titleMark = dirty.textStyle ? '변경됨' : ''
+  const buttonMark = dirty.buttonStyle ? '변경됨' : ''
 
   return '<div class="server-scroll" id="server-scroll">'
-    + '<p class="workspace-tip">문구를 선택해 글자색 · 크기 · 굵기를 바꿀 수 있어요. 블록·항목 삭제는 위의 순서·삭제 도구를 사용해주세요. 기간은 서버가 채우고 유의사항은 수정만 가능해요.</p>'
-    + looksHTML(s, busy)
-    + orderHTML(s, busy)
+    + '<p class="workspace-tip">문구를 먼저 고치세요. 배치·모양·순서·디자인은 아래를 열어 바꿔요. 기간은 서버가 채우고 유의사항은 수정만 가능해요.</p>'
     + (grouped ? '' : '<p class="helper" style="margin-bottom:10px">영역 구분을 불러오지 못해 문구를 순서대로 보여줘요.</p>')
-    + '<div id="server-direct">' + fields + textForm + styleForm + '</div></div>'
+    + '<div id="server-direct"><div class="sedit-group"><div class="sedit-subhead">문구 수정</div>' + fields + '</div></div>'
+    + foldSection(s, 'looks', '페이지 배치 · 영역 모양', looksHTML(s, busy), looksMark)
+    + foldSection(s, 'order', '블록 순서 · 삭제', orderHTML(s, busy), orderMark)
+    + foldSection(s, 'title', '제목 디자인', textBody, titleMark)
+    + foldSection(s, 'button', '참여 버튼 디자인', styleBody, buttonMark)
+    + '</div>'
     + '<div class="server-foot"><div class="foot-row" style="margin-top:0"><span class="helper" id="server-direct-count"></span>'
     + '<div class="row" style="gap:6px">' + button('server-direct-reset', '되돌리기', dis, 'btn sm')
     + button('server-direct-apply', s.busy ? '저장하는 중…' : '변경 저장', 'disabled', 'btn primary sm') + '</div></div>'
@@ -1659,6 +1691,7 @@ function afterServerRender() {
   })
   if (s.tab === 'direct') {
     updateDirectCount(s)
+    bindDirectFolds(s)
     foldLooks()
     const frame = $('.event-frame')
     // 미리보기 도구줄이 올린 영역에 보여 줄 것을 여기서 묻는다 (frame.js 의 server-edit 모드)
