@@ -362,6 +362,17 @@
    옅은 배경 칩으로 묶어 눈에 띄게 한다 */
 .card .trend-helper{font-size:13px;line-height:1.85;color:#4b5162;background:#f6f5fa;border-radius:8px;padding:11px 14px;margin:12px 0 0}
 
+/* 재색인 이력 카드 — 품질 추이 카드 바로 아래. 행 스타일은 호출 로그 행과 같은 골격 */
+.reindex-card{padding:20px 22px;margin-top:16px}
+.reindex-card h3{font-size:14px;margin-bottom:10px}
+.reindex-row{padding:11px 0;border-bottom:1px solid var(--line)}
+.reindex-row:first-of-type{border-top:1px solid var(--line)}
+.reindex-row:last-child{border-bottom:0}
+.reindex-line{font-size:13px;color:var(--ink)}
+.reindex-fail{display:block;font-size:11px;color:#99651d;margin-top:3px}
+/* 툴팁의 재색인 표시 — 확인용 안내 줄이라 밝게 둔다 */
+.trend-tip .tip-flag{display:block;font-size:12px;color:#bfe3c8;margin-top:4px}
+
 /* 추천·검색 모달 행 — 왼쪽 텍스트 묶음 + 오른쪽 세로 중앙 [복사] */
 .rag-rec-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
 .rag-rec-row:last-child{border-bottom:0}

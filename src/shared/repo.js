@@ -28,6 +28,7 @@ import {
   mockReindexAllStatus as _mockReindexAllStatus,
   mockLlmCallLogs as _mockLlmCallLogs,
   mockLlmCallLog as _mockLlmCallLog,
+  mockReindexLogs as _mockReindexLogs,
 } from './mock/rag-fixtures.js'
 
 /**
@@ -419,6 +420,16 @@ export async function loadSimilarVersions(eventId, versionId, topK = 3, query = 
 export async function loadQualityTrend(weeks = 4) {
   if (!USE_SERVER) return _mockQualityTrend()
   return requireApi().get(`/api/admin/rag/quality-trend?weeks=${weeks}`)
+}
+
+/**
+ * 재색인 이력 목록 — 실행 1회당 1행, 최신순. 대시보드는 첫 페이지 10 건이면 충분하다.
+ * 응답은 PageResponse 형태라 여기서 content 만 꺼내 넘긴다 (호출 쪽은 행 목록만 본다).
+ */
+export async function loadReindexLogs(page = 0, size = 10) {
+  if (!USE_SERVER) return _mockReindexLogs()
+  const res = await requireApi().get(`/api/admin/rag/reindex-logs?page=${page}&size=${size}`)
+  return res.content
 }
 
 /**

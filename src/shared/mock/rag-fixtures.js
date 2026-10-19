@@ -103,3 +103,33 @@ export function mockLlmCallLog(id) {
     createdAt: '2026-10-11T10:00:00Z',
   }
 }
+
+/** 재색인 이력 — 행 모양은 백엔드 ReindexLogSummaryResponse 와 같다. 시각은 UTC ISO, 요청자는 관리자 ID 문자열 */
+export function mockReindexLogs() {
+  return [
+    {
+      id: 3,
+      scope: 'ALL',
+      eventId: null,
+      versionId: null,
+      requestedBy: '1',
+      chunkCount: 189,
+      durationMs: 42310,
+      status: 'SUCCESS',
+      failureMessage: null,
+      createdAt: '2026-10-05T15:00:00Z',
+    },
+    {
+      id: 2,
+      scope: 'EVENT',
+      eventId: 41,
+      versionId: null,
+      requestedBy: '1',
+      chunkCount: 24,
+      durationMs: 5210,
+      status: 'FAILED',
+      failureMessage: '임베딩 TIMEOUT',
+      createdAt: '2026-09-28T05:00:00Z',
+    },
+  ]
+}
