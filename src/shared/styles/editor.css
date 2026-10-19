@@ -108,7 +108,8 @@
 .workspace-actions{gap:8px;flex-wrap:wrap}
 /* ★ 패널 폭은 화면 폭의 비율이다 — 브라우저 확대(Ctrl +)를 해도 패널 : 미리보기 비율이 그대로다.
  *   px 고정이면 확대할수록 패널만 커지고, 200% 근처에서 세로 배치로 무너졌다 */
-.workspace{--side-w:clamp(180px,24vw,440px)}
+/* AI 대화 · 직접 수정 패널 — 요청문·문구가 잘 보이도록 조금 넓힌다 */
+.workspace{--side-w:clamp(240px,30vw,520px)}
 .workspace .workspace-layout{grid-template-columns:var(--side-w) minmax(0,1fr);gap:16px;flex:1;min-height:0;align-items:stretch}
 .workspace .studio-preview-column{min-height:0;display:flex}
 .workspace .studio-preview-column>section{width:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
