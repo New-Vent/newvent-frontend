@@ -319,7 +319,7 @@
 .metrics.admin-status-metrics {grid-template-columns: repeat(4, minmax(0, 1fr));}
 @media (max-width: 760px) {.metrics.admin-status-metrics {grid-template-columns: repeat(2, minmax(0, 1fr));}}
 /* RAG 품질 추이 — 주간 막대. 높이 % 로 그려 차트 라이브러리를 쓰지 않는다 */
-.trend-legend{display:flex;gap:28px;margin:0 0 10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.trend-legend{display:flex;gap:28px;margin:10px 0 0;font-size:13px;color:var(--muted);flex-wrap:wrap}
 .trend-legend span{display:flex;align-items:center;gap:7px}
 .trend-legend b{font-weight:700;color:var(--ink)}
 .sw{width:13px;height:13px;border-radius:4px}

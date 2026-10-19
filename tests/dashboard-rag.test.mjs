@@ -63,9 +63,11 @@ test('주별 사용률과 지난주 대비 증감이 나온다', async () => {
   // 막대 밖엔 주 시작 날짜만 — 수치 행은 폐지됐다
   assert.doesNotMatch(html, /trend-value/)
   assert.doesNotMatch(html, /trend-rate/)
-  // 범례 — 색 견본과 설명이 한 세트로 붙는다
+  // 범례 — 색 견본과 설명이 한 세트로 붙는다. 위치는 막대 아래 (차트 안, 도움말 위)
   assert.match(html, /<b>전체 호출<\/b> — 그 주에 생성을 부른 횟수/)
   assert.match(html, /<b>그중 RAG 참고<\/b> — 안쪽 초록 막대, 참고 사례를 실어 넣은 호출/)
+  assert.ok(html.indexOf('trend-legend') > html.indexOf('class="trend"'), '범례가 막대 아래에 와야 한다')
+  assert.ok(html.indexOf('trend-legend') < html.indexOf('trend-helper'), '범례가 도움말 문단 앞에 와야 한다')
 })
 
 test('재색인 이력 카드와 툴팁의 전체 재색인 표시가 나온다', async () => {
