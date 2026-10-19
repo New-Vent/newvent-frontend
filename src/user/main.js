@@ -704,7 +704,7 @@ async function logout() {
   ui.serverGrades = null
   ui.participated = null
   ui.homeParticipations = null
-  navigate('home')
+  navigate('login')
   toast('로그아웃했어요.')
 }
 

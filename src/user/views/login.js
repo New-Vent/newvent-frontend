@@ -7,14 +7,61 @@ import { AUTH_ENABLED } from '@shared/api.js'
 import { loginForm } from '@shared/login-form.js'
 import { ui } from '@shared/state.js'
 
-function loginView(title='NewVent에 오신 것을 환영해요'){
- if(AUTH_ENABLED){
-  // 가입 직후 넘어오면 방금 만든 아이디를 채워 둔다 (main.js serverSignup 이 넣는다). 한 번 쓰고 버린다.
-  const hint=ui.loginHint||'';ui.loginHint=null;
-  return '<div class="container"><section class="login card"><span class="eyebrow">WELCOME TO NEWVENT</span><h1>'+esc(title)+'</h1><p>아이디와 비밀번호로 로그인해주세요.</p>'+loginForm(hint)
-   +'<p class="helper" style="margin:18px 0 0">아직 계정이 없으신가요? '+button('route','회원가입','data-route="signup"','btn soft sm')+'</p></section></div>';
- }
- return '<div class="container"><section class="login card"><span class="eyebrow">WELCOME TO NEWVENT</span><h1>'+esc(title)+'</h1><p>프로토타입에서 체험할 역할을 선택해주세요.</p>'+button('role',icon('user')+'사용자로 체험하기','data-role="user"','btn primary wide')+button('role',icon('layers')+'관리자로 체험하기','data-role="admin"','btn wide')+'<p class="helper" style="margin:20px 0 0">실제 계정 없이 화면과 동작을 확인할 수 있습니다.</p></section></div>';
+function loginView(title = '다시 만나서 반가워요!') {
+  let content
+
+  if (AUTH_ENABLED) {
+    // 가입 직후 전달된 아이디를 한 번만 사용한다.
+    const hint = ui.loginHint || ''
+    ui.loginHint = null
+
+    content = `
+      <h1 id="user-login-title">${esc(title)}</h1>
+      <p class="user-login-description">
+        로그인하고 다양한 이벤트에 참여해보세요.
+      </p>
+      ${loginForm(hint)}
+      <p class="user-login-signup">
+        아직 회원이 아니신가요?
+        ${button('route', '회원가입', 'data-route="signup"', 'user-login-link')}
+      </p>
+    `
+  } else {
+    content = `
+      <h1 id="user-login-title">${esc(title)}</h1>
+      <p class="user-login-description">
+        프로토타입에서 체험할 역할을 선택해주세요.
+      </p>
+      <div class="user-login-demo">
+        ${button('role', icon('user') + '사용자로 체험하기', 'data-role="user"', 'btn primary wide')}
+        ${button('role', icon('layers') + '관리자로 체험하기', 'data-role="admin"', 'btn wide')}
+      </div>
+      <p class="user-login-signup">
+        실제 계정 없이 화면과 동작을 확인할 수 있습니다.
+      </p>
+    `
+  }
+
+  return `
+    <div class="user-login-page">
+      <section class="user-login-card" aria-labelledby="user-login-title">
+        <div class="user-login-content">
+          <img
+            class="user-auth-logo"
+            src="/assets/newvent-logo.png"
+            alt="NEWVENT"
+          >
+          ${content}
+          ${button(
+            'route',
+            '이벤트 둘러보기 <span aria-hidden="true">›</span>',
+            'data-route="home"',
+            'user-login-browse',
+          )}
+        </div>
+      </section>
+    </div>
+  `
 }
 
 export { loginView }

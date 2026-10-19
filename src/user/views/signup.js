@@ -54,15 +54,20 @@ export function signupView() {
   })
 
   return `
-    <div class="container narrow">
+    <div class="user-signup-page">
+      <section class="user-signup-card" aria-labelledby="user-signup-title">
+        <img
+          class="user-auth-logo"
+          src="/assets/newvent-logo.png"
+          alt="NEWVENT"
+        >
       <div class="page-heading">
-        <span class="eyebrow">WELCOME TO NEWVENT</span>
-        <h1>회원가입</h1>
+        <h1 id="user-signup-title">회원가입</h1>
         <p>가입하면 이벤트에 참여하고 받은 혜택을 모아볼 수 있어요.</p>
       </div>
 
-      <form id="signup-form" class="panel" novalidate>
-        <div class="panel-body fields">
+      <form id="signup-form" class="user-signup-form" novalidate>
+        <div class="user-signup-fields">
           <label class="field">아이디
             <span class="helper">영문·숫자·밑줄(_) 4~50자</span>
             <input data-signup="loginId" name="loginId"
@@ -99,7 +104,6 @@ export function signupView() {
           </label>
 
           <label class="field">휴대폰 번호 (선택)
-            <span class="helper">최대 20자</span>
             <input data-signup="phone" name="phone" type="tel" maxlength="20"
                    autocomplete="tel" placeholder="01012345678"
                    value="${esc(f.phone)}">
@@ -118,12 +122,18 @@ export function signupView() {
 
           <p id="signup-error" class="create-error" role="alert"></p>
 
-          <div class="create-actions">
-            ${button('route', '이미 계정이 있어요', 'data-route="login"')}
-            <button type="submit" class="btn primary">가입하기</button>
+          <div class="user-signup-actions">
+            <button type="submit" class="btn primary wide">
+              가입하기
+            </button>
+            <p class="user-signup-login">
+              이미 계정이 있으신가요?
+              ${button('route', '로그인', 'data-route="login"', 'user-login-link')}
+            </p>
           </div>
         </div>
       </form>
+      </section>
     </div>
   `
 }

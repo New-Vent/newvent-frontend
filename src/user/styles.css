@@ -1208,3 +1208,430 @@
     font-size: 16px;
   }
 }
+
+/* 로그인·회원가입 공통 */
+body:has(.user-login-page, .user-signup-page) {
+  margin: 0;
+  padding: 0;
+}
+
+body:has(.user-login-page, .user-signup-page) #header,
+body:has(.user-login-page, .user-signup-page) #footer {
+  display: none;
+}
+
+body:has(.user-login-page, .user-signup-page) main,
+body:has(.user-login-page, .user-signup-page) #app {
+  width: 100%;
+  max-width: none;
+  min-height: 100svh;
+  margin: 0;
+  padding: 0;
+}
+
+.user-login-page,
+.user-signup-page {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100svh;
+  margin: 0;
+  background: #e7f2ff url('/assets/user-login-bg.png')
+    center center / cover no-repeat;
+}
+
+.user-login-page {
+  padding: 64px clamp(32px, 7vw, 140px);
+}
+
+.user-signup-page {
+  padding: 16px clamp(24px, 7vw, 140px);
+}
+
+.user-login-card,
+.user-signup-card {
+  box-sizing: border-box;
+  min-width: 0;
+  border: 1px solid rgb(255 255 255 / 85%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 20px 60px rgb(55 94 145 / 12%);
+}
+
+.user-login-card {
+  width: min(440px, 100%);
+  overflow: hidden;
+}
+
+.user-signup-card {
+  width: min(540px, 100%);
+  padding: 24px 32px;
+}
+
+.user-auth-logo {
+  display: block;
+  width: 160px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 16px;
+}
+
+/* 로그인 */
+.user-login-content {
+  min-width: 0;
+  padding: 42px 36px;
+}
+
+.user-login-eyebrow {
+  display: block;
+  margin-bottom: 18px;
+  color: #1685ec;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.user-login-content h1 {
+  margin: 0;
+  color: #15294c;
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -1.2px;
+  word-break: keep-all;
+}
+
+.user-login-description {
+  margin: 12px 0 30px;
+  color: #748197;
+  font-size: 14px;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.user-login-content .login-form {
+  display: grid;
+  gap: 20px;
+  margin: 0;
+}
+
+.user-login-content .login-form .field {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  color: #24364f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-login-content .login-form input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #dce4ee;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: #24364f;
+  font: inherit;
+  font-weight: 400;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.user-login-content .login-form input:focus {
+  border-color: #4097f2;
+  box-shadow: 0 0 0 3px rgb(64 151 242 / 12%);
+}
+
+.user-login-content .login-error {
+  margin: -6px 0;
+  color: #d34c54;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.user-login-content .login-error:empty {
+  display: none;
+}
+
+.user-login-content .login-form .btn[type="submit"] {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  border: 1px solid #2385ef;
+  border-radius: 10px;
+  background: #2385ef;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.user-login-content .login-form .btn[type="submit"]:hover {
+  border-color: #1475dd;
+  background: #1475dd;
+}
+
+.user-login-content .login-form .btn[type="submit"]:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.user-login-signup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: #7b8799;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.user-login-link,
+.user-login-browse {
+  border: 0;
+  background: transparent;
+  color: #2385ef;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.user-login-link {
+  padding: 3px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.user-login-browse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 26px auto 0;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.user-login-browse span {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.user-login-demo {
+  display: grid;
+  gap: 12px;
+}
+
+/* 회원가입 */
+.user-signup-card .page-heading {
+  margin: 0 0 16px;
+}
+
+.user-signup-card .eyebrow {
+  display: block;
+  margin-bottom: 12px;
+  color: #1685ec;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.user-signup-card h1 {
+  margin: 0;
+  color: #15294c;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -1px;
+  word-break: keep-all;
+}
+
+.user-signup-card .page-heading p {
+  margin: 10px 0 0;
+  color: #748197;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.user-signup-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+
+.user-signup-fields > .field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+  color: #24364f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-signup-fields > .field:has(
+  [data-signup="loginId"],
+  [data-signup="email"],
+  [data-signup="agree"]
+) {
+  grid-column: 1 / -1;
+}
+
+.user-signup-fields > .field:has([data-signup="name"]) {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.user-signup-fields > .field:has([data-signup="phone"]) {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.user-signup-fields > .field > .helper {
+  order: 1;
+}
+
+.user-signup-fields .helper {
+  color: #8995a7;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.user-signup-fields input:not([type="checkbox"]) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #dce4ee;
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  color: #24364f;
+  font: inherit;
+  font-weight: 400;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.user-signup-fields input::placeholder {
+  color: #a0aaba;
+}
+
+.user-signup-fields input:focus {
+  border-color: #4097f2;
+  box-shadow: 0 0 0 3px rgb(64 151 242 / 12%);
+}
+
+.user-signup-fields > .field:has([type="checkbox"]) {
+  flex-direction: row;
+  font-weight: 400;
+}
+
+.user-signup-fields #signup-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #d34c54;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.user-signup-fields #signup-error:empty {
+  display: none;
+}
+
+.user-signup-actions {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.user-signup-actions > .btn {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #2385ef;
+  border-radius: 10px;
+  background: #2385ef;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.user-signup-actions > .btn:hover {
+  border-color: #1475dd;
+  background: #1475dd;
+}
+
+.user-signup-actions > .btn:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.user-signup-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: #7b8799;
+  font-size: 12px;
+}
+
+/* 태블릿·모바일 */
+@media (max-width: 800px) {
+  .user-login-page {
+    align-items: flex-end;
+    justify-content: center;
+    padding: 280px 24px 40px;
+    background-position: 70% top;
+  }
+
+  .user-login-content {
+    padding: 32px 28px;
+  }
+
+  .user-signup-page {
+    justify-content: center;
+    padding: 24px 20px;
+    background-position: 70% center;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-signup-card {
+    padding: 24px 22px;
+  }
+
+  .user-signup-card h1 {
+    font-size: 23px;
+  }
+
+  .user-signup-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .user-signup-fields > .field:has(
+    [data-signup="name"],
+    [data-signup="phone"]
+  ) {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .user-login-page {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .user-login-content {
+    padding: 30px 22px;
+  }
+}
