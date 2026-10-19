@@ -478,12 +478,12 @@ body:not(.editing-workspace) #app {
 }
 
 /* 기간 선택 입력칸 */
-:is(.admin-events-page, .create-container) .event-range-picker {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-picker {
   position: relative;
   min-width: 0;
 }
 
-:is(.admin-events-page, .create-container) .event-range-trigger {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -506,12 +506,12 @@ body:not(.editing-workspace) #app {
   min-width: 0;
 }
 
-:is(.admin-events-page, .create-container) .event-range-trigger__arrow {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-trigger__arrow {
   color: #8491a6;
 }
 
 /* 달력은 필터 왼쪽으로 표시 */
-:is(.admin-events-page, .create-container) .event-range-calendar {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-calendar {
   position: absolute;
   top: 0;
   right: calc(100% + 30px);
@@ -528,30 +528,30 @@ body:not(.editing-workspace) #app {
   box-shadow: 0 10px 28px rgb(20 41 68 / 14%);
 }
 
-:is(.admin-events-page, .create-container) .event-range-calendar[hidden] {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-calendar[hidden] {
   display: none;
 }
 
 /* 월 제목과 이동 버튼 */
-:is(.admin-events-page, .create-container) .event-range-calendar__header {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-calendar__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
 }
 
-:is(.admin-events-page, .create-container) .event-range-calendar__header strong {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-calendar__header strong {
   color: #344359;
   font-size: 12px;
   font-weight: 700;
 }
 
-:is(.admin-events-page, .create-container) .event-range-calendar__nav {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-calendar__nav {
   display: flex;
   gap: 4px;
 }
 
-:is(.admin-events-page, .create-container) .event-range-calendar__nav button {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-calendar__nav button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -570,20 +570,20 @@ body:not(.editing-workspace) #app {
 }
 
 /* 날짜 */
-:is(.admin-events-page, .create-container) .event-range-calendar__grid {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-calendar__grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   row-gap: 3px;
 }
 
-:is(.admin-events-page, .create-container) .event-range-weekday {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-weekday {
   padding-bottom: 8px;
   color: #8491a6;
   font-size: 10px;
   text-align: center;
 }
 
-:is(.admin-events-page, .create-container) .event-range-day {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-day {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -605,7 +605,7 @@ body:not(.editing-workspace) #app {
   cursor: pointer;
 }
 
-:is(.admin-events-page, .create-container) .event-range-day span {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-day span {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -615,39 +615,39 @@ body:not(.editing-workspace) #app {
   border-radius: 50%;
 }
 
-:is(.admin-events-page, .create-container) .event-range-day.is-between {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-day.is-between {
   background: #edf5ff;
 }
 
-:is(.admin-events-page, .create-container) .event-range-day.is-start {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-day.is-start {
   background: linear-gradient(
     to right, transparent 50%, #edf5ff 50%
   );
 }
 
-:is(.admin-events-page, .create-container) .event-range-day.is-end {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-day.is-end {
   background: linear-gradient(
     to left, transparent 50%, #edf5ff 50%
   );
 }
 
-:is(.admin-events-page, .create-container) .event-range-day.is-start.is-end {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-day.is-start.is-end {
   background: transparent;
 }
 
-:is(.admin-events-page, .create-container) .event-range-day.is-start span,
-:is(.admin-events-page, .create-container) .event-range-day.is-end span {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-day.is-start span,
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-day.is-end span {
   background: #3484e8;
   color: #fff;
   font-weight: 700;
 }
 
-:is(.admin-events-page, .create-container) .event-range-day:hover span {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-day:hover span {
   box-shadow: inset 0 0 0 1px #3484e8;
 }
 
 /* 작은 선택 완료 버튼 */
-:is(.admin-events-page, .create-container) .event-range-calendar__footer {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-calendar__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -658,12 +658,12 @@ body:not(.editing-workspace) #app {
   border-top: 1px solid #e5eaf2;
 }
 
-:is(.admin-events-page, .create-container) [data-range-hint] {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) [data-range-hint] {
   color: #8491a6;
   font-size: 10px;
 }
 
-:is(.admin-events-page, .create-container) .event-range-done {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-done {
   width: auto;
   min-height: 26px;
   margin: 0;
@@ -681,7 +681,7 @@ body:not(.editing-workspace) #app {
   cursor: pointer;
 }
 
-:is(.admin-events-page, .create-container) .event-range-done:disabled {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-done:disabled {
   opacity: 0.45;
   cursor: default;
 }
@@ -697,25 +697,25 @@ body:not(.editing-workspace) #app {
 }
 
 /* 시작일 / 종료일 두 칸 */
-:is(.admin-events-page, .create-container) .event-range-fields {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-:is(.admin-events-page, .create-container) .event-range-field {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-field {
   display: flex;
   flex-direction: column;
   gap: 7px;
   min-width: 0;
 }
 
-:is(.admin-events-page, .create-container) .event-range-field__label {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-field__label {
   color: #8491a6;
   font-size: 11px;
 }
 
-:is(.admin-events-page, .create-container) .event-range-trigger[aria-expanded="true"] {
+:is(.admin-events-page, .create-container, .admin-datetime-widget) .event-range-trigger[aria-expanded="true"] {
   border-color: #3484e8;
 }
 
@@ -1863,14 +1863,14 @@ body:not(.editing-workspace) #app {
 }
 
 /* 날짜 선택 전 안내 문구 */
-.create-container .event-range-trigger .is-placeholder {
+:is(.create-container, .admin-datetime-widget) .event-range-trigger .is-placeholder {
   color: #94a3b8;
   font-weight: 400;
 }
 
 /* 생성 화면의 시작·종료 시간 */
 /* 생성 화면: 날짜와 시간을 나란히 분리 */
-.create-container #create-basics .create-datetime-row {
+:is(#create-basics, .admin-datetime-widget) .create-datetime-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 112px;
   align-items: stretch;
@@ -1878,7 +1878,7 @@ body:not(.editing-workspace) #app {
   min-width: 0;
 }
 
-.create-container #create-basics .create-datetime-row > .event-range-trigger {
+:is(#create-basics, .admin-datetime-widget) .create-datetime-row > .event-range-trigger {
   width: 100%;
   min-width: 0;
   height: 46px;
@@ -1887,12 +1887,12 @@ body:not(.editing-workspace) #app {
   border-radius: 9px;
 }
 
-.create-container .create-time-picker {
+:is(.create-container, .admin-datetime-widget) .create-time-picker {
   position: relative;
   min-width: 0;
 }
 
-.create-container #create-basics .create-time-trigger {
+:is(#create-basics, .admin-datetime-widget) .create-time-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1912,16 +1912,16 @@ body:not(.editing-workspace) #app {
   cursor: pointer;
 }
 
-.create-container .create-time-trigger .is-placeholder {
+:is(.create-container, .admin-datetime-widget) .create-time-trigger .is-placeholder {
   color: #94a3b8;
   font-weight: 400;
 }
 
-.create-container .create-time-trigger[aria-expanded="true"] {
+:is(.create-container, .admin-datetime-widget) .create-time-trigger[aria-expanded="true"] {
   border-color: #4088ed;
 }
 
-.create-container .create-time-icon {
+:is(.create-container, .admin-datetime-widget) .create-time-icon {
   position: relative;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -1931,7 +1931,7 @@ body:not(.editing-workspace) #app {
   border-radius: 50%;
 }
 
-.create-container .create-time-icon::before {
+:is(.create-container, .admin-datetime-widget) .create-time-icon::before {
   content: "";
   position: absolute;
   top: 2px;
@@ -1941,7 +1941,7 @@ body:not(.editing-workspace) #app {
   background: #8996a8;
 }
 
-.create-container .create-time-icon::after {
+:is(.create-container, .admin-datetime-widget) .create-time-icon::after {
   content: "";
   position: absolute;
   top: 5px;
@@ -1954,7 +1954,7 @@ body:not(.editing-workspace) #app {
 }
 
 /* 작은 다이얼 선택창 */
-.create-container .create-time-popup {
+:is(.create-container, .admin-datetime-widget) .create-time-popup {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
@@ -1968,49 +1968,49 @@ body:not(.editing-workspace) #app {
   box-shadow: 0 8px 25px rgb(34 60 96 / 10%);
 }
 
-.create-container .create-time-popup[hidden] {
+:is(.create-container, .admin-datetime-widget) .create-time-popup[hidden] {
   display: none;
 }
 
-.create-container .create-time-heading,
-.create-container .create-time-footer {
+:is(.create-container, .admin-datetime-widget) .create-time-heading,
+:is(.create-container, .admin-datetime-widget) .create-time-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.create-container .create-time-heading {
+:is(.create-container, .admin-datetime-widget) .create-time-heading {
   color: #475569;
   font-size: 12px;
   font-weight: 500;
 }
 
-.create-container .create-time-heading > :last-child {
+:is(.create-container, .admin-datetime-widget) .create-time-heading > :last-child {
   color: #8995a7;
   font-size: 11px;
 }
 
-.create-container .create-time-dials {
+:is(.create-container, .admin-datetime-widget) .create-time-dials {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 14px 0;
 }
 
-.create-container .create-time-column {
+:is(.create-container, .admin-datetime-widget) .create-time-column {
   flex: 1;
   min-width: 0;
   text-align: center;
 }
 
-.create-container .create-time-column > span {
+:is(.create-container, .admin-datetime-widget) .create-time-column > span {
   display: block;
   margin-bottom: 7px;
   color: #8995a7;
   font-size: 11px;
 }
 
-.create-container .create-time-wheel {
+:is(.create-container, .admin-datetime-widget) .create-time-wheel {
   height: 108px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -2026,18 +2026,18 @@ body:not(.editing-workspace) #app {
   );
 }
 
-.create-container .create-time-wheel::-webkit-scrollbar {
+:is(.create-container, .admin-datetime-widget) .create-time-wheel::-webkit-scrollbar {
   display: none;
 }
 
-.create-container .create-time-wheel::before,
-.create-container .create-time-wheel::after {
+:is(.create-container, .admin-datetime-widget) .create-time-wheel::before,
+:is(.create-container, .admin-datetime-widget) .create-time-wheel::after {
   content: "";
   display: block;
   height: 36px;
 }
 
-.create-container #create-basics .create-time-wheel > button {
+:is(#create-basics, .admin-datetime-widget) .create-time-wheel > button {
   display: block;
   box-sizing: border-box;
   width: 100%;
@@ -2057,28 +2057,28 @@ body:not(.editing-workspace) #app {
   cursor: pointer;
 }
 
-.create-container #create-basics
+:is(#create-basics, .admin-datetime-widget)
 .create-time-wheel > button[aria-pressed="true"] {
   color: #4088ed;
   font-weight: 600;
 }
 
-.create-container .create-time-colon {
+:is(.create-container, .admin-datetime-widget) .create-time-colon {
   margin-top: 22px;
   color: #8995a7;
 }
 
-.create-container .create-time-footer {
+:is(.create-container, .admin-datetime-widget) .create-time-footer {
   padding-top: 10px;
   border-top: 1px solid #e1e7ef;
 }
 
-.create-container .create-time-footer > span {
+:is(.create-container, .admin-datetime-widget) .create-time-footer > span {
   color: #8390a3;
   font-size: 12px;
 }
 
-.create-container #create-basics [data-time-done] {
+:is(#create-basics, .admin-datetime-widget) [data-time-done] {
   min-height: 0;
   padding: 7px 15px;
   border: 0;
@@ -2090,17 +2090,17 @@ body:not(.editing-workspace) #app {
   cursor: pointer;
 }
 
-.create-container .create-time-trigger:focus-visible {
+:is(.create-container, .admin-datetime-widget) .create-time-trigger:focus-visible {
   outline: 2px solid #c6ddff;
   outline-offset: 2px;
 }
 
 @media (max-width: 640px) {
-  .create-container #create-basics .event-range-fields {
+  :is(#create-basics, .admin-datetime-widget) .event-range-fields {
     grid-template-columns: 1fr;
   }
 
-  .create-container #create-basics .create-datetime-row {
+  :is(#create-basics, .admin-datetime-widget) .create-datetime-row {
     grid-template-columns: minmax(0, 1fr) 104px;
   }
 }
@@ -2110,4 +2110,1087 @@ body:not(.editing-workspace) #app {
   font-size: 12px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+.admin-detail-index-status {
+  margin: -8px 0 20px;
+}
+
+.admin-detail-index-status:empty {
+  display: none;
+}
+
+
+.admin-datetime-widget {
+  min-width: 0;
+  margin-bottom: 18px;
+}
+
+.admin-datetime-widget .create-period {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.admin-datetime-widget .create-period > legend {
+  width: 100%;
+  margin-bottom: 9px;
+  padding: 0;
+  color: #52627a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-datetime-widget .admin-datetime-helper {
+  margin: 0 0 9px;
+  line-height: 1.7;
+}
+
+.admin-datetime-widget .event-range-fields {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-datetime-widget .event-range-trigger,
+.admin-datetime-widget .create-time-trigger {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.admin-datetime-widget .event-range-trigger {
+  box-sizing: border-box;
+  border-color: #dfe6ef;
+  background: #fff;
+  color: #475569;
+}
+
+.admin-datetime-widget .event-range-calendar {
+  max-width: 100%;
+}
+
+.admin-datetime-widget fieldset:disabled button {
+  cursor: not-allowed;
+}
+
+.admin-datetime-widget fieldset:disabled .event-range-trigger,
+.admin-datetime-widget fieldset:disabled .create-time-trigger {
+  background: #f5f7fa;
+  color: #97a3b4;
+}
+
+/* 기본 정보 수정: 생성 화면의 이벤트 기간 배치 */
+
+#server-info-form {
+  display: grid;
+  gap: 25px;
+}
+
+#server-info-form .admin-info-period {
+  margin: 0;
+}
+
+#server-info-form .admin-info-period .event-range-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+#server-info-form .admin-info-period .event-range-field__label {
+  margin-bottom: 8px;
+  color: #8998ab;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+#server-info-form .admin-info-period .create-period > legend {
+  margin-bottom: 6px;
+}
+
+@media (max-width: 640px) {
+  #server-info-form .admin-info-period .event-range-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-datetime-widget .event-range-calendar {
+  top: calc(100% + 8px);
+  left: 0;
+  right: auto;
+  z-index: 100;
+}
+
+/* 기본 정보 수정 팝업 크기 */
+
+#overlay .modal:has(#server-info-form) .modal-head h2 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+
+/* 기본 정보 수정: 생성 화면과 같은 설명 배치 */
+#overlay .modal:has(#server-info-form) {
+  width: 720px;
+  max-width: calc(100vw - 32px);
+}
+
+
+
+#server-info-form .helper {
+  margin: 0;
+  color: #8998ab;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* 이벤트명 옆에 설명 */
+#server-info-form > .field:has(input[name="name"]) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 9px 10px;
+}
+
+#server-info-form > .field:has(input[name="name"]) > input {
+  grid-column: 1 / -1;
+}
+
+/* 등급 입력 오른쪽에 설명 */
+#server-info-form > .field:has(select[name="grade"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 18px;
+}
+
+#server-info-form > .field:has(select[name="grade"]) > span:first-child {
+  grid-column: 1 / -1;
+}
+
+#server-info-form [data-info-grade-description]::before {
+  content: "ⓘ";
+  margin-right: 7px;
+}
+
+/* 모달 밖에 표시되는 달력·시간 선택창 */
+.event-range-calendar[popover],
+.create-time-popup[popover] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  #server-info-form > .field:has(select[name="grade"]) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 주요 항목 제목 통일 */
+#server-info-form > .field > span:first-child,
+#server-info-form .admin-info-period .create-period > legend {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* 시작·종료 보조 제목 통일 */
+#server-info-form .admin-info-period .event-range-field__label {
+  color: #8998ab;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* 입력값 글씨 통일 */
+
+/* 생성 화면처럼 입력값을 굵게 표시 */
+#server-info-form input[name="name"],
+#server-info-form select[name="grade"],
+#server-info-form .admin-info-period .event-range-trigger,
+#server-info-form .admin-info-period .create-time-trigger {
+  color: #475569;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+
+/* 참여 등급 화살표를 테두리 안쪽으로 배치 */
+#server-info-form select[name="grade"] {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding-right: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2375869b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  background-size: 16px;
+}
+
+/* 팝업 내부 여백 축소 */
+#overlay .modal:has(#server-info-form) {
+  padding: 24px;
+}
+
+#overlay .modal:has(#server-info-form) .modal-head {
+  margin-bottom: 20px;
+}
+
+
+/* 시작·종료 일시와 입력 박스 사이 간격 */
+#server-info-form .admin-info-period .event-range-field {
+  gap: 5px;
+}
+
+#server-info-form .admin-info-period .event-range-field__label {
+  margin-bottom: 0;
+}
+
+/* 하단 버튼 위 여백 축소 */
+#overlay .modal:has(#server-info-form) .modal-actions {
+  margin-top: 0px;
+}
+
+#overlay .modal:has(#server-info-form) .modal-actions .btn.primary {
+  background: #428fe8;
+  border-color: #428fe8;
+}
+
+#overlay .modal:has(#server-info-form) .modal-actions .btn.primary:hover {
+  background: #337dd2;
+  border-color: #337dd2;
+}
+
+/* 참여 설정: 선택창 화살표와 안쪽 여백 */
+#pconf-form select {
+  appearance: none;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding-right: 42px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+}
+
+/* 참여 방식을 정하지 않았을 때 안내와 폼 사이 간격 */
+.review-note + #pconf-form {
+  margin-top: 20px;
+}
+
+/* 발표 시각: 날짜·시간 입력 너비 */
+#pconf-form .admin-datetime-widget .event-range-picker {
+  width: 100%;
+  max-width: 360px;
+}
+
+#pconf-form .admin-datetime-widget .create-datetime-row {
+  grid-template-columns: minmax(0, 1fr) 112px;
+}
+
+#pconf-form .admin-datetime-widget .event-range-trigger,
+#pconf-form .admin-datetime-widget .create-time-trigger {
+  height: 40px;
+  min-height: 40px;
+  font-size: 13px;
+}
+
+/* 참여 설정 저장 */
+#pconf-form button[type="submit"].primary {
+  min-height: 40px;
+  padding: 9px 16px;
+  border-color: #428bea;
+  background: #428bea;
+  color: #fff;
+  font-size: 13px;
+}
+
+#pconf-form button[type="submit"].primary:hover:not(:disabled) {
+  border-color: #337dd2;
+  background: #337dd2;
+}
+
+.participants-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.participants-empty > svg {
+  display: block;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+}
+
+.participants-empty > strong {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.participants-empty > p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+#pconf-form .participation-reward-add {
+  padding: 7px 12px;
+  border: 1px solid #c8dcf7;
+  border-radius: 8px;
+  background: #edf5ff;
+  color: #397bd2;
+  font-size: 12px;
+}
+
+#pconf-form .participation-reward-add:hover {
+  border-color: #a9c8f0;
+  background: #e3efff;
+}
+
+#pconf-form .participation-rewards-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+#pconf-form .participation-rewards-heading .participation-reward-add {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* 상세 화면: 제목 옆 이벤트명 */
+.admin-detail-title-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+.admin-detail-title-row > h1 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.admin-detail-event-name {
+  min-width: 0;
+  padding-left: 16px;
+  border-left: 1px solid #dce3ee;
+  color: #536780;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* 참여 설정: 항목 사이 간격 통일 */
+#pconf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+#pconf-form > .field,
+#pconf-form > .admin-datetime-widget {
+  margin: 0;
+}
+
+/* 내용이 없는 오류 영역은 공간을 차지하지 않게 */
+#pconf-form > .create-error:empty {
+  display: none;
+}
+
+/* 구분선을 저장 버튼 쪽으로 이동 */
+#pconf-form > .create-actions {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid #e5eaf2;
+}
+
+/* 참여자 상태 필터 */
+.admin-status-filters[aria-label="결과 필터"] button[aria-pressed="true"] {
+  border-color: #c8dcf7;
+  background: #edf5ff;
+  color: #397bd2;
+}
+
+.admin-status-filters[aria-label="결과 필터"] button:hover {
+  border-color: #a9c8f0;
+  background: #e3efff;
+  color: #397bd2;
+}
+
+/* 버전 색인 상태 안내 */
+.admin-index-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.admin-index-notice.is-pending {
+  color: #a66b24;
+}
+
+.admin-index-notice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 15px;
+  height: 15px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 600;
+  font-style: normal;
+  line-height: 1;
+}
+
+/* 버전 번호를 카드 왼쪽의 세로 영역으로 표시 */
+.server-version-row {
+  align-items: stretch;
+}
+
+.server-version-row > .version-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  flex-shrink: 0;
+  height: auto;
+  min-height: 64px;
+  background: #edf5ff;
+  color: #397bd2;
+  border-radius: 9px;
+}
+
+/* 버전 설명은 세로 중앙 정렬 */
+.server-version-row > .version-text {
+  align-self: center;
+}
+
+/* 기존 버튼 배치 유지 */
+.server-version-row > .version-actions {
+  align-self: center;
+}
+
+.rag-reindex-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.rag-reindex-heading > h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.rag-reindex-heading .admin-index-notice {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.rag-reindex-heading .admin-index-notice-icon {
+  align-self: center;
+  width: 12px;
+  height: 12px;
+  font-size: 8px;
+}
+
+.rag-reindex-text > .rag-desc {
+  margin-top: 12px;
+}
+
+.server-version-row .version-publish-btn {
+  flex: 0 0 88px;
+  width: 88px;
+  box-sizing: border-box;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* 아래 이력 목록과 구분 */
+.version-history-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 28px 0 12px;
+}
+
+.version-history-heading h2 {
+  margin: 0;
+  color: #30415b;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.version-history-heading > span {
+  color: #8c9aaf;
+  font-size: 12px;
+}
+
+/* 버전 제목 옆 상태 태그 */
+.version-text h3 .badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  padding: 3px 7px;
+  min-height: 0;
+  height: auto;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+  border-radius: 5px;
+}
+
+/* 기본 버튼 */
+.server-version-row .version-actions .btn:not(:disabled),
+.rag-reindex > .btn:not(:disabled) {
+  background: #fff;
+  border: 1px solid #dce3ec;
+  color: #62728a;
+  box-shadow: none;
+}
+
+.server-version-row .version-actions .btn:hover:not(:disabled),
+.rag-reindex > .btn:hover:not(:disabled) {
+  background: #f1f4f8;
+  border-color: #bbc7d6;
+  color: #405875;
+}
+
+/* 게시 */
+.server-version-row .version-actions .version-publish-btn:not(:disabled) {
+  background: #e9f2ff;
+  border-color: #c5dafa;
+  color: #4275b7;
+}
+
+.server-version-row .version-actions .version-publish-btn:hover:not(:disabled) {
+  background: #dceaff;
+  border-color: #accbf4;
+  color: #3466a5;
+}
+
+/* 템플릿 등록 */
+.server-version-row .version-actions .version-template-btn:not(:disabled) {
+  background: #edf4ff;
+  border-color: #d2dff4;
+  color: #597caa;
+}
+
+.server-version-row .version-actions .version-template-btn:hover:not(:disabled) {
+  background: #e1ecfc;
+  border-color: #bbcee9;
+  color: #466a98;
+}
+
+/* 저장 해제 */
+.server-version-row .version-actions .btn:nth-child(5):not(:disabled) {
+  background: #f4f5f7;
+  border-color: #e0e3e8;
+  color: #727b89;
+}
+
+.server-version-row .version-actions .btn:nth-child(5):hover:not(:disabled) {
+  background: #e9ecf0;
+  border-color: #ccd2db;
+  color: #596372;
+}
+
+/* 재색인 */
+.server-version-row .version-actions .version-reindex-btn:not(:disabled),
+.rag-reindex > .btn:not(:disabled) {
+  background: #f7f0e5;
+  border-color: #e3d4ba;
+  color: #8f744b;
+}
+
+.server-version-row .version-actions .version-reindex-btn:hover:not(:disabled),
+.rag-reindex > .btn:hover:not(:disabled) {
+  background: #efe4d2;
+  border-color: #d4bf9d;
+  color: #79603b;
+}
+
+/* 비활성 버튼 */
+.server-version-row .version-actions .btn:disabled,
+.rag-reindex > .btn:disabled {
+  background: #f5f6f8;
+  border: 1px solid #eceff3;
+  color: #a6afbc;
+  opacity: 1;
+  box-shadow: none;
+}
+
+.version-row {
+  position: relative;
+}
+
+.version-row.is-current::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 24px;
+  bottom: 24px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: #4387e8;
+}
+
+/* 모달 선택 상자: 화살표를 오른쪽에서 16px 안쪽으로 */
+#overlay .modal select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 44px;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px 16px;
+}
+
+/* 버전 이력 — LLM 호출 로그 */
+.rag-log-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.rag-log-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  color: #475569;
+  font-size: 12px;
+}
+
+.rag-log-table th,
+.rag-log-table td {
+  padding: 15px 16px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.rag-log-table thead th {
+  padding-top: 11px;
+  padding-bottom: 11px;
+  background: #f7f9fc;
+  color: #8491a5;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.rag-log-table tbody td {
+  border-top: 1px solid #e9edf4;
+}
+
+.rag-log-model {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rag-log-id {
+  color: #8b98ab;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.rag-log-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.rag-log-status.is-success {
+  background: #eaf7f2;
+  color: #198571;
+}
+
+.rag-log-status.is-failure {
+  background: #fff3e5;
+  color: #b07829;
+}
+
+.rag-log-number,
+.rag-log-date {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rag-log-slash {
+  margin: 0 6px;
+  color: #bac3d0;
+}
+
+.rag-log-date {
+  color: #8491a5;
+}
+
+.rag-log-rag {
+  display: block;
+  margin-top: 4px;
+  color: #6686b3;
+  font-size: 11px;
+}
+
+.rag-log-table .rag-log-detail td {
+  padding-top: 0;
+  padding-bottom: 12px;
+  border-top: 0;
+}
+
+.rag-log-detail p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* 편집 화면: 제목 아래 이벤트 정보 */
+.workspace .workspace-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+
+.workspace .workspace-title {
+  display: flex;
+  flex: 1 1 420px;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 6px;
+}
+
+.workspace .workspace-title > strong {
+  color: #263b55;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.workspace-event-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  color: #8492a6;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* 상태 배경 제거, 기존 상태별 글자색 유지 */
+.workspace-event-status .badge {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.workspace-event-status .badge::before {
+  content: '●';
+  margin-right: 6px;
+  font-size: 9px;
+}
+
+.workspace .workspace-actions {
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 미리보기: 버전·저장·게시 정보를 글씨로 표시 */
+.workspace .preview-version-text,
+.workspace .preview-save-text,
+.workspace .preview-published-text {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.workspace .preview-version-text {
+  color: #5284bb;
+}
+
+.workspace .preview-save-text {
+  color: #8b96a6;
+}
+
+.workspace .preview-save-text.is-unsaved {
+  color: #b18442;
+}
+
+.workspace .preview-published-text {
+  color: #268b80;
+}
+
+/* 편집 화면 상단 버튼 — 1번: 연한 레드 · 블루 */
+.editing-workspace .workspace-actions .btn {
+  box-shadow: none;
+}
+
+/* 이벤트 종료 */
+.editing-workspace .workspace-actions [data-act="server-end"]:not(:disabled) {
+  background: #fff0f0;
+  border-color: #f5cdcd;
+  color: #c55359;
+}
+
+.editing-workspace .workspace-actions [data-act="server-end"]:hover:not(:disabled) {
+  background: #fce2e2;
+  border-color: #e9b1b1;
+  color: #b44047;
+}
+
+/* 기본 정보 수정 */
+.editing-workspace .workspace-actions [data-act="server-info"]:not(:disabled) {
+  background: #edf4ff;
+  border-color: #d4e3fa;
+  color: #5579ad;
+}
+
+.editing-workspace .workspace-actions [data-act="server-info"]:hover:not(:disabled) {
+  background: #e1edff;
+  border-color: #bcd3f4;
+  color: #42699f;
+}
+
+/* 버전 이력 */
+.editing-workspace .workspace-actions [data-act="versions"]:not(:disabled) {
+  background: #fff;
+  border-color: #e1e7f0;
+  color: #33445d;
+}
+
+.editing-workspace .workspace-actions [data-act="versions"]:hover:not(:disabled) {
+  background: #f2f5fa;
+  border-color: #cbd5e3;
+}
+
+/* 버전 저장 — 저장 가능한 상태 */
+.editing-workspace .workspace-actions [data-act="server-save"]:not(:disabled) {
+  background: #fff;
+  border-color: #e1e7f0;
+  color: #33445d;
+}
+
+.editing-workspace .workspace-actions [data-act="server-save"]:hover:not(:disabled) {
+  background: #f2f5fa;
+  border-color: #cbd5e3;
+}
+
+/* 게시 · 재게시 */
+.editing-workspace .workspace-actions [data-act="server-publish"]:not(:disabled) {
+  background: #1688d5;
+  border-color: #1688d5;
+  color: #fff;
+}
+
+.editing-workspace .workspace-actions [data-act="server-publish"]:hover:not(:disabled) {
+  background: #1078bf;
+  border-color: #1078bf;
+}
+
+/* 저장됨 및 비활성 버튼 */
+.editing-workspace .workspace-actions .btn:disabled {
+  background: #f0f2f6;
+  border-color: transparent;
+  color: #969eaa;
+  opacity: 1;
+}
+
+/* 미리보기 상단 — 파란 점 + 텍스트 상태 */
+.editing-workspace .preview-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+}
+
+.editing-workspace .preview-status-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+
+.editing-workspace .preview-label {
+  margin-right: 4px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.editing-workspace .preview-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #4283d7;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.editing-workspace .preview-current::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4283d7;
+}
+
+.editing-workspace .preview-save-state {
+  color: #8b98aa;
+  font-size: 11px;
+}
+
+.editing-workspace .preview-save-state.is-unsaved {
+  color: #a8752b;
+}
+
+.editing-workspace .preview-published {
+  padding-left: 12px;
+  border-left: 1px solid #e2e8f1;
+  color: #458c83;
+  font-size: 11px;
+}
+
+/* 안내는 오른쪽, 기기 버튼 바로 앞 */
+.editing-workspace .preview-edit-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: #8595aa;
+  font-size: 11px;
+}
+
+.editing-workspace .preview-edit-hint svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.editing-workspace .preview-controls > .device-controls {
+  flex-shrink: 0;
+  margin-left: 0;
+}
+
+/* 안내가 없는 직접 수정 모드에서도 기기 버튼은 오른쪽 */
+.editing-workspace .preview-status-line + .device-controls {
+  margin-left: auto;
+}
+
+/* AI 대화 — 보내기 버튼 */
+#server-chat-form button[type="submit"] {
+  background: #4b8fe2;
+  border-color: #4b8fe2;
+  color: #fff;
+  box-shadow: none;
+}
+
+#server-chat-form button[type="submit"]:not(:disabled):hover {
+  background: #397dd0;
+  border-color: #397dd0;
+}
+
+#server-chat-form button[type="submit"]:disabled {
+  background: #dce8f7;
+  border-color: #dce8f7;
+  color: #91a8c5;
+  opacity: 1;
+}
+
+/* 편집 화면 하단 여백을 줄여 작업 패널 확장 */
+@media (min-width: 801px) and (min-height: 561px),
+       (orientation: landscape) and (min-height: 561px) {
+  .editing-workspace .workspace.studio-container {
+    padding-bottom: 16px;
+  }
+}
+
+/* 관리자 화면 공통 좌우 여백 */
+body {
+  --admin-page-gutter: 32px;
+}
+
+/* 공통 헤더: 로고와 운영자 메뉴를 양쪽으로 */
+#header > .container {
+  width: 100%;
+  max-width: none;
+  padding-inline: var(--admin-page-gutter);
+  box-sizing: border-box;
+}
+
+/* 일반 관리자 화면: 본문 너비 확장 */
+#app > .container:not(.create-container) {
+  width: 100%;
+  max-width: none;
+  padding-inline: var(--admin-page-gutter);
+  box-sizing: border-box;
+}
+
+/* 편집 화면: 헤더와 본문 시작 위치 맞춤 */
+.editing-workspace .workspace.studio-container {
+  padding-inline: var(--admin-page-gutter);
+}
+
+/* 이벤트 생성은 입력 영역이 너무 길어지지 않게 유지 */
+#app > .container.create-container {
+  width: 100%;
+  max-width: 1220px;
+  margin-inline: auto;
+  padding-inline: var(--admin-page-gutter);
+  box-sizing: border-box;
+}
+
+/* 작은 화면에서는 여백 축소 */
+@media (max-width: 760px) {
+  body {
+    --admin-page-gutter: 16px;
+  }
 }

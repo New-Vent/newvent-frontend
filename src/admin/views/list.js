@@ -306,7 +306,7 @@ function eventMoreMenu(e, showPage = false) {
       <div class="event-more-popup">
         ${showPage ? publicPageLink(e) : ''}
         ${menuButton('versions', '버전 이력', 'history')}
-        ${menuButton('participants', '참여자', 'users')}
+        ${menuButton('participants', '참여 관리', 'users')}
         ${menuButton('delete-event', '삭제하기', 'trash', 'is-danger')}
       </div>
     </details>

@@ -174,12 +174,6 @@ function userTable() {
             `data-id="${user.id}"`,
             'btn sm',
           )}
-          ${button(
-            'users-plan',
-            '요금제 변경',
-            `data-id="${user.id}"`,
-            'btn sm soft',
-          )}
         </div>
       </td>
     </tr>
@@ -187,6 +181,14 @@ function userTable() {
 
   return `
     <table class="admin-table users-table">
+      <colgroup>
+        <col style="width: 18%">
+        <col style="width: 25%">
+        <col style="width: 18%">
+        <col style="width: 10%">
+        <col style="width: 13%">
+        <col style="width: 16%">
+      </colgroup>
       <thead>
         <tr>
           <th>사용자</th>
@@ -340,7 +342,7 @@ const pageButtons = Array.from(
 }
 
 /** 상세 창에 표시할 사용자 정보 */
-function userDetails(user) {
+function userDetails(user, changePlan = false) {
   return `
     <dl class="users-details">
       <dt>이름</dt>
@@ -359,7 +361,17 @@ function userDetails(user) {
       <dd>${esc(user.joinedAt ?? '–')}</dd>
 
       <dt>현재 요금제</dt>
-      <dd>${esc(planLabel(user.plan))}</dd>
+      <dd>
+        <div class="users-current-plan">
+          <span>${esc(planLabel(user.plan))}</span>
+          ${!changePlan ? button(
+            'users-plan',
+            '변경',
+            `data-id="${user.id}"`,
+            'btn sm soft',
+          ) : ''}
+        </div>
+      </dd>
 
       <dt>멤버십 등급</dt>
       <dd>${gradeBadge(user.membershipGrade)}</dd>
@@ -388,18 +400,12 @@ async function openUser(userId, changePlan) {
       || !body.isConnected
     ) return
 
-    body.innerHTML = userDetails(user)
+    body.innerHTML = userDetails(user, changePlan)
 
     if (!changePlan) {
       body.innerHTML += `
         <div class="modal-actions">
           ${button('close', '닫기')}
-          ${button(
-            'users-plan',
-            '요금제 변경',
-            `data-id="${user.id}"`,
-            'btn primary',
-          )}
         </div>
       `
       return
