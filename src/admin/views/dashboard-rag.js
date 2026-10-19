@@ -118,9 +118,9 @@ export function dashboardRagView() {
       </div>
     </div>
   `
-  if (!rows) return '<div class="container">' + head + '<div class="card"><p>불러오는 중…</p></div></div>'
+  if (!rows) return '<div class="container rag-dash">' + head + '<div class="card"><p>불러오는 중…</p></div></div>'
   if (!rows.length) {
-    return '<div class="container">' + head
+    return '<div class="container rag-dash">' + head
       + '<div class="card"><p>아직 집계된 호출이 없어요.</p></div></div>'
   }
 
@@ -159,7 +159,7 @@ export function dashboardRagView() {
       + (d.diff === 0 ? '변동 없음' : (d.diff > 0 ? '+' + d.diff + '회' : d.diff + '회')) + '</p>'
     : ''
 
-  return '<div class="container">' + head
+  return '<div class="container rag-dash">' + head
     + reindexActionCard()
     + delta
     + '<div class="card"><div class="trend">' + cols + '</div>'

@@ -101,6 +101,8 @@ test('전체 재색인 카드가 차트보다 위에 온다', async () => {
   const action = html.indexOf('RAG 전체 재색인')
   const trend = html.indexOf('막대 밖 날짜는')
   const history = html.indexOf('재색인 이력')
+  // 대시보드 박스 — 열 폭을 닫아 양 끝 막대 툴팁이 가장자리에 붙지 않게 한다
+  assert.match(html, /container rag-dash/)
   // 실행(맨 위) → 관찰(추이) → 설명(이력) 순서다
   assert.ok(action < trend && action < history && trend < history, '실행 카드가 차트 앞, 이력은 차트 뒤여야 한다')
   // 버튼 — 실행 전이면 누를 수 있다

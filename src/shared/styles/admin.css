@@ -319,13 +319,16 @@
 .metrics.admin-status-metrics {grid-template-columns: repeat(4, minmax(0, 1fr));}
 @media (max-width: 760px) {.metrics.admin-status-metrics {grid-template-columns: repeat(2, minmax(0, 1fr));}}
 /* RAG 품질 추이 — 주간 막대. 높이 % 로 그려 차트 라이브러리를 쓰지 않는다 */
+/* 대시보드 열 폭 닫기 — 카드가 화면을 꽉 채우면 양 끝 막대의 툴팁이 가장자리에 붙어 잘린다.
+   열 전체를 같이 닫아 카드 좌우 정렬을 유지하고, 막대 양옆 여백을 넓혀 툴팁이 잘리지 않게 한다 */
+.rag-dash{max-width:1100px}
 .trend-legend{display:flex;gap:28px;margin:10px 0 0;font-size:13px;color:var(--muted);flex-wrap:wrap}
 .trend-legend span{display:flex;align-items:center;gap:7px}
 .trend-legend b{font-weight:700;color:var(--ink)}
 .sw{width:13px;height:13px;border-radius:4px}
 .sw-total{background:var(--sky)}
 .sw-rag{background:var(--green)}
-.trend{display:flex;gap:28px;align-items:flex-end;padding:14px 4px 0;border-bottom:1px solid var(--line)}
+.trend{display:flex;gap:28px;align-items:flex-end;padding:14px 48px 0;border-bottom:1px solid var(--line)}
 .trend-col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:78px}
 .trend-week{font-size:13px;color:var(--muted)}
 .trend-bar{position:relative;width:52px;height:200px;border-radius:8px 8px 0 0;background:#f1eef6}
