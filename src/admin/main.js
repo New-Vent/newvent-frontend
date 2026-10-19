@@ -324,6 +324,7 @@ function render(scroll = false) {
   const serverView = USE_SERVER && { editor: serverEditorView, versions: serverVersionsView }[ui.route]
   if (serverView) ensureServerEditor(ui.activeId, () => render())
   document.body.classList.toggle('editing-workspace', ui.route === 'editor')
+  document.body.classList.toggle('admin-login-screen', ui.route === 'login')
   header()
   $('#app').innerHTML = (serverView || VIEWS[ui.route] || adminView)()
   hydrate()

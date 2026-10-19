@@ -3194,3 +3194,433 @@ body {
     --admin-page-gutter: 16px;
   }
 }
+
+/* 관리자 로그인 화면 */
+body.admin-login-screen {
+  margin: 0;
+  background: #e7f2ff;
+}
+
+body.admin-login-screen #header {
+  display: none;
+}
+
+body.admin-login-screen #app {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+body.admin-login-screen .admin-login-page {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 48px 7vw;
+  overflow: hidden;
+  background: #e7f2ff;
+}
+
+/* 배경과 애니메이션 공통 영역 */
+.admin-login-art {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: max(100vw, 177.68vh);
+  width: max(100vw, 177.68svh);
+  aspect-ratio: 1672 / 941;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.admin-login-art-bg {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+/* 로그인 카드 */
+.admin-login-card {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 390px;
+  max-width: 100%;
+  padding: 38px 34px 34px;
+  border: 1px solid rgb(255 255 255 / 90%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 20px 60px rgb(67 110 168 / 12%);
+  animation: admin-login-appear 650ms ease-out both;
+}
+
+.admin-login-logo {
+  display: block;
+  width: 200px;
+  height: auto;
+  margin: 0 auto 22px;
+}
+
+.admin-login-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #7190b6;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+}
+
+.admin-login-card h1 {
+  margin: 0;
+  color: #293d57;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.8px;
+}
+
+.admin-login-description {
+  margin: 10px 0 28px;
+  color: #8290a3;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* 로그인 폼 */
+.admin-login-card #login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0;
+}
+
+.admin-login-card #login-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  color: #52657e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-login-card #login-form input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid #dce5f0;
+  border-radius: 10px;
+  background: #f9fbfe;
+  color: #293d57;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  transition: border-color 160ms, box-shadow 160ms;
+}
+
+.admin-login-card #login-form input:focus {
+  outline: none;
+  border-color: #6ba4ec;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(80 145 230 / 12%);
+}
+
+.admin-login-card #login-error {
+  margin: 0;
+  color: #c65562;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.admin-login-card #login-error:empty {
+  display: none;
+}
+
+.admin-login-card #login-form button[type="submit"] {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 4px;
+  border: 1px solid #428bea;
+  border-radius: 10px;
+  background: #428bea;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgb(66 139 234 / 16%);
+}
+
+.admin-login-card #login-form button[type="submit"]:hover:not(:disabled) {
+  border-color: #337dd2;
+  background: #337dd2;
+}
+
+.admin-login-card #login-form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.admin-login-demo {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-login-helper {
+  margin: 20px 0 0;
+  color: #8290a3;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* 노트북 주변 빛 */
+.admin-laptop-glow {
+  position: absolute;
+  top: 55%;
+  left: 55%;
+  z-index: 1;
+  width: 24%;
+  height: 25%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse,
+    rgb(207 238 255 / 65%) 0%,
+    rgb(132 203 255 / 28%) 35%,
+    rgb(132 203 255 / 0%) 72%
+  );
+  filter: blur(12px);
+  mix-blend-mode: screen;
+  animation: admin-laptop-glow 5s ease-in-out infinite;
+}
+
+/* 문어 눈 깜빡임 */
+.admin-login-art .admin-login-blink {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  pointer-events: none;
+  clip-path: inset(53% 22.5% 39% 68%);
+  opacity: 0;
+  animation: admin-octopus-blink 5.5s steps(1, end) infinite;
+}
+
+/* 풍선 */
+.admin-login-art .admin-login-balloon {
+  position: absolute;
+  bottom: 35%;
+  left: 85.7%;
+  z-index: 3;
+  width: 9.5%;
+  height: auto;
+  max-width: none;
+  object-fit: contain;
+  transform-origin: 50% 98%;
+  animation: admin-balloon-sway 5.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* 별·리본·색종이 */
+.admin-login-art .admin-decoration {
+  position: absolute;
+  z-index: 4;
+  display: block;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.admin-decoration svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+}
+
+.admin-decoration-star {
+  top: 31.5%;
+  left: 76.5%;
+  width: 3.4%;
+  animation: admin-star-turn 7s ease-in-out infinite;
+}
+
+.admin-decoration-ribbon {
+  top: 37.5%;
+  left: 55.7%;
+  width: 3.7%;
+  animation: admin-decoration-float 6s ease-in-out infinite;
+}
+
+.admin-decoration-confetti-blue {
+  --decoration-angle: -8deg;
+  top: 37.5%;
+  left: 64.5%;
+  width: 2%;
+  animation: admin-confetti-float 5s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.admin-decoration-confetti-yellow {
+  --decoration-angle: 8deg;
+  top: 48%;
+  left: 56.5%;
+  width: 2%;
+  animation: admin-confetti-float 6.5s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+.admin-decoration-confetti-right {
+  --decoration-angle: -6deg;
+  top: 63%;
+  left: 94.5%;
+  width: 2%;
+  animation: admin-confetti-float 5.5s ease-in-out infinite;
+  animation-delay: -1s;
+}
+
+/* 애니메이션 */
+@keyframes admin-login-appear {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-laptop-glow {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.95);
+  }
+
+  50% {
+    opacity: 0.65;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes admin-octopus-blink {
+  0%, 46% {
+    opacity: 0;
+  }
+
+  47%, 49% {
+    opacity: 1;
+  }
+
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes admin-balloon-sway {
+  0%, 100% {
+    transform: rotate(-2deg);
+  }
+
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes admin-star-turn {
+  0%, 100% {
+    transform: rotate(-7deg);
+    filter: brightness(1);
+  }
+
+  50% {
+    transform: rotate(8deg);
+    filter: brightness(1.12);
+  }
+}
+
+@keyframes admin-decoration-float {
+  0%, 100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+
+  50% {
+    transform: translateY(-10%) rotate(5deg);
+  }
+}
+
+@keyframes admin-confetti-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform:
+      translateY(-22%)
+      rotate(var(--decoration-angle, 8deg));
+  }
+}
+
+/* 태블릿 */
+@media (max-width: 1000px) {
+  body.admin-login-screen .admin-login-page {
+    padding-inline: 5vw;
+  }
+
+  .admin-login-card {
+    width: 360px;
+    padding: 32px 28px;
+  }
+}
+
+/* 모바일 */
+@media (max-width: 600px) {
+  body.admin-login-screen .admin-login-page {
+    justify-content: center;
+    padding: 32px 20px;
+  }
+
+  .admin-login-card {
+    width: 380px;
+    padding: 30px 26px;
+    border-radius: 20px;
+  }
+
+  .admin-login-art {
+    opacity: 0.4;
+  }
+
+  .admin-login-art .admin-login-balloon,
+  .admin-login-art .admin-decoration {
+    display: none;
+  }
+}
+
+/* 움직임 줄이기 */
+@media (prefers-reduced-motion: reduce) {
+  .admin-login-card,
+  .admin-laptop-glow,
+  .admin-login-art .admin-login-blink,
+  .admin-login-art .admin-login-balloon,
+  .admin-login-art .admin-decoration {
+    animation: none;
+  }
+
+  .admin-laptop-glow {
+    opacity: 0.3;
+  }
+
+  .admin-login-art .admin-login-blink {
+    opacity: 0;
+  }
+}
