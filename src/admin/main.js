@@ -36,8 +36,7 @@ import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, 
 import { creationView, startCreation, validateCreation, finishCreation, refreshCreationSummary, handleCreateRagClick, ensureCreationTemplates, selectCreationTemplate } from './views/create.js'
 import { loginView } from './views/login.js'
 import { usersView, ensureAdminUsers, resetAdminUsers, handleUsersClick, handleUsersChange, handleUsersSubmit } from './views/user-management.js'
-import { dashboardRagView, ensureDashboard } from './views/dashboard-rag.js'
-import { handleRagPanelClick } from './views/rag-panel.js'
+import { dashboardRagView, ensureDashboard, handleRagDashboardClick } from './views/dashboard-rag.js'
 
 /**
  * 관리자 앱 셸.
@@ -468,8 +467,8 @@ document.addEventListener('click', (ev) => {
 
   // ── 템플릿 라이브러리 (PR #133) — 목업 · 서버 둘 다 쓴다 ────────
   if(handleLibraryClick(a,b,()=>render()))return;
-  // ── RAG 구역 (버전 이력) — 목업 · 서버 둘 다 쓴다 ──────────────
-  if(handleRagPanelClick(a,b,()=>render()))return;
+  // ── RAG 품질 대시보드 — 전체 재색인은 전역 작업이라 여기로 옮겨졌다 ──
+  if(handleRagDashboardClick(a,()=>render()))return;
   if(handleParticipantsClick(a,b,()=>render()))return;
 
   // ── 서버 모드 편집 화면 ─────────────────────────────────────────

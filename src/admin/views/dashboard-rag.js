@@ -2,25 +2,32 @@
  * RAG 품질 대시보드 — 신규 뷰 1개 (라우트 /rag).
  *
  *   주간 추이  GET /api/admin/rag/quality-trend?weeks=8
+ *   재색인 이력 GET /api/admin/rag/reindex-logs
+ *   전체 재색인 POST /reindex/all + GET /reindex/all/status
  *
  * 주간 막대 — 파란색이 전체 호출, 안쪽 초록색이 그중 RAG 참고 사례를 실어 넣은 호출.
  * 막대 밖엔 주 시작 날짜만 두고 자세한 수치는 hover 툴팁에서 세로로 요약해 보여준다.
  * 범례 아래 지난주 대비 증감을 붙인다 (같은 응답으로 계산 — 추가 요청 없음).
  * 차트 라이브러리 없이 div 높이로 그린다 (프로덕션 의존성 제로 원칙).
+ *
+ * 과거에는 전체 재색인 카드가 버전 이력 화면에 있었다 — 전역 작업인데 이벤트 화면에
+ * 놓인 게 반직관적이라 관찰(추이)·설명(이력)·행동(실행)이 한 화면에서 닫히도록 여기로 옮겼다.
  */
 
 import { esc } from '@shared/dom.js'
 import { icon } from '@shared/icons.js'
-import { loadQualityTrend, loadReindexLogs } from '@shared/repo.js'
+import { loadQualityTrend, loadReindexLogs, startReindexAll, pollReindexStatus } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
+import { toast } from '@shared/ui/toast.js'
 
 /** 화면에 처음 들어올 때 한 번 읽는다. 실패하면 빈 목록으로 둔다 */
 export function ensureDashboard(onDone) {
   if (ui.ragTrend !== undefined) return
   ui.ragTrend = null
   ui.ragReindexLogs = null
-  let pending = 2
+  ui.ragReindexAll = null
+  let pending = 3
   const finish = () => { if (--pending === 0) onDone() }
   loadQualityTrend(8)
     .then((rows) => { ui.ragTrend = Array.isArray(rows) ? rows : [] })
@@ -29,6 +36,11 @@ export function ensureDashboard(onDone) {
   loadReindexLogs()
     .then((rows) => { ui.ragReindexLogs = Array.isArray(rows) ? rows : [] })
     .catch(() => { ui.ragReindexLogs = [] })
+    .finally(finish)
+  // 다른 관리자가 이미 전체 재색인을 돌리고 있으면 진행 중으로 그린다
+  pollReindexStatus()
+    .then((st) => { ui.ragReindexAll = st })
+    .catch(() => { ui.ragReindexAll = null })
     .finally(finish)
 }
 
@@ -153,7 +165,28 @@ export function dashboardRagView() {
     + '막대에 마우스를 올리면 주간 범위와 전체·RAG 참고 회수, 사용률, 그 주에 사용된 청크 수가 세로로 요약돼요. '
     + '그 주에 전체 재색인을 돌렸으면 청크 수가 일제히 바뀌니 말줄에 "그 주에 전체 재색인 실행" 표시가 붙어요. '
     + '막대 밖 날짜는 주의 시작일이고, 이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p></div>'
+    + reindexActionCard()
     + reindexCard(ui.ragReindexLogs)
+    + '</div>'
+}
+
+/** 전체 재색인 실행 카드 — 관찰(추이)→행동(실행)의 짝. 이벤트 범위 재색인은 버전 이력 화면에 남는다 */
+function reindexActionCard() {
+  const st = ui.ragReindexAll
+  const running = !!st?.running
+  const desc = running
+    ? '<p class="rag-desc">전체 재색인 진행 중… 2초 간격으로 상태를 확인해요.</p>'
+    : (st?.lastResult
+      ? '<p class="rag-desc">완료 — 성공 ' + (st.lastResult.succeeded ?? 0) + '/' + (st.lastResult.totalEvents ?? 0)
+        + ', 청크 ' + (st.lastResult.totalChunks ?? 0) + '개</p>'
+      : '<p class="rag-desc">삭제된 이벤트·시드를 빼고 전체 이벤트의 청크를 다시 만들어요.<br>'
+        + '돌린 뒤에는 아래 이력에 ALL 기록 한 줄이 쌓여요.</p>')
+  return '<div class="card rag-card rag-reindex">'
+    + '<div class="rag-reindex-text">'
+    + '<h3>RAG 전체 재색인</h3>'
+    + desc
+    + '</div>'
+    + button('rag-reindex-all', running ? '진행 중…' : '전체 재색인', running ? 'disabled' : '', 'btn sm')
     + '</div>'
 }
 
@@ -179,4 +212,55 @@ function reindexCard(logs) {
     + '<p class="helper trend-helper">버전·이벤트·전체 재색인이 돌 때마다 남는 기록이에요. '
     + '품질 추이에서 청크 수가 튀는 주가 보이면 여기서 먼저 확인해요.</p>'
     + rows + '</div>'
+}
+
+/** 전체 재색인 폴링 타이머 — 이 화면에서만 하나다 */
+let reindexTimer = null
+
+/**
+ * 대시보드 버튼 (main.js 가 클릭을 위임한다). 처리했으면 true.
+ * rag-panel.js 에 있던 전체 재색인 처리가 이동해 온 것 — 동작(202 시작/409 관용/2초 폴링)은 같다.
+ * @returns {boolean} 처리했으면 true
+ */
+export function handleRagDashboardClick(a, rerender) {
+  if (a !== 'rag-reindex-all') return false
+  reindexAllFromDashboard(rerender)
+  return true
+}
+
+async function reindexAllFromDashboard(rerender) {
+  try {
+    await startReindexAll()  // 202. 이미 돌고 있으면 409 — 그래도 상태 폴링으로 간다
+  } catch (e) {
+    if (e?.status !== 409) {
+      toast(e?.message || '전체 재색인을 시작하지 못했어요.')
+      return
+    }
+  }
+  if (reindexTimer) clearInterval(reindexTimer)
+  reindexTimer = setInterval(async () => {
+    // 화면을 벗어났으면 폴링을 끊는다 — 보이지 않는 상태 갱신은 비용일 뿐이다
+    if (ui.route !== 'rag') {
+      clearInterval(reindexTimer)
+      reindexTimer = null
+      return
+    }
+    try {
+      const st = await pollReindexStatus()
+      ui.ragReindexAll = st
+      if (!st.running) {
+        clearInterval(reindexTimer)
+        reindexTimer = null
+        // 방금 ALL 행이 쌓였을 수 있으니 이력 카드도 새로 읽는다
+        loadReindexLogs()
+          .then((rows) => { ui.ragReindexLogs = Array.isArray(rows) ? rows : [] })
+          .catch(() => {})
+      }
+      rerender()
+    } catch {
+      clearInterval(reindexTimer)
+      reindexTimer = null
+      rerender()
+    }
+  }, 2000)
 }

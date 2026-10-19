@@ -9,9 +9,12 @@ import { SourceTextModule, SyntheticModule } from 'node:vm'
  */
 async function setup() {
   const ui = {}
+  const buttons = []
+  const calls = { startedReindex: 0 }
   const bindings = {
     esc: String, icon: () => '', ui,
-    button: () => '',
+    button: (action, label, attrs) => { buttons.push({ action, label, attrs }); return '' },
+    toast: (message) => { buttons.push({ action: 'toast', label: message }) },
     loadQualityTrend: async () => ([
       { weekStart: '2026-09-28', totalCalls: 15, ragUsedCalls: 7, chunkCount: 25 },
       { weekStart: '2026-10-05', totalCalls: 22, ragUsedCalls: 14, chunkCount: 31 },
@@ -29,13 +32,17 @@ async function setup() {
         createdAt: '2026-09-28T05:00:00Z',
       },
     ]),
+    // 전체 재색인 — 시작은 세고, 상태 폴링은 기본 '안 돌고 있는 중'으로 둔다
+    startReindexAll: async () => { calls.startedReindex++; return { running: true } },
+    pollReindexStatus: async () => ({ running: false, startedAt: null, finishedAt: null, lastResult: null }),
   }
   const module = new SourceTextModule(await readFile(new URL('../src/admin/views/dashboard-rag.js', import.meta.url), 'utf8'))
   await module.link(() => new SyntheticModule(Object.keys(bindings), function () {
     for (const [key, value] of Object.entries(bindings)) this.setExport(key, value)
   }))
   await module.evaluate()
-  return { ns: module.namespace, ui }
+  return { ns: module.namespace, ui, buttons, calls,
+    settle: () => new Promise((r) => setTimeout(r, 20)) }
 }
 
 test('주별 사용률과 지난주 대비 증감이 나온다', async () => {
@@ -83,6 +90,47 @@ test('재색인 기록이 없으면 툴팁 표시 없이 빈 안내를 보여준
   assert.match(html, /아직 재색인 기록이 없어요/)
   // 설명 문구에도 같은 문장이 있으므로 표시 span 자체를 검사한다
   assert.doesNotMatch(html, /<span class="tip-flag">그 주에 전체 재색인 실행/)
+})
+
+test('전체 재색인 카드가 추이와 이력 사이에 온다', async () => {
+  const h = await setup()
+  await new Promise((r) => h.ns.ensureDashboard(r))
+  const html = h.ns.dashboardRagView()
+  const action = html.indexOf('RAG 전체 재색인')
+  const trend = html.indexOf('막대 밖 날짜는')
+  const history = html.indexOf('재색인 이력')
+  // 관찰(추이) → 행동(실행) → 설명(이력) 순서다
+  assert.ok(action > trend && action < history, '실행 카드가 추이 뒤 이력 앞에 있어야 한다')
+  // 버튼 — 실행 전이면 누를 수 있다
+  assert.ok(h.buttons.some((b) => b.action === 'rag-reindex-all' && b.label === '전체 재색인' && !b.attrs.includes('disabled')))
+})
+
+test('실행 중이면 버튼이 잠기고 진행 문구가 나온다', async () => {
+  const h = await setup()
+  await new Promise((r) => h.ns.ensureDashboard(r))
+  h.ui.ragReindexAll = { running: true, startedAt: '2026-10-19T09:00:00Z', finishedAt: null, lastResult: null }
+  const html = h.ns.dashboardRagView()
+  assert.match(html, /전체 재색인 진행 중… 2초 간격으로 상태를 확인해요/)
+  assert.ok(h.buttons.some((b) => b.action === 'rag-reindex-all' && b.label === '진행 중…' && b.attrs.includes('disabled')))
+})
+
+test('마친 재색인은 완료 결과를 보여준다', async () => {
+  const h = await setup()
+  await new Promise((r) => h.ns.ensureDashboard(r))
+  h.ui.ragReindexAll = { running: false, startedAt: null, finishedAt: '2026-10-19T09:05:00Z',
+    lastResult: { totalEvents: 3, succeeded: 2, failedEvents: [41], totalChunks: 189 } }
+  const html = h.ns.dashboardRagView()
+  assert.match(html, /완료 — 성공 2\/3, 청크 189개/)
+})
+
+test('버튼 클릭은 전체 재색인을 시작한다', async () => {
+  const h = await setup()
+  h.ui.route = 'rag'
+  const rerender = () => {}
+  assert.equal(h.ns.handleRagDashboardClick('rag-reindex-all', rerender), true)
+  assert.equal(h.ns.handleRagDashboardClick('unknown-act', rerender), false)
+  await h.settle()
+  assert.equal(h.calls.startedReindex, 1)
 })
 
 test('데이터가 없으면 빈 메시지를 보여준다', async () => {
