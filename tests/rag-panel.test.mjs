@@ -47,18 +47,20 @@ test('첫 렌더에서 색인 현황과 호출 로그를 불러와 배지와 카
   const h = await setup()
   h.ns.ensureRagPanel('7')
   await h.settle()
-  // 미색인 1건 → 경고 배지
-  assert.match(h.ns.ragIndexBadge('7'), /미색인 1건/)
+  // 재색인이 필요한 버전 1개 → 경고 배지
+  assert.match(h.ns.ragIndexBadge('7'), /재색인이 필요한 버전이 1개 있어요/)
   const html = h.ns.ragPanel('7')
   assert.match(html, /RAG 전체 재색인/)
   assert.match(html, /LLM 호출 로그/)
-  // 목록 필드 인라인 — 성공 행 토큰·응답시간
-  assert.match(html, /#101 성공/)
-  assert.match(html, /입력 1200 · 출력 300토큰 · 1.4초/)
+  // 로그 표 — 호출 ID·모델, 상태 배지, 토큰·응답시간 칸 (표형이라 칸이 갈라져 있다)
+  assert.match(html, /<span class="rag-log-id">#101<\/span>/)
+  assert.match(html, /is-success/)
+  assert.match(html, /1200/)
+  assert.match(html, /<td class="rag-log-number">1\.4초<\/td>/)
   // 상세에서 붙인 실패원인·청크ID 인라인
-  assert.match(html, /#102 실패/)
+  assert.match(html, /<span class="rag-log-id">#102<\/span>/)
+  assert.match(html, /is-failure/)
   assert.match(html, /실패: TIMEOUT/)
-  assert.match(html, /참고 청크: 101,102/)
   // 재색인 버튼은 카드에 있다. 로그 상세 버튼은 없다(인라인이라 모달이 없다)
   assert.deepEqual(h.buttons.filter((b) => b.action === 'rag-reindex-all').length, 1)
   assert.deepEqual(h.buttons.filter((b) => b.action === 'rag-log').length, 0)
@@ -68,7 +70,7 @@ test('색인 배지는 전부 색인됐을 때 완료로 표시한다', async ()
   const h = await setup()
   h.ns.ensureRagPanel('9') // 스텁이 이 ID 는 미색인 0건으로 답한다
   await h.settle()
-  assert.match(h.ns.ragIndexBadge('9'), /색인 2\/3/)
+  assert.match(h.ns.ragIndexBadge('9'), /모든 버전의 색인이 완료됐어요/)
 })
 
 test('패널 버튼은 처리한 것만 true 를 돌려준다', async () => {

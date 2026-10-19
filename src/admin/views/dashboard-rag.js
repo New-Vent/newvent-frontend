@@ -11,7 +11,7 @@
 
 import { esc } from '@shared/dom.js'
 import { icon } from '@shared/icons.js'
-import { loadQualityTrend } from '@shared/repo.js'
+import { loadQualityTrend, loadReindexLogs } from '@shared/repo.js'
 import { ui } from '@shared/state.js'
 import { button } from '@shared/ui/controls.js'
 
@@ -19,10 +19,17 @@ import { button } from '@shared/ui/controls.js'
 export function ensureDashboard(onDone) {
   if (ui.ragTrend !== undefined) return
   ui.ragTrend = null
+  ui.ragReindexLogs = null
+  let pending = 2
+  const finish = () => { if (--pending === 0) onDone() }
   loadQualityTrend(8)
     .then((rows) => { ui.ragTrend = Array.isArray(rows) ? rows : [] })
     .catch(() => { ui.ragTrend = [] })
-    .finally(onDone)
+    .finally(finish)
+  loadReindexLogs()
+    .then((rows) => { ui.ragReindexLogs = Array.isArray(rows) ? rows : [] })
+    .catch(() => { ui.ragReindexLogs = [] })
+    .finally(finish)
 }
 
 const maxOf = (rows, pick) => rows.reduce((m, r) => Math.max(m, pick(r) || 0), 0)
@@ -43,6 +50,37 @@ const weekRange = (iso) => {
 
 /** 사용률 % — 분모 0 이면 '-' */
 const rate = (rag, total) => (total > 0 ? Math.round((rag / total) * 100) + '%' : '-')
+
+// 재색인 이력 — scope(SINGLE/EVENT/ALL)·status 를 화면용 말로 바꾼다
+const scopeLabel = { SINGLE: '버전 재색인', EVENT: '이벤트 재색인', ALL: '전체 재색인' }
+const statusLabel = { SUCCESS: '성공', FAILED: '실패' }
+
+/** 로그 시각(UTC ISO) → KST 달 'MM/DD hh:mm'. 백엔드 주간 집계가 KST 기준이라 표시도 KST 로 맞춘다 */
+const logStamp = (iso) => {
+  const d = new Date(new Date(iso).getTime() + 9 * 3600000)
+  if (Number.isNaN(d.getTime())) return String(iso ?? '')
+  return String(d.getUTCMonth() + 1).padStart(2, '0') + '/' + String(d.getUTCDate()).padStart(2, '0')
+    + ' ' + String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0')
+}
+
+/** 로그 시각 → KST 날짜 'YYYY-MM-DD'. 주 범위 비교용 */
+const logDateKst = (iso) => {
+  const d = new Date(new Date(iso).getTime() + 9 * 3600000)
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10)
+}
+
+/**
+ * 그 주에 실행된 전체 재색인이 있나 — 추이 툴팁의 "왜 이 주가 튄나" 말붙이(ALL만).
+ * 전체 재색인은 모든 청크의 생성 시각을 실행일로 다시 찍는다 — 그래서 이 표지로 설명이 끝난다.
+ */
+function allReindexInWeek(logs, weekStart) {
+  if (!weekStart || !logs || !logs.length) return false
+  const end = new Date(weekStart + 'T00:00:00Z')
+  end.setUTCDate(end.getUTCDate() + 6)
+  const endDate = end.toISOString().slice(0, 10)
+  return logs.some((l) => l.scope === 'ALL'
+    && logDateKst(l.createdAt) >= weekStart && logDateKst(l.createdAt) <= endDate)
+}
 
 /** 마지막 두 주 RAG 사용 증감. 1주뿐이면 null */
 function weekDelta(rows) {
@@ -94,6 +132,8 @@ export function dashboardRagView() {
       + '<span>그중 RAG 참고 ' + rag + '회</span>'
       + '<span>사용률 ' + usage + '</span>'
       + '<span>청크 ' + (r.chunkCount || 0) + '개</span>'
+      + (allReindexInWeek(ui.ragReindexLogs, String(r.weekStart ?? ''))
+          ? '<span class="tip-flag">그 주에 전체 재색인 실행</span>' : '')
       + '</span>'
       + '<span class="trend-fill" style="height:' + Math.round((total / maxCalls) * 100) + '%">'
       + '<span class="trend-rag" style="height:' + (total ? Math.round((rag / total) * 100) : 0) + '%"></span>'
@@ -111,6 +151,32 @@ export function dashboardRagView() {
     + '<div class="card"><div class="trend">' + cols + '</div>'
     + '<p class="helper trend-helper">막대 높이는 그 주 전체 호출 수, 안쪽 초록은 그중 RAG 참고 사례를 실어 넣은 호출이에요. '
     + '막대에 마우스를 올리면 주간 범위와 전체·RAG 참고 회수, 사용률, 그 주에 사용된 청크 수가 세로로 요약돼요. '
-    + '막대 밖 날짜는 주의 시작일이에요. '
-    + '이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p></div></div>'
+    + '그 주에 전체 재색인을 돌렸으면 청크 수가 일제히 바뀌니 말줄에 "그 주에 전체 재색인 실행" 표시가 붙어요. '
+    + '막대 밖 날짜는 주의 시작일이고, 이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p></div>'
+    + reindexCard(ui.ragReindexLogs)
+    + '</div>'
+}
+
+/**
+ * 재색인 이력 카드 — 실행 1회당 남은 기록을 최신순으로 보여준다.
+ * 품질 추이에서 청크 수가 튄 주가 보일 때 원인을 먼저 여기서 확인하게 하려는 배치다.
+ */
+function reindexCard(logs) {
+  if (!logs) return ''
+  if (!logs.length) {
+    return '<div class="card reindex-card"><h3>재색인 이력</h3>'
+      + '<p class="helper trend-helper">아직 재색인 기록이 없어요. 재색인을 돌리면 실행마다 기록이 쌓여요.</p></div>'
+  }
+  const rows = logs.map((l) => {
+    const line = logStamp(l.createdAt) + ' · ' + (scopeLabel[l.scope] || l.scope) + ' · '
+      + (statusLabel[l.status] || l.status)
+      + (l.chunkCount != null ? ' · 청크 ' + l.chunkCount + '개' : '')
+    return '<div class="reindex-row"><span class="reindex-line">' + esc(line) + '</span>'
+      + (l.failureMessage ? '<span class="reindex-fail">사유: ' + esc(l.failureMessage) + '</span>' : '')
+      + '</div>'
+  }).join('')
+  return '<div class="card reindex-card"><h3>재색인 이력</h3>'
+    + '<p class="helper trend-helper">버전·이벤트·전체 재색인이 돌 때마다 남는 기록이에요. '
+    + '품질 추이에서 청크 수가 튀는 주가 보이면 여기서 먼저 확인해요.</p>'
+    + rows + '</div>'
 }
