@@ -81,7 +81,7 @@ function participationResult(r, eventId) {
   return '<div class="participation-access ' + (won ? 'ready' : pending ? 'login' : 'done') + '" role="status">'
     + '<strong>' + message + '</strong>'
     + (won && r.prizeName ? '<p class="summary">' + esc(r.prizeName) + '</p>' : '')
-    + button('result', '참여 결과 보기', 'data-route="my"', 'btn sm wide') + '</div>'
+    + button('result', '참여 결과 보기', 'data-event-id="' + esc(eventId) + '"', 'btn sm wide') + '</div>'
 }
 
 /**

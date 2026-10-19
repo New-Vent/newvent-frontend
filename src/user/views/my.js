@@ -65,6 +65,7 @@ function serverCard(p) {
     + '<span class="badge ' + (pending ? 'amber' : won ? 'green' : '') + '">'
     + (pending ? '결과 대기' : won ? '당첨' : '미당첨') + '</span>'
     + '<p>' + esc(p.reward || p.result) + '</p></div>'
+    + button('result', '상세 보기', 'data-id="' + esc(p.id) + '"', 'btn sm')
     + button('event', '이벤트 보기', 'data-id="' + esc(p.eventId) + '"', 'btn sm')
     + '</article>'
 }
