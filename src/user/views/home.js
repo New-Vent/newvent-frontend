@@ -46,17 +46,52 @@ function serverThumb(e) {
   return '<div class="thumb thumb-empty" aria-hidden="true">' + icon('gift') + '</div>'
 }
 
+function progressOf(event, now) {
+  if (event.status === 'ENDED') return 'ended'
+  if (new Date(event.startDate).getTime() > now) return 'upcoming'
+  if (new Date(event.endDate).getTime() <= now) return 'ended'
+  return 'live'
+}
+
 function serverResults() {
-  const es = (ui.serverEvents || []).filter((e) =>
-    e.title.toLowerCase().includes(ui.query.trim().toLowerCase()),
-  )
-  return '<div class="filterbar"><span class="result-count">' + es.length + '개의 이벤트</span></div>'
+  const query = ui.query.trim().toLowerCase()
+  const filter = ui.filter || 'all'
+  const now = Date.now()
+
+  const events = (ui.serverEvents || []).filter((event) => {
+    const matchesTitle = event.title.toLowerCase().includes(query)
+    const matchesProgress =
+      filter === 'all' || progressOf(event, now) === filter
+
+    return matchesTitle && matchesProgress
+  })
+
+  const filters = [
+    ['all', '전체'],
+    ['live', '진행 중'],
+    ['upcoming', '오픈 예정'],
+  ].map(([value, label]) =>
+    button(
+      'filter',
+      label,
+      'data-value="' + value + '" aria-pressed="' + (filter === value) + '"',
+      filter === value ? 'active' : '',
+    ),
+  ).join('')
+
+  return '<div class="filterbar">'
+    + '<div class="filters">' + filters + '</div>'
+    + '<span class="result-count">' + events.length + '개의 이벤트</span>'
+    + '</div>'
     + '<div class="event-grid">'
-    + (es.length
-        ? es.map(serverCard).join('')
-        : '<div class="empty">' + icon('search') + '<h3>이벤트가 없어요</h3>'
-          + '<p>다른 검색어로 찾아보세요.</p>'
-          + button('clear-filter', '전체 이벤트 보기', '', 'btn soft') + '</div>')
+    + (events.length
+      ? events.map(serverCard).join('')
+      : '<div class="empty">'
+        + icon('search')
+        + '<h3>일치하는 이벤트가 없어요</h3>'
+        + '<p>검색어나 필터를 변경해보세요.</p>'
+        + button('clear-filter', '전체 이벤트 보기', '', 'btn soft')
+        + '</div>')
     + '</div>'
 }
 

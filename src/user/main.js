@@ -619,11 +619,13 @@ document.addEventListener('submit', (ev) => {
   })
 })
 
-document.addEventListener('input', (ev) => {
-  if (ev.target.id === 'event-search') {
-    ui.query = ev.target.value
-    refreshResults()
-  }
+document.addEventListener('keydown', (ev) => {
+  if (ev.target.id !== 'event-search') return
+  if (ev.key !== 'Enter' || ev.isComposing) return
+
+  ev.preventDefault()
+  ui.query = ev.target.value
+  refreshResults()
 })
 
 /**
