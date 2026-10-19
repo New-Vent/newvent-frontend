@@ -323,6 +323,7 @@ function render(scroll = false) {
   const serverView = USE_SERVER && { editor: serverEditorView, versions: serverVersionsView }[ui.route]
   if (serverView) ensureServerEditor(ui.activeId, () => render())
   document.body.classList.toggle('editing-workspace', ui.route === 'editor')
+  document.body.classList.toggle('admin-login-screen', ui.route === 'login')
   header()
   // 편집 화면을 통째로 바꾸기 전에 스크롤을 기억한다 — AI 대화 후 상단으로 튀지 않게
   if (ui.route === 'editor' && USE_SERVER) rememberSideScroll()
