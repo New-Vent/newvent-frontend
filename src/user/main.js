@@ -161,15 +161,47 @@ function ensureParticipationStatus(id, rerender) {
  */
 function ensureMy(rerender) {
   if (!USE_SERVER || !ui.logged) return
-  const want = ui.myFilter === 'rewards' ? 'REWARDS' : 'ALL'
-  if (ui.serverMyState === 'loading') return
-  if (ui.serverMyState === 'done' && ui.serverMyFilter === want) return
-  ui.serverMyFilter = want
+
+  const filter = ui.myFilter === 'rewards' ? 'REWARDS' : 'ALL'
+  const page = ui.myPage ?? 0
+  const key = `${filter}:${page}`
+
+  if (
+    ui.serverMyKey === key
+    && ['loading', 'done', 'error'].includes(ui.serverMyState)
+  ) return
+
+  ui.serverMyKey = key
+  ui.serverMyFilter = filter
   ui.serverMyState = 'loading'
-  loadParticipations({ filter: want }).then(
-    (d) => { ui.serverMy = d; ui.serverMyState = 'done'; rerender() },
-    (err) => { ui.serverMyError = err?.message || '참여 내역을 불러오지 못했어요.'
-               ui.serverMyState = 'error'; rerender() },
+  ui.serverMyError = null
+
+  loadParticipations({ filter, page, size: 10 }).then(
+    (data) => {
+      if (!ui.logged || ui.serverMyKey !== key) return
+
+      // 기록 수가 줄어 현재 페이지가 사라졌으면 마지막 페이지로 이동한다.
+      const lastPage = Math.max(0, data.totalPages - 1)
+
+      if (page > lastPage) {
+        ui.myPage = lastPage
+        ui.serverMyState = null
+        rerender()
+        return
+      }
+
+      ui.serverMy = data
+      ui.serverMyState = 'done'
+      rerender()
+    },
+    (error) => {
+      if (!ui.logged || ui.serverMyKey !== key) return
+
+      ui.serverMyError =
+        error?.message || '참여 내역을 불러오지 못했어요.'
+      ui.serverMyState = 'error'
+      rerender()
+    },
   )
 }
 
@@ -317,9 +349,30 @@ document.addEventListener('click', (ev) => {
   }
   if (a === 'my-filter') {
     ui.myFilter = b.dataset.value
-    // 서버 모드는 필터를 서버가 건다. 상태를 비워 ensureMy 가 다시 묻게 한다.
+    ui.myPage = 0
+
     if (USE_SERVER) ui.serverMyState = null
+
     render()
+    return
+  }
+
+  if (a === 'my-page') {
+    if (!USE_SERVER || ui.serverMyState !== 'done') return
+
+    const page = Number(b.dataset.page)
+    const totalPages = ui.serverMy?.totalPages ?? 0
+
+    if (
+      !Number.isInteger(page)
+      || page < 0
+      || page >= totalPages
+      || page === (ui.myPage ?? 0)
+    ) return
+
+    ui.myPage = page
+    ui.serverMyState = null
+    render(true)
     return
   }
   if (a === 'reset') {
@@ -536,6 +589,8 @@ async function logout() {
   ui.serverMy = null
   ui.serverMyState = null
   ui.serverMyFilter = null
+  ui.serverMyKey = null
+  ui.myPage = 0
   ui.serverMyError = null
   ui.serverParticipation = null
   ui.serverGrades = null

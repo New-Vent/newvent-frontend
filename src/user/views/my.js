@@ -70,6 +70,40 @@ function serverCard(p) {
     + '</article>'
 }
 
+function myPagination(data) {
+  const totalPages = data.totalPages
+
+  if (totalPages <= 1) return ''
+
+  const page = data.page
+  const start = Math.max(0, Math.min(page - 2, totalPages - 5))
+  const end = Math.min(totalPages, start + 5)
+
+  const pageButton = (target, label, disabled = false) => {
+    const current = target === page
+
+    return '<button type="button"'
+      + ' class="btn sm' + (current ? ' primary' : '') + '"'
+      + ' data-act="my-page"'
+      + ' data-page="' + target + '"'
+      + (disabled ? ' disabled' : '')
+      + (current ? ' aria-current="page"' : '')
+      + '>' + label + '</button>'
+  }
+
+  let pages = ''
+
+  for (let index = start; index < end; index++) {
+    pages += pageButton(index, index + 1)
+  }
+
+  return '<nav class="my-pagination" aria-label="내 혜택 페이지">'
+    + pageButton(page - 1, '이전', page === 0)
+    + pages
+    + pageButton(page + 1, '다음', page >= totalPages - 1)
+    + '</nav>'
+}
+
 function serverMyView() {
   const st = ui.serverMyState
   if (st === 'loading') {
@@ -91,7 +125,9 @@ function serverMyView() {
     + filterBar(d.totalElements)
     + '<div class="stack">'
     + (d.items.length ? d.items.map(serverCard).join('') : emptyBox)
-    + '</div></div>'
+    + '</div>'
+    + myPagination(d)
+    + '</div>'
 }
 
 /* ───────────── 목업 모드 ───────────── */

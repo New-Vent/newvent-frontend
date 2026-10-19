@@ -4,3 +4,21 @@
 @import '@shared/styles/components.css';
 @import '@shared/styles/user.css';
 @import '@shared/styles/responsive.css';
+
+.my-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.my-pagination .btn {
+  min-width: 36px;
+}
+
+.my-pagination .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
