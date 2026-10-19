@@ -14,7 +14,7 @@ import './navigation.css'
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
 import { handleLoginSubmit } from '@shared/login-form.js'
-import { deleteEvent, loadPreview, publishEvent, purgeEvent, restoreEvent, unpublishEvent, useApi, USE_SERVER } from '@shared/repo.js'
+import { deleteEvent, loadAdminProfile, loadPreview, publishEvent, purgeEvent, restoreEvent, unpublishEvent, useApi, USE_SERVER } from '@shared/repo.js'
 import { state, ui } from '@shared/state.js'
 import { persist } from '@shared/persist.js'
 import { icon } from '@shared/icons.js'
@@ -53,6 +53,16 @@ export const api = createApi({ authBase: '/api/admin/auth' })
 useApi(api)
 
 const adminNotifications = createAdminNotifications(api, AUTH_ENABLED && USE_SERVER)
+
+async function refreshAdminProfile() {
+  ui.adminProfile = null
+
+  try {
+    ui.adminProfile = await loadAdminProfile()
+  } catch (e) {
+    toast(e?.message || '관리자 정보를 불러오지 못했어요.')
+  }
+}
 
 const VIEWS = { admin: adminView, users: usersView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, participants: participantsView, login: loginView, rag: dashboardRagView }
 
@@ -93,7 +103,7 @@ function header() {
           'aria-expanded="false" ' +
           'aria-controls="admin-account-dropdown">' +
           '<span class="avatar">' + icon('user') + '</span>' +
-          '<span class="name">운영자님</span>' +
+          '<span class="name">' + esc(profile?.name ? profile.name + '님' : '운영자님') + '</span>' +
           '<span class="admin-account-chevron">' +
             icon('chevron') +
           '</span>' +
@@ -719,6 +729,7 @@ async function logout() {
   resetLibrary()
   resetParticipants()
   ui.serverEditor = null
+  ui.adminProfile = null
   ui.logged = false
   navigate('login')
   toast('로그아웃했어요.')
@@ -726,8 +737,9 @@ async function logout() {
 
 document.addEventListener('submit', (ev) => {
   if (ev.target.id !== 'login-form') return
-  handleLoginSubmit(ev, api, () => {
+  handleLoginSubmit(ev, api, async () => {
     ui.logged = true
+    await refreshAdminProfile()
     toast('로그인했어요.')
     navigate('admin')
   })
@@ -763,6 +775,8 @@ ui.route = 'admin'
 // 서버 인증 사용 여부는 AUTH_ENABLED (@shared/api.js). 꺼져 있으면 목업 로그인 상태로 돈다.
 
 async function start() {
+  ui.adminProfile = null
+
   if (AUTH_ENABLED) {
     // 새로고침으로 메모리 토큰이 비었어도 Refresh 쿠키로 되살린다.
     // 먼저 갱신하고 렌더해야 로그인 화면이 깜빡였다 바뀌지 않는다.
@@ -771,6 +785,11 @@ async function start() {
   } else {
     ui.logged = true
   }
+
+  if (ui.logged) {
+    await refreshAdminProfile()
+  }
+  
   router.start()
 }
 
