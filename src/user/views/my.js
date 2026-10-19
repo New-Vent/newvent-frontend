@@ -30,9 +30,11 @@ function when(iso) {
 }
 
 const heading = (name) =>
-  '<div class="page-heading"><span class="eyebrow">MY EVENT COLLECTION</span>'
-  + '<h1>나의 즐거움이 모이는 곳</h1>'
-  + '<p>' + esc(name) + '님의 참여 기록과 받은 혜택을 확인하세요.</p></div>'
+  '<div class="page-heading my-page-heading">'
+  + '<span class="eyebrow">나의 참여 활동</span>'
+  + '<h1>참여 기록과 혜택을 한눈에</h1>'
+  + '<p>' + esc(name) + '님의 이벤트 참여 내역과 결과를 확인하세요.</p>'
+  + '</div>'
 
 const metrics = (s) =>
   '<div class="metrics">'
@@ -57,16 +59,76 @@ const emptyBox =
 function serverCard(p) {
   const pending = p.state === 'pending'
   const won = p.resultStatus === 'WON'
+  const resultLabel = pending
+    ? '결과 대기'
+    : won
+      ? '당첨'
+      : p.resultStatus === 'LOST'
+        ? '미당첨'
+        : '참여 완료'
+
   return '<article class="history-card card">'
-    + '<div class="history-icon">' + icon(won ? 'gift' : pending ? 'clock' : 'layers') + '</div>'
-    + '<div class="history-info"><h3>' + esc(p.title) + '</h3>'
-    + '<div class="history-meta">' + when(p.at) + '</div></div>'
+    + '<div class="history-icon">'
+    + icon(won ? 'gift' : pending ? 'clock' : 'layers')
+    + '</div>'
+    + '<div class="history-info">'
+    + '<h3>' + esc(p.title) + '</h3>'
+    + '<div class="history-meta">' + when(p.at) + '</div>'
+    + '</div>'
     + '<div class="history-result">'
     + '<span class="badge ' + (pending ? 'amber' : won ? 'green' : '') + '">'
-    + (pending ? '결과 대기' : won ? '당첨' : '미당첨') + '</span>'
-    + '<p>' + esc(p.reward || p.result) + '</p></div>'
-    + button('event', '이벤트 보기', 'data-id="' + esc(p.eventId) + '"', 'btn sm')
+    + resultLabel
+    + '</span>'
+    + '</div>'
+    + '<div class="history-actions">'
+    + button(
+      'result',
+      '상세 보기',
+      'data-id="' + esc(p.id) + '"',
+      'btn sm history-detail-btn',
+    )
+    + button(
+      'event',
+      '이벤트 보기',
+      'data-id="' + esc(p.eventId) + '"',
+      'btn sm history-event-btn',
+    )
+    + '</div>'
     + '</article>'
+}
+
+function myPagination(data) {
+  const totalPages = data.totalPages
+
+  if (totalPages <= 1) return ''
+
+  const page = data.page
+  const start = Math.max(0, Math.min(page - 2, totalPages - 5))
+  const end = Math.min(totalPages, start + 5)
+
+  const pageButton = (target, label, disabled = false) => {
+    const current = target === page
+
+    return '<button type="button"'
+      + ' class="btn sm' + (current ? ' primary' : '') + '"'
+      + ' data-act="my-page"'
+      + ' data-page="' + target + '"'
+      + (disabled ? ' disabled' : '')
+      + (current ? ' aria-current="page"' : '')
+      + '>' + label + '</button>'
+  }
+
+  let pages = ''
+
+  for (let index = start; index < end; index++) {
+    pages += pageButton(index, index + 1)
+  }
+
+  return '<nav class="my-pagination" aria-label="내 혜택 페이지">'
+    + pageButton(page - 1, '이전', page === 0)
+    + pages
+    + pageButton(page + 1, '다음', page >= totalPages - 1)
+    + '</nav>'
 }
 
 function serverMyView() {
@@ -90,7 +152,9 @@ function serverMyView() {
     + filterBar(d.totalElements)
     + '<div class="stack">'
     + (d.items.length ? d.items.map(serverCard).join('') : emptyBox)
-    + '</div></div>'
+    + '</div>'
+    + myPagination(d)
+    + '</div>'
 }
 
 /* ───────────── 목업 모드 ───────────── */

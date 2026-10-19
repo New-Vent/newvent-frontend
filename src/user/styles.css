@@ -4,3 +4,1634 @@
 @import '@shared/styles/components.css';
 @import '@shared/styles/user.css';
 @import '@shared/styles/responsive.css';
+
+/* 페이지네이션 */
+.my-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.my-pagination .btn {
+  min-width: 36px;
+}
+
+.my-pagination .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 사용자 화면 너비 */
+#header > .container,
+#footer > .container {
+  width: 100%;
+  max-width: none;
+  padding-inline: clamp(20px, 3vw, 56px);
+}
+
+#app > .container {
+  width: 100%;
+  max-width: 1600px;
+  margin-inline: auto;
+  padding-inline: 32px;
+}
+
+#app > .container.narrow {
+  max-width: 880px;
+}
+
+/* 헤더 */
+#header {
+  height: auto;
+  overflow: visible;
+  background: #fff;
+  border-bottom: 1px solid #e5eaf1;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+}
+
+#header .user-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  min-height: 78px;
+  height: auto;
+}
+
+.user-brand {
+  flex-shrink: 0;
+}
+
+.user-brand img {
+  display: block;
+  width: 180px;
+  height: 40px;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* 상단 메뉴 */
+.user-nav {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+  gap: 28px;
+}
+
+.user-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #929dab;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color .2s;
+}
+
+.user-nav-link::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: transparent;
+}
+
+.user-nav-link:hover {
+  background: transparent;
+  color: #3568b8;
+}
+
+.user-nav-link.active {
+  background: transparent;
+  color: #3568b8;
+}
+
+.user-nav-link.active::after {
+  background: #3568b8;
+}
+
+/* 사용자 메뉴 */
+.user-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.user-account-menu {
+  position: relative;
+}
+
+.user-account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #252d3c;
+  font: inherit;
+  cursor: pointer;
+  list-style: none;
+}
+
+.user-account-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.user-account-trigger:hover,
+.user-account-menu[open] .user-account-trigger {
+  background: #f1f4f7;
+}
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #f1f3f6;
+  color: #748094;
+}
+
+.user-avatar svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.user-account-name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #505b6b;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.user-account-chevron {
+  width: 12px;
+  height: 12px;
+  margin-left: 3px;
+  flex-shrink: 0;
+  color: #748094;
+  transition: transform .2s;
+}
+
+.user-account-menu[open] .user-account-chevron {
+  transform: rotate(180deg);
+}
+
+.user-account-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 50;
+  width: min(280px, calc(100vw - 40px));
+  padding: 8px;
+  border: 1px solid #e1e8f1;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 40px #243b611c;
+}
+
+.user-account-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 14px 12px 16px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #edf0f5;
+  overflow-wrap: anywhere;
+}
+
+.user-account-info strong {
+  color: #334155;
+  font-size: 14px;
+}
+
+.user-account-info > span {
+  color: #7b8798;
+  font-size: 12px;
+}
+
+.user-account-info .user-grade {
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: #eef4ff;
+  color: #5378ad;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.user-account-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #526176;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.user-account-item svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.user-account-item:hover {
+  background: #f3f6fb;
+}
+
+.user-account-logout {
+  color: #bc6570;
+}
+
+.user-account-logout:hover {
+  background: #fff3f4;
+}
+
+.user-nav-link:focus-visible,
+.user-account-trigger:focus-visible,
+.user-account-item:focus-visible {
+  outline: 2px solid #648ed0;
+  outline-offset: 3px;
+}
+
+/* 본문 */
+#app {
+  min-height: calc(100dvh - 220px);
+  padding-top: 36px;
+}
+
+#app .event-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+#app .detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 28px;
+}
+
+#app .detail-side {
+  top: 108px;
+}
+
+#app .history-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* 태블릿 */
+@media (max-width: 1000px) {
+  #header .user-header-inner {
+    gap: 25px;
+  }
+
+  #header .user-brand img {
+    width: 150px;
+    height: 34px;
+  }
+
+  #app .detail-layout {
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 20px;
+  }
+}
+
+/* 모바일 */
+@media (max-width: 760px) {
+  #header .user-header-inner {
+    flex-wrap: wrap;
+    gap: 0;
+    min-height: 68px;
+    padding-top: 12px;
+    padding-bottom: 10px;
+  }
+
+  #header .user-brand img {
+    width: 140px;
+    height: 32px;
+  }
+
+  .user-account-name {
+    max-width: 90px;
+  }
+
+  .user-nav {
+    order: 3;
+    justify-content: center;
+    width: 100%;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #edf0f5;
+  }
+
+  .user-nav-link {
+    flex: 1;
+    min-height: 38px;
+  }
+
+  .user-account .btn {
+    padding-inline: 10px;
+    font-size: 12px;
+  }
+
+  #app {
+    padding-top: 24px;
+  }
+
+  #app .event-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  #app .detail-layout {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 20px;
+  }
+
+  #app .detail-side {
+    position: static;
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  #header .user-brand img {
+    width: 115px;
+    height: 28px;
+  }
+
+  .user-account-name,
+  .user-account-chevron {
+    display: none;
+  }
+
+  #app .event-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (pointer: coarse) {
+  .user-account-trigger {
+    min-height: 44px;
+  }
+}
+
+/* 추천 이벤트 배너 */
+.user-featured {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: 28px;
+  min-height: 360px;
+  padding: 32px 40px;
+  border: 1px solid #dce8f7;
+  border-radius: 24px;
+  background: linear-gradient(
+    110deg,
+    #f8fbff 0%,
+    #eef5ff 65%,
+    #edf1fc 100%
+  );
+}
+
+.user-featured::before {
+  width: 360px;
+  height: 360px;
+  border-width: 55px;
+  right: -70px;
+  top: -150px;
+}
+
+.user-featured .hero-copy {
+  padding: 0;
+}
+
+.user-featured .eyebrow {
+  color: #5480bc;
+  font-size: 10px;
+  letter-spacing: 1.6px;
+}
+
+.user-featured h1 {
+  margin: 20px 0 14px;
+  font-size: clamp(30px, 2.5vw, 42px);
+  line-height: 1.3;
+  letter-spacing: -1.5px;
+}
+
+.user-featured h1 em {
+  color: #3878d4;
+}
+
+.user-featured .hero-copy > p {
+  margin-bottom: 20px;
+  color: #748299;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.user-featured .hero-copy > .btn.primary {
+  min-height: 42px;
+  padding: 10px 18px;
+  border: 1px solid #427fd5;
+  border-radius: 10px;
+  background: #427fd5;
+  color: #fff;
+  font-size: 12px;
+  box-shadow: 0 5px 14px #427fd51a;
+}
+
+.user-featured .hero-copy > .btn.primary:hover {
+  border-color: #326cc0;
+  background: #326cc0;
+}
+
+.user-featured .hero-controls {
+  gap: 10px;
+  margin-top: 20px;
+  color: #7a899e;
+  font-size: 11px;
+}
+
+.user-featured .hero-controls .line {
+  width: 30px;
+  background: #ccd9ec;
+}
+
+.user-featured .hero-controls .icon-btn {
+  width: 30px;
+  height: 30px;
+  border-color: #e0e7f1;
+  color: #6f829e;
+}
+
+.user-featured .hero-controls .icon-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.user-featured .hero-controls .icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.user-featured .hero-preview {
+  width: 100%;
+  max-width: 600px;
+  min-width: 0;
+  justify-self: end;
+  margin: 0;
+  border: 4px solid #fff;
+  border-radius: 15px;
+  background: #fff;
+  transform: rotate(1.2deg);
+  box-shadow: 0 16px 32px #42618e18;
+}
+
+.user-featured .hero-preview:hover {
+  transform: rotate(0);
+}
+
+.user-featured .preview-bar {
+  padding: 8px 10px;
+  color: #8996aa;
+  font-size: 9px;
+}
+
+.user-featured .thumb,
+#app .event-card .thumb {
+  aspect-ratio: 720 / 440;
+}
+
+.user-featured .hero-caption {
+  min-height: 46px;
+  padding: 9px 12px;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.user-featured .hero-caption > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-featured .hero-caption > svg,
+.user-featured .hero-caption > .icon-btn {
+  flex-shrink: 0;
+}
+
+.user-featured .hero-caption .icon-btn {
+  width: 28px;
+  height: 28px;
+  background: #edf4ff;
+  color: #427fd5;
+}
+
+.user-events-section {
+  width: 100%;
+  max-width: 1280px;
+  margin: 36px auto 0;
+}
+
+@media (max-width: 1000px) {
+  .user-featured {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 24px;
+    padding: 28px;
+  }
+
+  .user-featured h1 {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .user-featured {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    gap: 26px;
+    padding: 28px 24px;
+  }
+
+  .user-featured h1 {
+    font-size: 32px;
+  }
+
+  .user-featured .hero-preview {
+    max-width: 480px;
+    justify-self: center;
+  }
+}
+
+/* 이벤트 목록 제목과 검색창 */
+.user-events-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.user-events-heading .page-heading,
+.user-events-heading .section-title {
+  margin: 0;
+}
+
+.user-events-heading .page-heading h1 {
+  font-size: 26px;
+  line-height: 1.4;
+  letter-spacing: -1px;
+}
+
+.user-events-heading .section-title {
+  flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+  .user-events-section {
+    margin-top: 28px;
+  }
+
+  .user-events-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .user-events-heading .page-heading h1 {
+    font-size: 23px;
+  }
+
+  .user-events-heading .section-title {
+    width: 100%;
+  }
+}
+
+.user-featured .eyebrow,
+.user-events-heading .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #5480bc;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.user-featured .eyebrow::before,
+.user-events-heading .eyebrow::before {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #4382d4;
+}
+
+.user-events-heading .eyebrow {
+  margin-bottom: 10px;
+}
+
+/* 내 혜택 제목 */
+.my-page-heading .eyebrow {
+  gap: 8px;
+  color: #5480bc;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.my-page-heading .eyebrow::before {
+  width: 6px;
+  height: 6px;
+  background: #4382d4;
+}
+
+/* 참여 내역 버튼 */
+.history-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.history-actions .history-detail-btn {
+  border-color: #dce7f8;
+  background: #edf4ff;
+  color: #3974c5;
+}
+
+.history-actions .history-detail-btn:hover {
+  border-color: #c8daf4;
+  background: #e1edff;
+}
+
+.history-actions .history-event-btn {
+  border-color: #e5eaf1;
+  background: #f7f9fc;
+  color: #718096;
+}
+
+.history-actions .history-event-btn:hover {
+  background: #edf1f6;
+  color: #475569;
+}
+
+@media (max-width: 760px) {
+  .history-actions {
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+}
+
+/* 이벤트 상세 조회 실패 */
+.event-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 560px;
+  margin: 48px auto;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.event-error-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 20px;
+  border-radius: 18px;
+  background: #edf4ff;
+  color: #6086bb;
+}
+
+.event-error-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.event-error h1 {
+  margin: 0;
+  color: #334155;
+  font-size: 22px;
+  line-height: 1.5;
+  letter-spacing: -0.7px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.event-error p {
+  max-width: 100%;
+  margin: 12px 0 0;
+  color: #7b8798;
+  font-size: 14px;
+  line-height: 1.8;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.event-error-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  margin-top: 28px;
+}
+
+.event-error-actions .btn {
+  min-width: 120px;
+  min-height: 44px;
+  margin: 0;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.event-error-actions .event-error-retry {
+  border-color: #427fd5;
+  background: #427fd5;
+  color: #fff;
+}
+
+.event-error-actions .event-error-retry:hover {
+  border-color: #326cc0;
+  background: #326cc0;
+}
+
+.event-error-actions .event-error-back {
+  border-color: #ceddf2;
+  background: #edf3fc;
+  color: #42699f;
+}
+
+.event-error-actions .event-error-back:hover {
+  border-color: #b8cee9;
+  background: #e1ebf9;
+}
+
+@media (max-width: 480px) {
+  .event-error {
+    margin-block: 24px;
+    padding: 28px 8px;
+  }
+
+  .event-error h1 {
+    font-size: 20px;
+  }
+
+  .event-error-actions .btn {
+    flex: 1 1 120px;
+    min-width: 0;
+    max-width: 220px;
+  }
+}
+
+.detail-side .facts {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-side .fact {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.detail-side .fact dt {
+  min-width: 0;
+}
+
+.detail-side .fact dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.event-list-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  margin-bottom: 16px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #687587;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.event-list-back:hover {
+  background: transparent;
+  color: #344256;
+  text-decoration: none;
+}
+
+.event-list-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 이벤트 카드 — 상태 · 제목 · 기간 */
+#app .event-card .event-body {
+  padding: 22px 24px 20px;
+}
+
+#app .event-card h3 {
+  min-height: 0;
+  margin: 0 0 12px;
+  font-size: 19px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+#app .event-card .event-period {
+  margin: 0 0 20px;
+  color: #768294;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+#app .event-card .event-bottom {
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 15px;
+}
+
+#app .event-card .card-action {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* 목록·상세의 마감 임박 배지 */
+#app .event-closing-badge {
+  background: #fff1df;
+  color: #a65316;
+}
+
+/* 이벤트 진행 상태와 내 참여 상태 */
+#app .event-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+
+#app .event-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #008ab8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#app .event-progress > span {
+  font-size: 9px;
+}
+
+#app .event-progress.upcoming {
+  color: #697c9b;
+}
+
+#app .event-progress.ended {
+  color: #858d99;
+}
+
+#app .event-status-row .event-progress {
+  margin-bottom: 0;
+}
+
+#app .event-my-status {
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: #edf2f7;
+  color: #596b80;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+#app .event-my-status.pending {
+  background: #fff4e5;
+  color: #96601f;
+}
+
+#app .detail-status-row {
+  align-items: center;
+  gap: 12px;
+}
+
+.user-account-info-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.user-account-info-heading strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.user-account-info-heading .user-grade {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* 내 정보 */
+#app > .container.user-account-page {
+  max-width: 960px;
+}
+
+.user-account-page .page-heading {
+  margin-bottom: 26px;
+}
+
+.user-account-page .page-heading h1 {
+  font-size: 28px;
+  letter-spacing: -1px;
+}
+
+.user-account-page .page-heading .eyebrow {
+  color: #5480bc;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+/* 계정 요약 */
+.user-account-page .account-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 24px;
+  border: 1px solid #e3e9f2;
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.user-account-page .activity-intro,
+.user-account-page .activity-intro > div {
+  min-width: 0;
+}
+
+.user-account-page .activity-intro .avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #edf4ff;
+  color: #537fb9;
+}
+
+.user-account-page .activity-intro h2 {
+  margin: 0 0 6px;
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+
+.user-account-page .activity-intro p {
+  color: #8290a3;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.user-account-page .activity-stat {
+  gap: 8px;
+  padding-left: 24px;
+}
+
+.user-account-page .activity-stat > span {
+  color: #8290a3;
+  font-size: 11px;
+}
+
+.user-account-page .activity-stat > strong {
+  color: #425775;
+  font-size: 17px;
+  letter-spacing: -0.5px;
+}
+
+/* 수정 폼 */
+.user-account-page #account-form {
+  overflow: hidden;
+  border: 1px solid #e3e9f2;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.user-account-page #account-form .panel-head {
+  padding: 20px 26px;
+  border-bottom: 1px solid #edf0f5;
+  background: transparent;
+  color: #35465c;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.user-account-page #account-form .panel-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 24px;
+  padding: 26px;
+}
+
+.user-account-page #account-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  margin: 0;
+  color: #526176;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 설명은 입력칸 아래로 */
+.user-account-page #account-form .field > .helper {
+  order: 1;
+  margin: 0;
+  color: #8491a3;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.user-account-page #account-form .field > input:not([type="checkbox"]) {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 13px;
+  border: 1px solid #dfe6ef;
+  border-radius: 10px;
+  background: #fff;
+  color: #35465c;
+  font-size: 14px;
+  font-weight: 400;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.user-account-page #account-form .field > input:disabled {
+  background: #f5f7fa;
+  color: #8a96a7;
+  opacity: 1;
+}
+
+.user-account-page #account-form .field > input:focus {
+  border-color: #7fa4d8;
+  outline: none;
+  box-shadow: 0 0 0 3px #427fd512;
+}
+
+/* 목업 모드의 수신 동의 */
+.user-account-page #account-form .field.row {
+  grid-column: 1 / -1;
+  flex-direction: row;
+}
+
+.user-account-page #account-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.user-account-page #account-error:empty {
+  display: none;
+}
+
+.user-account-page #account-form .create-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 0;
+  padding-top: 22px;
+  border-top: 1px solid #edf0f5;
+}
+
+.user-account-page #account-form .create-actions .btn {
+  min-height: 42px;
+  margin: 0;
+  padding: 10px 20px;
+  border: 1px solid #427fd5;
+  border-radius: 10px;
+  background: #427fd5;
+  color: #fff;
+  font-size: 12px;
+}
+
+.user-account-page #account-form .create-actions .btn:hover {
+  border-color: #326cc0;
+  background: #326cc0;
+}
+
+.user-account-page #account-form .create-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .user-account-page .account-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    padding: 22px;
+  }
+
+  .user-account-page .activity-intro {
+    grid-column: 1 / -1;
+  }
+
+  .user-account-page .activity-stat {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .user-account-page #account-form .panel-head {
+    padding: 20px;
+  }
+
+  .user-account-page #account-form .panel-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding: 22px 20px;
+  }
+
+  .user-account-page #account-form .field > input:not([type="checkbox"]) {
+    font-size: 16px;
+  }
+}
+
+/* 로그인·회원가입 공통 */
+body:has(.user-login-page, .user-signup-page) {
+  margin: 0;
+  padding: 0;
+}
+
+body:has(.user-login-page, .user-signup-page) #header,
+body:has(.user-login-page, .user-signup-page) #footer {
+  display: none;
+}
+
+body:has(.user-login-page, .user-signup-page) main,
+body:has(.user-login-page, .user-signup-page) #app {
+  width: 100%;
+  max-width: none;
+  min-height: 100svh;
+  margin: 0;
+  padding: 0;
+}
+
+.user-login-page,
+.user-signup-page {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100svh;
+  margin: 0;
+  background: #e7f2ff url('/assets/user-login-bg.png')
+    center center / cover no-repeat;
+}
+
+.user-login-page {
+  padding: 64px clamp(32px, 7vw, 140px);
+}
+
+.user-signup-page {
+  padding: 16px clamp(24px, 7vw, 140px);
+}
+
+.user-login-card,
+.user-signup-card {
+  box-sizing: border-box;
+  min-width: 0;
+  border: 1px solid rgb(255 255 255 / 85%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 20px 60px rgb(55 94 145 / 12%);
+}
+
+.user-login-card {
+  width: min(440px, 100%);
+  overflow: hidden;
+}
+
+.user-signup-card {
+  width: min(540px, 100%);
+  padding: 24px 32px;
+}
+
+.user-auth-logo {
+  display: block;
+  width: 160px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 16px;
+}
+
+/* 로그인 */
+.user-login-content {
+  min-width: 0;
+  padding: 42px 36px;
+}
+
+.user-login-eyebrow {
+  display: block;
+  margin-bottom: 18px;
+  color: #1685ec;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.user-login-content h1 {
+  margin: 0;
+  color: #15294c;
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -1.2px;
+  word-break: keep-all;
+}
+
+.user-login-description {
+  margin: 12px 0 30px;
+  color: #748197;
+  font-size: 14px;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.user-login-content .login-form {
+  display: grid;
+  gap: 20px;
+  margin: 0;
+}
+
+.user-login-content .login-form .field {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  color: #24364f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-login-content .login-form input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #dce4ee;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: #24364f;
+  font: inherit;
+  font-weight: 400;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.user-login-content .login-form input:focus {
+  border-color: #4097f2;
+  box-shadow: 0 0 0 3px rgb(64 151 242 / 12%);
+}
+
+.user-login-content .login-error {
+  margin: -6px 0;
+  color: #d34c54;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.user-login-content .login-error:empty {
+  display: none;
+}
+
+.user-login-content .login-form .btn[type="submit"] {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  border: 1px solid #2385ef;
+  border-radius: 10px;
+  background: #2385ef;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.user-login-content .login-form .btn[type="submit"]:hover {
+  border-color: #1475dd;
+  background: #1475dd;
+}
+
+.user-login-content .login-form .btn[type="submit"]:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.user-login-signup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: #7b8799;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.user-login-link,
+.user-login-browse {
+  border: 0;
+  background: transparent;
+  color: #2385ef;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.user-login-link {
+  padding: 3px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.user-login-browse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 26px auto 0;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.user-login-browse span {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.user-login-demo {
+  display: grid;
+  gap: 12px;
+}
+
+/* 회원가입 */
+.user-signup-card .page-heading {
+  margin: 0 0 16px;
+}
+
+.user-signup-card .eyebrow {
+  display: block;
+  margin-bottom: 12px;
+  color: #1685ec;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.user-signup-card h1 {
+  margin: 0;
+  color: #15294c;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -1px;
+  word-break: keep-all;
+}
+
+.user-signup-card .page-heading p {
+  margin: 10px 0 0;
+  color: #748197;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.user-signup-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+
+.user-signup-fields > .field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+  color: #24364f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-signup-fields > .field:has(
+  [data-signup="loginId"],
+  [data-signup="email"],
+  [data-signup="agree"]
+) {
+  grid-column: 1 / -1;
+}
+
+.user-signup-fields > .field:has([data-signup="name"]) {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.user-signup-fields > .field:has([data-signup="phone"]) {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.user-signup-fields > .field > .helper {
+  order: 1;
+}
+
+.user-signup-fields .helper {
+  color: #8995a7;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.user-signup-fields input:not([type="checkbox"]) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #dce4ee;
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  color: #24364f;
+  font: inherit;
+  font-weight: 400;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.user-signup-fields input::placeholder {
+  color: #a0aaba;
+}
+
+.user-signup-fields input:focus {
+  border-color: #4097f2;
+  box-shadow: 0 0 0 3px rgb(64 151 242 / 12%);
+}
+
+.user-signup-fields > .field:has([type="checkbox"]) {
+  flex-direction: row;
+  font-weight: 400;
+}
+
+.user-signup-fields #signup-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #d34c54;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.user-signup-fields #signup-error:empty {
+  display: none;
+}
+
+.user-signup-actions {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.user-signup-actions > .btn {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #2385ef;
+  border-radius: 10px;
+  background: #2385ef;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.user-signup-actions > .btn:hover {
+  border-color: #1475dd;
+  background: #1475dd;
+}
+
+.user-signup-actions > .btn:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.user-signup-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: #7b8799;
+  font-size: 12px;
+}
+
+/* 태블릿·모바일 */
+@media (max-width: 800px) {
+  .user-login-page {
+    align-items: flex-end;
+    justify-content: center;
+    padding: 280px 24px 40px;
+    background-position: 70% top;
+  }
+
+  .user-login-content {
+    padding: 32px 28px;
+  }
+
+  .user-signup-page {
+    justify-content: center;
+    padding: 24px 20px;
+    background-position: 70% center;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-signup-card {
+    padding: 24px 22px;
+  }
+
+  .user-signup-card h1 {
+    font-size: 23px;
+  }
+
+  .user-signup-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .user-signup-fields > .field:has(
+    [data-signup="name"],
+    [data-signup="phone"]
+  ) {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .user-login-page {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .user-login-content {
+    padding: 30px 22px;
+  }
+}

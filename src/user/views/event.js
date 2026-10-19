@@ -33,14 +33,42 @@ function participationControl(e){
  *   안 한 것이라, 등급 부족처럼 사용자 탓으로 읽히면 안 된다. "준비 중" 으로 둔다.
  * ★ 사유는 앞으로 늘어난다. 모르는 값이면 일반 문구로 넘긴다 (화면이 안 깨지게).
  */
+
+const PARTICIPATION_GRADES = {
+  NORMAL: '일반 이상',
+  EXCELLENT: '우수 이상',
+  BEST: '최우수',
+}
+
+function participationGradeLabel(grade) {
+  return PARTICIPATION_GRADES[grade] || '이벤트 안내 참고'
+}
+
 const UNAVAILABLE = {
   NOT_STARTED: { tone: 'soon', title: '아직 시작 전이에요', desc: '이벤트 시작 시각 이후 참여할 수 있어요.' },
   ALREADY_PARTICIPATED: { tone: 'done', title: '이미 참여하셨어요', desc: '참여 결과는 내 혜택에서 볼 수 있어요.' },
-  INSUFFICIENT_GRADE: { tone: 'grade', title: '우수 등급부터 참여할 수 있어요', desc: '멤버십 등급은 이용 실적에 따라 정해져요.' },
   NOT_CONFIGURED: { tone: 'soon', title: '준비 중이에요', desc: '참여 방식이 아직 설정되지 않았어요. 곧 열립니다.' },
 }
-const unavailableOf = (reason) =>
-  UNAVAILABLE[reason] ?? { tone: 'soon', title: '지금은 참여할 수 없어요', desc: '잠시 후 다시 확인해주세요.' }
+function unavailableOf(reason) {
+  if (reason === 'INSUFFICIENT_GRADE') {
+    const grade = ui.serverEvent?.grade
+    const label = PARTICIPATION_GRADES[grade]
+
+    return {
+      tone: 'grade',
+      title: label
+        ? label + ' 등급만 참여할 수 있어요'
+        : '참여 대상 등급을 확인해주세요',
+      desc: '현재 회원님의 멤버십 등급으로는 참여할 수 없어요.',
+    }
+  }
+
+  return UNAVAILABLE[reason] ?? {
+    tone: 'soon',
+    title: '지금은 참여할 수 없어요',
+    desc: '잠시 후 다시 확인해주세요.',
+  }
+}
 
 /**
  * 방식별 추가 입력.
@@ -81,7 +109,7 @@ function participationResult(r, eventId) {
   return '<div class="participation-access ' + (won ? 'ready' : pending ? 'login' : 'done') + '" role="status">'
     + '<strong>' + message + '</strong>'
     + (won && r.prizeName ? '<p class="summary">' + esc(r.prizeName) + '</p>' : '')
-    + button('result', '참여 결과 보기', 'data-route="my"', 'btn sm wide') + '</div>'
+    + button('result', '참여 결과 보기', 'data-event-id="' + esc(eventId) + '"', 'btn sm wide') + '</div>'
 }
 
 /**
@@ -178,10 +206,33 @@ function serverEventView() {
     return '<div class="container"><div class="empty"><h3>불러오는 중…</h3></div></div>'
   }
   if (ui.serverEventState === 'error' || !e) {
-    return '<div class="container empty"><h3>이벤트를 불러오지 못했어요</h3>'
-      + '<p>' + esc(ui.serverEventError || '') + '</p>'
-      + button('reload-event', '다시 시도', '', 'btn primary')
-      + button('route', '목록으로', 'data-route="home"', 'btn') + '</div>'
+    return `
+      <div class="container">
+        <section class="event-error" aria-labelledby="event-error-title">
+          <div class="event-error-icon" aria-hidden="true">
+            ${icon('search')}
+          </div>
+
+          <h1 id="event-error-title">이벤트를 불러오지 못했어요</h1>
+          <p>${esc(ui.serverEventError || '잠시 후 다시 시도해주세요.')}</p>
+
+          <div class="event-error-actions">
+            ${button(
+              'reload-event',
+              '다시 시도',
+              '',
+              'btn event-error-retry',
+            )}
+            ${button(
+              'route',
+              '목록으로',
+              'data-route="home"',
+              'btn event-error-back',
+            )}
+          </div>
+        </section>
+      </div>
+    `
   }
   if (!e.publishedHtml) {
     return '<div class="container empty"><h3>아직 게시되지 않은 이벤트입니다</h3>'
@@ -189,18 +240,29 @@ function serverEventView() {
   }
 
   return '<div class="container">'
-    + button('route', icon('back') + '이벤트 목록', 'data-route="home"', 'backlink')
+    + button('route', icon('back') + '이벤트 목록', 'data-route="home"', 'btn event-list-back')
     + '<div class="detail-layout"><div class="detail-frame">'
     // live — 페이지 안의 「참여하기」(data-slot="cta-link")를 호스트가 받는다.
     // 그 밖의 클릭은 readonly 와 똑같이 막는다 (frame.js 의 bindFrame 참고)
     + serverFrame(e.publishedHtml, esc(e.title), isUpcomingEvent(e) ? 'readonly' : 'live', e.id)
     + '</div><aside class="detail-side card">'
-    + '<div class="spread">' + (isUpcomingEvent(e) ? '<span class="badge">오픈 예정</span>' : '<span class="badge green">진행 중</span>')
-    + (e.closingSoon ? '<span class="badge pink">마감 임박</span>' : '') + '</div>'
+    + '<div class="spread detail-status-row">'
+    + '<span class="event-progress '
+    + (isUpcomingEvent(e) ? 'upcoming' : 'live') + '">'
+    + '<span aria-hidden="true">●</span> '
+    + (isUpcomingEvent(e) ? '오픈 예정' : '진행 중')
+    + '</span>'
+    + (e.closingSoon ? '<span class="badge event-closing-badge">마감 임박</span>' : '') + '</div>'
     + '<h1>' + esc(e.title) + '</h1>'
-    + '<dl class="facts"><div class="fact"><dt>이벤트 기간</dt><dd>'
-    + shortDate(e.startDate.slice(0, 10)) + '<br>~ ' + shortDate(e.endDate.slice(0, 10))
-    + '</dd></div></dl>'
+    + '<dl class="facts">'
+    + '<div class="fact"><dt>이벤트 기간</dt><dd>'
+    + shortDate(e.startDate.slice(0, 10))
+    + ' ~ ' + shortDate(e.endDate.slice(0, 10))
+    + '</dd></div>'
+    + '<div class="fact"><dt>참여 대상</dt><dd>'
+    + esc(participationGradeLabel(e.grade))
+    + '</dd></div>'
+    + '</dl>'
     + serverParticipation()
     + '<p class="small muted" style="margin-top:15px;line-height:1.8">'
     + '자세한 조건은 이벤트의 유의사항을 확인해주세요.</p>'
