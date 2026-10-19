@@ -118,9 +118,9 @@ export function dashboardRagView() {
       </div>
     </div>
   `
-  if (!rows) return '<div class="container">' + head + '<div class="card"><p>불러오는 중…</p></div></div>'
+  if (!rows) return '<div class="container rag-dash">' + head + '<div class="card"><p>불러오는 중…</p></div></div>'
   if (!rows.length) {
-    return '<div class="container">' + head
+    return '<div class="container rag-dash">' + head
       + '<div class="card"><p>아직 집계된 호출이 없어요.</p></div></div>'
   }
 
@@ -159,10 +159,11 @@ export function dashboardRagView() {
       + (d.diff === 0 ? '변동 없음' : (d.diff > 0 ? '+' + d.diff + '회' : d.diff + '회')) + '</p>'
     : ''
 
-  return '<div class="container">' + head
+  return '<div class="container rag-dash">' + head
     + reindexActionCard()
-    + legend + delta
+    + delta
     + '<div class="card"><div class="trend">' + cols + '</div>'
+    + legend
     + '<p class="helper trend-helper">막대 높이는 그 주 전체 호출 수, 안쪽 초록은 그중 RAG 참고 사례를 실어 넣은 호출이에요. '
     + '막대에 마우스를 올리면 주간 범위와 전체·RAG 참고 회수, 사용률, 그 주에 사용된 청크 수가 세로로 요약돼요. '
     + '그 주에 전체 재색인을 돌렸으면 청크 수가 일제히 바뀌니 말줄에 "그 주에 전체 재색인 실행" 표시가 붙어요. '

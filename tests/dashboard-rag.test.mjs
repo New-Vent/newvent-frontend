@@ -63,9 +63,11 @@ test('주별 사용률과 지난주 대비 증감이 나온다', async () => {
   // 막대 밖엔 주 시작 날짜만 — 수치 행은 폐지됐다
   assert.doesNotMatch(html, /trend-value/)
   assert.doesNotMatch(html, /trend-rate/)
-  // 범례 — 색 견본과 설명이 한 세트로 붙는다
+  // 범례 — 색 견본과 설명이 한 세트로 붙는다. 위치는 막대 아래 (차트 안, 도움말 위)
   assert.match(html, /<b>전체 호출<\/b> — 그 주에 생성을 부른 횟수/)
   assert.match(html, /<b>그중 RAG 참고<\/b> — 안쪽 초록 막대, 참고 사례를 실어 넣은 호출/)
+  assert.ok(html.indexOf('trend-legend') > html.indexOf('class="trend"'), '범례가 막대 아래에 와야 한다')
+  assert.ok(html.indexOf('trend-legend') < html.indexOf('trend-helper'), '범례가 도움말 문단 앞에 와야 한다')
 })
 
 test('재색인 이력 카드와 툴팁의 전체 재색인 표시가 나온다', async () => {
@@ -99,6 +101,8 @@ test('전체 재색인 카드가 차트보다 위에 온다', async () => {
   const action = html.indexOf('RAG 전체 재색인')
   const trend = html.indexOf('막대 밖 날짜는')
   const history = html.indexOf('재색인 이력')
+  // 대시보드 박스 — 열 폭을 닫아 양 끝 막대 툴팁이 가장자리에 붙지 않게 한다
+  assert.match(html, /container rag-dash/)
   // 실행(맨 위) → 관찰(추이) → 설명(이력) 순서다
   assert.ok(action < trend && action < history && trend < history, '실행 카드가 차트 앞, 이력은 차트 뒤여야 한다')
   // 버튼 — 실행 전이면 누를 수 있다
