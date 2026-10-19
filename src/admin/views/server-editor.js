@@ -300,6 +300,8 @@ async function sendChat(text, rerender) {
   chat.push({ role: 'user', text: request, blocks })
   s.chatInput = ''
   s.notice = null
+  // 방금 보낸 말이 보이게 — 다시 그린 뒤 맨 아래로 붙인다
+  s.chatStickBottom = true
   try {
     const r = await startEdit(s.id, request, blocks)
     s.job = { jobId: r.jobId, kind: 'edit', phase: r.phase, label: '대기 중', percent: r.percent ?? 0, done: false }
@@ -430,6 +432,27 @@ function removeItemDraft(s, key, index, rerender) {
 function rememberDirectScroll(s) {
   s.direct.scrollTop = $('#server-scroll')?.scrollTop ?? 0
   s.direct.windowScrollY = window.scrollY
+}
+
+/**
+ * 전체를 다시 그리기 직전에 왼쪽 패널·창 스크롤을 기억한다.
+ * ★ AI 대화가 끝나면 remount 때문에 스크롤이 맨 위로 리셋되던 문제를 막는다.
+ *   맨 아래 근처였거나 방금 메시지를 보냈으면 아래로 붙이고, 위로 올려 읽고 있으면 그 자리를 유지한다.
+ * ★ 대화/직접 수정 스크롤은 탭별로 따로 둔다 — 탭을 바꿔도 서로 섞이지 않게.
+ */
+function rememberSideScroll() {
+  const s = ui.serverEditor
+  if (!s || ui.route !== 'editor' || s.status !== 'ready') return
+  const el = $('#server-scroll')
+  if (el) {
+    const max = Math.max(0, el.scrollHeight - el.clientHeight)
+    const top = el.scrollTop
+    const stickBottom = max <= 8 || top >= max - 48
+    if (s.tab === 'chat') s.chatScroll = { top, stickBottom }
+    else s.direct.scrollTop = top
+  }
+  s.windowScrollY = window.scrollY
+  if (s.tab === 'direct') s.direct.windowScrollY = window.scrollY
 }
 
 /** 바꾼 게 있으면 보낼 목록, 없으면 null */
@@ -1608,19 +1631,25 @@ function serverEditorView() {
     + '<div class="studio-layout workspace-layout">' + sidePanel(s) + previewPanel(s) + '</div></div>'
 }
 
-/** 그린 뒤 — 직접 수정 칸 개수 · 버튼 상태, 대화 스크롤 */
+/** 그린 뒤 — 직접 수정 칸 개수 · 버튼 상태, 대화·창 스크롤 복원 */
 function afterServerRender() {
   const s = ui.serverEditor
   if (!s || ui.route !== 'editor' || s.status !== 'ready') return
-  // 대화는 최신 말이 보이게 맨 아래로
   const scroller = $('#server-scroll')
-  if (scroller && s.tab === 'chat') scroller.scrollTop = scroller.scrollHeight
+  if (scroller && s.tab === 'chat') {
+    // 보낸 직후·맨 아래 근처면 최신 말풍선으로, 아니면 읽던 자리 유지 (상단으로 튀지 않게)
+    const stick = s.chatStickBottom || s.chatScroll?.stickBottom || !s.chatScroll
+    scroller.scrollTop = stick ? scroller.scrollHeight : s.chatScroll.top
+    s.chatStickBottom = false
+  }
   if (scroller && s.tab === 'direct' && s.direct.scrollTop != null) {
     scroller.scrollTop = s.direct.scrollTop
-    requestAnimationFrame(() => {
-      if (ui.serverEditor === s && s.tab === 'direct') window.scrollTo(0, s.direct.windowScrollY || 0)
-    })
   }
+  requestAnimationFrame(() => {
+    if (ui.serverEditor !== s) return
+    const y = s.tab === 'direct' ? (s.direct.windowScrollY ?? s.windowScrollY) : s.windowScrollY
+    if (y != null) window.scrollTo(0, y)
+  })
   document.querySelectorAll('textarea[data-autogrow]').forEach((el) => {
     if (el.dataset.sedit !== undefined) {
       const index = Number(el.dataset.sedit)
@@ -2078,7 +2107,7 @@ function reloadServerEditor(rerender) {
 }
 
 export {
-  openServerEditor, ensureServerEditor, serverEditorView, afterServerRender, loadingView, refreshPage, running, openPublish,
+  openServerEditor, ensureServerEditor, serverEditorView, afterServerRender, rememberSideScroll, loadingView, refreshPage, running, openPublish,
   regenerate, cancel as cancelServerGeneration, onServerPromptInput, reloadServerEditor,
   handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock,
   handleServerDrag, handleServerTool, handleServerChange,

@@ -27,7 +27,7 @@ import { setNavigate } from '@shared/navigate.js'
 
 import { adminView, ensureAdminServer, loadAdminServer, resetAdminServer, serverItem } from './views/list.js'
 import { markPick } from '@shared/layouts.js'
-import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag, handleServerTool, handleServerChange } from './views/server-editor.js'
+import { ensureServerEditor, openServerEditor, serverEditorView, afterServerRender, rememberSideScroll, handleServerClick, handleServerInput, handleServerSubmit, handleServerFocus, handleServerPick, handleServerBlock, handleServerDrag, handleServerTool, handleServerChange } from './views/server-editor.js'
 import { templatesView, ensureLibrary, resetLibrary, handleLibraryClick, handleLibrarySubmit, handleLibraryChange } from './views/templates.js'
 import { participantsView, ensureParticipants, resetParticipants, handleParticipantsClick, handleParticipantsSubmit, handleParticipantsChange } from './views/participants.js'
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
@@ -324,6 +324,8 @@ function render(scroll = false) {
   if (serverView) ensureServerEditor(ui.activeId, () => render())
   document.body.classList.toggle('editing-workspace', ui.route === 'editor')
   header()
+  // 편집 화면을 통째로 바꾸기 전에 스크롤을 기억한다 — AI 대화 후 상단으로 튀지 않게
+  if (ui.route === 'editor' && USE_SERVER) rememberSideScroll()
   $('#app').innerHTML = (serverView || VIEWS[ui.route] || adminView)()
   hydrate()
   if (serverView) afterServerRender()

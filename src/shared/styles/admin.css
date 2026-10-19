@@ -151,7 +151,7 @@
 .server-side .chat .bubble small{font-size:10px}
 .server-side .bubble.tone-fail{border:1px solid #f3c5cf;background:#fff6f8}
 .server-side .bubble.tone-ask{border:1px solid #f1dfa8;background:#fffbee}
-.server-foot .field textarea{min-height:0;height:60px;resize:none}
+.server-foot .field textarea{min-height:0;height:88px;resize:vertical}
 .server-foot .chips{gap:6px;margin:8px 0;flex-wrap:wrap}
 .server-foot .chip{font-size:11px;flex:none;white-space:nowrap}
 /* AI 대화 — 미리보기에서 고른 영역 */
