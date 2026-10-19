@@ -352,4 +352,28 @@ function homeView() {
 
 function refreshResults(){const box=$('#event-results');if(box){box.innerHTML=resultsHTML();hydrate(box);}}
 
-export { homeView, resultsHTML, refreshResults }
+function refreshHero() {
+  const hero = document.querySelector('.user-featured')
+  if (!USE_SERVER || !hero) return false
+
+  const template = document.createElement('template')
+  template.innerHTML = serverHero().trim()
+
+  const nextHero = template.content.firstElementChild
+  if (!nextHero) return false
+
+  const focusedAction = hero.contains(document.activeElement)
+    ? document.activeElement.dataset.act
+    : null
+
+  hero.replaceWith(nextHero)
+  hydrate(nextHero)
+
+  if (focusedAction) {
+    nextHero.querySelector(`[data-act="${focusedAction}"]`)?.focus()
+  }
+
+  return true
+}
+
+export { homeView, resultsHTML, refreshResults, refreshHero }
