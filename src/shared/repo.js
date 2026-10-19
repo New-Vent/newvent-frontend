@@ -122,6 +122,19 @@ export async function loadAdminEventCounts() {
   return requireApi().get('/api/admin/events/counts')
 }
 
+/** 로그인한 관리자 본인 정보 */
+export async function loadAdminProfile() {
+  if (!USE_SERVER) {
+    return {
+      id: 1,
+      loginId: 'admin',
+      name: '운영자',
+    }
+  }
+
+  return requireApi().get('/api/admin/me')
+}
+
 /**
  * 내 참여 목록 — `GET /api/users/me/participations` (PR #128)
  *
