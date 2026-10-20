@@ -5,7 +5,7 @@
  *   재색인 이력 GET /api/admin/rag/reindex-logs
  *   전체 재색인 POST /reindex/all + GET /reindex/all/status
  *
- * 주간 막대 — 파란색이 전체 호출, 안쪽 초록색이 그중 RAG 참고 사례를 실어 넣은 호출.
+ * 주간 막대 — 바깥 파란색이 전체 호출, 안쪽 분홍색이 그중 RAG 참고 사례를 실어 넣은 호출.
  * 막대 밖엔 주 시작 날짜만 두고 자세한 수치는 hover 툴팁에서 세로로 요약해 보여준다.
  * 범례 아래 지난주 대비 증감을 붙인다 (같은 응답으로 계산 — 추가 요청 없음).
  * 차트 라이브러리 없이 div 높이로 그린다 (프로덕션 의존성 제로 원칙).
@@ -81,6 +81,13 @@ const logDateKst = (iso) => {
   return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10)
 }
 
+/** 소요 시간 — ms 를 초/분으로 맞춘다. LLM 호출 로그 표의 응답 시간 열과 같은 느낌 */
+const dur = (ms) => {
+  if (ms == null) return '-'
+  if (ms < 60000) return (Math.round(ms / 100) / 10) + '초'
+  return Math.floor(ms / 60000) + '분 ' + Math.round((ms % 60000) / 1000) + '초'
+}
+
 /**
  * 그 주에 실행된 전체 재색인이 있나 — 추이 툴팁의 "왜 이 주가 튄나" 말붙이(ALL만).
  * 전체 재색인은 모든 청크의 생성 시각을 실행일로 다시 찍는다 — 그래서 이 표지로 설명이 끝난다.
@@ -126,7 +133,7 @@ export function dashboardRagView() {
 
   const legend = '<p class="trend-legend">'
     + '<span><i class="sw sw-total"></i><b>전체 호출</b> — 그 주에 생성을 부른 횟수</span>'
-    + '<span><i class="sw sw-rag"></i><b>그중 RAG 참고</b> — 안쪽 초록 막대, 참고 사례를 실어 넣은 호출</span>'
+    + '<span><i class="sw sw-rag"></i><b>그중 RAG 참고</b> — 안쪽 분홍 막대, 참고 사례를 실어 넣은 호출</span>'
     + '</p>'
   const maxCalls = Math.max(1, maxOf(rows, (r) => r.totalCalls))
   const cols = rows.map((r) => {
@@ -164,10 +171,13 @@ export function dashboardRagView() {
     + delta
     + '<div class="card"><div class="trend">' + cols + '</div>'
     + legend
-    + '<p class="helper trend-helper">막대 높이는 그 주 전체 호출 수, 안쪽 초록은 그중 RAG 참고 사례를 실어 넣은 호출이에요. '
+    + '</div>'
+    // 설명 문단은 카드 밖으로 뺐다 — 카드 안에서 범례·설명 두 블록이 뭉쳐 보이던 걸 풀기 위해서다.
+    // CSS(.card+.trend-helper)가 회색 배경 대신 화면 배경 위의 조용한 문단으로 꾸며준다.
+    + '<p class="helper trend-helper">막대 높이는 그 주 전체 호출 수, 안쪽 분홍은 그중 RAG 참고 사례를 실어 넣은 호출이에요. '
     + '막대에 마우스를 올리면 주간 범위와 전체·RAG 참고 회수, 사용률, 그 주에 사용된 청크 수가 세로로 요약돼요. '
     + '그 주에 전체 재색인을 돌렸으면 청크 수가 일제히 바뀌니 말줄에 "그 주에 전체 재색인 실행" 표시가 붙어요. '
-    + '막대 밖 날짜는 주의 시작일이고, 이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p></div>'
+    + '막대 밖 날짜는 주의 시작일이고, 이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p>'
     + reindexCard(ui.ragReindexLogs)
     + '</div>'
 }
@@ -195,6 +205,10 @@ function reindexActionCard() {
 /**
  * 재색인 이력 카드 — 실행 1회당 남은 기록을 최신순으로 보여준다.
  * 품질 추이에서 청크 수가 튄 주가 보일 때 원인을 먼저 여기서 확인하게 하려는 배치다.
+ *
+ * LLM 호출 로그(버전 이력 화면)와 같은 표 구조로 맞췄다 — 한 줄 텍스트 나열보다
+ * 열이 정리된 표가 기록 간 비교와 실패 행 가려내기를 쉽게 한다.
+ * 열: 작업 / 대상 / 상태 / 청크 / 소요 시간 / 일시. 소요 시간·대상은 이전 카드에 없던 정보다.
  */
 function reindexCard(logs) {
   if (!logs) return ''
@@ -203,17 +217,35 @@ function reindexCard(logs) {
       + '<p class="helper trend-helper">아직 재색인 기록이 없어요. 재색인을 돌리면 실행마다 기록이 쌓여요.</p></div>'
   }
   const rows = logs.map((l) => {
-    const line = logStamp(l.createdAt) + ' · ' + (scopeLabel[l.scope] || l.scope) + ' · '
-      + (statusLabel[l.status] || l.status)
-      + (l.chunkCount != null ? ' · 청크 ' + l.chunkCount + '개' : '')
-    return '<div class="reindex-row"><span class="reindex-line">' + esc(line) + '</span>'
-      + (l.failureMessage ? '<span class="reindex-fail">사유: ' + esc(l.failureMessage) + '</span>' : '')
-      + '</div>'
+    // 이벤트·버전은 지워져도 이력은 남는다 (V24 — FK ON DELETE SET NULL). 지워진 행은 대상이 null 이다
+    const target = l.scope === 'ALL'
+      ? '전체 이벤트'   // 전체 재색인은 대상이 없는 전역 실행 — 이벤트 개념으로 좁히지 않는다
+      : l.eventId != null
+        ? '이벤트 #' + esc(l.eventId) + (l.versionId != null ? ' · 버전 #' + esc(l.versionId) : '')
+        : '삭제된 이벤트'
+    const status = statusLabel[l.status] || l.status
+    return '<tr>'
+      + '<td><span class="rag-log-model"><span class="rag-log-id">#' + esc(l.id) + '</span>'
+      + esc(scopeLabel[l.scope] || l.scope) + '</span></td>'
+      + '<td>' + target + '</td>'
+      + '<td><span class="rag-log-status ' + (l.status === 'SUCCESS' ? 'is-success' : 'is-failure') + '">'
+      + esc(status) + '</span></td>'
+      + '<td class="rag-log-number">' + (l.chunkCount != null ? esc(l.chunkCount) + '개' : '-') + '</td>'
+      + '<td class="rag-log-number">' + dur(l.durationMs) + '</td>'
+      + '<td class="rag-log-date">' + esc(logStamp(l.createdAt)) + '</td>'
+      + '</tr>'
+      + (l.failureMessage
+        ? '<tr class="rag-log-detail"><td colspan="6"><p class="rag-log-fail">실패: ' + esc(l.failureMessage) + '</p></td></tr>'
+        : '')
   }).join('')
   return '<div class="card reindex-card"><h3>재색인 이력</h3>'
     + '<p class="helper trend-helper">버전·이벤트·전체 재색인이 돌 때마다 남는 기록이에요. '
     + '품질 추이에서 청크 수가 튀는 주가 보이면 여기서 먼저 확인해요.</p>'
-    + rows + '</div>'
+    + '<div class="rag-log-table-wrap">'
+    + '<table class="rag-log-table" aria-label="재색인 이력">'
+    + '<thead><tr><th scope="col">작업</th><th scope="col">대상</th><th scope="col">상태</th>'
+    + '<th scope="col">청크</th><th scope="col">소요 시간</th><th scope="col">일시</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table></div></div>'
 }
 
 /** 전체 재색인 폴링 타이머 — 이 화면에서만 하나다 */

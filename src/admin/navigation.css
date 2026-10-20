@@ -87,9 +87,10 @@
   box-sizing: border-box;
 }
 
+/* 메뉴 5개 — 4칸이면 AI 사용량이 둘째 줄로 내려가 판이 두 행이 된다. 한 줄에 5칸 */
 #header .admin-navigation-list {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   width: 100%;
   margin: 0;
   gap: 0;
