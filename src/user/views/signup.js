@@ -133,6 +133,12 @@ export function signupView() {
           </div>
         </div>
       </form>
+        ${button(
+          'route',
+          '이벤트 둘러보기 <span aria-hidden="true">›</span>',
+          'data-route="home"',
+          'user-login-browse',
+        )}
       </section>
     </div>
   `
