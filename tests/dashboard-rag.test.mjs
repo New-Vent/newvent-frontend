@@ -65,7 +65,7 @@ test('주별 사용률과 지난주 대비 증감이 나온다', async () => {
   assert.doesNotMatch(html, /trend-rate/)
   // 범례 — 색 견본과 설명이 한 세트로 붙는다. 위치는 막대 아래 (차트 안, 도움말 위)
   assert.match(html, /<b>전체 호출<\/b> — 그 주에 생성을 부른 횟수/)
-  assert.match(html, /<b>그중 RAG 참고<\/b> — 안쪽 초록 막대, 참고 사례를 실어 넣은 호출/)
+  assert.match(html, /<b>그중 RAG 참고<\/b> — 안쪽 분홍 막대, 참고 사례를 실어 넣은 호출/)
   assert.ok(html.indexOf('trend-legend') > html.indexOf('class="trend"'), '범례가 막대 아래에 와야 한다')
   assert.ok(html.indexOf('trend-legend') < html.indexOf('trend-helper'), '범례가 도움말 문단 앞에 와야 한다')
 })
@@ -74,11 +74,20 @@ test('재색인 이력 카드와 툴팁의 전체 재색인 표시가 나온다'
   const h = await setup()
   await new Promise((r) => h.ns.ensureDashboard(r))
   const html = h.ns.dashboardRagView()
-  // 이력 카드 — KST 표시 시각·scope·상태·청크 수. 실패 행은 사유까지
+  // 이력 카드 — LLM 호출 로그와 같은 표 구조. KST 표시 시각·scope·상태·청크 수·소요 시간
   assert.match(html, /재색인 이력/)
-  assert.match(html, /10\/06 00:00 · 전체 재색인 · 성공 · 청크 189개/)
-  assert.match(html, /09\/28 14:00 · 이벤트 재색인 · 실패 · 청크 24개/)
-  assert.match(html, /사유: 임베딩 TIMEOUT/)
+  assert.match(html, /<span class="rag-log-id">#3<\/span>전체 재색인<\/span>/)
+  assert.match(html, /<td>전체 이벤트<\/td>/)
+  assert.match(html, /<span class="rag-log-status is-success">성공<\/span>/)
+  assert.match(html, /<td class="rag-log-number">189개<\/td>/)
+  assert.match(html, /42\.3초/)
+  assert.match(html, /class="rag-log-date">10\/06 00:00<\/td>/)
+  assert.match(html, /#2<\/span>이벤트 재색인/)
+  assert.match(html, /<td>이벤트 #41<\/td>/)
+  assert.match(html, /<span class="rag-log-status is-failure">실패<\/span>/)
+  assert.match(html, /실패: 임베딩 TIMEOUT/)
+  // 옛 한 줄 텍스트 형식은 남아 있으면 안 된다
+  assert.doesNotMatch(html, /reindex-row/)
   // 툴팁 표시는 ALL 재색인이 있었던 주(10/05)에만 — EVENT 는 표시하지 않는다
   // (설명 문구에도 같은 문장이 있으므로 표시 span 만 센다)
   assert.equal((html.match(/<span class="tip-flag">그 주에 전체 재색인 실행/g) || []).length, 1)

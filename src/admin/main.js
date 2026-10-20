@@ -37,6 +37,7 @@ import { creationView, startCreation, validateCreation, finishCreation, refreshC
 import { loginView } from './views/login.js'
 import { usersView, ensureAdminUsers, resetAdminUsers, handleUsersClick, handleUsersChange, handleUsersSubmit } from './views/user-management.js'
 import { dashboardRagView, ensureDashboard, handleRagDashboardClick } from './views/dashboard-rag.js'
+import { usageView, ensureUsage } from './views/usage.js'
 
 /**
  * 관리자 앱 셸.
@@ -63,13 +64,14 @@ async function refreshAdminProfile() {
   }
 }
 
-const VIEWS = { admin: adminView, users: usersView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, participants: participantsView, login: loginView, rag: dashboardRagView }
+const VIEWS = { admin: adminView, users: usersView, editor: editorView, versions: versionsView, create: creationView, templates: templatesView, participants: participantsView, login: loginView, usage: usageView, rag: dashboardRagView }
 
 const ROUTES = [
   { path: '/', name: 'admin' },
   { path: '/users', name: 'users' },
   { path: '/login', name: 'login' },
   { path: '/templates', name: 'templates' },
+  { path: '/usage', name: 'usage' },
   { path: '/rag', name: 'rag' },
   { path: '/events/new', name: 'create' },
   { path: '/events/:id/edit', name: 'editor' },
@@ -82,6 +84,7 @@ const PATH = {
   login: () => '/login',
   users: () => '/users',
   templates: () => '/templates',
+  usage: () => '/usage',
   rag: () => '/rag',
   create: () => '/events/new',
   editor: (id) => `/events/${id}/edit`,
@@ -159,6 +162,11 @@ function header() {
       route: 'users',
       title: '사용자 관리',
       description: '회원 정보와 요금제',
+    },
+    {
+      route: 'usage',
+      title: 'AI 사용량',
+      description: '호출·토큰·비용 살펴보기',
     },
     {
       route: 'rag',
@@ -315,6 +323,7 @@ function render(scroll = false) {
   // 템플릿 라이브러리는 목업 모드에서도 목록이 있다 (mock/library.js)
   if (ui.route === 'templates') ensureLibrary(() => render())
   if (ui.route === 'users') ensureAdminUsers(() => render())
+  if (ui.route === 'usage') ensureUsage(() => render())
   if (ui.route === 'rag') ensureDashboard(() => render())
   if (ui.route === 'participants') ensureParticipants(ui.activeId, () => render())
   if (ui.route === 'create') ensureCreationTemplates(() => render())
@@ -330,7 +339,7 @@ function render(scroll = false) {
   $('#app').innerHTML = (serverView || VIEWS[ui.route] || adminView)()
   hydrate()
   if (serverView) afterServerRender()
-  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리', users: '사용자 관리', participants: '참여 관리', rag: 'RAG 품질 추이' }[ui.route]
+  document.title = { editor: '이벤트 제작 스튜디오', templates: '템플릿 라이브러리', users: '사용자 관리', participants: '참여 관리', usage: 'AI 사용량 분석', rag: 'RAG 품질 추이' }[ui.route]
     ?? '이벤트 관리'
   document.title += ' | NewVent'
   if (scroll) window.scrollTo(0, 0)
