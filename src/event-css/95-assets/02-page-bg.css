@@ -80,8 +80,8 @@
  */
 .ev-container:has(> .ev-asset-page)::before,
 .ev-container:has(> .ev-asset-page)::after,
-.ev-container:has(> .ev-asset-page) [data-block="hero"]::before,
-.ev-container:has(> .ev-asset-page) [data-block="hero"]::after {
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light)) [data-block="hero"]::before,
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light)) [data-block="hero"]::after {
   content: none;
 }
 
@@ -104,8 +104,15 @@
 .ev-container:has(> .ev-asset-dim-68)::before { background: rgba(0, 0, 0, .68); }
 
 /* hero 는 자기 그라데이션을 갖고 있어서 사진을 통째로 가린다.
- * ★ 페이지 배경이 있을 때만 비운다. 글자색은 10-fallback 이 이미 흰색으로 둔다. */
-.ev-container:has(> .ev-asset-page) [data-block="hero"]:not(:has(> .ev-asset-bg)) {
+ * ★ 페이지 배경이 있을 때만 비운다. 글자색은 10-fallback 이 이미 흰색으로 둔다.
+ *
+ * ★★ on-light 는 뺀다 — **밝은 그림과 투명 장식**이다(ImageProbe 가 재서 붙인다).
+ *   그런 배경에 히어로를 검게 덮으면, 비치라고 올린 그림 위에서 히어로만 시커메진다
+ *   (제보: "전체적으로 까매졌어"). 덮개를 빼면 히어로는 **자기 테마 그라데이션**을
+ *   그대로 쓴다 — 불투명하니 대비는 테마가 이미 보장하던 그 값이다.
+ *   사진은 히어로 뒤에서만 안 보일 뿐, 나머지 영역에서는 그대로 비친다. */
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block="hero"]:not(:has(> .ev-asset-bg)) {
   /* ★ .28 로 뒀다가 밝은 사진에서 흰 제목이 2.18 까지 떨어졌다(실측, 테마 4종 전부).
      사진이 순백이어도 흰 글씨가 4.5 를 넘으려면 .55 는 돼야 한다 — 여유를 둬 .58.
      사진을 가리는 값이지만, hero 는 어차피 자기 그라데이션으로 다 가리던 자리다. */
@@ -117,12 +124,16 @@
  *   theme-bloom          h1 에 9px 흰 획을 둘러 글자 속을 먹는다 → 실측 1.00
  *   v-hero-gradient-text color: transparent 로 두고 배경을 글자에 깎아 넣는다
  * ★ [data-block] 세 번은 특이도용이다 — 테마가 0,3,1 로 집고 있다. */
-.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block="hero"]
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block][data-block][data-block="hero"]
   :is(h1, h2, h3, p, .period, .ev-period, .sub-label) {
   -webkit-text-stroke: 0;
   background-image: none;
 }
-.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block="hero"]
+/* ★ on-light 에는 안 건드린다. 히어로가 자기 배경을 쓰므로 글자색도 테마 것이 맞다 —
+ *   밝은 장식 위에서 흰 글씨를 강제하면 테마가 어두운 글씨를 쓰던 히어로가 통째로 날아간다. */
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block][data-block][data-block="hero"]
   :is(h1, h2, h3, p, .period, .ev-period, .sub-label) {
   color: #fff;
   -webkit-text-fill-color: #fff;

@@ -66,6 +66,17 @@
   background: rgba(255, 255, 255, 0.14);
 }
 
+/* ★★ 올린 그림에는 카드를 씌우지 않는다. 위 판은 **글자**를 오른쪽 칸에 모으려고
+ *   만든 것이고 그림은 글자가 아니다 — 투명 PNG 뒤로 흰 네모가 비친다(제보).
+ * ★ 위 선택자에 :not(.ev-asset) 을 붙이면 안 된다. 특이도가 (0,4,1) 로 올라가서
+ *   60-variants/90-responsive.css 의 `grid-column: 1` 되돌림을 이겨 버린다 —
+ *   좁은 화면에서 격자가 2단으로 남아 제목이 한 글자씩 끊긴다(실측). 규칙을 따로 둔다. */
+[data-block="hero"].v-hero-split:not(.ev-block) > .ev-asset {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
 [data-block="hero"].v-hero-ticket:not(.ev-block) {
   text-align: center;
   padding: 48px 44px;

@@ -5850,6 +5850,17 @@ body {
   background: rgba(255, 255, 255, 0.14);
 }
 
+/* ★★ 올린 그림에는 카드를 씌우지 않는다. 위 판은 **글자**를 오른쪽 칸에 모으려고
+ *   만든 것이고 그림은 글자가 아니다 — 투명 PNG 뒤로 흰 네모가 비친다(제보).
+ * ★ 위 선택자에 :not(.ev-asset) 을 붙이면 안 된다. 특이도가 (0,4,1) 로 올라가서
+ *   60-variants/90-responsive.css 의 `grid-column: 1` 되돌림을 이겨 버린다 —
+ *   좁은 화면에서 격자가 2단으로 남아 제목이 한 글자씩 끊긴다(실측). 규칙을 따로 둔다. */
+[data-block="hero"].v-hero-split:not(.ev-block) > .ev-asset {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
 [data-block="hero"].v-hero-ticket:not(.ev-block) {
   text-align: center;
   padding: 48px 44px;
@@ -11509,7 +11520,11 @@ body:has(.palette-chilseok) {
  *   실측 — 그대로 두면 가운데 글 위로 그림이 올라앉아 제목을 가린다.
  * ★ min-height 는 그림이 설 자리다. 글이 두 줄뿐인 히어로는 250px 밖에 안 돼서
  *   max-height:94% 가 그림을 반으로 깎는다. */
-[data-block="hero"][data-block][data-block]:has(> .ev-asset-art) {
+/* ★★ v-hero-split 은 뺀다. 그 변형은 **이미 2단**이다 —
+ *   왼쪽에 제목, 오른쪽 칸에 나머지를 세운다. 여기서 display:flex 로 덮으면
+ *   (특이도 0,4,1 이 변형의 0,3,1 을 이긴다) 격자가 풀려서 오른쪽 칸 카드들이
+ *   가운데로 쏟아진다(제보 화면이 그것이다). 자기 배치를 가진 변형은 건드리지 않는다. */
+[data-block="hero"][data-block][data-block]:not(.v-hero-split):has(> .ev-asset-art) {
   position: relative;
   padding-right: 48%;
   padding-left: 40px;
@@ -11530,10 +11545,10 @@ body:has(.palette-chilseok) {
  *   물건 그림은 object-position 으로 같은 자리에 맞춰진다.
  * ★ max-height 로 히어로 밖으로 나가는 것을 막는다 — 글이 짧은 히어로에서
  *   그림이 영역보다 커져 아래 블록을 밀어내던 일을 여기서 끊는다.
- * ★★ 투명 PNG 뒤에 **부드러운 번짐**을 깐다. 요청 그대로다 — 그림이 배경에서
- *   오려 붙인 것처럼 떠 보이지 않게 테마 색으로 한 겹 깔아 준다.
- *   가상요소가 아니라 <img> 자신의 background 다. 테마 · 변형이 쓰는
- *   ::before · ::after 와 부딪히지 않는 유일한 자리다. */
+ * ★★ 그림 뒤에 번짐(radial-gradient)을 깔았다가 **뺐다.** 어두운 히어로에서는
+ *   흰 번짐이 부드럽게 퍼지지 않고 **네모난 판**으로 보였다(실측 · 제보).
+ *   그림 뒤 분위기는 테마 · 팔레트가 이미 히어로 전체에 깔고 있다.
+ *   그 위에 한 겹 더 얹으면 번짐이 아니라 상자가 된다. 얹지 않는다. */
 [data-block="hero"] > .ev-asset-art {
   position: absolute;
   right: 0;
@@ -11544,9 +11559,6 @@ body:has(.palette-chilseok) {
   max-height: 94%;
   object-fit: contain;
   object-position: bottom right;
-  background: radial-gradient(62% 58% at 58% 52%,
-      color-mix(in srgb, var(--ev-surface) 42%, transparent) 0,
-      transparent 72%);
   z-index: 1;
 }
 
@@ -11561,9 +11573,31 @@ body:has(.palette-chilseok) {
 
 [data-block="hero"] > .ev-asset-art-left { right: auto; left: 22px; }
 
+/* ★★ v-hero-split 은 자기 격자가 있다. 그림을 띄우지 말고 **격자 한 칸으로** 넣는다.
+ *   absolute 로 두면 부모에 position:relative 가 없어 더 위 조상에 붙어 버리고,
+ *   그림이 히어로 밖 구석에 손톱만 하게 찍힌다(실측).
+ * ★ 카드(배경 · padding · radius)는 윗 규칙에서 .ev-asset 을 빼 두었다. */
+[data-block="hero"].v-hero-split:not(.ev-block) > .ev-asset-art {
+  position: static;
+  grid-column: 2;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  transform: none;
+}
+
+@media (max-width: 560px) {
+  [data-block="hero"].v-hero-split:not(.ev-block) > .ev-asset-art {
+    grid-column: 1;
+    max-width: 320px;
+    margin: 4px auto 0;
+  }
+}
+
 /* 좁은 화면에서는 옆이 아니라 아래로 — 글자 칸이 반으로 줄면 제목이 세로로 갈라진다 */
 @media (max-width: 640px) {
-  [data-block="hero"][data-block][data-block]:has(> .ev-asset-art) {
+  [data-block="hero"][data-block][data-block]:not(.v-hero-split):has(> .ev-asset-art) {
     padding-right: 24px; padding-left: 24px; text-align: center;
     min-height: 0; align-items: center;
   }
@@ -11739,8 +11773,8 @@ body:has(.palette-chilseok) {
  */
 .ev-container:has(> .ev-asset-page)::before,
 .ev-container:has(> .ev-asset-page)::after,
-.ev-container:has(> .ev-asset-page) [data-block="hero"]::before,
-.ev-container:has(> .ev-asset-page) [data-block="hero"]::after {
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light)) [data-block="hero"]::before,
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light)) [data-block="hero"]::after {
   content: none;
 }
 
@@ -11763,8 +11797,15 @@ body:has(.palette-chilseok) {
 .ev-container:has(> .ev-asset-dim-68)::before { background: rgba(0, 0, 0, .68); }
 
 /* hero 는 자기 그라데이션을 갖고 있어서 사진을 통째로 가린다.
- * ★ 페이지 배경이 있을 때만 비운다. 글자색은 10-fallback 이 이미 흰색으로 둔다. */
-.ev-container:has(> .ev-asset-page) [data-block="hero"]:not(:has(> .ev-asset-bg)) {
+ * ★ 페이지 배경이 있을 때만 비운다. 글자색은 10-fallback 이 이미 흰색으로 둔다.
+ *
+ * ★★ on-light 는 뺀다 — **밝은 그림과 투명 장식**이다(ImageProbe 가 재서 붙인다).
+ *   그런 배경에 히어로를 검게 덮으면, 비치라고 올린 그림 위에서 히어로만 시커메진다
+ *   (제보: "전체적으로 까매졌어"). 덮개를 빼면 히어로는 **자기 테마 그라데이션**을
+ *   그대로 쓴다 — 불투명하니 대비는 테마가 이미 보장하던 그 값이다.
+ *   사진은 히어로 뒤에서만 안 보일 뿐, 나머지 영역에서는 그대로 비친다. */
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block="hero"]:not(:has(> .ev-asset-bg)) {
   /* ★ .28 로 뒀다가 밝은 사진에서 흰 제목이 2.18 까지 떨어졌다(실측, 테마 4종 전부).
      사진이 순백이어도 흰 글씨가 4.5 를 넘으려면 .55 는 돼야 한다 — 여유를 둬 .58.
      사진을 가리는 값이지만, hero 는 어차피 자기 그라데이션으로 다 가리던 자리다. */
@@ -11776,12 +11817,16 @@ body:has(.palette-chilseok) {
  *   theme-bloom          h1 에 9px 흰 획을 둘러 글자 속을 먹는다 → 실측 1.00
  *   v-hero-gradient-text color: transparent 로 두고 배경을 글자에 깎아 넣는다
  * ★ [data-block] 세 번은 특이도용이다 — 테마가 0,3,1 로 집고 있다. */
-.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block="hero"]
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block][data-block][data-block="hero"]
   :is(h1, h2, h3, p, .period, .ev-period, .sub-label) {
   -webkit-text-stroke: 0;
   background-image: none;
 }
-.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block="hero"]
+/* ★ on-light 에는 안 건드린다. 히어로가 자기 배경을 쓰므로 글자색도 테마 것이 맞다 —
+ *   밝은 장식 위에서 흰 글씨를 강제하면 테마가 어두운 글씨를 쓰던 히어로가 통째로 날아간다. */
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block][data-block][data-block="hero"]
   :is(h1, h2, h3, p, .period, .ev-period, .sub-label) {
   color: #fff;
   -webkit-text-fill-color: #fff;
