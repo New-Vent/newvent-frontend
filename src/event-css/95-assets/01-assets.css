@@ -122,20 +122,50 @@
 
 /* ── ② 제목 옆 그림 ───────────────────────────────────────────── */
 
-[data-block="hero"]:has(> .ev-asset-art) {
+/* ★★ [data-block] 을 세 번 쓴 건 특이도 때문이다 — 변형이 (0,3,1) 로 집는다.
+ *   v-hero-center 는 `padding: 56px 28px` 단축과 `text-align: center` 를 들고 있어서,
+ *   (0,2,1) 로 쓰면 글자 칸을 비우지도, 왼쪽으로 붙이지도 못한다.
+ *   실측 — 그대로 두면 가운데 글 위로 그림이 올라앉아 제목을 가린다.
+ * ★ min-height 는 그림이 설 자리다. 글이 두 줄뿐인 히어로는 250px 밖에 안 돼서
+ *   max-height:94% 가 그림을 반으로 깎는다. */
+[data-block="hero"][data-block][data-block]:has(> .ev-asset-art) {
   position: relative;
-  padding-right: 32%;
+  padding-right: 48%;
+  padding-left: 40px;
   text-align: left;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
 }
 
+/* ★★ 제목 옆 그림은 **오른쪽을 가득 채운다.**
+ *   전에는 width:26% · max-width:230px 라, 1600px 넓은 화면에서도 230px 짜리
+ *   우표만 하게 들어갔다("너무 작잖아" 제보). 레퍼런스 디자인은 그림이 히어로의
+ *   절반을 쓰고 위아래 끝까지 닿는다.
+ *
+ * ★ 오른쪽 아래에 붙인다(right:0 · bottom:0). 사람 그림은 바닥에 서야 자연스럽고,
+ *   물건 그림은 object-position 으로 같은 자리에 맞춰진다.
+ * ★ max-height 로 히어로 밖으로 나가는 것을 막는다 — 글이 짧은 히어로에서
+ *   그림이 영역보다 커져 아래 블록을 밀어내던 일을 여기서 끊는다.
+ * ★★ 투명 PNG 뒤에 **부드러운 번짐**을 깐다. 요청 그대로다 — 그림이 배경에서
+ *   오려 붙인 것처럼 떠 보이지 않게 테마 색으로 한 겹 깔아 준다.
+ *   가상요소가 아니라 <img> 자신의 background 다. 테마 · 변형이 쓰는
+ *   ::before · ::after 와 부딪히지 않는 유일한 자리다. */
 [data-block="hero"] > .ev-asset-art {
   position: absolute;
-  right: 22px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 26%;
-  max-width: 230px;
+  right: 0;
+  bottom: 0;
+  width: 48%;
+  max-width: 540px;
   height: auto;
+  max-height: 94%;
+  object-fit: contain;
+  object-position: bottom right;
+  background: radial-gradient(62% 58% at 58% 52%,
+      color-mix(in srgb, var(--ev-surface) 42%, transparent) 0,
+      transparent 72%);
   z-index: 1;
 }
 
@@ -144,21 +174,29 @@
    ★ 자리를 옮기면 **글자 쪽 여백도 반대로** 가야 한다. 안 그러면 그림이 글자를 덮는다.
    ★ 위 두 규칙과 같은 특이도(0,2,0 · 0,2,0)인데 **뒤에 있어서** 이긴다. 순서를 바꾸면 안 먹는다.
    ★ 서버가 붙인다(AssetEdit) — 모델이 고르는 이름이 아니다. */
-[data-block="hero"]:has(> .ev-asset-art-left) { padding-right: 24px; padding-left: 32%; }
+[data-block="hero"][data-block][data-block]:has(> .ev-asset-art-left) {
+  padding-right: 40px; padding-left: 48%; align-items: flex-end; text-align: right;
+}
 
 [data-block="hero"] > .ev-asset-art-left { right: auto; left: 22px; }
 
 /* 좁은 화면에서는 옆이 아니라 아래로 — 글자 칸이 반으로 줄면 제목이 세로로 갈라진다 */
 @media (max-width: 640px) {
-  [data-block="hero"]:has(> .ev-asset-art) { padding-right: 24px; text-align: center; }
+  [data-block="hero"][data-block][data-block]:has(> .ev-asset-art) {
+    padding-right: 24px; padding-left: 24px; text-align: center;
+    min-height: 0; align-items: center;
+  }
   /* ★ 좁은 화면에서는 왼쪽 · 오른쪽이 의미가 없다 — 어차피 글자 아래로 내려간다 */
-  [data-block="hero"]:has(> .ev-asset-art-left) { padding-left: 24px; }
+  [data-block="hero"][data-block][data-block]:has(> .ev-asset-art-left) {
+    padding-left: 24px; align-items: center; text-align: center;
+  }
   [data-block="hero"] > .ev-asset-art-left { left: auto; }
   [data-block="hero"] > .ev-asset-art {
     position: static;
     transform: none;
-    width: 60%;
-    max-width: 200px;
+    width: 78%;
+    max-width: 320px;
+    max-height: none;
     margin: 14px auto 0;
   }
 }
