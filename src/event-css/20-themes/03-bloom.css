@@ -3,9 +3,13 @@
    src/event-css/90-themes/02-bloom.css
 
    ★ aurora 는 "변형과 안 싸우기" 에만 신경 써서 얌전했다.
-     여기서는 **장식을 적극적으로 그린다** — 구름 · 반짝이 · 떠 있는 배지 ·
-     테두리 글자 · 라벨 표. 전부 가상요소(::before · ::after)로 그리므로
-     생성되는 HTML 은 한 글자도 안 바뀐다.
+     여기서는 **장식을 적극적으로 그린다** — 반짝이 · 테두리 글자 · 라벨 표.
+     전부 가상요소(::before · ::after)로 그리므로 생성되는 HTML 은 한 글자도 안 바뀐다.
+
+   ★★ 뺀 것 — 구름(배경 · 컨테이너)과 cta 옆 "지금 참여하세요" 배지.
+     장식이 **내용 자리**를 차지하면 그건 장식이 아니다. 구름은 글자를 덮었고,
+     배지는 CSS 가 읽는 문구를 만들어 관리자가 고칠 수 없었다.
+     장식은 CSS 가, **문구와 지면은 HTML 이** 쥔다.
 
    ★ position 을 마음껏 쓴다
      "모델에게 position 을 열지 않는다" 와 "CSS 가 position 을 쓴다" 는 다른 말이다.
@@ -42,7 +46,7 @@
 
      계약은 "테마 = 구조, 팔레트 = 색" 이다. 테마가 색을 쥐면 그 계약이 깨지고
      테마×팔레트 조합이 전부 말이 안 되는 화면이 된다. 그래서 bloom 은
-     **모양만** 쥔다 — 구름, 외곽선 타이포, 알약 소제목, 두툼한 그림자.
+     **모양만** 쥔다 — 외곽선 타이포, 알약 소제목, 두툼한 그림자.
      색은 하나도 빠짐없이 팔레트에서 받는다.
 
    ★ 이 테마 안에서만 쓰는 값도 팔레트에서 파생시킨다. */
@@ -52,30 +56,23 @@
   --bloom-cream:  var(--ev-surface);
   --bloom-shadow: 0 10px 0 color-mix(in srgb, var(--ev-text-main) 7%, transparent),
                   0 18px 40px color-mix(in srgb, var(--ev-text-main) 11%, transparent);
-  /* 구름 · 외곽선에 쓰는 "종이색" — 표면색을 그대로 쓴다 */
+  /* 외곽선에 쓰는 "종이색" — 표면색을 그대로 쓴다 (구름에도 쓰였으나 구름은 뺐다) */
   --bloom-paper:  var(--ev-surface);
 }
 
-/* ── ② 페이지 배경 — 구름이 떠 있는 하늘 ──────────────────────── */
+/* ── ② 페이지 배경 — 위가 밝은 하늘 ───────────────────────────── */
 
 /* ★★ 팔레트 변수는 90-palettes 에서 body:has(.palette-*) 로도 선언된다.
      그래서 여기서 var(--ev-bg) 를 읽으면 **요청문에 맞는 색**이 나온다.
      (전에는 팔레트가 .ev-container 에만 붙어 body 가 :root 기본값을 읽었고,
-      어떤 요청이든 같은 색이 깔렸다 — "가을 요청에 민트 배경" 의 원인.)
-   ★ 컨테이너의 ::before 로 깔면 안 된다 — 이 테마는 ::before·::after 를
-     구름에 쓰고 있어서 서로 덮는다. 실제로 배경이 사라졌다. */
+      어떤 요청이든 같은 색이 깔렸다 — "가을 요청에 민트 배경" 의 원인.) */
 body:has(.theme-bloom) {
   background-color: var(--ev-bg);
-  /* ★★ 하늘은 --ev-primary 를 **섞어서** 만든다. --ev-bg 와 --ev-surface 만 쓰면
-       밝은 팔레트에서 둘 다 거의 흰색이라(autumn: #fffaf3 vs #fffdf9)
-       구름이 배경에 묻혀 사라진다 — 실제로 "구름이 어디 갔냐" 는 말을 들었다.
-       하늘에 색을 섞어 두면 구름(= --ev-surface, 밝은 팔레트에선 거의 흰색,
-       어두운 팔레트에선 어두운 카드색)이 또렷하게 떠오른다. */
+  /* ★★ 구름(흰 radial-gradient 4개)을 뺐다 — 제보: "알 수 없는 구름들이 자꾸 생긴다".
+       이벤트 내용과 아무 상관이 없는데 화면의 제일 큰 자리를 차지했고,
+       관리자가 끌 방법이 없었다(HTML 에 없으니 직접수정에도 안 잡힌다).
+       하늘색 기울기와 아래쪽 빛번짐은 남긴다 — 그건 '색' 이지 '그림' 이 아니다. */
   background-image:
-    radial-gradient(44% 26% at 14% 9%,  var(--ev-surface) 0, transparent 68%),
-    radial-gradient(30% 18% at 30% 15%, var(--ev-surface) 0, transparent 68%),
-    radial-gradient(36% 22% at 86% 22%, var(--ev-surface) 0, transparent 68%),
-    radial-gradient(26% 16% at 70% 30%, var(--ev-surface) 0, transparent 68%),
     radial-gradient(60% 34% at 50% 102%, var(--ev-primary-glow), transparent 70%),
     linear-gradient(180deg,
       color-mix(in srgb, var(--ev-primary) 24%, var(--ev-bg)) 0%,
@@ -98,39 +95,11 @@ body:has(.theme-bloom) {
   overflow: visible;
 }
 
-/* ★ 구름 — 컨테이너 가상요소로 그린다. HTML 은 그대로다 */
-.theme-bloom.ev-container::before,
-.theme-bloom .ev-container::before {
-  content: "";
-  position: absolute;
-  /* ★ 미리보기 iframe 은 컨테이너 폭에 맞춰 잘리므로 음수 좌표는 안 보인다.
-     안쪽으로 당겨서 카드 사이 여백에 걸치게 둔다 */
-  top: 104px;
-  left: -12px;
-  width: 190px;
-  height: 92px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bloom-paper) 92%, transparent);
-  box-shadow: 74px -30px 0 -12px color-mix(in srgb, var(--bloom-paper) 90%, transparent),
-              150px -4px 0 -24px color-mix(in srgb, var(--bloom-paper) 85%, transparent);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.theme-bloom.ev-container::after,
-.theme-bloom .ev-container::after {
-  content: "";
-  position: absolute;
-  top: 300px;
-  right: -10px;
-  width: 150px;
-  height: 74px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bloom-paper) 80%, transparent);
-  box-shadow: -60px 26px 0 -14px color-mix(in srgb, var(--bloom-paper) 75%, transparent);
-  pointer-events: none;
-  z-index: 0;
-}
+/* ★★ 떠다니던 구름 두 덩이(.ev-container 의 ::before · ::after)를 뺐다.
+     top/left 를 픽셀로 박아 둔 장식이라 내용 길이에 따라 글자를 덮었고,
+     이벤트와 무관한 그림이 페이지마다 같은 자리에 떴다.
+     ★ 덤 — 이제 .ev-container 의 ::before·::after 가 비었다. 나중에 다른 장식을
+       붙일 자리가 생겼다는 뜻이다(전에는 "구름이 쓰고 있어서 못 쓴다" 였다). */
 
 /* ── ③ 섹션 — 크림색 둥근 카드가 겹겹이 ───────────────────────── */
 
@@ -673,24 +642,12 @@ body:has(.theme-bloom) {
   box-shadow: 0 5px 0 var(--ev-primary-glow), 0 12px 24px color-mix(in srgb, var(--ev-text-main) 16%, transparent);
 }
 
-/* ★ 버튼 옆 떠 있는 배지 — 참고 디자인의 "참여 인증 완료!" 자리 */
-.theme-bloom [data-block="cta"]:not(.ev-block)::after {
-  content: "✓ 지금 참여하세요";
-  position: absolute;
-  /* ★ bottom: 8px 로 뒀더니 버튼 위에 겹쳤다. 버튼 아래로 내린다 */
-  left: 50%;
-  bottom: -6px;
-  transform: translateX(-50%) rotate(-3deg);
-  padding: 7px 16px;
-  border-radius: 999px;
-  background: var(--bloom-pink);
-  border: 3px solid var(--bloom-paper);
-  color: #fff;
-  font-size: 0.76rem;
-  font-weight: 800;
-  box-shadow: 0 5px 14px var(--ev-primary-glow);
-  white-space: nowrap;
-}
+/* ★★ cta 옆 떠 있는 배지를 뺐다 — content 로 **읽는 문구**를 만들고 있었다.
+     ① 관리자가 못 고친다. HTML 에 없으니 직접수정에도 AI 수정에도 안 잡힌다
+     ② 버튼 문구와 따로 논다 — "응모하기" 버튼 밑에 다른 말이 같이 나왔다
+     ③ 끝난 이벤트에도 참여를 권한다. 지킬 수 없는 말이 게시된다
+     장식은 CSS 가, **문구는 HTML 이** 쥔다. 이 파일의 다른 ::after(♥ · ✓ · Q)는
+     글자가 아니라 기호라 그대로 둔다 — 읽히는 내용이 아니다. */
 
 /* ── ⑫ 문구 꾸밈 ─────────────────────────────────────────────── */
 
@@ -726,11 +683,8 @@ body:has(.theme-bloom) {
 /* ── ⑬ 좁은 화면 ─────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
-  .theme-bloom.ev-container::before,
-  .theme-bloom .ev-container::before,
-  .theme-bloom.ev-container::after,
-  .theme-bloom .ev-container::after { display: none; }
-
+  /* ★ 구름을 숨기던 display:none 을 뺐다 — 구름 자체가 없어졌다.
+       좁은 화면에서 글자를 덮어 숨겨야 했다는 게, 넓은 화면에서도 덮고 있었다는 뜻이다. */
   .theme-bloom [data-block]:not(.ev-block) { margin: 0 12px 14px; padding: 26px 18px; }
   .theme-bloom [data-block="hero"]:not(.ev-block) h1 { -webkit-text-stroke-width: 6px; }
   .theme-bloom [data-block="schedule"]:not(.ev-block) li strong { flex-basis: 96px; font-size: 0.78rem; }
