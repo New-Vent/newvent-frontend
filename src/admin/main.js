@@ -702,6 +702,13 @@ document.addEventListener('keydown',ev=>{
  }
 });
 
+// AI 대화 입력칸에서 Ctrl(맥은 ⌘) + Enter 로 보낸다 — 그냥 Enter 는 줄바꿈이다
+document.addEventListener('keydown',ev=>{
+ if(!USE_SERVER||ev.key!=='Enter'||!(ev.ctrlKey||ev.metaKey)||ev.target.id!=='server-chat'||ev.isComposing)return;
+ ev.preventDefault();
+ $('#server-chat-form')?.requestSubmit();
+});
+
 document.addEventListener('input',ev=>{
  const key=ev.target.dataset.contentKey;
  if(!key||ui.route!=='editor'||ui.role!=='admin'||requestPending())return;

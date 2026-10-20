@@ -56,6 +56,8 @@ async function setup({ upload, remove } = {}) {
     hasVariantIcons: () => false, shortName: (k) => k, variantIcon: () => '',
     loadChatMessages: async () => [], searchRagPreview: async () => ({}),
     loadPromptDrafts: async () => [],
+    eventRangePicker: () => '',
+    diffBlocks: () => [], orderChanged: () => false,
   }
   const source = await readFile(new URL('../src/admin/views/server-editor.js', import.meta.url), 'utf8')
   const module = new SourceTextModule(source)

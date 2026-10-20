@@ -36,6 +36,7 @@ import { GRADES, gradeLabel, REQUEST_MAX } from '@shared/grades.js'
 import { icon } from '@shared/icons.js'
 import { LAYOUTS, STACK, layoutPicks, markPick } from '@shared/layouts.js'
 import { hasVariantIcons, shortName, variantIcon } from '@shared/variant-icons.js'
+import { diffBlocks, orderChanged } from '@shared/preview/block-diff.js'
 import { serverFrame } from '@shared/preview/document.js'
 import { collectTexts, matches, normalize, textsOf } from '@shared/preview/server-texts.js'
 import {
@@ -66,14 +67,13 @@ const ASSET_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp'
 
 /** AI 대화 — 이벤트별. 편집 화면을 다시 열어도 탭이 살아 있는 동안은 남는다 */
 const CHATS = {}
-const GREETING = '어떻게 고쳐볼까요? 예: "제목을 가을 대축제로 바꿔줘", "혜택에 카페 쿠폰을 추가해줘". '
-  + '요청 한 번이 새 버전 하나가 되고, 남기고 싶은 버전은 "버전 저장" 으로 이력에 올려요.'
+const GREETING = '바꾸고 싶은 내용을 말해 주세요. 오른쪽 미리보기에서 영역을 고르면 그 부분만 바뀌어요.'
 const chatOf = (id) => (CHATS[id] ||= [{ role: 'assistant', text: GREETING }])
 
 // order 는 null 로 시작한다 — 아직 안 건드렸다는 뜻이다. 미리보기 순서를 그대로 쓴다
 // layout 도 null 로 시작한다. variants 는 고친 영역만 담는다 (영역 → class)
 const freshDirect = () => ({
-  values: {}, formats: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {},
+  values: {}, formats: {}, style: {}, styleOn: {}, order: null, layout: null, variants: {}, query: '',
   removeBlocks: [], removeItems: {},
   // 직접 수정 접기 상태 — 다시 그려도 열림/닫힘을 유지 (looks · order · title · button)
   folds: {},
@@ -95,6 +95,9 @@ function openServerEditor(id, { jobId = null, request = null, startError = null 
     chatError: null,
     tab: 'chat',                       // chat | direct
     selected: [],                      // AI 대화 — 미리보기에서 고른 영역(data-block). 최대 MAX_SELECTED
+    compare: null,                     // 가장 최근 AI 수정의 이전 모습 { before, versionNo, versionId }
+    showBefore: false,                 // 미리보기에 이전 모습을 띄우는 중
+    changedKeys: [],                   // 가장 최근 AI 수정이 바꾼 영역 — 미리보기에서 강조
     direct: freshDirect(),
     assets: [],                        // 올린 이미지 (서버 모드만. 목업은 늘 빈 배열)
     assetBusy: false,                  // 올리기 · 지우기 중
@@ -255,13 +258,36 @@ async function poll(s, rerender) {
   }
   s.polling = false
   if (ui.serverEditor !== s || !s.job?.done) return
+  // ★ 다시 읽으면 이전 미리보기가 사라진다 — AI 수정이 무엇을 바꿨는지 보여 주려고 먼저 잡아 둔다
+  const beforeHtml = s.preview?.html
+  const versionBefore = s.preview?.versionNo
   if (s.job.phase === 'DONE') {
     try { await refreshPage(s) } catch { /* 미리보기는 다시 열 때 읽는다 */ }
   }
-  if (kind === 'edit') chatOf(s.id).push({ role: 'assistant', tone: s.job.phase, text: editReply(s) })
-  else if (s.job.phase === 'DONE' && s.preview) toast('v' + s.preview.versionNo + ' 로 만들었어요.')
+  if (kind === 'edit') {
+    const reply = { role: 'assistant', tone: s.job.phase, text: editReply(s) }
+    const changes = s.job.phase === 'DONE' ? changesOf(beforeHtml, s.preview?.html) : null
+    if (changes) {
+      reply.changes = changes
+      // 이전 모습은 가장 최근 한 번만 둔다 — 대화가 길어져도 HTML 이 쌓이지 않게
+      s.compare = { before: beforeHtml, versionNo: versionBefore, versionId: s.preview.versionId }
+      s.changedKeys = changes.filter((c) => c.key && c.kind !== 'removed').map((c) => c.key)
+    }
+    chatOf(s.id).push(reply)
+  } else if (s.job.phase === 'DONE' && s.preview) toast('v' + s.preview.versionNo + ' 로 만들었어요.')
   rerender()
 }
+
+/** AI 수정 전 · 후 — 말풍선에 붙일 변경 목록. 바뀐 게 없으면 null */
+function changesOf(beforeHtml, afterHtml) {
+  if (!beforeHtml || !afterHtml || beforeHtml === afterHtml) return null
+  const list = diffBlocks(beforeHtml, afterHtml).map((d) => ({ ...d, label: labelOf(d.key) }))
+  if (orderChanged(beforeHtml, afterHtml)) list.push({ key: null, kind: 'order', label: '영역 순서', summary: '순서 변경' })
+  return list.length ? list : null
+}
+
+/** 이전 모습 비교 중인가 — 가장 최근 수정의 결과 버전을 보고 있을 때만 */
+const comparing = (s) => !!(s.showBefore && s.tab === 'chat' && s.compare && s.preview?.versionId === s.compare.versionId)
 
 function editReply(s) {
   const j = s.job
@@ -307,6 +333,9 @@ async function sendChat(text, rerender) {
   s.notice = null
   // 방금 보낸 말이 보이게 — 다시 그린 뒤 맨 아래로 붙인다
   s.chatStickBottom = true
+  // 새 요청을 보내면 지난 수정의 강조 · 비교는 거둔다
+  s.changedKeys = []
+  s.showBefore = false
   try {
     const r = await startEdit(s.id, request, blocks)
     s.job = { jobId: r.jobId, kind: 'edit', phase: r.phase, label: '대기 중', percent: r.percent ?? 0, done: false }
@@ -458,6 +487,69 @@ function rememberSideScroll() {
   }
   s.windowScrollY = window.scrollY
   if (s.tab === 'direct') s.direct.windowScrollY = window.scrollY
+}
+
+/**
+ * 미리보기 스크롤(.canvas) 유지.
+ * ★ 전체를 다시 그리면 .canvas 도 iframe 도 새로 만들어져 스크롤이 0 으로 돌아간다.
+ *   다시 그릴 때 읽으면 안 된다 — iframe 이 아직 짧을 때 맞춘 값(잘린 값)을 기억하게 된다.
+ *   그래서 사람이 움직일 때마다 기억해 두고(bind), 다시 그린 뒤에는 iframe 높이가 자리 잡을 때까지
+ *   그 값으로 맞춘다(restore). 맞추는 동안 생기는 scroll 이벤트는 기억하지 않는다.
+ */
+function bindCanvasScroll(s, canvas) {
+  canvas?.addEventListener('scroll', () => { if (!s.canvasRestoring) s.canvasScroll = canvas.scrollTop }, { passive: true })
+}
+
+function restoreCanvasScroll(s, canvas) {
+  const want = s.canvasScroll
+  if (!canvas || !(want > 0)) return
+  const frame = canvas.querySelector('.event-frame')
+  if (!frame) return
+  s.canvasRestoring = true
+  // iframe 높이는 문서가 뜬 뒤에 자리 잡는다 — 높이가 바뀔 때마다 다시 맞추고, 닿으면 끝낸다
+  // (닿지 못하는 경우 — 페이지가 줄었을 때 — 를 위해 8초 뒤에는 그만둔다)
+  const stop = () => { s.canvasRestoring = false; observer.disconnect(); clearTimeout(timer) }
+  const apply = () => {
+    if (!s.canvasRestoring || ui.serverEditor !== s || !canvas.isConnected) return stop()
+    canvas.scrollTop = want
+    if (Math.abs(canvas.scrollTop - want) <= 1) stop()
+  }
+  const observer = new ResizeObserver(apply)
+  const timer = setTimeout(stop, 8000)
+  observer.observe(frame)
+  // 맞추는 중에 사람이 직접 움직이면 그 뜻을 따른다
+  for (const ev of ['wheel', 'touchstart', 'pointerdown', 'keydown']) canvas.addEventListener(ev, stop, { once: true, passive: true })
+  apply()
+}
+
+const CHANGE_STYLE = '.nv-changed{outline:3px solid #f2b705!important;outline-offset:-3px}'
+  + '.nv-flash{animation:nv-flash .9s ease-out 2}@keyframes nv-flash{50%{outline-color:#ff7a00}}'
+
+/** 가장 최근 AI 수정이 바꾼 영역에 외곽선을 입힌다 — 새 iframe 이 뜰 때마다 다시 */
+function paintChanges(s) {
+  const doc = $('.event-frame')?.contentDocument
+  if (!doc?.head || comparing(s)) return
+  if (!doc.getElementById('nv-change-style')) {
+    const style = doc.createElement('style')
+    style.id = 'nv-change-style'
+    style.textContent = CHANGE_STYLE
+    doc.head.appendChild(style)
+  }
+  doc.querySelectorAll('[data-block]').forEach((n) => n.classList.toggle('nv-changed', s.changedKeys.includes(n.dataset.block)))
+}
+
+/** 변경 칩 — 미리보기를 그 영역으로 옮기고 외곽선을 잠깐 깜빡인다 */
+function goToBlock(key) {
+  const frame = $('.event-frame'), canvas = $('.canvas')
+  const el = frame?.contentDocument?.querySelector('[data-block="' + key + '"]')
+  if (!el || !canvas) return
+  // 줄여 보기(fit)면 iframe 이 scale 로 줄어 있다 — 화면에 보이는 크기 비율로 바꿔 계산한다
+  const scale = frame.offsetHeight ? frame.getBoundingClientRect().height / frame.offsetHeight : 1
+  const top = frame.getBoundingClientRect().top - canvas.getBoundingClientRect().top + canvas.scrollTop + el.getBoundingClientRect().top * scale
+  canvas.scrollTo({ top: Math.max(0, top - 12), behavior: 'smooth' })
+  el.classList.remove('nv-flash')
+  void el.offsetWidth
+  el.classList.add('nv-flash')
 }
 
 /** 바꾼 게 있으면 보낼 목록, 없으면 null */
@@ -721,23 +813,97 @@ function looksHTML(s, busy) {
     + '<p class="helper">미리보기에서 영역에 마우스를 올려도 바꿀 수 있어요.</p></div>'
 }
 
-/** 자주 안 쓰는 설정은 접어 두고, 문구 수정이 먼저 보이게 */
-function foldSection(s, key, title, body, mark) {
+/**
+ * 접기(토글) 한 칸. 열림 상태는 s.direct.folds 에 기억하고, 아직 건드린 적 없으면 defaultOpen 을 따른다.
+ *   idx    이 칸이 품은 문구 번호들 — 있으면 "변경됨" 표시를 입력에 맞춰 실시간으로 켜고 끈다 (updateGroupMarks)
+ *   count  제목 옆에 붙는 문구 개수
+ *   sub    문구 수정 안의 영역별 칸 (들여쓰기·작은 머리글)
+ */
+function foldSection(s, key, title, body, mark, { defaultOpen = false, sub = false, idx = null, count = null, note = '', preview = '' } = {}) {
   if (!body) return ''
-  const open = s.direct.folds?.[key] ? ' open' : ''
-  const badge = mark ? ' <span class="sedit-fold-mark">' + esc(mark) + '</span>' : ''
-  return '<details class="sedit-fold" data-fold="' + key + '"' + open + '>'
-    + '<summary>' + title + badge + '</summary><div class="sedit-fold-body">' + body + '</div></details>'
+  const open = (s.direct.folds?.[key] ?? defaultOpen) ? ' open' : ''
+  const badge = idx
+    ? '<span class="sedit-fold-mark"' + (mark ? '' : ' hidden') + '>변경됨</span>'
+    : (mark ? ' <span class="sedit-fold-mark">' + esc(mark) + '</span>' : '')
+  const num = count != null ? '<span class="sedit-fold-count">' + count + '개</span>' : ''
+  // note: 머리글 오른쪽의 짧은 안내(예: 수정만 가능). preview: 접어 둬도 무슨 문구가 들었는지 알려 주는 한 줄
+  const tag = note ? '<span class="sedit-fold-note">' + esc(note) + '</span>' : ''
+  const peek = preview ? '<span class="sedit-fold-preview">' + esc(preview) + '</span>' : ''
+  return '<details class="sedit-fold' + (sub ? ' sedit-subfold' : '') + '" data-fold="' + key + '"'
+    + (idx ? ' data-idx="' + idx.join(',') + '"' : '') + (count != null ? ' data-n="' + count + '"' : '')
+    + (defaultOpen ? ' data-def="1"' : '') + open + '>'
+    + '<summary>' + title + num + tag + badge + peek + '</summary><div class="sedit-fold-body">' + body + '</div></details>'
+}
+
+/** 문구 하나를 고쳤거나 서식을 건드렸는가 */
+function isEdited(s, i) {
+  const before = editable(s)[i]?.before ?? ''
+  return normalize(s.direct.values[i] ?? before) !== normalize(before) || Object.keys(s.direct.formats?.[i] || {}).length > 0
+}
+
+/** 접힌 칸 머리글의 "변경됨" — 접어 두어도 어디를 고쳤는지 보이게 */
+function updateGroupMarks(s) {
+  document.querySelectorAll('details.sedit-fold[data-idx]').forEach((el) => {
+    const mark = el.querySelector(':scope > summary .sedit-fold-mark')
+    if (mark) mark.hidden = !el.dataset.idx.split(',').some((i) => isEdited(s, Number(i)))
+  })
+}
+
+/**
+ * 접힌 칸 안의 칸을 열어 보이게 한다.
+ * ★ 접힌 <details> 안의 textarea 는 scrollHeight 가 0 이라 자동 높이가 2px 로 접힌다 —
+ *   열 때 다시 맞춘다. 미리보기에서 글자를 눌러 찾아 들어갈 때도 부모 칸을 먼저 연다.
+ */
+function revealField(el) {
+  for (let d = el.closest('details'); d; d = d.parentElement?.closest('details')) d.open = true
+  el.closest('.sedit-fold-body')?.querySelectorAll('textarea[data-autogrow]').forEach(grow)
 }
 
 function bindDirectFolds(s) {
   document.querySelectorAll('details.sedit-fold[data-fold]').forEach((el) => {
     el.addEventListener('toggle', () => {
       if (ui.serverEditor !== s || !s.direct) return
+      if (el.open) el.querySelectorAll('textarea[data-autogrow]').forEach(grow)
+      // 검색 때문에 억지로 연 칸은 기억하지 않는다 — 검색을 지우면 사람이 정해 둔 상태로 돌아가야 한다
+      if (el.dataset.forced) return
       s.direct.folds = s.direct.folds || {}
       s.direct.folds[el.dataset.fold] = el.open
     })
   })
+}
+
+/** 사람이 정해 둔 열림 상태 — 건드린 적 없으면 처음 기본값 */
+const foldWanted = (s, el) => s.direct.folds?.[el.dataset.fold] ?? el.dataset.def === '1'
+
+/**
+ * 문구 검색 — s.direct.query 가 든 칸만 남기고, 맞는 영역은 펴서 보여 준다.
+ * ★ 전체를 다시 그리지 않는다(입력 포커스 유지). 그린 직후에도 같은 함수로 맞춘다.
+ * ★ 검색 때문에 연 칸은 data-forced 로 표시해 folds 에 기억하지 않는다. 검색을 지우면 원래대로 접힌다.
+ */
+function applyTextFilter(s) {
+  const q = (s.direct.query || '').trim().toLowerCase()
+  const force = (el, on) => {
+    if (on) { el.dataset.forced = '1'; el.open = true }
+    else if (el.dataset.forced) { delete el.dataset.forced; el.open = foldWanted(s, el) }
+  }
+  let total = 0
+  document.querySelectorAll('details.sedit-subfold').forEach((d) => {
+    let n = 0
+    d.querySelectorAll('.sedit-item').forEach((item) => {
+      const hit = !q || (item.querySelector('textarea')?.value || '').toLowerCase().includes(q)
+      item.hidden = !hit
+      if (hit) n++
+    })
+    d.hidden = !!q && n === 0
+    const count = d.querySelector(':scope > summary .sedit-fold-count')
+    if (count) count.textContent = q ? n + '개 일치' : d.dataset.n + '개'
+    force(d, !!q && n > 0)
+    total += n
+  })
+  const outer = document.querySelector('details[data-fold="texts"]')
+  if (outer) force(outer, !!q)
+  const none = $('#server-text-none')
+  if (none) none.hidden = !(q && total === 0)
 }
 
 function paintLooks(s) {
@@ -789,6 +955,7 @@ async function applyDirect(rerender) {
   const invalidSize = [...document.querySelectorAll('[data-text-format="size"]')].find((el) => el.value !== '' && !el.checkValidity())
   if (invalidSize) {
     toast('글자 크기는 10~96px 사이의 정수로 입력해주세요.')
+    revealField(invalidSize)
     invalidSize.focus()
     return
   }
@@ -947,6 +1114,7 @@ function updateDirectCount(s) {
     + Object.values(s.direct.removeItems).reduce((sum, xs) => sum + xs.length, 0)
   const el = $('#server-direct-count')
   if (el) el.textContent = n ? '바꾼 항목 ' + n + '개' : '바꾼 항목 없음'
+  updateGroupMarks(s)
   const apply = $('[data-act="server-direct-apply"]')
   if (apply) apply.disabled = !n || running(s) || s.busy
 }
@@ -1131,13 +1299,34 @@ function generateForm(s) {
 
 const EXAMPLES = ['제목을 더 짧고 강렬하게 바꿔줘', '소개 문구를 친근하게 다듬어줘', '참여 방법을 3단계로 정리해줘']
 
+/** 대화를 시작하기 전 빈 자리에 놓는 큰 예시 카드 — [제목, 요청문] */
+const STARTERS = [
+  ['제목 바꾸기', '제목을 가을 대축제로 바꿔줘'],
+  ['소개 다듬기', '소개 문구를 친근하게 다듬어줘'],
+  ['혜택 추가', '혜택에 카페 쿠폰을 추가해줘'],
+  ['참여 방법 정리', '참여 방법을 3단계로 정리해줘'],
+]
+
 const TONE = { FAILED: 'tone-fail', ASK_BACK: 'tone-ask', CANCELLED: 'tone-ask' }
 
 /** AI 대화 — 대화 · 다시 만들기는 스크롤, 입력칸은 아래 고정 */
 function chatPanel(s) {
   const busy = running(s)
   const tags = (m) => (m.blocks?.length ? '<span class="bubble-tags">' + m.blocks.map((k) => '<span>' + esc(labelOf(k)) + '</span>').join('') + '</span>' : '')
-  const log = chatOf(s.id).map((m) => {
+  // 바뀐 곳 — 누르면 미리보기가 그 영역으로 간다. 이전 모습 비교는 가장 최근 수정에만 붙는다
+  const changes = (m, last) => (m.changes?.length
+    ? '<span class="bubble-changes">' + m.changes.map((c) => (c.key && c.kind !== 'removed'
+      ? button('server-change-go', '<b>' + esc(c.label) + '</b><span>' + esc(c.summary) + '</span><em>보기</em>', 'data-block="' + esc(c.key) + '"', 'change-item')
+      : '<span class="change-item static"><b>' + esc(c.label) + '</b><span>' + esc(c.summary) + '</span></span>')).join('')
+      + (last && s.compare && s.compare.versionId === s.preview?.versionId
+        ? button('server-compare', icon('layers') + '<span>' + (s.showBefore ? '변경 후 모습 보기' : '이전 모습과 비교') + '</span>', 'aria-pressed="' + !!s.showBefore + '"', 'change-compare')
+        : '')
+      + '</span>'
+    : '')
+  const history = chatOf(s.id)
+  const starting = !history.some((m) => m.role === 'user')
+  const lastWithChanges = history.map((m) => !!m.changes).lastIndexOf(true)
+  const log = history.map((m, i) => {
     const statusLabel = m.tone && m.tone !== 'DONE'
       ? RESULT[m.tone]?.[1]
       : null
@@ -1153,6 +1342,7 @@ function chatPanel(s) {
       + '</small>'
       + tags(m)
       + esc(m.text)
+      + changes(m, i === lastWithChanges)
       + '</div>'
   }).join('')
   return '<div class="server-scroll" id="server-scroll">'
@@ -1162,16 +1352,27 @@ function chatPanel(s) {
         + ' 편집 화면을 다시 열면 재조회합니다.</p>'
       : '')
     + '<div class="chat" id="chat-log" role="log" aria-label="AI 대화" aria-live="polite">' + log + '</div>'
+    // ★ 아직 한 마디도 안 했으면 빈 자리에 시작 카드를 놓는다 — 무엇을 입력할지 막막하지 않게.
+    //   대화가 시작되면 카드는 빠지고 입력칸 아래 작은 예시 칩이 그 일을 한다
+    + (starting
+      ? '<div class="start-head"><p class="start-title">이렇게 시작해 보세요</p>'
+        + button('server-rag-examples', '예시 더 찾기', busy ? 'disabled' : '', 'start-more') + '</div>'
+        + '<div class="start-cards">' + STARTERS.map(([title, ask]) => button('server-chat-example',
+          '<b>' + esc(title) + '</b><span>“' + esc(ask) + '”</span>', 'data-prompt="' + esc(ask) + '" ' + (busy ? 'disabled' : ''), 'start-card')).join('') + '</div>'
+        + '<p class="helper start-help">요청 한 번이 새 버전 하나가 돼요. 남기고 싶은 버전은 위쪽 “버전 저장”으로 이력에 올려요.</p>'
+      : '')
     + '<details class="server-regen"><summary>처음부터 다시 만들기</summary>' + generateForm(s) + '</details></div>'
     + '<form class="server-foot" id="server-chat-form" aria-busy="' + busy + '">'
     + '<div id="server-selection">' + selectionHTML(s, busy) + '</div><label class="field">'
     + '<textarea id="server-chat" rows="3" aria-label="수정 요청" maxlength="' + REQUEST_MAX + '" placeholder="' + esc(chatPlaceholder(s)) + '" ' + (busy ? 'disabled' : '') + '>'
     + esc(s.chatInput || '') + '</textarea></label>'
     + assetStrip(s)
-    + '<div class="chips">' + EXAMPLES.map((t) => button('server-chat-example', t, 'data-prompt="' + esc(t) + '" ' + (busy ? 'disabled' : ''), 'chip')).join('')
-    + button('server-rag-examples', '예시 찾기', busy ? 'disabled' : '', 'chip') + '</div>'
+    + (starting
+      ? ''
+      : '<div class="chips">' + EXAMPLES.map((t) => button('server-chat-example', t, 'data-prompt="' + esc(t) + '" ' + (busy ? 'disabled' : ''), 'chip')).join('')
+        + button('server-rag-examples', '예시 찾기', busy ? 'disabled' : '', 'chip') + '</div>')
     + '<div class="foot-row">' + assetAdd(s)
-    + '<span class="helper" id="server-chat-count">' + (s.chatInput || '').length + ' / ' + REQUEST_MAX + '자 · 최신 버전 기준</span>'
+    + '<span class="helper" title="수정은 항상 최신 버전을 기준으로 해요"><span class="keyhint">Ctrl + Enter로 보내기</span> · <span id="server-chat-count">' + (s.chatInput || '').length + ' / ' + REQUEST_MAX + '자</span></span>'
     + '<button class="btn primary sm" type="submit" ' + (busy ? 'disabled' : '') + '>' + icon('sparkle') + (busy ? '처리 중…' : '보내기') + '</button></div></form>'
 }
 
@@ -1279,8 +1480,23 @@ function directPanel(s) {
     return '<div class="sedit-item"><span class="sedit-no' + (changed ? ' changed' : '') + '" data-sedit-no="' + t.index
       + '" title="문구 번호 ' + t.index + '">' + t.index + '</span><div>' + input + itemFormatHTML(s, t, busy) + '</div></div>'
   }
-  const fields = groups.map((g) => '<fieldset class="sedit-group"><legend>'
-    + esc(g.block === 'all' ? '문구' : BLOCK_LABELS[g.block] || g.block) + '</legend>' + g.items.map(field).join('') + '</fieldset>').join('')
+  // ★ 영역별 문구는 접는다 — 문구가 수십 개면 "페이지 배치 · 영역 모양" 같은 아래 칸까지 한참 내려가야 했다.
+  //   처음엔 머리글(영역 이름 · 문구 개수 · 변경됨)만 보이고 누르면 펴진다. 영역을 못 나눈 경우(하나뿐)만 펴 둔다
+  const fields = groups.map((g) => {
+    const idx = g.items.map((t) => t.index)
+    // 접힌 머리글 아래 한 줄 — 앞의 문구 몇 개를 보여 줘서 열어 보지 않고도 어느 영역인지 알게 한다
+    const peek = g.items.map((t) => t.before.replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, 3).join(' · ')
+    return foldSection(s, 'text:' + g.block, esc(g.block === 'all' ? '문구' : BLOCK_LABELS[g.block] || g.block),
+      g.items.map(field).join(''), idx.some((i) => isEdited(s, i)) ? '변경됨' : '',
+      { defaultOpen: groups.length === 1, sub: true, idx, count: g.items.length, preview: peek, note: g.block === 'notices' ? '수정만 가능' : '' })
+  }).join('')
+  // 검색 · 모두 펼치기/접기 — 문구가 수십 개라 영역을 하나씩 열어 찾기 어렵다
+  const tools = '<div class="sedit-tools"><input type="search" id="server-text-q" class="sedit-search" placeholder="문구 검색 (예: 응원)"'
+    + ' aria-label="문구 검색" autocomplete="off" value="' + esc(s.direct.query || '') + '">'
+    + button('server-folds-open', '모두 펼치기', '', 'sedit-tool') + button('server-folds-close', '모두 접기', '', 'sedit-tool') + '</div>'
+    + '<p class="sedit-none" id="server-text-none" hidden>일치하는 문구가 없어요.</p>'
+  const allIdx = groups.flatMap((g) => g.items.map((t) => t.index))
+  const textsMark = allIdx.some((i) => isEdited(s, i)) ? '변경됨' : ''
   const hasCta = /data-slot="cta-link"/.test(s.preview.html)
   const st = s.direct.style, on = s.direct.styleOn
   const dis = busy ? 'disabled' : ''
@@ -1317,15 +1533,19 @@ function directPanel(s) {
   const orderMark = dirty.order ? '변경됨' : ''
   const titleMark = dirty.textStyle ? '변경됨' : ''
   const buttonMark = dirty.buttonStyle ? '변경됨' : ''
-
-  return '<div class="server-scroll" id="server-scroll">'
-    + '<p class="workspace-tip">문구를 먼저 고치세요. 배치·모양·순서·디자인은 아래를 열어 바꿔요. 기간은 서버가 채우고 유의사항은 수정만 가능해요.</p>'
-    + (grouped ? '' : '<p class="helper" style="margin-bottom:10px">영역 구분을 불러오지 못해 문구를 순서대로 보여줘요.</p>')
-    + '<div id="server-direct"><div class="sedit-group"><div class="sedit-subhead">문구 수정</div>' + fields + '</div></div>'
-    + foldSection(s, 'looks', '페이지 배치 · 영역 모양', looksHTML(s, busy), looksMark)
+  const design = foldSection(s, 'looks', '페이지 배치 · 영역 모양', looksHTML(s, busy), looksMark)
     + foldSection(s, 'order', '블록 순서 · 삭제', orderHTML(s, busy), orderMark)
     + foldSection(s, 'title', '제목 디자인', textBody, titleMark)
     + foldSection(s, 'button', '참여 버튼 디자인', styleBody, buttonMark)
+
+  return '<div class="server-scroll" id="server-scroll">'
+    + '<p class="workspace-tip">미리보기에서 <b>고칠 글자를 누르면</b> 해당 칸이 열려요. 아래에서 영역을 골라도 돼요.</p>'
+    + (grouped ? '' : '<p class="helper" style="margin-bottom:10px">영역 구분을 불러오지 못해 문구를 순서대로 보여줘요.</p>')
+    + '<div id="server-direct">'
+    + foldSection(s, 'texts', '문구 수정', tools + fields, textsMark, { defaultOpen: true, idx: allIdx, count: allIdx.length })
+    + '</div>'
+    // 문구 밖의 설정은 한 묶음으로 — 주 작업(문구)과 부가 작업(배치 · 디자인)이 한눈에 갈린다
+    + (design ? '<p class="sedit-design-head">디자인 · 배치</p>' + design : '')
     + '</div>'
     + '<div class="server-foot"><div class="foot-row" style="margin-top:0"><span class="helper" id="server-direct-count"></span>'
     + '<div class="row" style="gap:6px">' + button('server-direct-reset', '되돌리기', dis, 'btn sm')
@@ -1364,10 +1584,18 @@ function sidePanel(s) {
 function previewPanel(s) {
   const p = s.preview
   const published = (s.versions || []).find((v) => v.published)
+  const before = comparing(s)
   const body = p
     // ★ fit — 페이지 전체를 한 화면에 줄여 보여 준다. 줄이는 계산은 preview/frame.js 의 fitCanvasFrame
-    ? '<div class="canvas"><div class="canvas-frame ' + (ui.mobile ? 'mobile' : '') + (ui.fit ? ' fit' : '') + '">'
-      + serverFrame(p.html, '이벤트 미리보기', s.tab === 'direct' ? 'server-edit' : 'server-select') + '</div></div>'
+    // ★ 이전 모습은 읽기 전용이다 — 영역을 고르거나 문구를 고칠 수 없게 한다
+    ? (before
+      ? '<div class="compare-bar" role="status">' + icon('layers') + '<span>AI 수정 전' + (s.compare.versionNo ? ' v' + s.compare.versionNo : '') + ' 모습이에요. 수정은 변경 후 모습에서 할 수 있어요.</span></div>'
+      : '')
+      + '<div class="canvas"><div class="canvas-frame ' + (ui.mobile ? 'mobile' : '') + (ui.fit ? ' fit' : '') + '">'
+      + (before
+        ? serverFrame(s.compare.before, 'AI 수정 전 미리보기', 'readonly')
+        : serverFrame(p.html, '이벤트 미리보기', s.tab === 'direct' ? 'server-edit' : 'server-select'))
+      + '</div></div>'
     : '<div class="empty"><strong>아직 만들어진 페이지가 없어요</strong><p>왼쪽에서 페이지를 만들어보세요.</p></div>'
   return '<div class="studio-preview-column"><section class="panel"><div class="preview-controls">'
     + '<div class="preview-status-line">'
@@ -1381,7 +1609,7 @@ function previewPanel(s) {
       ? '<span class="preview-published">게시 중 v' + published.versionNo + '</span>'
       : '')
     + '</div>'
-    + (p && s.tab === 'chat'
+    + (p && s.tab === 'chat' && !before
       ? '<span class="preview-edit-hint">' + icon('sparkle') + '수정할 영역을 선택하세요</span>'
       : '')
     + '<div class="device-controls">'
@@ -1677,6 +1905,9 @@ function afterServerRender() {
   if (scroller && s.tab === 'direct' && s.direct.scrollTop != null) {
     scroller.scrollTop = s.direct.scrollTop
   }
+  const canvas = $('.canvas')
+  restoreCanvasScroll(s, canvas)
+  bindCanvasScroll(s, canvas)
   requestAnimationFrame(() => {
     if (ui.serverEditor !== s) return
     const y = s.tab === 'direct' ? (s.direct.windowScrollY ?? s.windowScrollY) : s.windowScrollY
@@ -1690,6 +1921,7 @@ function afterServerRender() {
     grow(el)
   })
   if (s.tab === 'direct') {
+    applyTextFilter(s)
     updateDirectCount(s)
     bindDirectFolds(s)
     foldLooks()
@@ -1707,7 +1939,7 @@ function afterServerRender() {
   } else {
     // 고른 영역 외곽선 — 새 iframe(새 버전 · 기기 전환)에도 다시 입힌다
     const frame = $('.event-frame')
-    if (frame) frame.addEventListener('load', () => paintSelection(s), { once: true })
+    if (frame) frame.addEventListener('load', () => { if (!comparing(s)) paintSelection(s); paintChanges(s) }, { once: true })
   }
 }
 
@@ -1854,6 +2086,16 @@ async function runRagExamples() {
       if (s && input && !input.disabled) { s.chatInput = b.dataset.prompt; input.value = s.chatInput; input.focus(); onChatInput(s.chatInput) }
       return true
     }
+    case 'server-change-go': if (s) goToBlock(b.dataset.block); return true
+    case 'server-folds-open':
+    case 'server-folds-close': {
+      const on = a === 'server-folds-open'
+      document.querySelectorAll('details.sedit-subfold:not([hidden])').forEach((d) => { d.open = on })
+      return true
+    }
+    case 'server-compare':
+      if (s?.compare) { s.showBefore = !s.showBefore; rerender() }
+      return true
     case 'server-unselect':
       if (s && !running(s)) { s.selected = s.selected.filter((k) => k !== b.dataset.block); paintSelection(s) }
       return true
@@ -1929,6 +2171,7 @@ function handleServerInput(ev) {
   if (t.id === 'server-chat') { onChatInput(t.value); return true }
   if (t.id === 'server-publish-version') { onPublishPick(t.value); return true }
   if (t.dataset.svariant !== undefined) { pickVariant(s, t.dataset.svariant, t.value); return true }
+  if (t.id === 'server-text-q') { s.direct.query = t.value; applyTextFilter(s); return true }
   if (t.dataset.sedit !== undefined) {
     const i = Number(t.dataset.sedit)
     s.direct.values[i] = t.value
@@ -2121,6 +2364,14 @@ function handleServerPick(ev) {
   if (i < 0) { toast('이 부분은 직접 고칠 수 없어요.'); return }
   const field = document.querySelector('[data-sedit="' + i + '"]')
   if (!field) return
+  // 검색으로 가려 둔 칸이면 검색부터 지운다 — 눌러서 찾아 들어온 칸이 안 보이면 안 된다
+  if (s.direct.query) {
+    s.direct.query = ''
+    const box = $('#server-text-q')
+    if (box) box.value = ''
+    applyTextFilter(s)
+  }
+  revealField(field)
   field.scrollIntoView({ block: 'center', behavior: 'smooth' })
   field.focus({ preventScroll: true })
   highlight(s, i, false)
