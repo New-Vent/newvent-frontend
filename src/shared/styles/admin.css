@@ -200,6 +200,7 @@
 .bubble .change-compare[aria-pressed="true"]{background:#0284c7;border-color:#0284c7;color:#fff}
 .compare-bar{display:flex;align-items:center;gap:6px;padding:8px 14px;background:#fffbee;border-bottom:1px solid #f1d58a;color:#5b4410;font-size:12px;font-weight:700;flex:none}
 .compare-bar svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;flex:none}
+.preview-edit-hint[hidden]{display:none}
 .server-foot .foot-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
 .server-foot .foot-row .helper{font-weight:500}
 /* 이미지 올리기 — 입력칸의 + 와 올린 그림 목록
@@ -313,6 +314,20 @@
 .sstyle-toggle:has(input:checked) .sstyle-state::before{content:'직접 지정';color:var(--sky)}
 .sstyle-ctl input[type=color]{width:34px;height:26px;padding:2px;border:1px solid #e5e2ea;border-radius:7px;background:#fff;cursor:pointer;transition:opacity .15s}
 .sstyle-row:has(input[data-sstyle-on]:not(:checked)) input[type=color]{opacity:.45}
+/* 색 코드 입력줄 — 색 칸 아래에 # 16진수 · R · G · B. 쓰다 만 값(여섯 자리 · 0~255 가 아님)은 빨갛게 */
+.sstyle-row.has-codes{flex-wrap:wrap}
+.sstyle-codes{flex-basis:100%;display:grid;grid-template-columns:minmax(0,1.7fr) repeat(3,minmax(0,1fr));align-items:center;gap:6px}
+.sstyle-codes input{box-sizing:border-box;width:100%;min-width:0;height:28px;border:1px solid #e5e2ea;border-radius:7px;padding:0 8px;font-size:12px;font-weight:600;color:var(--ink);background:#fff;font-variant-numeric:tabular-nums}
+/* R · G · B 는 세 자리가 다 보여야 한다 — 위아래 단추가 숫자를 가리지 않게 뺀다 (키보드 ↑↓ 는 그대로 된다) */
+.sstyle-codes input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.sstyle-codes input[type=number]::-webkit-inner-spin-button,.sstyle-codes input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.sstyle-codes input:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(2,132,199,.12)}
+.sstyle-codes input.invalid{border-color:#e11d48;background:#fff1f2}
+.sstyle-codes input:disabled{background:#f7f6f9;color:var(--muted)}
+.sstyle-hex{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em}
+.sstyle-rgb{display:flex;align-items:center;gap:4px;min-width:0;font-size:11px;font-weight:800;color:var(--muted)}
+.sstyle-rgb input{padding:0 6px}
+.sstyle-row:has(input[data-sstyle-on]:not(:checked)) .sstyle-codes{opacity:.6}
 .sstyle-seg{display:flex;gap:2px;padding:3px;border-radius:9px;background:#f4f2f7}
 /* ★ label 을 기준으로 숨긴다 — 기준이 없으면 숨은 라디오가 페이지 위쪽에 놓여, 누를 때 포커스가 그리로 튀며 화면이 스크롤된다 */
 .sstyle-seg label{position:relative;flex:1;min-width:0}
