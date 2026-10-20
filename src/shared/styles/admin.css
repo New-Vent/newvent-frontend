@@ -145,15 +145,34 @@
 .server-side{flex:1;min-height:0;display:flex;flex-direction:column}
 .server-side>#server-progress:not(:empty){flex:none;padding:12px 14px 0}
 .server-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px;scrollbar-width:thin}
-.server-foot{flex:none;padding:12px 14px 14px;border-top:1px solid var(--line);background:#fff}
-.server-side .chat{max-height:none;margin:0;overflow:visible}
-.server-side .chat .bubble{font-size:12px;padding:12px 13px}
-.server-side .chat .bubble small{font-size:10px}
+.server-foot{flex:none;padding:10px 14px 12px;border-top:1px solid var(--line);background:#fff}
+/* ★ 대화 · 입력은 관리자가 계속 읽고 쓰는 자리다 — 본문 14px, 안내 12px 아래로는 내리지 않는다.
+ *   관리자 말은 들여서 파란 바탕으로, AI 말은 회색 바탕으로 나눈다 */
+.server-side .chat{max-height:none;margin:0;overflow:visible;gap:12px}
+.server-side .chat .bubble{font-size:14px;line-height:1.7;padding:12px 14px}
+.server-side .chat .bubble small{font-size:12px;font-weight:700;margin-bottom:5px}
+.server-side .chat .bubble.me{margin-left:28px;background:#e2f4fd;color:#1d4f66}
 .server-side .bubble.tone-fail{border:1px solid #f3c5cf;background:#fff6f8}
 .server-side .bubble.tone-ask{border:1px solid #f1dfa8;background:#fffbee}
-.server-foot .field textarea{min-height:0;height:88px;resize:vertical}
-.server-foot .chips{gap:6px;margin:8px 0;flex-wrap:wrap}
-.server-foot .chip{font-size:11px;flex:none;white-space:nowrap}
+/* 입력칸은 .field 의 굵은 글씨(700)를 물려받는다 — 안내 문구가 이미 쓴 글처럼 보이지 않게 가볍게 */
+.server-foot .field textarea{min-height:0;height:80px;resize:vertical;font-size:14px;line-height:1.6;font-weight:400}
+.server-foot .field textarea::placeholder{font-weight:400;color:#a09fa9}
+.server-foot .helper{font-size:12px}
+.server-foot .keyhint{font-weight:500}
+#server-chat-form .btn.primary.sm{font-size:15px;padding:12px 22px;border-radius:12px}
+/* 대화 시작 전 빈 자리 — 큰 예시 카드 */
+.start-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:18px 0 0}
+.start-title{margin:0;font-size:13px;font-weight:800;color:var(--ink)}
+.start-more{border:0;background:none;color:var(--sky);font-size:12px;font-weight:700;text-decoration:underline;padding:2px 4px}
+.start-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.start-card{display:flex;flex-direction:column;gap:3px;text-align:left;padding:11px 12px;border:1px solid #cfe9f6;border-radius:12px;background:#f8fcff;color:var(--ink);min-width:0}
+.start-card b{font-size:14px;font-weight:800;color:#0377ad}
+.start-card span{font-size:12px;font-weight:400;color:#5c5666;line-height:1.5;overflow-wrap:anywhere}
+.start-card:hover:not(:disabled){background:#eaf6fd}
+.start-help{margin:10px 2px 0}
+/* ★ 칩은 줄바꿈한다 — 좌우 스크롤은 만들지 않는다 */
+.server-foot .chips{gap:6px;margin:6px 0;flex-wrap:wrap}
+.server-foot .chip{font-size:12px;padding:6px 10px;flex:none;white-space:nowrap}
 /* AI 대화 — 미리보기에서 고른 영역 */
 .server-foot .sel-hint{display:flex;align-items:center;gap:4px;margin:-2px 0 8px;font-weight:500}
 .server-foot .sel-hint svg{width:12px;height:12px;flex:none;color:#0284c7}
@@ -161,14 +180,26 @@
 .preview-controls .pick-guide{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;background:#f0faff;color:#0377ad;font-size:11px;font-weight:700}
 .preview-controls .pick-guide svg{width:12px;height:12px}
 .server-foot .sel-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px}
-.server-foot .sel-label{font-size:11px;font-weight:700;color:var(--muted)}
-.server-foot .sel-chip{display:inline-flex;align-items:center;gap:2px;padding:3px 4px 3px 10px;border-radius:999px;background:#f0faff;border:1px solid #bce3f5;color:#0377ad;font-size:11px;font-weight:700}
+.server-foot .sel-label{font-size:12px;font-weight:700;color:var(--muted)}
+.server-foot .sel-chip{display:inline-flex;align-items:center;gap:2px;padding:3px 4px 3px 10px;border-radius:999px;background:#f0faff;border:1px solid #bce3f5;color:#0377ad;font-size:12px;font-weight:700}
 .server-foot .sel-x{border:0;background:none;color:inherit;font-size:13px;line-height:1;padding:0 5px;cursor:pointer;border-radius:999px}
 .server-foot .sel-x:hover{background:#d5effb}
 .server-foot .sel-clear{border:0;background:none;color:var(--muted);font-size:11px;text-decoration:underline;cursor:pointer;padding:2px 4px}
 .server-foot .sel-x:disabled,.server-foot .sel-clear:disabled{opacity:.4;cursor:default}
 .bubble .bubble-tags{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 6px}
-.bubble .bubble-tags span{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:#f0faff;color:#0377ad}
+.bubble .bubble-tags span{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#f0faff;color:#0377ad}
+/* AI 수정이 바꾼 곳 — 말풍선 아래 칩. 누르면 미리보기가 그 영역으로 간다 */
+.bubble .bubble-changes{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.bubble .change-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:8px 11px;border:1px solid #f1d58a;border-radius:8px;background:#fffbee;color:#5b4410;font-size:13px}
+.bubble .change-item b{font-weight:800}
+.bubble .change-item em{margin-left:auto;font-style:normal;font-size:12px;font-weight:700;color:#8a6b1a}
+.bubble button.change-item:hover{background:#fff4cf}
+.bubble .change-item.static{background:#f6f5f9;border-color:var(--line);color:var(--muted)}
+.bubble .change-compare{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;margin-top:3px;padding:6px 10px;border:1px solid #dfe7ea;border-radius:8px;background:#fff;color:#0377ad;font-size:11px;font-weight:700}
+.bubble .change-compare svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
+.bubble .change-compare[aria-pressed="true"]{background:#0284c7;border-color:#0284c7;color:#fff}
+.compare-bar{display:flex;align-items:center;gap:6px;padding:8px 14px;background:#fffbee;border-bottom:1px solid #f1d58a;color:#5b4410;font-size:12px;font-weight:700;flex:none}
+.compare-bar svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;flex:none}
 .server-foot .foot-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
 .server-foot .foot-row .helper{font-weight:500}
 /* 이미지 올리기 — 입력칸의 + 와 올린 그림 목록
@@ -201,22 +232,45 @@
 .server-regen summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)}
 .server-regen[open] summary{margin-bottom:10px}
 .server-scroll .workspace-tip{padding:0 0 12px;margin-bottom:12px}
+.server-scroll .workspace-tip{font-size:12px}
 .sedit-group{border:0;padding:0;margin:0 0 16px;min-width:0}
-.sedit-group legend{padding:0;margin-bottom:8px;font-size:11px;font-weight:800;color:var(--sky);letter-spacing:.02em}
-.sedit-subhead{padding:0;margin:0 0 8px;font-size:11px;font-weight:800;color:var(--sky);letter-spacing:.02em}
+.sedit-group legend{padding:0;margin-bottom:8px;font-size:12px;font-weight:800;color:var(--sky);letter-spacing:.02em}
+.sedit-subhead{padding:0;margin:0 0 8px;font-size:12px;font-weight:800;color:var(--sky);letter-spacing:.02em}
 /* 직접 수정 — 배치·모양·디자인은 접어 두고 문구가 먼저 보이게 */
 .sedit-fold{margin:0 0 10px;border:1px solid #ece9f1;border-radius:10px;background:#faf9fc;overflow:hidden}
-.sedit-fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:11px 12px;font-size:12px;font-weight:800;color:var(--ink)}
+.sedit-fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:11px 12px;font-size:13px;font-weight:800;color:var(--ink)}
 .sedit-fold>summary::-webkit-details-marker{display:none}
 .sedit-fold>summary::before{content:'▸';display:inline-block;color:var(--muted);transition:transform .15s}
 .sedit-fold[open]>summary{border-bottom:1px solid #ece9f1;color:var(--sky)}
 .sedit-fold[open]>summary::before{transform:rotate(90deg);color:var(--sky)}
-.sedit-fold-mark{margin-left:auto;padding:2px 8px;border-radius:999px;background:#e8f6fd;color:#0377ad;font-size:10px;font-weight:800}
+.sedit-fold-mark{margin-left:auto;padding:2px 8px;border-radius:999px;background:#e8f6fd;color:#0377ad;font-size:11px;font-weight:800}
 .sedit-fold-body{padding:12px}
-.sedit-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:start}
+/* 문구 수정 안의 영역별 칸 — 영역 이름 · 문구 개수 · 변경됨 만 보이고 누르면 펼쳐진다 */
+.sedit-fold-count{font-size:11px;font-weight:600;color:var(--muted)}
+.sedit-fold-mark[hidden]{display:none}
+.sedit-subfold{margin:0 0 8px;background:#fff}
+.sedit-subfold:last-child{margin-bottom:0}
+.sedit-subfold>summary{flex-wrap:wrap;row-gap:1px;padding:9px 12px;font-size:13px}
+.sedit-subfold[open]>summary{background:#faf9fc}
+/* hidden 속성이 display 에 밀리지 않게 — 검색으로 가린 칸 */
+.sedit-item[hidden],.sedit-subfold[hidden]{display:none!important}
+/* 접어 둬도 무슨 문구가 들었는지 보이는 한 줄 */
+.sedit-fold-preview{flex-basis:100%;margin:0 0 0 18px;font-size:11.5px;font-weight:400;color:#8a8794;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sedit-fold-note{margin-left:auto;padding:2px 8px;border-radius:999px;background:#fff4cf;color:#8a6b1a;font-size:11px;font-weight:700}
+.sedit-fold-note+.sedit-fold-mark{margin-left:6px}
+/* 문구 검색 · 모두 펼치기/접기 */
+.sedit-tools{display:flex;gap:6px;align-items:center;margin:0 0 10px}
+.sedit-search{flex:1;min-width:0;height:36px;border:1px solid #e5e2ea;border-radius:10px;padding:0 12px;font-size:13px;font-weight:400;background:#fff}
+.sedit-tool{height:36px;padding:0 10px;border:1px solid #e5e2ea;border-radius:10px;background:#fff;font-size:12px;font-weight:700;color:#0377ad;white-space:nowrap}
+.sedit-tool:hover{background:#f0faff}
+.sedit-none{margin:0;padding:12px 4px;font-size:13px;color:var(--muted)}
+.sedit-none[hidden]{display:none}
+/* 문구 밖 설정 묶음 머리글 */
+.sedit-design-head{margin:18px 2px 8px;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.02em}
+.sedit-item{display:grid;grid-template-columns:32px minmax(0,1fr);gap:8px;align-items:start}
 .sedit-item+.sedit-item{margin-top:6px}
 .sedit-format{margin:4px 0 12px;font-size:12px}
-.sedit-format summary{cursor:pointer;color:var(--sky);padding:4px 0;font-size:11px;font-weight:700;list-style:none}
+.sedit-format summary{cursor:pointer;color:var(--sky);padding:4px 0;font-size:12px;font-weight:700;list-style:none}
 .sedit-format summary::-webkit-details-marker{display:none}
 .sedit-format summary::before{content:'▸';display:inline-block;margin-right:5px;transition:transform .15s}
 .sedit-format[open] summary::before{transform:rotate(90deg)}
@@ -226,10 +280,11 @@
 .sedit-format-tools input[type=number]{width:68px}
 .sedit-format-tools input[type=color]{width:34px;height:28px;padding:2px;border:1px solid #e5e2ea;border-radius:7px;background:#fff}
 .sedit-format-tools .btn{margin-left:auto}
-.sedit-no{height:34px;display:grid;place-items:center;border-radius:8px;background:#f3f1f6;color:var(--muted);font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.sedit-no{height:34px;display:grid;place-items:center;border-radius:8px;background:#f3f1f6;color:var(--muted);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.sedit-no:not(.changed){opacity:.6}
 .sedit-no.changed{background:var(--sky);color:#fff}
 .sedit-item:focus-within .sedit-no:not(.changed){background:var(--tint);color:var(--sky)}
-.sedit{display:block;width:100%;min-width:0;border:1px solid #e5e2ea;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;font-weight:400;line-height:1.5;color:var(--ink);background:#fff;resize:none;transition:border-color .15s,background .15s}
+.sedit{display:block;width:100%;min-width:0;border:1px solid #e5e2ea;border-radius:8px;padding:9px 11px;font:inherit;font-size:14px;font-weight:400;line-height:1.5;color:var(--ink);background:#fff;resize:none;transition:border-color .15s,background .15s}
 .sedit:hover{border-color:#d4cfdc}
 .sedit:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(2,132,199,.12)}
 .sedit.changed{border-color:var(--sky);background:#f5fcff}
