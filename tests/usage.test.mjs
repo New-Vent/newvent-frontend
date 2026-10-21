@@ -46,37 +46,36 @@ function defaultReindex() {
   ]
 }
 
-test('종합 카드 — 도넛과 라벨·상한 숫자가 나온다', async () => {
+test('종합 카드 — 비용 구성과 상한 대비 숫자가 나온다', async () => {
   const h = await setup()
   await new Promise((r) => h.ns.ensureUsage(r))
   const html = h.ns.usageView()
-  // 도넛은 라이브러리 없이 conic-gradient — 조각은 생성(측정)/임베딩(추정) 둘
-  assert.match(html, /background:conic-gradient\(var\(--chart-main\)/)
-  assert.match(html, /생성 \(측정\)/)
-  assert.match(html, /임베딩 \(추정\)/)
+  // 비용 요약 — 누적 예상 비용 한 줄 + 생성(측정)/임베딩(추정) 두 조각. 라벨을 섞지 않는다
+  assert.match(html, /class="card usage-panel usage-overview"/)
+  assert.match(html, /최근 8주 누적 예상 비용/)
+  assert.match(html, /생성 · 측정\s*<strong>[\d,]+원<\/strong>/)
+  assert.match(html, /임베딩 · 추정\s*<strong>[\d,]+원<\/strong>/)
   // 상한 대비 숫자 — 하루 200(주 1,400) 기준이 코드 상수와 맞는지
-  assert.match(html, /\d+\/200회/)
-  assert.match(html, /\d+\/1,400회/)
+  assert.match(html, /usage-quota-value">\s*\d+<span>\/ 200회<\/span>/)
+  assert.match(html, /usage-quota-value">\s*\d+<span>\/ 1,400회<\/span>/)
   assert.match(html, /하루 상한은 200회/)
   // 둘 다 성공 행
-  assert.match(html, /성공률 100%/)
+  assert.match(html, /<span>성공률<\/span>\s*<strong>100%<\/strong>/)
   // 누적 토큰 — 입력·출력 분해까지 보여준다
   assert.match(html, /누적 토큰/)
-  // 종합과 주차별이 한 카드에 담긴다 — 구분선으로 절을 나눈다
-  assert.match(html, /class="card usage-card"/)
-  assert.match(html, /usage-divider/)
-  // 비용 근거(최근 8주 내역)도 정보 행 한 줄로 들어간다 — 별도 문단이 아니다
-  assert.match(html, /비용 \(최근 8주\)/)
+  assert.match(html, /입력 토큰/)
+  assert.match(html, /출력 토큰/)
 })
 
-test('주차별 카드 — 토큰 볼륨 막대와 범례가 나온다', async () => {
+test('주차별 카드 — 토큰 볼륨 막대와 툴팁이 나온다', async () => {
   const h = await setup()
   await new Promise((r) => h.ns.ensureUsage(r))
   const html = h.ns.usageView()
   assert.match(html, /주차별 사용량/)
-  assert.match(html, /<b>토큰 볼륨<\/b> — 그 주 입력\+출력 토큰 합계/)
-  // 막대는 기존 trend 패턴 높이 % 로
-  assert.match(html, /class="trend-fill" style="height:\d+%/)
+  assert.match(html, /<span>입력 \+ 출력 토큰<\/span>/)
+  // 막대는 높이 % 로 — 호출이 없는 주도 8주 모두 그린다
+  assert.match(html, /class="usage-week-fill"\s+style="height:[\d.]+%/)
+  assert.equal((html.match(/class="usage-week-col/g) || []).length, 8)
   // 툴팁에 호출·토큰·예상 비용이 세로로
   assert.match(html, /<span>토큰 [\d,]+<\/span>/)
   assert.match(html, /예상 비용 약 [\d,]+원/)
@@ -113,5 +112,5 @@ test('모델 단가 — Bedrock gemma 가격과 1M 나눗셈으로 계산한다'
   const html = h.ns.usageView()
   // Bedrock gemma-3-27b-it 표준가 $0.23/$0.38 per 1M — 1M+1M 토큰 = 0.61 USD = 원화 854원.
   // 1M 나눗셈이 빠지면 서닌개억 대로 폭등한다 (2026-10-19 실사고)
-  assert.match(html, /생성 854원 \(측정\)/)
+  assert.match(html, /생성 · 측정\s*<strong>854원<\/strong>/)
 })

@@ -51,10 +51,12 @@ test('첫 렌더에서 색인 현황과 호출 로그를 불러와 배지와 카
   assert.match(html, /is-success/)
   assert.match(html, /1200/)
   assert.match(html, /<td class="rag-log-number">1\.4초<\/td>/)
-  // 상세에서 붙인 실패원인·청크ID 인라인
+  // 상세에서 붙인 실패 사유 — 접어 두고 "실패 사유 보기" 를 누르면 유형·메시지가 나온다
   assert.match(html, /<span class="rag-log-id">#102<\/span>/)
   assert.match(html, /is-failure/)
-  assert.match(html, /실패: TIMEOUT/)
+  assert.match(html, /<summary>실패 사유 보기<\/summary>/)
+  assert.match(html, /<span class="rag-log-failure-type">TIMEOUT<\/span>/)
+  assert.match(html, /Bedrock 호출이 60초 안에 끝나지 않았어요\./)
   // 재색인 버튼은 이제 버전 이력 화면에 없다 — 전체 재색인 카드가 품질 대시보드로 이동했다
   assert.deepEqual(h.buttons.filter((b) => b.action === 'rag-reindex-all').length, 0)
   assert.deepEqual(h.buttons.filter((b) => b.action === 'rag-log').length, 0)
