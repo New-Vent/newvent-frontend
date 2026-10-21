@@ -122,20 +122,51 @@
 
 /* ── ② 제목 옆 그림 ───────────────────────────────────────────── */
 
-[data-block="hero"]:has(> .ev-asset-art) {
+/* ★★ [data-block] 을 세 번 쓴 건 특이도 때문이다 — 변형이 (0,3,1) 로 집는다.
+ *   v-hero-center 는 `padding: 56px 28px` 단축과 `text-align: center` 를 들고 있어서,
+ *   (0,2,1) 로 쓰면 글자 칸을 비우지도, 왼쪽으로 붙이지도 못한다.
+ *   실측 — 그대로 두면 가운데 글 위로 그림이 올라앉아 제목을 가린다.
+ * ★ min-height 는 그림이 설 자리다. 글이 두 줄뿐인 히어로는 250px 밖에 안 돼서
+ *   max-height:94% 가 그림을 반으로 깎는다. */
+/* ★★ v-hero-split 은 뺀다. 그 변형은 **이미 2단**이다 —
+ *   왼쪽에 제목, 오른쪽 칸에 나머지를 세운다. 여기서 display:flex 로 덮으면
+ *   (특이도 0,4,1 이 변형의 0,3,1 을 이긴다) 격자가 풀려서 오른쪽 칸 카드들이
+ *   가운데로 쏟아진다(제보 화면이 그것이다). 자기 배치를 가진 변형은 건드리지 않는다. */
+[data-block="hero"][data-block][data-block]:not(.v-hero-split):has(> .ev-asset-art) {
   position: relative;
-  padding-right: 32%;
+  padding-right: 48%;
+  padding-left: 40px;
   text-align: left;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
 }
 
+/* ★★ 제목 옆 그림은 **오른쪽을 가득 채운다.**
+ *   전에는 width:26% · max-width:230px 라, 1600px 넓은 화면에서도 230px 짜리
+ *   우표만 하게 들어갔다("너무 작잖아" 제보). 레퍼런스 디자인은 그림이 히어로의
+ *   절반을 쓰고 위아래 끝까지 닿는다.
+ *
+ * ★ 오른쪽 아래에 붙인다(right:0 · bottom:0). 사람 그림은 바닥에 서야 자연스럽고,
+ *   물건 그림은 object-position 으로 같은 자리에 맞춰진다.
+ * ★ max-height 로 히어로 밖으로 나가는 것을 막는다 — 글이 짧은 히어로에서
+ *   그림이 영역보다 커져 아래 블록을 밀어내던 일을 여기서 끊는다.
+ * ★★ 그림 뒤에 번짐(radial-gradient)을 깔았다가 **뺐다.** 어두운 히어로에서는
+ *   흰 번짐이 부드럽게 퍼지지 않고 **네모난 판**으로 보였다(실측 · 제보).
+ *   그림 뒤 분위기는 테마 · 팔레트가 이미 히어로 전체에 깔고 있다.
+ *   그 위에 한 겹 더 얹으면 번짐이 아니라 상자가 된다. 얹지 않는다. */
 [data-block="hero"] > .ev-asset-art {
   position: absolute;
-  right: 22px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 26%;
-  max-width: 230px;
+  right: 0;
+  bottom: 0;
+  width: 48%;
+  max-width: 540px;
   height: auto;
+  max-height: 94%;
+  object-fit: contain;
+  object-position: bottom right;
   z-index: 1;
 }
 
@@ -144,21 +175,51 @@
    ★ 자리를 옮기면 **글자 쪽 여백도 반대로** 가야 한다. 안 그러면 그림이 글자를 덮는다.
    ★ 위 두 규칙과 같은 특이도(0,2,0 · 0,2,0)인데 **뒤에 있어서** 이긴다. 순서를 바꾸면 안 먹는다.
    ★ 서버가 붙인다(AssetEdit) — 모델이 고르는 이름이 아니다. */
-[data-block="hero"]:has(> .ev-asset-art-left) { padding-right: 24px; padding-left: 32%; }
+[data-block="hero"][data-block][data-block]:has(> .ev-asset-art-left) {
+  padding-right: 40px; padding-left: 48%; align-items: flex-end; text-align: right;
+}
 
 [data-block="hero"] > .ev-asset-art-left { right: auto; left: 22px; }
 
+/* ★★ v-hero-split 은 자기 격자가 있다. 그림을 띄우지 말고 **격자 한 칸으로** 넣는다.
+ *   absolute 로 두면 부모에 position:relative 가 없어 더 위 조상에 붙어 버리고,
+ *   그림이 히어로 밖 구석에 손톱만 하게 찍힌다(실측).
+ * ★ 카드(배경 · padding · radius)는 윗 규칙에서 .ev-asset 을 빼 두었다. */
+[data-block="hero"].v-hero-split:not(.ev-block) > .ev-asset-art {
+  position: static;
+  grid-column: 2;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  transform: none;
+}
+
+@media (max-width: 560px) {
+  [data-block="hero"].v-hero-split:not(.ev-block) > .ev-asset-art {
+    grid-column: 1;
+    max-width: 320px;
+    margin: 4px auto 0;
+  }
+}
+
 /* 좁은 화면에서는 옆이 아니라 아래로 — 글자 칸이 반으로 줄면 제목이 세로로 갈라진다 */
 @media (max-width: 640px) {
-  [data-block="hero"]:has(> .ev-asset-art) { padding-right: 24px; text-align: center; }
+  [data-block="hero"][data-block][data-block]:not(.v-hero-split):has(> .ev-asset-art) {
+    padding-right: 24px; padding-left: 24px; text-align: center;
+    min-height: 0; align-items: center;
+  }
   /* ★ 좁은 화면에서는 왼쪽 · 오른쪽이 의미가 없다 — 어차피 글자 아래로 내려간다 */
-  [data-block="hero"]:has(> .ev-asset-art-left) { padding-left: 24px; }
+  [data-block="hero"][data-block][data-block]:has(> .ev-asset-art-left) {
+    padding-left: 24px; align-items: center; text-align: center;
+  }
   [data-block="hero"] > .ev-asset-art-left { left: auto; }
   [data-block="hero"] > .ev-asset-art {
     position: static;
     transform: none;
-    width: 60%;
-    max-width: 200px;
+    width: 78%;
+    max-width: 320px;
+    max-height: none;
     margin: 14px auto 0;
   }
 }

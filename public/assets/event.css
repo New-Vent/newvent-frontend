@@ -1047,9 +1047,13 @@ body:has(.theme-basic) {
    src/event-css/90-themes/02-bloom.css
 
    ★ aurora 는 "변형과 안 싸우기" 에만 신경 써서 얌전했다.
-     여기서는 **장식을 적극적으로 그린다** — 구름 · 반짝이 · 떠 있는 배지 ·
-     테두리 글자 · 라벨 표. 전부 가상요소(::before · ::after)로 그리므로
-     생성되는 HTML 은 한 글자도 안 바뀐다.
+     여기서는 **장식을 적극적으로 그린다** — 반짝이 · 테두리 글자 · 라벨 표.
+     전부 가상요소(::before · ::after)로 그리므로 생성되는 HTML 은 한 글자도 안 바뀐다.
+
+   ★★ 뺀 것 — 구름(배경 · 컨테이너)과 cta 옆 "지금 참여하세요" 배지.
+     장식이 **내용 자리**를 차지하면 그건 장식이 아니다. 구름은 글자를 덮었고,
+     배지는 CSS 가 읽는 문구를 만들어 관리자가 고칠 수 없었다.
+     장식은 CSS 가, **문구와 지면은 HTML 이** 쥔다.
 
    ★ position 을 마음껏 쓴다
      "모델에게 position 을 열지 않는다" 와 "CSS 가 position 을 쓴다" 는 다른 말이다.
@@ -1086,7 +1090,7 @@ body:has(.theme-basic) {
 
      계약은 "테마 = 구조, 팔레트 = 색" 이다. 테마가 색을 쥐면 그 계약이 깨지고
      테마×팔레트 조합이 전부 말이 안 되는 화면이 된다. 그래서 bloom 은
-     **모양만** 쥔다 — 구름, 외곽선 타이포, 알약 소제목, 두툼한 그림자.
+     **모양만** 쥔다 — 외곽선 타이포, 알약 소제목, 두툼한 그림자.
      색은 하나도 빠짐없이 팔레트에서 받는다.
 
    ★ 이 테마 안에서만 쓰는 값도 팔레트에서 파생시킨다. */
@@ -1096,30 +1100,23 @@ body:has(.theme-basic) {
   --bloom-cream:  var(--ev-surface);
   --bloom-shadow: 0 10px 0 color-mix(in srgb, var(--ev-text-main) 7%, transparent),
                   0 18px 40px color-mix(in srgb, var(--ev-text-main) 11%, transparent);
-  /* 구름 · 외곽선에 쓰는 "종이색" — 표면색을 그대로 쓴다 */
+  /* 외곽선에 쓰는 "종이색" — 표면색을 그대로 쓴다 (구름에도 쓰였으나 구름은 뺐다) */
   --bloom-paper:  var(--ev-surface);
 }
 
-/* ── ② 페이지 배경 — 구름이 떠 있는 하늘 ──────────────────────── */
+/* ── ② 페이지 배경 — 위가 밝은 하늘 ───────────────────────────── */
 
 /* ★★ 팔레트 변수는 90-palettes 에서 body:has(.palette-*) 로도 선언된다.
      그래서 여기서 var(--ev-bg) 를 읽으면 **요청문에 맞는 색**이 나온다.
      (전에는 팔레트가 .ev-container 에만 붙어 body 가 :root 기본값을 읽었고,
-      어떤 요청이든 같은 색이 깔렸다 — "가을 요청에 민트 배경" 의 원인.)
-   ★ 컨테이너의 ::before 로 깔면 안 된다 — 이 테마는 ::before·::after 를
-     구름에 쓰고 있어서 서로 덮는다. 실제로 배경이 사라졌다. */
+      어떤 요청이든 같은 색이 깔렸다 — "가을 요청에 민트 배경" 의 원인.) */
 body:has(.theme-bloom) {
   background-color: var(--ev-bg);
-  /* ★★ 하늘은 --ev-primary 를 **섞어서** 만든다. --ev-bg 와 --ev-surface 만 쓰면
-       밝은 팔레트에서 둘 다 거의 흰색이라(autumn: #fffaf3 vs #fffdf9)
-       구름이 배경에 묻혀 사라진다 — 실제로 "구름이 어디 갔냐" 는 말을 들었다.
-       하늘에 색을 섞어 두면 구름(= --ev-surface, 밝은 팔레트에선 거의 흰색,
-       어두운 팔레트에선 어두운 카드색)이 또렷하게 떠오른다. */
+  /* ★★ 구름(흰 radial-gradient 4개)을 뺐다 — 제보: "알 수 없는 구름들이 자꾸 생긴다".
+       이벤트 내용과 아무 상관이 없는데 화면의 제일 큰 자리를 차지했고,
+       관리자가 끌 방법이 없었다(HTML 에 없으니 직접수정에도 안 잡힌다).
+       하늘색 기울기와 아래쪽 빛번짐은 남긴다 — 그건 '색' 이지 '그림' 이 아니다. */
   background-image:
-    radial-gradient(44% 26% at 14% 9%,  var(--ev-surface) 0, transparent 68%),
-    radial-gradient(30% 18% at 30% 15%, var(--ev-surface) 0, transparent 68%),
-    radial-gradient(36% 22% at 86% 22%, var(--ev-surface) 0, transparent 68%),
-    radial-gradient(26% 16% at 70% 30%, var(--ev-surface) 0, transparent 68%),
     radial-gradient(60% 34% at 50% 102%, var(--ev-primary-glow), transparent 70%),
     linear-gradient(180deg,
       color-mix(in srgb, var(--ev-primary) 24%, var(--ev-bg)) 0%,
@@ -1142,39 +1139,11 @@ body:has(.theme-bloom) {
   overflow: visible;
 }
 
-/* ★ 구름 — 컨테이너 가상요소로 그린다. HTML 은 그대로다 */
-.theme-bloom.ev-container::before,
-.theme-bloom .ev-container::before {
-  content: "";
-  position: absolute;
-  /* ★ 미리보기 iframe 은 컨테이너 폭에 맞춰 잘리므로 음수 좌표는 안 보인다.
-     안쪽으로 당겨서 카드 사이 여백에 걸치게 둔다 */
-  top: 104px;
-  left: -12px;
-  width: 190px;
-  height: 92px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bloom-paper) 92%, transparent);
-  box-shadow: 74px -30px 0 -12px color-mix(in srgb, var(--bloom-paper) 90%, transparent),
-              150px -4px 0 -24px color-mix(in srgb, var(--bloom-paper) 85%, transparent);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.theme-bloom.ev-container::after,
-.theme-bloom .ev-container::after {
-  content: "";
-  position: absolute;
-  top: 300px;
-  right: -10px;
-  width: 150px;
-  height: 74px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bloom-paper) 80%, transparent);
-  box-shadow: -60px 26px 0 -14px color-mix(in srgb, var(--bloom-paper) 75%, transparent);
-  pointer-events: none;
-  z-index: 0;
-}
+/* ★★ 떠다니던 구름 두 덩이(.ev-container 의 ::before · ::after)를 뺐다.
+     top/left 를 픽셀로 박아 둔 장식이라 내용 길이에 따라 글자를 덮었고,
+     이벤트와 무관한 그림이 페이지마다 같은 자리에 떴다.
+     ★ 덤 — 이제 .ev-container 의 ::before·::after 가 비었다. 나중에 다른 장식을
+       붙일 자리가 생겼다는 뜻이다(전에는 "구름이 쓰고 있어서 못 쓴다" 였다). */
 
 /* ── ③ 섹션 — 크림색 둥근 카드가 겹겹이 ───────────────────────── */
 
@@ -1717,24 +1686,12 @@ body:has(.theme-bloom) {
   box-shadow: 0 5px 0 var(--ev-primary-glow), 0 12px 24px color-mix(in srgb, var(--ev-text-main) 16%, transparent);
 }
 
-/* ★ 버튼 옆 떠 있는 배지 — 참고 디자인의 "참여 인증 완료!" 자리 */
-.theme-bloom [data-block="cta"]:not(.ev-block)::after {
-  content: "✓ 지금 참여하세요";
-  position: absolute;
-  /* ★ bottom: 8px 로 뒀더니 버튼 위에 겹쳤다. 버튼 아래로 내린다 */
-  left: 50%;
-  bottom: -6px;
-  transform: translateX(-50%) rotate(-3deg);
-  padding: 7px 16px;
-  border-radius: 999px;
-  background: var(--bloom-pink);
-  border: 3px solid var(--bloom-paper);
-  color: #fff;
-  font-size: 0.76rem;
-  font-weight: 800;
-  box-shadow: 0 5px 14px var(--ev-primary-glow);
-  white-space: nowrap;
-}
+/* ★★ cta 옆 떠 있는 배지를 뺐다 — content 로 **읽는 문구**를 만들고 있었다.
+     ① 관리자가 못 고친다. HTML 에 없으니 직접수정에도 AI 수정에도 안 잡힌다
+     ② 버튼 문구와 따로 논다 — "응모하기" 버튼 밑에 다른 말이 같이 나왔다
+     ③ 끝난 이벤트에도 참여를 권한다. 지킬 수 없는 말이 게시된다
+     장식은 CSS 가, **문구는 HTML 이** 쥔다. 이 파일의 다른 ::after(♥ · ✓ · Q)는
+     글자가 아니라 기호라 그대로 둔다 — 읽히는 내용이 아니다. */
 
 /* ── ⑫ 문구 꾸밈 ─────────────────────────────────────────────── */
 
@@ -1770,11 +1727,8 @@ body:has(.theme-bloom) {
 /* ── ⑬ 좁은 화면 ─────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
-  .theme-bloom.ev-container::before,
-  .theme-bloom .ev-container::before,
-  .theme-bloom.ev-container::after,
-  .theme-bloom .ev-container::after { display: none; }
-
+  /* ★ 구름을 숨기던 display:none 을 뺐다 — 구름 자체가 없어졌다.
+       좁은 화면에서 글자를 덮어 숨겨야 했다는 게, 넓은 화면에서도 덮고 있었다는 뜻이다. */
   .theme-bloom [data-block]:not(.ev-block) { margin: 0 12px 14px; padding: 26px 18px; }
   .theme-bloom [data-block="hero"]:not(.ev-block) h1 { -webkit-text-stroke-width: 6px; }
   .theme-bloom [data-block="schedule"]:not(.ev-block) li strong { flex-basis: 96px; font-size: 0.78rem; }
@@ -5894,6 +5848,17 @@ body {
   padding: 12px 14px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.14);
+}
+
+/* ★★ 올린 그림에는 카드를 씌우지 않는다. 위 판은 **글자**를 오른쪽 칸에 모으려고
+ *   만든 것이고 그림은 글자가 아니다 — 투명 PNG 뒤로 흰 네모가 비친다(제보).
+ * ★ 위 선택자에 :not(.ev-asset) 을 붙이면 안 된다. 특이도가 (0,4,1) 로 올라가서
+ *   60-variants/90-responsive.css 의 `grid-column: 1` 되돌림을 이겨 버린다 —
+ *   좁은 화면에서 격자가 2단으로 남아 제목이 한 글자씩 끊긴다(실측). 규칙을 따로 둔다. */
+[data-block="hero"].v-hero-split:not(.ev-block) > .ev-asset {
+  background: none;
+  padding: 0;
+  border-radius: 0;
 }
 
 [data-block="hero"].v-hero-ticket:not(.ev-block) {
@@ -11584,20 +11549,51 @@ body:has(.palette-chilseok) {
 
 /* ── ② 제목 옆 그림 ───────────────────────────────────────────── */
 
-[data-block="hero"]:has(> .ev-asset-art) {
+/* ★★ [data-block] 을 세 번 쓴 건 특이도 때문이다 — 변형이 (0,3,1) 로 집는다.
+ *   v-hero-center 는 `padding: 56px 28px` 단축과 `text-align: center` 를 들고 있어서,
+ *   (0,2,1) 로 쓰면 글자 칸을 비우지도, 왼쪽으로 붙이지도 못한다.
+ *   실측 — 그대로 두면 가운데 글 위로 그림이 올라앉아 제목을 가린다.
+ * ★ min-height 는 그림이 설 자리다. 글이 두 줄뿐인 히어로는 250px 밖에 안 돼서
+ *   max-height:94% 가 그림을 반으로 깎는다. */
+/* ★★ v-hero-split 은 뺀다. 그 변형은 **이미 2단**이다 —
+ *   왼쪽에 제목, 오른쪽 칸에 나머지를 세운다. 여기서 display:flex 로 덮으면
+ *   (특이도 0,4,1 이 변형의 0,3,1 을 이긴다) 격자가 풀려서 오른쪽 칸 카드들이
+ *   가운데로 쏟아진다(제보 화면이 그것이다). 자기 배치를 가진 변형은 건드리지 않는다. */
+[data-block="hero"][data-block][data-block]:not(.v-hero-split):has(> .ev-asset-art) {
   position: relative;
-  padding-right: 32%;
+  padding-right: 48%;
+  padding-left: 40px;
   text-align: left;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
 }
 
+/* ★★ 제목 옆 그림은 **오른쪽을 가득 채운다.**
+ *   전에는 width:26% · max-width:230px 라, 1600px 넓은 화면에서도 230px 짜리
+ *   우표만 하게 들어갔다("너무 작잖아" 제보). 레퍼런스 디자인은 그림이 히어로의
+ *   절반을 쓰고 위아래 끝까지 닿는다.
+ *
+ * ★ 오른쪽 아래에 붙인다(right:0 · bottom:0). 사람 그림은 바닥에 서야 자연스럽고,
+ *   물건 그림은 object-position 으로 같은 자리에 맞춰진다.
+ * ★ max-height 로 히어로 밖으로 나가는 것을 막는다 — 글이 짧은 히어로에서
+ *   그림이 영역보다 커져 아래 블록을 밀어내던 일을 여기서 끊는다.
+ * ★★ 그림 뒤에 번짐(radial-gradient)을 깔았다가 **뺐다.** 어두운 히어로에서는
+ *   흰 번짐이 부드럽게 퍼지지 않고 **네모난 판**으로 보였다(실측 · 제보).
+ *   그림 뒤 분위기는 테마 · 팔레트가 이미 히어로 전체에 깔고 있다.
+ *   그 위에 한 겹 더 얹으면 번짐이 아니라 상자가 된다. 얹지 않는다. */
 [data-block="hero"] > .ev-asset-art {
   position: absolute;
-  right: 22px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 26%;
-  max-width: 230px;
+  right: 0;
+  bottom: 0;
+  width: 48%;
+  max-width: 540px;
   height: auto;
+  max-height: 94%;
+  object-fit: contain;
+  object-position: bottom right;
   z-index: 1;
 }
 
@@ -11606,21 +11602,51 @@ body:has(.palette-chilseok) {
    ★ 자리를 옮기면 **글자 쪽 여백도 반대로** 가야 한다. 안 그러면 그림이 글자를 덮는다.
    ★ 위 두 규칙과 같은 특이도(0,2,0 · 0,2,0)인데 **뒤에 있어서** 이긴다. 순서를 바꾸면 안 먹는다.
    ★ 서버가 붙인다(AssetEdit) — 모델이 고르는 이름이 아니다. */
-[data-block="hero"]:has(> .ev-asset-art-left) { padding-right: 24px; padding-left: 32%; }
+[data-block="hero"][data-block][data-block]:has(> .ev-asset-art-left) {
+  padding-right: 40px; padding-left: 48%; align-items: flex-end; text-align: right;
+}
 
 [data-block="hero"] > .ev-asset-art-left { right: auto; left: 22px; }
 
+/* ★★ v-hero-split 은 자기 격자가 있다. 그림을 띄우지 말고 **격자 한 칸으로** 넣는다.
+ *   absolute 로 두면 부모에 position:relative 가 없어 더 위 조상에 붙어 버리고,
+ *   그림이 히어로 밖 구석에 손톱만 하게 찍힌다(실측).
+ * ★ 카드(배경 · padding · radius)는 윗 규칙에서 .ev-asset 을 빼 두었다. */
+[data-block="hero"].v-hero-split:not(.ev-block) > .ev-asset-art {
+  position: static;
+  grid-column: 2;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  transform: none;
+}
+
+@media (max-width: 560px) {
+  [data-block="hero"].v-hero-split:not(.ev-block) > .ev-asset-art {
+    grid-column: 1;
+    max-width: 320px;
+    margin: 4px auto 0;
+  }
+}
+
 /* 좁은 화면에서는 옆이 아니라 아래로 — 글자 칸이 반으로 줄면 제목이 세로로 갈라진다 */
 @media (max-width: 640px) {
-  [data-block="hero"]:has(> .ev-asset-art) { padding-right: 24px; text-align: center; }
+  [data-block="hero"][data-block][data-block]:not(.v-hero-split):has(> .ev-asset-art) {
+    padding-right: 24px; padding-left: 24px; text-align: center;
+    min-height: 0; align-items: center;
+  }
   /* ★ 좁은 화면에서는 왼쪽 · 오른쪽이 의미가 없다 — 어차피 글자 아래로 내려간다 */
-  [data-block="hero"]:has(> .ev-asset-art-left) { padding-left: 24px; }
+  [data-block="hero"][data-block][data-block]:has(> .ev-asset-art-left) {
+    padding-left: 24px; align-items: center; text-align: center;
+  }
   [data-block="hero"] > .ev-asset-art-left { left: auto; }
   [data-block="hero"] > .ev-asset-art {
     position: static;
     transform: none;
-    width: 60%;
-    max-width: 200px;
+    width: 78%;
+    max-width: 320px;
+    max-height: none;
     margin: 14px auto 0;
   }
 }
@@ -11726,9 +11752,26 @@ body:has(.palette-chilseok) {
   --ev-bg: transparent;
   background: transparent;
 
-  /* ★ .86 · .72 인 이유는 파일 끝 주석 참고 — 재서 고른 값이다 */
-  --ev-surface: rgba(255, 255, 255, .86);
-  --ev-surface-subtle: rgba(255, 255, 255, .72);
+  /* ★★ 흰색으로 박지 않는다 — **테마가 정한 바탕색에 투명도만 입힌다.**
+   *   전에는 .86 흰색을 그대로 썼다. 그러면 사진을 까는 순간 모든 테마가
+   *   같은 흰 판이 돼서, 테마를 고른 의미가 사라진다("까맣고 투명하다" 제보).
+   *   농도(.86 · .72)는 재서 고른 값이라 그대로 두고 **색만** 테마에서 가져온다.
+   *
+   * ★ 여기서 var(--ev-surface) 는 **테마가 넣은 값**이다. 같은 규칙 안에서
+   *   --ev-surface 를 다시 선언하면 그 선언이 먼저 읽혀 흰색이 들어간다.
+   *   그래서 토큰 교체는 아래 자식 규칙에서 한다. 순서를 바꾸지 말 것. */
+  --ev-panel: color-mix(in srgb, var(--ev-surface) 92%, transparent);
+  --ev-panel-weak: color-mix(in srgb, var(--ev-surface) 86%, transparent);
+  --ev-panel-faint: color-mix(in srgb, var(--ev-surface-subtle) 72%, transparent);
+}
+
+/* 블록 안쪽 규칙들이 읽는 토큰을 반투명으로 바꾼다. **컨테이너가 아니라 자식에** 건다 —
+ * 위 --ev-panel 이 테마의 원래 색을 읽어야 하기 때문이다. */
+/* ★ 유의사항은 뺀다. 자기 크림색 판을 갖고 있고 그게 "읽고 넘어가라" 는 신호다 —
+ *   여기 토큰을 바꾸면 그 판이 옅어져 대비가 4.75 → 4.44 로 떨어진다(실측). */
+.ev-container:has(> .ev-asset-page) > [data-block]:not([data-block="notices"]) {
+  --ev-surface: var(--ev-panel-weak);
+  --ev-surface-subtle: var(--ev-panel-faint);
 }
 
 /* ★ fixed 다. absolute 로 두면 페이지가 길 때 사진이 위쪽에서 끝나고
@@ -11750,16 +11793,23 @@ body:has(.palette-chilseok) {
  *   사진 없는 페이지를 꾸미려고 만든 그림이라, 사진 위에서는 **떠다니는 얼룩**이 된다.
  *   실제로 하늘 사진 위에 흰 구름 덩어리와 물결이 남아 "이게 뭐냐" 는 말을 들었다.
  *
- * ★ 선택자로 하나씩 쫓지 않고 **가상요소를 통째로 끈다.** 테마가 늘어도 같이 막힌다.
- *   장식은 전부 ::before · ::after 로만 그린다 — HTML 은 안 건드린다는 규칙이 있어서다.
+ * ★ 선택자로 하나씩 쫓지 않는다. 장식은 전부 ::before · ::after 로만 그리므로
+ *   (HTML 은 안 건드린다는 규칙) 가상요소를 끄면 테마가 늘어도 같이 막힌다.
+ *
+ * ★★ 다만 **사진에 닿는 자리만** 끈다 — 컨테이너 자신과 hero 다.
+ *   그 밖의 블록은 아래에서 불투명한 판을 받는다. 판 위에 그려지는 장식은
+ *   사진 위에 있는 게 아니라 **판 위에** 있다. 끌 이유가 없다.
+ *   전에는 전부 껐다 — bloom 21개 · basic 14개 · aurora 11개 규칙이 같이 죽어서
+ *   사진을 까는 순간 어느 테마든 같은 모양이 됐다.
+ *   영역 배경(01-assets.css)은 처음부터 **사진이 깔린 그 블록만** 끈다. 같은 자세로 맞춘다.
  *
  * ★★ 순서가 중요하다. 바로 아래 덮개가 같은 ::before 를 쓴다 —
  *   이 규칙이 **먼저** 와야 덮개가 이긴다. 뒤로 보내면 덮개까지 같이 꺼진다.
  */
 .ev-container:has(> .ev-asset-page)::before,
 .ev-container:has(> .ev-asset-page)::after,
-.ev-container:has(> .ev-asset-page) [data-block]::before,
-.ev-container:has(> .ev-asset-page) [data-block]::after {
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light)) [data-block="hero"]::before,
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light)) [data-block="hero"]::after {
   content: none;
 }
 
@@ -11782,8 +11832,15 @@ body:has(.palette-chilseok) {
 .ev-container:has(> .ev-asset-dim-68)::before { background: rgba(0, 0, 0, .68); }
 
 /* hero 는 자기 그라데이션을 갖고 있어서 사진을 통째로 가린다.
- * ★ 페이지 배경이 있을 때만 비운다. 글자색은 10-fallback 이 이미 흰색으로 둔다. */
-.ev-container:has(> .ev-asset-page) [data-block="hero"]:not(:has(> .ev-asset-bg)) {
+ * ★ 페이지 배경이 있을 때만 비운다. 글자색은 10-fallback 이 이미 흰색으로 둔다.
+ *
+ * ★★ on-light 는 뺀다 — **밝은 그림과 투명 장식**이다(ImageProbe 가 재서 붙인다).
+ *   그런 배경에 히어로를 검게 덮으면, 비치라고 올린 그림 위에서 히어로만 시커메진다
+ *   (제보: "전체적으로 까매졌어"). 덮개를 빼면 히어로는 **자기 테마 그라데이션**을
+ *   그대로 쓴다 — 불투명하니 대비는 테마가 이미 보장하던 그 값이다.
+ *   사진은 히어로 뒤에서만 안 보일 뿐, 나머지 영역에서는 그대로 비친다. */
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block="hero"]:not(:has(> .ev-asset-bg)) {
   /* ★ .28 로 뒀다가 밝은 사진에서 흰 제목이 2.18 까지 떨어졌다(실측, 테마 4종 전부).
      사진이 순백이어도 흰 글씨가 4.5 를 넘으려면 .55 는 돼야 한다 — 여유를 둬 .58.
      사진을 가리는 값이지만, hero 는 어차피 자기 그라데이션으로 다 가리던 자리다. */
@@ -11795,20 +11852,26 @@ body:has(.palette-chilseok) {
  *   theme-bloom          h1 에 9px 흰 획을 둘러 글자 속을 먹는다 → 실측 1.00
  *   v-hero-gradient-text color: transparent 로 두고 배경을 글자에 깎아 넣는다
  * ★ [data-block] 세 번은 특이도용이다 — 테마가 0,3,1 로 집고 있다. */
-.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block]
-  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block][data-block][data-block="hero"]
+  :is(h1, h2, h3, p, .period, .ev-period, .sub-label) {
   -webkit-text-stroke: 0;
   background-image: none;
 }
-.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block="hero"]
+/* ★ on-light 에는 안 건드린다. 히어로가 자기 배경을 쓰므로 글자색도 테마 것이 맞다 —
+ *   밝은 장식 위에서 흰 글씨를 강제하면 테마가 어두운 글씨를 쓰던 히어로가 통째로 날아간다. */
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block][data-block][data-block="hero"]
   :is(h1, h2, h3, p, .period, .ev-period, .sub-label) {
   color: #fff;
   -webkit-text-fill-color: #fff;
 }
 
-/* 카드 테두리가 흰 실선이면 사진 위에서 종이처럼 뜬다. 살짝 눌러 둔다 */
-.ev-container:has(> .ev-asset-page) {
-  --ev-border: rgba(255, 255, 255, .55);
+/* 카드 테두리가 진한 실선이면 사진 위에서 종이처럼 뜬다. 살짝 눌러 둔다.
+ * ★ 흰색으로 박지 않는다. 테마가 정한 테두리색을 반투명으로 만들 뿐이다 —
+ *   어두운 테마에서 흰 테두리를 그으면 그 선만 떠 보인다. */
+.ev-container:has(> .ev-asset-page) > [data-block]:not([data-block="notices"]) {
+  --ev-border: color-mix(in srgb, var(--ev-border) 55%, transparent);
 }
 
 /* ★★ 여기가 핵심이다 — 블록에 **판**을 깐다.
@@ -11826,7 +11889,10 @@ body:has(.palette-chilseok) {
  * ★ padding 은 안 건드린다. 블록마다 이미 있고, 여기서 덮으면 템플릿이 틀어진다.
  */
 .ev-container:has(> .ev-asset-page) > [data-block]:not([data-block="hero"], [data-block="notices"]) {
-  background: rgba(255, 255, 255, .90);
+  /* ★ 흰색이 아니라 **테마 바탕색**이다. 글자색은 아래에서 같은 테마의 --ev-text-main 을
+   *   쓰므로, 판과 글자가 테마가 설계한 짝 그대로 맞는다. 흰 판에 테마 글자색을 얹던
+   *   전 방식이 어긋났던 자리다. */
+  background: var(--ev-panel);
   backdrop-filter: blur(3px);
   border-radius: var(--ev-radius-lg, 18px);
   margin-bottom: 14px;

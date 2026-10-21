@@ -24,9 +24,26 @@
   --ev-bg: transparent;
   background: transparent;
 
-  /* ★ .86 · .72 인 이유는 파일 끝 주석 참고 — 재서 고른 값이다 */
-  --ev-surface: rgba(255, 255, 255, .86);
-  --ev-surface-subtle: rgba(255, 255, 255, .72);
+  /* ★★ 흰색으로 박지 않는다 — **테마가 정한 바탕색에 투명도만 입힌다.**
+   *   전에는 .86 흰색을 그대로 썼다. 그러면 사진을 까는 순간 모든 테마가
+   *   같은 흰 판이 돼서, 테마를 고른 의미가 사라진다("까맣고 투명하다" 제보).
+   *   농도(.86 · .72)는 재서 고른 값이라 그대로 두고 **색만** 테마에서 가져온다.
+   *
+   * ★ 여기서 var(--ev-surface) 는 **테마가 넣은 값**이다. 같은 규칙 안에서
+   *   --ev-surface 를 다시 선언하면 그 선언이 먼저 읽혀 흰색이 들어간다.
+   *   그래서 토큰 교체는 아래 자식 규칙에서 한다. 순서를 바꾸지 말 것. */
+  --ev-panel: color-mix(in srgb, var(--ev-surface) 92%, transparent);
+  --ev-panel-weak: color-mix(in srgb, var(--ev-surface) 86%, transparent);
+  --ev-panel-faint: color-mix(in srgb, var(--ev-surface-subtle) 72%, transparent);
+}
+
+/* 블록 안쪽 규칙들이 읽는 토큰을 반투명으로 바꾼다. **컨테이너가 아니라 자식에** 건다 —
+ * 위 --ev-panel 이 테마의 원래 색을 읽어야 하기 때문이다. */
+/* ★ 유의사항은 뺀다. 자기 크림색 판을 갖고 있고 그게 "읽고 넘어가라" 는 신호다 —
+ *   여기 토큰을 바꾸면 그 판이 옅어져 대비가 4.75 → 4.44 로 떨어진다(실측). */
+.ev-container:has(> .ev-asset-page) > [data-block]:not([data-block="notices"]) {
+  --ev-surface: var(--ev-panel-weak);
+  --ev-surface-subtle: var(--ev-panel-faint);
 }
 
 /* ★ fixed 다. absolute 로 두면 페이지가 길 때 사진이 위쪽에서 끝나고
@@ -48,16 +65,23 @@
  *   사진 없는 페이지를 꾸미려고 만든 그림이라, 사진 위에서는 **떠다니는 얼룩**이 된다.
  *   실제로 하늘 사진 위에 흰 구름 덩어리와 물결이 남아 "이게 뭐냐" 는 말을 들었다.
  *
- * ★ 선택자로 하나씩 쫓지 않고 **가상요소를 통째로 끈다.** 테마가 늘어도 같이 막힌다.
- *   장식은 전부 ::before · ::after 로만 그린다 — HTML 은 안 건드린다는 규칙이 있어서다.
+ * ★ 선택자로 하나씩 쫓지 않는다. 장식은 전부 ::before · ::after 로만 그리므로
+ *   (HTML 은 안 건드린다는 규칙) 가상요소를 끄면 테마가 늘어도 같이 막힌다.
+ *
+ * ★★ 다만 **사진에 닿는 자리만** 끈다 — 컨테이너 자신과 hero 다.
+ *   그 밖의 블록은 아래에서 불투명한 판을 받는다. 판 위에 그려지는 장식은
+ *   사진 위에 있는 게 아니라 **판 위에** 있다. 끌 이유가 없다.
+ *   전에는 전부 껐다 — bloom 21개 · basic 14개 · aurora 11개 규칙이 같이 죽어서
+ *   사진을 까는 순간 어느 테마든 같은 모양이 됐다.
+ *   영역 배경(01-assets.css)은 처음부터 **사진이 깔린 그 블록만** 끈다. 같은 자세로 맞춘다.
  *
  * ★★ 순서가 중요하다. 바로 아래 덮개가 같은 ::before 를 쓴다 —
  *   이 규칙이 **먼저** 와야 덮개가 이긴다. 뒤로 보내면 덮개까지 같이 꺼진다.
  */
 .ev-container:has(> .ev-asset-page)::before,
 .ev-container:has(> .ev-asset-page)::after,
-.ev-container:has(> .ev-asset-page) [data-block]::before,
-.ev-container:has(> .ev-asset-page) [data-block]::after {
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light)) [data-block="hero"]::before,
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light)) [data-block="hero"]::after {
   content: none;
 }
 
@@ -80,8 +104,15 @@
 .ev-container:has(> .ev-asset-dim-68)::before { background: rgba(0, 0, 0, .68); }
 
 /* hero 는 자기 그라데이션을 갖고 있어서 사진을 통째로 가린다.
- * ★ 페이지 배경이 있을 때만 비운다. 글자색은 10-fallback 이 이미 흰색으로 둔다. */
-.ev-container:has(> .ev-asset-page) [data-block="hero"]:not(:has(> .ev-asset-bg)) {
+ * ★ 페이지 배경이 있을 때만 비운다. 글자색은 10-fallback 이 이미 흰색으로 둔다.
+ *
+ * ★★ on-light 는 뺀다 — **밝은 그림과 투명 장식**이다(ImageProbe 가 재서 붙인다).
+ *   그런 배경에 히어로를 검게 덮으면, 비치라고 올린 그림 위에서 히어로만 시커메진다
+ *   (제보: "전체적으로 까매졌어"). 덮개를 빼면 히어로는 **자기 테마 그라데이션**을
+ *   그대로 쓴다 — 불투명하니 대비는 테마가 이미 보장하던 그 값이다.
+ *   사진은 히어로 뒤에서만 안 보일 뿐, 나머지 영역에서는 그대로 비친다. */
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block="hero"]:not(:has(> .ev-asset-bg)) {
   /* ★ .28 로 뒀다가 밝은 사진에서 흰 제목이 2.18 까지 떨어졌다(실측, 테마 4종 전부).
      사진이 순백이어도 흰 글씨가 4.5 를 넘으려면 .55 는 돼야 한다 — 여유를 둬 .58.
      사진을 가리는 값이지만, hero 는 어차피 자기 그라데이션으로 다 가리던 자리다. */
@@ -93,20 +124,26 @@
  *   theme-bloom          h1 에 9px 흰 획을 둘러 글자 속을 먹는다 → 실측 1.00
  *   v-hero-gradient-text color: transparent 로 두고 배경을 글자에 깎아 넣는다
  * ★ [data-block] 세 번은 특이도용이다 — 테마가 0,3,1 로 집고 있다. */
-.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block]
-  :is(h1, h2, h3, p, li, dt, dd, .period, .ev-period, .sub-label, .title) {
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block][data-block][data-block="hero"]
+  :is(h1, h2, h3, p, .period, .ev-period, .sub-label) {
   -webkit-text-stroke: 0;
   background-image: none;
 }
-.ev-container:has(> .ev-asset-page) [data-block][data-block][data-block="hero"]
+/* ★ on-light 에는 안 건드린다. 히어로가 자기 배경을 쓰므로 글자색도 테마 것이 맞다 —
+ *   밝은 장식 위에서 흰 글씨를 강제하면 테마가 어두운 글씨를 쓰던 히어로가 통째로 날아간다. */
+.ev-container:has(> .ev-asset-page):not(:has(> .ev-asset-on-light))
+  [data-block][data-block][data-block="hero"]
   :is(h1, h2, h3, p, .period, .ev-period, .sub-label) {
   color: #fff;
   -webkit-text-fill-color: #fff;
 }
 
-/* 카드 테두리가 흰 실선이면 사진 위에서 종이처럼 뜬다. 살짝 눌러 둔다 */
-.ev-container:has(> .ev-asset-page) {
-  --ev-border: rgba(255, 255, 255, .55);
+/* 카드 테두리가 진한 실선이면 사진 위에서 종이처럼 뜬다. 살짝 눌러 둔다.
+ * ★ 흰색으로 박지 않는다. 테마가 정한 테두리색을 반투명으로 만들 뿐이다 —
+ *   어두운 테마에서 흰 테두리를 그으면 그 선만 떠 보인다. */
+.ev-container:has(> .ev-asset-page) > [data-block]:not([data-block="notices"]) {
+  --ev-border: color-mix(in srgb, var(--ev-border) 55%, transparent);
 }
 
 /* ★★ 여기가 핵심이다 — 블록에 **판**을 깐다.
@@ -124,7 +161,10 @@
  * ★ padding 은 안 건드린다. 블록마다 이미 있고, 여기서 덮으면 템플릿이 틀어진다.
  */
 .ev-container:has(> .ev-asset-page) > [data-block]:not([data-block="hero"], [data-block="notices"]) {
-  background: rgba(255, 255, 255, .90);
+  /* ★ 흰색이 아니라 **테마 바탕색**이다. 글자색은 아래에서 같은 테마의 --ev-text-main 을
+   *   쓰므로, 판과 글자가 테마가 설계한 짝 그대로 맞는다. 흰 판에 테마 글자색을 얹던
+   *   전 방식이 어긋났던 자리다. */
+  background: var(--ev-panel);
   backdrop-filter: blur(3px);
   border-radius: var(--ev-radius-lg, 18px);
   margin-bottom: 14px;
