@@ -102,9 +102,6 @@ export function ragPanel(eventId) {
           </thead>
           <tbody>
             ${logs.slice(0, 5).map((l) => {
-              const failure = !l.validOk
-                ? [l.failureType, l.failureMessage].filter(Boolean).join(' — ')
-                : ''
               const chunks = l.ragUsed && l.chunkIds
                 ? String(l.chunkIds)
                 : ''
@@ -133,12 +130,22 @@ export function ragPanel(eventId) {
                   <td class="rag-log-number">${esc(ms(l.responseTimeMs))}</td>
                   <td class="rag-log-date">${esc(when(l.createdAt))}</td>
                 </tr>
-                ${failure || chunks ? `
+                ${!l.validOk || chunks ? `
                   <tr class="rag-log-detail">
                     <td colspan="5">
-                      ${failure
-                        ? `<p class="rag-log-fail">실패: ${esc(failure)}</p>`
-                        : ''}
+                      ${!l.validOk
+                         ? `
+                           <details class="rag-log-failure">
+                             <summary>실패 사유 보기</summary>
+                             <div class="rag-log-failure-body">
+                               ${l.failureType
+                                 ? `<span class="rag-log-failure-type">${esc(l.failureType)}</span>`
+                                 : ''}
+                               <p>${esc(l.failureMessage || '상세 실패 사유를 불러오지 못했어요.')}</p>
+                             </div>
+                           </details>
+                         `
+                         : ''}
                       ${chunks
                         ? `<p class="rag-log-meta">참고 청크: ${esc(chunks)}</p>`
                         : ''}

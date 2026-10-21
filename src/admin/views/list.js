@@ -243,6 +243,7 @@ function eventActionIcon(name) {
     history: '<path d="M3 11a9 9 0 1 1 2 7M3 4v7h7"/><path d="M12 7v5l3 2"/>',
     users: '<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4v2"/>',
     trash: '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+    external: '<path d="M15 3h6v6M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>',
   }
 
   return `<svg viewBox="0 0 24 24" aria-hidden="true">
@@ -304,7 +305,7 @@ function eventMoreMenu(e, showPage = false) {
       </summary>
 
       <div class="event-more-popup">
-        ${showPage ? publicPageLink(e) : ''}
+        ${e.status === 'PUBLISHED' ? publicPageLink(e) : ''}
         ${menuButton('versions', '버전 이력', 'history')}
         ${menuButton('participants', '참여 관리', 'users')}
         ${menuButton('delete-event', '삭제하기', 'trash', 'is-danger')}
@@ -429,22 +430,51 @@ function serverMine(es) {
  * ★ 공개 API 응답의 url 필드는 쓰지 않는다 — 채우는 곳이 없어 항상 null 이다
  * 게시 페이지는 누구나 보는 화면이라 소유자와 상관없이 연다
  */
-const publicPageLink = (e) =>
-  `<a class="btn sm" href="/e/${encodeURIComponent(e.id)}" target="_blank" rel="noopener">페이지 열기</a>`
+const publicPageLink = (e) => `
+  <a
+    class="event-more-item"
+    href="/e/${encodeURIComponent(e.id)}"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    ${eventActionIcon('external')}
+    <span>페이지 열기</span>
+  </a>
+`
 
 /** 게시중 — 기간을 보여준다. 게시 버전 번호는 목록 API 에 없다 */
 function serverLive(es) {
   const rows = es.map((e) =>
     `<tr class="${closingDays(e) !== null ? 'is-closing-soon' : ''}">`
     + serverTitleCell(e)
-    + `<td>${serverPeriod(e)}</td>`
-    + '<td>' + adminStatusBadge('live') + '</td>'
-    + '<td>' + eventManagementActions(e, true) + '</td></tr>')
+    + `<td>${adminStatusBadge(serverStatus(e))}</td>`
+    + `<td class="event-period-cell">${serverPeriod(e)}</td>`
+    + `<td>${eventManagementActions(e, true)}</td>`
+    + '</tr>',
+  )
 
-  return `<table class="admin-table"><thead><tr><th>이벤트</th><th>기간</th><th>게시 상태</th><th>관리</th></tr></thead><tbody>`
-    + rows.join('')
-    + (rows.length ? '' : emptyRow(4, '게시 중인 이벤트가 없습니다.'))
-    + '</tbody></table>'
+  return `
+    <table class="admin-table admin-event-list-table">
+      <colgroup>
+        <col class="event-title-column">
+        <col class="event-status-column">
+        <col class="event-period-column">
+        <col class="event-actions-column">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>이벤트</th>
+          <th>상태</th>
+          <th>이벤트 기간</th>
+          <th>관리</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.join('')}
+        ${rows.length ? '' : emptyRow(4, '게시 중인 이벤트가 없습니다.')}
+      </tbody>
+    </table>
+  `
 }
 
 /**
