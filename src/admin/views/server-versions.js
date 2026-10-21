@@ -1,12 +1,16 @@
 /**
  * 버전 이력 — 서버 모드 (VITE_API_AUTH=on).
  *
- *   목록       GET    /api/admin/events/{id}/versions               (버전 저장한 것만)
- *   미리보기   GET    /api/admin/events/{id}/versions/{versionId}   (저장본 — 기간 자리는 비어 있다)
- *   저장 해제  DELETE /api/admin/events/{id}/versions/{versionId}/checkpoint
- *   템플릿 등록 POST  /api/admin/template-library                   (views/templates.js 의 openRegister)
+ *   전체 목록   GET    /api/admin/events/{id}/versions
+ *   미리보기    GET    /api/admin/events/{id}/versions/{versionId}
+ *   북마크 추가 PUT    /api/admin/events/{id}/versions/{versionId}/checkpoint
+ *   북마크 해제 DELETE /api/admin/events/{id}/versions/{versionId}/checkpoint
+ *   템플릿 등록 POST   /api/admin/template-library
+ *   되돌리기    POST   /api/admin/events/{id}/versions/{versionId}/restore
  *
- *   되돌리기   POST /api/admin/events/{id}/versions/{versionId}/restore (본문 없이 새 버전 생성)
+ * 전체 버전을 이력에 표시한다.
+ * 북마크 추가·해제는 기존 버전의 checkpoint 표시만 변경한다.
+ * 게시하면 자동으로 북마크가 추가되며, 게시 중에는 해제할 수 없다.
  *
  * 상태는 편집 화면과 같이 쓴다 (ui.serverEditor, server-editor.js).
  */
@@ -67,16 +71,16 @@ function serverVersionsView() {
   const list = s.versions
   const busy = running(s) || s.busy
   const ended = s.event?.status === 'ENDED'
-  const latestSaved = !!latest && (list || []).some((v) => sameVersion(v, latest))
   const rows = list == null
     ? '<div class="empty"><strong>버전 이력을 불러오지 못했어요</strong>' + button('server-reload', '다시 불러오기', '', 'btn sm') + '</div>'
     : !list.length
-      ? '<div class="empty"><strong>저장한 버전이 없어요</strong><p>편집 화면에서 "버전 저장" 을 누르면 여기에 남아요.</p></div>'
+      ? '<div class="empty"><strong>아직 생성된 버전이 없어요</strong><p>페이지를 생성하거나 수정하면 버전이 여기에 표시돼요.</p></div>'
       : '<div class="card">' + list.map((v) => {
         const isLatest = sameVersion(v, latest)
         return '<div class="version-row server-version-row' + (isLatest ? ' is-current' : '') + '"><div class="version-number">v' + v.versionNo + '</div><div class="version-text"><h3>'
           + esc(v.changeSummary?.trim() || (v.sourceVersionNo ? 'v' + v.sourceVersionNo + ' 에서 변경한 버전' : '처음 만든 버전')) + ' '
           + (v.published ? '<span class="badge green">게시 중</span>' : '')
+          + (v.checkpoint ? '<span class="badge version-bookmark-badge">★ 북마크</span>' : '')
           + (isLatest ? '<span class="badge pink">현재 작업</span>' : '') + '</h3>'
           + '<p>' + when(v.createdAt) + ' · ' + (v.sourceVersionNo ? 'v' + v.sourceVersionNo + '에서 이어진 버전' : '최초 버전') + '</p></div>'
           + '<div class="version-actions">'
@@ -86,7 +90,18 @@ function serverVersionsView() {
           + button('server-version-restore', '이 버전에서 이어서 작업', 'data-version="' + v.versionId + '" '
               + (canRestoreVersion(s, v) ? '' : 'disabled'), 'btn sm')
           + button('server-version-template', '템플릿으로 등록', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm soft version-template-btn')
-          + button('server-version-unsave', '저장 해제', 'data-version="' + v.versionId + '" ' + ((v.published || busy) ? 'disabled title="게시 중인 버전은 해제할 수 없어요"' : ''), 'btn sm ghost')
+          + '<div class="version-bookmark-action">'
+          + button(
+              v.checkpoint ? 'server-version-unsave' : 'server-version-bookmark',
+              v.checkpoint ? '북마크 해제' : '북마크 추가',
+              'data-version="' + v.versionId + '"'
+                + (busy || (v.checkpoint && v.published) ? ' disabled' : ''),
+              'btn sm ghost',
+            )
+          + (v.checkpoint && v.published
+              ? '<span class="version-bookmark-note">게시 중에는 해제할 수 없어요</span>'
+              : '')
+          + '</div>'
           + button('server-rag-reindex-one', '재색인', 'data-version="' + v.versionId + '"' + (busy ? ' disabled' : ''), 'btn sm version-reindex-btn')
           + '</div></div>'
       }).join('') + '</div>'
@@ -98,20 +113,16 @@ function serverVersionsView() {
     +       '<h1>버전 이력</h1>'
     +       '<span class="admin-detail-event-name">' + esc(s.event.name) + '</span>'
     +     '</div>'
-    +     '<p>저장한 버전을 확인하고, 이전 버전에서 이어서 작업하거나 게시하세요.</p>'
+    +     '<p>전체 버전을 확인하고, 중요한 버전에 북마크를 추가하세요.</p>'
     +   '</div>'
     + '</div>'
-    + (latest && !latestSaved
-      ? '<div class="helper">현재 작업 버전 v' + latest.versionNo + '은 아직 이력에 저장되지 않았어요. '
-        + button('server-version-save', '버전 저장', busy ? 'disabled' : '', 'btn sm')
-        + '</div>'
-      : '')
     + '<div class="version-history-heading">'
     + '<h2>버전 이력</h2>'
     + (list == null ? '' : '<span>' + list.length + '개</span>')
     + '</div>'
     + rows + ragPanel(s.id)
-    + '<p class="review-note">생성 · 수정할 때마다 버전이 자동으로 만들어지지만, 이력에는 "버전 저장" 한 버전만 남아요. '
+    + '<p class="review-note">AI 생성·수정 완료 또는 직접 수정의 변경 저장 시 새 버전이 전체 이력에 표시돼요. '
+    + '중요한 버전에는 북마크를 추가할 수 있어요. 게시하면 자동으로 북마크가 추가되며, 게시 중에는 해제할 수 없어요. '
     + '마음에 드는 버전은 <strong>템플릿으로 등록</strong>해 두면 다른 이벤트에서 다시 쓸 수 있어요. '
     + '이전 버전에서 이어서 작업하면 그 내용으로 새 최신 버전이 만들어져요. 기존 이력과 게시 중인 페이지는 유지돼요.</p></div>'
 }
@@ -166,9 +177,9 @@ async function toggleSaved(versionId, save, rerender) {
   try {
     await (save ? saveCheckpoint : removeCheckpoint)(s.id, versionId)
     s.versions = (await loadVersions(s.id)).versions
-    toast(save ? '버전 이력에 저장했어요.' : '버전 이력에서 뺐어요. 버전 자체는 서버에 남아 있어요.')
+    toast(save ? '북마크를 추가했어요.' : '북마크를 해제했어요.')
   } catch (e) {
-    toast(e?.message || '버전 이력을 바꾸지 못했어요.')
+    toast(e?.message || '북마크를 변경하지 못했어요.')
   } finally {
     s.busy = false
     rerender()
@@ -188,10 +199,15 @@ function handleVersionsClick(a, b, rerender) {
       return true
     }
     case 'server-version-publish': openPublish(id); return true
-    case 'server-version-save': if (s?.preview) toggleSaved(s.preview.versionId, true, rerender); return true
+    case 'server-version-save':
+      if (s?.preview) toggleSaved(s.preview.versionId, true, rerender)
+      return true
+    case 'server-version-bookmark':
+      if (validVersionId(id)) toggleSaved(id, true, rerender)
+      return true
     case 'server-version-unsave':
-      ask('버전 이력에서 뺄까요?', '이력 목록에서만 사라지고 버전 내용은 서버에 남아요. 다시 저장하려면 그 버전이 최신일 때 버전 저장을 눌러야 해요.',
-        () => toggleSaved(id, false, rerender), '이력에서 빼기')
+      ask('북마크를 해제할까요?', '북마크 표시만 해제돼요. 버전은 전체 이력에 그대로 남습니다.',
+        () => toggleSaved(id, false, rerender), '북마크 해제')
       return true
     case 'server-rag-reindex-one': {
       if (validVersionId(id) && !s.busy) reindexOne(s.id, id, rerender)
