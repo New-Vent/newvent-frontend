@@ -1,9 +1,8 @@
 /**
  * 이벤트 목록.
  *
- * 서버 모드에서는 공개 목록(`GET /api/public/events`)이 **제목 · 기간 · 상태**만 준다.
- * 카테고리 · 혜택 요약 · 참여 방식 · 정책은 응답에 없다(목업에만 있던 값이다).
- * 그래서 카드도 **제목 · 썸네일 · 기간** 세 가지로 맞췄다 — 양쪽 모드가 같은 모양이다.
+ * 서버 모드에서는 공개 목록(`GET /api/public/events`)이 **제목 · 기간 · 상태 · 참여 대상 등급**을 준다.
+ * 혜택 요약 · 참여 방식 · 정책은 응답에 없다(목업에만 있던 값이다).
  *
  * 썸네일은 목록 응답에 HTML 이 없어 지금은 안 나온다. 백엔드에 요청해둔 상태이고,
  * `thumbnailHtml` 이 오면 serverThumb() 가 바로 그린다.
@@ -13,6 +12,7 @@
 
 import { $, esc } from '@shared/dom.js'
 import { deadline, eventStatus, personalBadge, shortDate } from '@shared/format.js'
+import { gradeLabel } from '@shared/grades.js'
 import { icon } from '@shared/icons.js'
 import { serverFrame, thumb } from '@shared/preview/document.js'
 import { hydrate } from '@shared/preview/frame.js'
@@ -37,6 +37,19 @@ function myParticipationBadge(eventId) {
     + (pending ? ' pending' : '') + '">'
     + (pending ? '결과 대기' : '참여 완료')
     + '</span>'
+}
+
+/** 날짜 다음 줄. 상세의 「참여 대상 / 일반 이상」과 같은 말. */
+function gradeLine(label) {
+  if (!label) return ''
+  return '<p class="event-grade"><span>참여 대상</span>' + esc(label) + '</p>'
+}
+
+function listGrade(e) {
+  if (e.grade) return gradeLabel(e.grade)
+  if (String(e.audience || '').includes('VIP')) return '우수 이상'
+  if (e.audience) return '일반 이상'
+  return ''
 }
 
 /** 서버 목록 항목 → 카드. 있는 값만 쓴다. */
@@ -67,6 +80,7 @@ function serverCard(e) {
     + '</div>'
     + '<h3>' + esc(e.title) + '</h3>'
     + '<p class="event-period">' + period + '</p>'
+    + gradeLine(listGrade(e))
     + '<div class="event-bottom">'
     + '<span>' + (progress === 'live'
       ? '이벤트 진행 중'
@@ -211,7 +225,7 @@ function activity(){
 /** 목업 카드도 제목 · 썸네일 · 기간으로 맞춘다 (서버 모드와 같은 모양). */
 function eventCard(e){
  const s=published(e);
- return '<article class="event-card"><button class="card-link" data-act="event" data-id="'+e.id+'"><div style="position:relative">'+thumb(e)+'<span class="thumb-badge badge '+(eventStatus(e)==='live'?'pink':'')+'">'+deadline(e)+'</span></div><div class="event-body"><div class="event-meta">'+personalBadge(e)+'</div><h3>'+esc(s.title)+'</h3><div class="event-bottom"><span>'+shortDate(s.start)+' ~ '+shortDate(s.end)+'</span><span class="card-action">자세히 보기'+icon('arrow')+'</span></div></div></button></article>';
+ return '<article class="event-card"><button class="card-link" data-act="event" data-id="'+e.id+'"><div style="position:relative">'+thumb(e)+'<span class="thumb-badge badge '+(eventStatus(e)==='live'?'pink':'')+'">'+deadline(e)+'</span></div><div class="event-body"><div class="event-meta">'+personalBadge(e)+'</div><h3>'+esc(s.title)+'</h3><p class="event-period">'+shortDate(s.start)+' ~ '+shortDate(s.end)+'</p>'+gradeLine(listGrade(e))+'<div class="event-bottom"><span class="card-action">자세히 보기'+icon('arrow')+'</span></div></div></button></article>';
 }
 
 function filteredEvents(){

@@ -888,10 +888,25 @@
 }
 
 #app .event-card .event-period {
-  margin: 0 0 20px;
+  margin: 0 0 6px;
   color: #768294;
   font-size: 13px;
   line-height: 1.6;
+}
+
+.event-card .event-grade {
+  display: flex;
+  gap: 12px;
+  margin: 0 0 16px;
+  color: #243044;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.event-card .event-grade span {
+  color: #768294;
+  font-weight: 500;
 }
 
 #app .event-card .event-bottom {
