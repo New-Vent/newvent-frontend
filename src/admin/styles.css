@@ -24,6 +24,10 @@
   font-display: swap;
 }
 
+/* 상단바 높이 — 편집 화면이 본문 높이를 calc 로 재므로(editor.css) 한 곳에서 정한다.
+   한쪽만 고치면 본문이 화면 밖으로 밀리거나 아래가 비어 보인다 */
+body { --admin-header-h: 56px; }
+
 #header {
   height: auto;
   background: #fff;
@@ -44,7 +48,7 @@
   display: flex;
   align-items: center;
   gap: 36px;
-  min-height: 78px;
+  min-height: var(--admin-header-h);
 }
 
 #header .brand.brand-image {
@@ -2888,13 +2892,47 @@ body:not(.editing-workspace) #app {
   gap: 16px 24px;
 }
 
+/* ★ 뒤로가기 · 이벤트명 · 상태를 **한 줄**로 둔다.
+   셋을 쌓으면 머리말만 세 줄(약 90px)을 먹어서, 대화가 쌓일수록 입력칸이 화면 밖으로 밀린다.
+   좁아지면 자연스럽게 접히게 wrap 은 열어 둔다 */
 .workspace .workspace-title {
   display: flex;
   flex: 1 1 420px;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
   min-width: 0;
-  gap: 6px;
+  gap: 4px 12px;
+}
+
+.workspace .workspace-title .backlink {
+  flex: none;
+  margin: 0;
+}
+
+/* 아이콘만 남긴 뒤로가기 — 글자가 없으니 누를 자리를 넉넉히 준다 (32px 원형).
+   이름은 aria-label · title 로만 남는다 (server-editor.js 의 backToList) */
+.workspace .workspace-title .backlink-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line, #e2dee8);
+  border-radius: 999px;
+  background: #fff;
+  color: #647287;
+}
+
+.workspace .workspace-title .backlink-icon:hover {
+  background: #f0faff;
+  border-color: #bce3f5;
+  color: #0377ad;
+}
+
+.workspace .workspace-title .backlink-icon svg {
+  width: 15px;
+  height: 15px;
 }
 
 .workspace .workspace-title > strong {

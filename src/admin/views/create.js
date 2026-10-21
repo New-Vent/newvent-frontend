@@ -249,15 +249,41 @@ function updateCreationSelection() {
   if (detail) detail.innerHTML = creationTemplateDetail(c)
 }
 
+/**
+ * 새 이벤트의 기본 기간 — **오늘 00시부터 2주.**
+ *
+ * ★ 날짜는 **서울 기준**으로 센다. 관리자 PC 의 시간대가 다르면 하루가 어긋나는데,
+ *   저장할 때는 creationDateTime 이 +09:00 을 붙이므로 둘이 맞지 않으면
+ *   「오늘」이라고 적힌 날짜가 어제·내일로 저장된다.
+ * ★ 2주는 날짜에 더한다(UTC 자정에 걸어서). 밀리초로 더하면 시간대 보정이 섞인다.
+ */
+const seoulYmd = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' })
+const DEFAULT_PERIOD_DAYS = 14
+
+function defaultPeriod() {
+  const start = seoulYmd.format(new Date())
+  const end = new Date(start + 'T00:00:00Z')
+  end.setUTCDate(end.getUTCDate() + DEFAULT_PERIOD_DAYS)
+  return { start, end: end.toISOString().slice(0, 10) }
+}
+
+/**
+ * 처음 열었을 때의 값.
+ *
+ * ★ 기간 · 참여 등급은 **미리 채운다.** 거의 모든 이벤트가 오늘 시작해 2주를 돌고
+ *   누구나 참여할 수 있어서, 비워 두면 매번 같은 값을 다시 고르게 된다.
+ *   바꿀 일이 있으면 그 자리에서 고치면 된다 — 막는 값이 아니라 출발점이다.
+ */
 function createInitialCreation() {
+  const period = defaultPeriod()
   return {
     step: 1,
     title: '',
-    start: '',
-    end: '',
-    startTime: '',
-    endTime: '',
-    grade: '',
+    start: period.start,
+    end: period.end,
+    startTime: '00:00',
+    endTime: '00:00',
+    grade: 'NORMAL',       // 일반 이상 — 모든 회원
     mode: 'template',
     templateId: null,
     prompt: '',
