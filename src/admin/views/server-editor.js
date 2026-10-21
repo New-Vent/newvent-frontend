@@ -210,10 +210,15 @@ function selectionHTML(s, busy) {
     + '<p class="helper sel-hint">고른 영역 밖은 바뀌지 않아요</p>'
 }
 
-/** 입력칸 안내도 고른 영역을 따라간다 */
-const chatPlaceholder = (s) => (s.selected.length
-  ? s.selected.map(labelOf).join(' · ') + '을(를) 어떻게 바꿀까요? 예: 더 눈에 띄게'
-  : '예: 제목을 가을 대축제로 바꿔줘')
+/**
+ * 입력칸 안내 — 고른 영역을 따라가고, 처음부터 다시 만드는 중이면 그 말을 한다.
+ * ★ 같은 칸을 두 가지로 쓰므로(수정 · 새로 만들기) 안내가 갈라져야 한다.
+ */
+const chatPlaceholder = (s) => (s.regen
+  ? '예: 가을 맞이 데이터 이벤트. 혜택은 데이터 3GB, 카페 쿠폰 추첨.'
+  : s.selected.length
+    ? s.selected.map(labelOf).join(' · ') + '을(를) 어떻게 바꿀까요? 예: 더 눈에 띄게'
+    : '예: 제목을 가을 대축제로 바꿔줘')
 
 /** 다시 그리지 않고 칩 · 미리보기 외곽선만 고친다 — iframe 을 새로 띄우면 깜빡인다 */
 function paintSelection(s) {
@@ -319,6 +324,56 @@ async function regenerate(rerender) {
   }
   rerender()
   if (running(s)) poll(s, rerender)
+}
+
+/* ───────── 새로 시작하기 — 같은 입력칸으로 처음부터 다시 만든다 ───────── */
+
+const RESTART_GREETING = '처음부터 다시 만들어요. 어떤 이벤트인지 적어 주세요.'
+
+/**
+ * 「새로 시작하기」 — 묻고 나서 비운다.
+ *
+ * ★ 되돌릴 수 없는 일이라 먼저 묻는다. 지금까지의 대화가 화면에서 사라지고,
+ *   다음 입력은 수정이 아니라 **페이지를 통째로 다시 만드는** 요청이 된다.
+ */
+function askRestart() {
+  const s = ui.serverEditor
+  if (!s || running(s)) return
+  modal('새로 시작하기',
+    '<p>처음부터 다시 생성할까요? 지금까지 입력한 채팅 내역이 초기화됩니다.</p>',
+    button('close', '취소') + button('server-restart-confirm', '초기화', '', 'btn primary'))
+}
+
+/** 대화를 비우고 입력칸을 "새로 만들기" 쪽으로 돌린다 (입력칸은 그대로 쓴다) */
+function startOver(rerender) {
+  const s = ui.serverEditor
+  if (!s) return
+  closeModal()
+  CHATS[s.id] = [{ role: 'assistant', text: RESTART_GREETING }]
+  s.regen = true
+  s.chatInput = ''
+  s.prompt = ''
+  s.selected = []          // 고른 영역은 수정에서만 뜻이 있다
+  s.notice = null
+  rerender()
+  $('#server-chat')?.focus()
+}
+
+/**
+ * 새로 만들기 요청 — 입력칸의 글을 그대로 쓴다.
+ * ★ 작업이 실제로 시작됐을 때만 모드를 되돌린다. 실패하면 적어 둔 글이 남아야 다시 누를 수 있다.
+ */
+async function submitRestart(text, rerender) {
+  const s = ui.serverEditor
+  if (!s) return
+  s.prompt = (text || '').trim()
+  await regenerate(rerender)
+  if (!s.job) return
+  s.regen = false
+  s.chatInput = ''
+  const box = $('#server-chat')
+  if (box) box.value = ''
+  rerender()
 }
 
 /** AI 대화 — 요청 한 번 = 작업 하나. 결과는 폴링이 끝나면 대화에 붙는다 */
@@ -1601,17 +1656,7 @@ function generateForm(s) {
         busy ? 'disabled' : '', hasPage ? 'btn sm' : 'btn primary') + '</div>'
 }
 
-const EXAMPLES = ['제목을 더 짧고 강렬하게 바꿔줘', '소개 문구를 친근하게 다듬어줘', '참여 방법을 3단계로 정리해줘']
-
-/** 대화를 시작하기 전 빈 자리에 놓는 큰 예시 카드 — [제목, 요청문] */
-const STARTERS = [
-  ['제목 바꾸기', '제목을 가을 대축제로 바꿔줘'],
-  ['소개 다듬기', '소개 문구를 친근하게 다듬어줘'],
-  ['혜택 추가', '혜택에 카페 쿠폰을 추가해줘'],
-  ['참여 방법 정리', '참여 방법을 3단계로 정리해줘'],
-]
-
-const TONE = { FAILED: 'tone-fail', ASK_BACK: 'tone-ask', CANCELLED: 'tone-ask' }
+const TONE ={ FAILED: 'tone-fail', ASK_BACK: 'tone-ask', CANCELLED: 'tone-ask' }
 
 /** AI 대화 — 대화 · 다시 만들기는 스크롤, 입력칸은 아래 고정 */
 function chatPanel(s) {
@@ -1628,7 +1673,6 @@ function chatPanel(s) {
       + '</span>'
     : '')
   const history = chatOf(s.id)
-  const starting = !history.some((m) => m.role === 'user')
   const lastWithChanges = history.map((m) => !!m.changes).lastIndexOf(true)
   const log = history.map((m, i) => {
     const statusLabel = m.tone && m.tone !== 'DONE'
@@ -1656,28 +1700,29 @@ function chatPanel(s) {
         + ' 편집 화면을 다시 열면 재조회합니다.</p>'
       : '')
     + '<div class="chat" id="chat-log" role="log" aria-label="AI 대화" aria-live="polite">' + log + '</div>'
-    // ★ 아직 한 마디도 안 했으면 빈 자리에 시작 카드를 놓는다 — 무엇을 입력할지 막막하지 않게.
-    //   대화가 시작되면 카드는 빠지고 입력칸 아래 작은 예시 칩이 그 일을 한다
-    + (starting
-      ? '<div class="start-head"><p class="start-title">이렇게 시작해 보세요</p>'
-        + button('server-rag-examples', '예시 더 찾기', busy ? 'disabled' : '', 'start-more') + '</div>'
-        + '<div class="start-cards">' + STARTERS.map(([title, ask]) => button('server-chat-example',
-          '<b>' + esc(title) + '</b><span>“' + esc(ask) + '”</span>', 'data-prompt="' + esc(ask) + '" ' + (busy ? 'disabled' : ''), 'start-card')).join('') + '</div>'
-        + '<p class="helper start-help">요청 한 번이 새 버전 하나가 돼요. 남기고 싶은 버전은 위쪽 “버전 저장”으로 이력에 올려요.</p>'
-      : '')
-    + '<details class="server-regen"><summary>처음부터 다시 만들기</summary>' + generateForm(s) + '</details></div>'
+    + '</div>'
     + '<form class="server-foot" id="server-chat-form" aria-busy="' + busy + '">'
-    + '<div id="server-selection">' + selectionHTML(s, busy) + '</div><label class="field">'
-    + '<textarea id="server-chat" rows="3" aria-label="수정 요청" maxlength="' + REQUEST_MAX + '" placeholder="' + esc(chatPlaceholder(s)) + '" ' + (busy ? 'disabled' : '') + '>'
+    + '<div id="server-selection">' + selectionHTML(s, busy) + '</div>'
+    // 처음부터 다시 만드는 중 — 입력칸을 같이 쓰므로 지금 무엇을 쓰는 칸인지 적어 둔다.
+    // 돌아갈 길도 같이 둔다. 없으면 수정하려다 페이지를 통째로 새로 만들게 된다
+    + (s.regen
+      ? '<p class="restart-hint">처음부터 다시 만드는 중이에요 — 어떤 이벤트인지 적고 <strong>입력</strong>을 눌러주세요. '
+        + button('server-restart-cancel', '수정으로 돌아가기', 'type="button"', 'linklike') + '</p>'
+      : '')
+    + '<label class="field">'
+    + '<textarea id="server-chat" rows="3" aria-label="' + (s.regen ? '새로 만들 내용' : '수정 요청') + '" maxlength="' + REQUEST_MAX + '" placeholder="' + esc(chatPlaceholder(s)) + '" ' + (busy ? 'disabled' : '') + '>'
     + esc(s.chatInput || '') + '</textarea></label>'
     + assetStrip(s)
-    + (starting
-      ? ''
-      : '<div class="chips">' + EXAMPLES.map((t) => button('server-chat-example', t, 'data-prompt="' + esc(t) + '" ' + (busy ? 'disabled' : ''), 'chip')).join('')
-        + button('server-rag-examples', '예시 찾기', busy ? 'disabled' : '', 'chip') + '</div>')
-    + '<div class="foot-row">' + assetAdd(s)
-    + '<span class="helper" title="수정은 항상 최신 버전을 기준으로 해요"><span class="keyhint">Ctrl + Enter로 보내기</span> · <span id="server-chat-count">' + (s.chatInput || '').length + ' / ' + REQUEST_MAX + '자</span></span>'
-    + '<button class="btn primary sm" type="submit" ' + (busy ? 'disabled' : '') + '>' + icon('sparkle') + (busy ? '처리 중…' : '보내기') + '</button></div></form>'
+    // 안내는 버튼 줄 위에 둔다 — 같은 줄에 두면 좁은 패널에서 「입력」이 아래로 밀린다
+    + '<p class="foot-meta" title="수정은 항상 최신 버전을 기준으로 해요">'
+    + '<span class="keyhint">Ctrl + Enter로 보내기</span> · <span id="server-chat-count">'
+    + (s.chatInput || '').length + ' / ' + REQUEST_MAX + '자</span></p>'
+    // 한 줄에 넷 — 이미지 추가 · 예시 찾기 · 새로 시작하기 (왼쪽), 입력 (오른쪽)
+    + '<div class="foot-row">'
+    + assetAdd(s)
+    + button('server-rag-examples', '예시 찾기', 'type="button" ' + (busy ? 'disabled' : ''), 'foot-btn')
+    + button('server-restart', '새로 시작하기', 'type="button" ' + (busy ? 'disabled' : ''), 'foot-btn')
+    + '<button class="btn primary sm foot-send" type="submit" ' + (busy ? 'disabled' : '') + '>' + (busy ? '처리 중…' : '입력') + '</button></div></form>'
 }
 
 /**
@@ -1688,8 +1733,8 @@ function chatPanel(s) {
  */
 function assetAdd(s) {
   const busy = running(s) || s.assetBusy
-  return '<label class="chat-add" aria-label="이미지 올리기" title="이미지 올리기 (PNG · JPG · GIF · WEBP, 3MB 까지)">'
-    + icon(s.assetBusy ? 'clock' : 'plus')
+  return '<label class="chat-add" title="PNG · JPG · GIF · WEBP, 3MB 까지">'
+    + (s.assetBusy ? icon('clock') + '올리는 중…' : '이미지 추가')
     + '<input type="file" id="server-asset-file" accept="' + ASSET_ACCEPT + '" ' + (busy ? 'disabled' : '') + '></label>'
 }
 
@@ -1979,7 +2024,19 @@ function previewPanel(s) {
     + '</div></div>' + body + '</section></div>'
 }
 
-const backToList = () => button('route', icon('back') + '이벤트 관리', 'data-route="admin"', 'backlink')
+/**
+ * 목록으로 — 편집 화면 머리말에서는 **아이콘만** 쓴다 (compact).
+ *
+ * ★ 머리말은 한 줄이다. 글자까지 두면 이벤트명이 그만큼 일찍 잘린다.
+ * ★ 아이콘만 남기면 화면에 이름이 없어지므로 aria-label · title 을 반드시 단다 —
+ *   낭독기와 마우스 둘 다 "어디로 가는 버튼인지" 를 알아야 한다.
+ * ★ 불러오는 중 · 실패 화면(loadingView)은 그대로 글자를 쓴다. 거기는 이 버튼
+ *   하나뿐이라 줄을 아낄 이유가 없고, 아이콘만 덩그러니 두면 막막하다.
+ */
+const backToList = (compact = false) => button('route',
+  icon('back') + (compact ? '' : '이벤트 관리'),
+  'data-route="admin" aria-label="이벤트 관리로 돌아가기" title="이벤트 관리로 돌아가기"',
+  compact ? 'backlink backlink-icon' : 'backlink')
 
 /** 불러오는 중 · 실패 — 버전 이력 화면도 같이 쓴다 */
 function loadingView(s, back = backToList()) {
@@ -2227,7 +2284,7 @@ function serverEditorView() {
   const saved = isSaved(s)
   return '<div class="container studio-container workspace">'
     + '<div class="workspace-toolbar"><div class="workspace-title">'
-    + backToList()
+    + backToList(true)
     + '<strong>' + esc(e.name) + '</strong>'
     + '<div class="workspace-event-meta">'
     + '<span class="workspace-event-status">' + badgeOf(serverStatus(e)) + '</span>'
@@ -2434,17 +2491,17 @@ async function runRagExamples() {
       return true
     }
     case 'server-generate': regenerate(rerender); return true
+    case 'server-restart': askRestart(); return true
+    case 'server-restart-confirm': startOver(rerender); return true
+    case 'server-restart-cancel':
+      if (s) { s.regen = false; rerender() }
+      return true
     case 'server-cancel': cancel(); return true
     case 'server-reload': reloadServerEditor(rerender); return true
     case 'server-save': saveCurrent(rerender); return true
     case 'server-tab':
       if (s && s.tab !== b.dataset.tab) { s.tab = b.dataset.tab === 'direct' ? 'direct' : 'chat'; rerender() }
       return true
-    case 'server-chat-example': {
-      const input = $('#server-chat')
-      if (s && input && !input.disabled) { s.chatInput = b.dataset.prompt; input.value = s.chatInput; input.focus(); onChatInput(s.chatInput) }
-      return true
-    }
     case 'server-change-go': if (s) goToBlock(b.dataset.block); return true
     case 'server-folds-open':
     case 'server-folds-close': {
@@ -2756,7 +2813,10 @@ function handleServerSubmit(ev, rerender) {
 
   if (ev.target.id !== 'server-chat-form') return false
   ev.preventDefault()
-  sendChat($('#server-chat')?.value, rerender)
+  const value = $('#server-chat')?.value
+  // 같은 입력칸을 둘이 쓴다 — 「새로 시작하기」를 누른 뒤에는 수정이 아니라 다시 만들기다
+  if (ui.serverEditor?.regen) submitRestart(value, rerender)
+  else sendChat(value, rerender)
   return true
 }
 

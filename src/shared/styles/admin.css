@@ -159,20 +159,8 @@
 .server-foot .field textarea::placeholder{font-weight:400;color:#a09fa9}
 .server-foot .helper{font-size:12px}
 .server-foot .keyhint{font-weight:500}
-#server-chat-form .btn.primary.sm{font-size:15px;padding:12px 22px;border-radius:12px}
-/* 대화 시작 전 빈 자리 — 큰 예시 카드 */
-.start-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:18px 0 0}
-.start-title{margin:0;font-size:13px;font-weight:800;color:var(--ink)}
-.start-more{border:0;background:none;color:var(--sky);font-size:12px;font-weight:700;text-decoration:underline;padding:2px 4px}
-.start-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
-.start-card{display:flex;flex-direction:column;gap:3px;text-align:left;padding:11px 12px;border:1px solid #cfe9f6;border-radius:12px;background:#f8fcff;color:var(--ink);min-width:0}
-.start-card b{font-size:14px;font-weight:800;color:#0377ad}
-.start-card span{font-size:12px;font-weight:400;color:#5c5666;line-height:1.5;overflow-wrap:anywhere}
-.start-card:hover:not(:disabled){background:#eaf6fd}
-.start-help{margin:10px 2px 0}
-/* ★ 칩은 줄바꿈한다 — 좌우 스크롤은 만들지 않는다 */
-.server-foot .chips{gap:6px;margin:6px 0;flex-wrap:wrap}
-.server-foot .chip{font-size:12px;padding:6px 10px;flex:none;white-space:nowrap}
+/* 「입력」도 옆의 셋과 같은 높이 · 같은 알약 모양으로 — 한 줄에 넷이 나란히 선다 */
+#server-chat-form .btn.primary.sm{font-size:12px;padding:0 18px;min-height:30px;height:30px;border-radius:999px}
 /* AI 대화 — 미리보기에서 고른 영역 */
 .server-foot .sel-hint{display:flex;align-items:center;gap:4px;margin:-2px 0 8px;font-weight:500}
 .server-foot .sel-hint svg{width:12px;height:12px;flex:none;color:#0284c7}
@@ -201,13 +189,24 @@
 .compare-bar{display:flex;align-items:center;gap:6px;padding:8px 14px;background:#fffbee;border-bottom:1px solid #f1d58a;color:#5b4410;font-size:12px;font-weight:700;flex:none}
 .compare-bar svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;flex:none}
 .preview-edit-hint[hidden]{display:none}
-.server-foot .foot-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
-.server-foot .foot-row .helper{font-weight:500}
+/* 맨 아랫줄 — 이미지 추가 · 예시 찾기 · 새로 시작하기 (왼쪽), 입력 (오른쪽).
+   ★ 한 줄에 넷을 유지한다. 줄바꿈을 허용하면 좁은 패널에서 「입력」만 아래로 떨어진다 */
+.server-foot .foot-row{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.server-foot .foot-send{margin-left:auto;flex:none}
+/* 보내기 안내 · 글자 수 — 버튼 줄 위, 오른쪽 */
+.server-foot .foot-meta{display:block;margin:6px 2px 0;text-align:right;font-size:11px;font-weight:500;color:var(--muted)}
+/* 처음부터 다시 만드는 중 안내 — 입력칸을 수정과 같이 쓰므로 지금 무엇을 쓰는지 밝힌다 */
+.server-foot .restart-hint{margin:0 0 8px;padding:8px 11px;border-radius:9px;background:#f0faff;border:1px solid #bce3f5;color:#0b6c99;font-size:11px;line-height:1.7}
+.server-foot .restart-hint .linklike{border:0;background:none;padding:0;color:#0377ad;font-size:11px;font-weight:700;text-decoration:underline;cursor:pointer}
 /* 이미지 올리기 — 입력칸의 + 와 올린 그림 목록
    ★ input[type=file] 을 display:none 으로 숨기지 않는다 — 그러면 일부 브라우저에서
      label 로 창이 안 열리고, 화면 낭독기에도 안 잡힌다. 크기를 0 으로 만든다 */
-.server-foot .chat-add{display:inline-flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;border:1px solid var(--line,#e2dee8);border-radius:999px;background:#fff;color:var(--muted);cursor:pointer}
-.server-foot .chat-add:hover{background:#f0faff;border-color:#bce3f5;color:#0377ad}
+/* 셋을 같은 모양으로 — 이미지 추가는 <label>(파일 input 을 품는다), 나머지는 <button> */
+.server-foot .chat-add,
+.server-foot .foot-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;height:30px;padding:0 12px;border:1px solid var(--line,#e2dee8);border-radius:999px;background:#fff;color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer}
+.server-foot .chat-add:hover,
+.server-foot .foot-btn:hover:not(:disabled){background:#f0faff;border-color:#bce3f5;color:#0377ad}
+.server-foot .foot-btn:disabled{opacity:.4;cursor:default}
 .server-foot .chat-add svg{width:15px;height:15px}
 .server-foot .chat-add input{width:0;height:0;opacity:0;position:absolute;pointer-events:none}
 .server-foot .chat-add:has(input:disabled){opacity:.4;cursor:default}
@@ -229,9 +228,6 @@
 .server-foot .chat-asset-done{display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 7px;border:1px solid var(--green,#168467);border-radius:999px;background:color-mix(in oklab,var(--green,#168467) 12%,transparent);color:var(--green,#168467);font-size:11px;font-weight:700;line-height:1;cursor:pointer}
 .server-foot .chat-asset-done:hover{background:color-mix(in oklab,var(--green,#168467) 22%,transparent)}
 .server-foot .chat-asset-done svg{width:11px;height:11px}
-.server-regen{margin-top:14px}
-.server-regen summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)}
-.server-regen[open] summary{margin-bottom:10px}
 .server-scroll .workspace-tip{padding:0 0 12px;margin-bottom:12px}
 .server-scroll .workspace-tip{font-size:12px}
 .sedit-group{border:0;padding:0;margin:0 0 16px;min-width:0}
