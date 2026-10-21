@@ -519,14 +519,8 @@ function table(s) {
 }
 
 /**
- * 목록이 설명해야 하는 승부 예측형 사정 두 가지.
- *
- * ★ 발표 전에는 전원 PENDING 이다 — "아직 아무도 당첨되지 않았다" 가 아니라
- *   **아직 뽑지 않았다**는 뜻이다.
- * ★ 혜택이 둘 이상이면 목록의 「경품」은 믿을 수 없다 — 서버가 당첨 혜택 중
- *   **하나만** 준다 (result_data.rewards 를 내려주지 않는다). 실측: 정답자 2명 중
- *   1명이 추첨 경품에 당첨됐는데 목록에는 둘 다 참가 보상만 보였다.
- *   경품을 보내기 전에 반드시 확인이 필요하므로 숨기지 않고 적는다.
+ * 승부 예측형의 발표 대기 상태와 대표 경품 표시를 안내한다.
+ * 목록에는 대표 경품을, CSV에는 당첨된 모든 혜택을 표시한다.
  */
 function sportsNotes(s) {
   if (s.config?.gameCode !== 'SPORTS_PREDICTION') return ''
@@ -538,9 +532,8 @@ function sportsNotes(s) {
       + '이 지나고 경기 결과가 등록돼 있으면 혜택별로 추첨이 돌아갑니다.')
   }
   if ((c.rewards || []).length > 1) {
-    notes.push('혜택이 ' + c.rewards.length + '개예요. 목록의 <strong>경품 칸은 당첨 혜택 중 하나만</strong> 보여줘요 '
-      + '— 서버가 하나만 내려줍니다. 추첨 혜택 당첨자를 이 화면에서 가려낼 수 없으니, '
-      + '경품을 보내기 전에 꼭 확인해주세요.')
+    notes.push('혜택이 ' + c.rewards.length + '개예요. 목록에는 <strong>대표 당첨 경품 하나만</strong> 표시돼요. '
+      + '<strong>당첨자 내려받기</strong>에서는 당첨된 혜택마다 한 줄씩 확인할 수 있어요.')
   }
   return notes.map((t) => '<p class="review-note">' + t + '</p>').join('')
 }
@@ -868,11 +861,10 @@ async function submitResult(form, rerender) {
 }
 
 /**
- * 당첨자 CSV — 서버에 엔드포인트가 없어서 화면이 페이지를 끝까지 모아 만든다.
- * ★ 전화번호를 **가리지 않고** 넣는다. 경품 발송에 쓰는 파일이다 —
- *   화면에서는 가리지만 내려받기는 원본이 필요하다.
- * ★ 승부 예측형에서 혜택이 둘 이상이면 「경품」은 당첨 혜택 중 하나뿐이다
- *   (서버가 하나만 준다). 화면에도 같은 안내를 띄운다.
+ * 당첨자 CSV — 전체 페이지를 모아 당첨 혜택마다 한 줄씩 만든다.
+ * 여러 혜택은 rewards 중 WON만 포함하고,
+ * 혜택 목록이 없는 기본형·복주머니형은 prizeName을 사용한다.
+ * 참여 입력의 전화번호는 발송용으로 원본을 포함한다.
  */
 async function downloadWinners(rerender) {
   const s = state()
@@ -880,24 +872,61 @@ async function downloadWinners(rerender) {
   s.downloading = true
   rerender()
   try {
-    const rows = await loadAllParticipants(s.eventId, 'WON')
-    const head = ['참여ID', '회원ID', '이름', '참여시각', '참여입력', '경품']
-    const cell = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"'
-    const body = rows.map((p) => [
-      p.participationId, p.userId, p.userName, p.participatedAt,
-      Object.entries(p.submittedData || {}).map(([k, v]) => k + '=' + v).join(' '),
-      p.prizeName,
-    ].map(cell).join(','))
-    // ★ BOM 을 붙인다 — 없으면 엑셀이 한글을 깨서 연다
-    const blob = new Blob(['﻿' + [head.map(cell).join(','), ...body].join('\n')],
-      { type: 'text/csv;charset=utf-8' })
+    const participants = await loadAllParticipants(s.eventId, 'WON')
+
+    const rows = participants.flatMap((p) => {
+      const base = [
+        p.participationId,
+        p.userId,
+        p.userName,
+        p.participatedAt,
+        Object.entries(p.submittedData || {})
+          .map(([k, v]) => k + '=' + v)
+          .join(' '),
+      ]
+
+      if (Array.isArray(p.rewards) && p.rewards.length) {
+        return p.rewards
+          .filter((reward) => reward.status === 'WON')
+          .map((reward) => [
+            ...base,
+            reward.rewardId,
+            reward.prizeName,
+          ])
+      }
+
+      return [[...base, '', p.prizeName]]
+    })
+
+    const head = [
+      '참여ID', '회원ID', '이름', '참여시각',
+      '참여입력', '혜택ID', '경품',
+    ]
+    const cell = (v) => {
+      const value = String(v ?? '')
+      // 엑셀에서 사용자 입력이 수식으로 실행되지 않도록 처리한다.
+      const safe = /^[\s\uFEFF]*[=+\-@]/.test(value)
+        || /^[\t\r\n]/.test(value)
+        ? "'" + value
+        : value
+      return '"' + safe.replace(/"/g, '""') + '"'
+    }
+    const body = rows.map((row) => row.map(cell).join(','))
+    const blob = new Blob(
+      ['\uFEFF' + [head.map(cell).join(','), ...body].join('\r\n')],
+      { type: 'text/csv;charset=utf-8' },
+    )
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = 'winners-' + s.eventId + '.csv'
+    document.body.appendChild(a)
     a.click()
-    URL.revokeObjectURL(url)
-    toast(rows.length + '명의 당첨자를 내려받았어요.')
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+
+    toast('당첨자 ' + participants.length + '명 · 당첨 혜택 '
+      + rows.length + '건을 내려받았어요.')
   } catch (e) {
     toast(e?.message || '당첨자를 내려받지 못했어요.')
   } finally {
