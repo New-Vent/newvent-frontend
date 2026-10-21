@@ -97,11 +97,13 @@
 /* Full-height editor: large canvas and a single mode-switching side panel. */
 .editing-workspace main{padding:0;min-height:0}
 .editing-workspace .footer{display:none}
-.workspace.studio-container{max-width:none;padding:14px 20px 48px;height:calc(100dvh - 78px);display:flex;flex-direction:column;gap:14px}
-.workspace-toolbar{display:flex;align-items:center;gap:24px;flex:none;min-height:64px}
+/* ★ 높이는 상단바 높이에서 뺀다 — 값을 여기 적어 두면 상단바를 고칠 때 같이 안 바뀐다
+   ★ 아래 여백 48px 은 화면 안쪽을 그만큼 깎는다(높이가 고정이라). 대화 패널이 쓰도록 줄였다 */
+.workspace.studio-container{max-width:none;padding:10px 20px 14px;height:calc(100dvh - var(--admin-header-h, 78px));display:flex;flex-direction:column;gap:10px}
+.workspace-toolbar{display:flex;align-items:center;gap:16px;flex:none;min-height:0}
 .workspace-title{min-width:120px;flex:1}
-.workspace-title strong{font-size:15px;display:block;max-width:350px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.workspace-title .backlink{margin:0 0 6px}
+.workspace-title strong{font-size:15px;max-width:350px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.workspace-title .backlink{margin:0}
 #workspace-dates{border:0;padding:0;margin:0;display:flex;gap:12px;min-width:0}
 #workspace-dates .field{font-size:10px;gap:4px}
 #workspace-dates input{padding:7px 10px;font-size:12px;width:150px}

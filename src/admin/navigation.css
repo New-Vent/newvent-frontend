@@ -6,7 +6,8 @@
 #header .admin-header-main {
   position: relative;
   flex-wrap: nowrap;
-  min-height: 78px;
+  /* 높이는 admin/styles.css 의 --admin-header-h 하나로 정한다 — 편집 화면이 그 값으로 본문 높이를 잰다 */
+  min-height: var(--admin-header-h, 78px);
   padding-top: 0;
 }
 
@@ -149,7 +150,6 @@
 @media (max-width: 760px) {
   #header .admin-header-main {
     gap: 12px;
-    min-height: 68px;
   }
 
   #header .admin-header-tools {
