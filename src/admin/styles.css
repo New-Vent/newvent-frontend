@@ -4016,10 +4016,10 @@ body.admin-login-screen .admin-login-page {
 
 .rag-dash .rag-week-rag {
   position: absolute;
-  right: 7px;
+  right: 0;
   bottom: 0;
-  left: 7px;
-  border-radius: 3px;
+  left: 0;
+  border-radius: 5px;
   background: #e7a0bd;
 }
 
@@ -4068,11 +4068,6 @@ body.admin-login-screen .admin-login-page {
   .rag-dash .rag-week-total,
   .rag-dash .rag-week-date {
     font-size: 10px;
-  }
-
-  .rag-dash .rag-week-rag {
-    right: 4px;
-    left: 4px;
   }
 }
 
@@ -4191,4 +4186,16 @@ body.admin-login-screen .admin-login-page {
     flex-wrap: wrap;
     gap: 6px 12px;
   }
+}
+
+/* 재색인 안내와 표 사이 여백 */
+.rag-dash .reindex-card > .helper.trend-helper {
+  margin: 12px 0 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #758399;
+  font-size: 12px;
+  line-height: 1.8;
+  word-break: keep-all;
 }
