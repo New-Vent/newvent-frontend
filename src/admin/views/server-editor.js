@@ -35,9 +35,10 @@ import { badgeOf, serverStatus } from '@shared/format.js'
 import { GRADES, gradeLabel, REQUEST_MAX } from '@shared/grades.js'
 import { icon } from '@shared/icons.js'
 import { LAYOUTS, STACK, layoutPicks, markPick } from '@shared/layouts.js'
+import { hexToRgb, parseHex, rgbToHex } from '@shared/color-code.js'
 import { hasVariantIcons, shortName, variantIcon } from '@shared/variant-icons.js'
 import { diffBlocks, orderChanged } from '@shared/preview/block-diff.js'
-import { serverFrame } from '@shared/preview/document.js'
+import { serverFrame, takeStagedDocument } from '@shared/preview/document.js'
 import { collectTexts, matches, normalize, textsOf } from '@shared/preview/server-texts.js'
 import {
   cancelGeneration, deleteAsset, directEdit, endEvent, generationStatus,
@@ -77,6 +78,8 @@ const freshDirect = () => ({
   removeBlocks: [], removeItems: {},
   // 직접 수정 접기 상태 — 다시 그려도 열림/닫힘을 유지 (looks · order · title · button)
   folds: {},
+  // 블록 순서 · 삭제 · 항목 맞바꾸기를 한 단계씩 되돌리는 기록 (pushHistory · undoLast)
+  history: [],
 })
 
 /** 새로 만든 직후처럼 진행 중인 작업을 들고 들어올 때 — 목록에서 열 때는 인자 없이 */
@@ -450,16 +453,255 @@ function previewDeletes(s) {
 function removeBlockDraft(s, key, rerender) {
   if (ADMIN_KEEP.includes(key)) return
   rememberDirectScroll(s)
+  pushHistory(s, { type: 'block', removeBlocks: [...s.direct.removeBlocks], order: s.direct.order && [...s.direct.order] })
   s.direct.removeBlocks = s.direct.removeBlocks.includes(key) ? s.direct.removeBlocks : [...s.direct.removeBlocks, key]
   s.direct.order = currentOrder(s)
-  previewDeletes(s); paintOrder(s); previewOrder(s); updateDirectCount(s); rerender?.()
+  previewDeletes(s); paintOrder(s); previewOrder(s); updateDirectCount(s); repaintDirectPanel(s, rerender)
 }
 function removeItemDraft(s, key, index, rerender) {
   const current = s.direct.removeItems[key] || []
   if (current.includes(index)) return
   rememberDirectScroll(s)
+  pushHistory(s, { type: 'item', key, removed: [...current] })
   s.direct.removeItems[key] = [...current, index]
-  previewDeletes(s); paintOrder(s); updateDirectCount(s); rerender?.()
+  previewDeletes(s); paintOrder(s); updateDirectCount(s); repaintDirectPanel(s, rerender)
+}
+
+/**
+ * 직접 수정 패널(왼쪽)만 다시 그린다. 미리보기 iframe 은 그대로 둔다.
+ * ★ 영역 · 항목을 지우거나 되돌리면 문구 칸 목록이 달라져서 패널은 다시 그려야 한다.
+ *   그런데 화면 전체를 다시 그리면 iframe 이 새로 떠서 매번 깜빡인다 — 지운 모습은 previewDeletes 가 이미 제자리에서 입혔다.
+ * ★ 패널을 못 찾으면(다른 탭 · 아직 안 그림) 예전처럼 전체를 다시 그린다.
+ */
+function repaintDirectPanel(s, rerender) {
+  const side = $('.workspace-side .server-side'), old = $('#server-scroll')
+  if (!side || !old || s.tab !== 'direct' || !$('.event-frame')) { rerender?.(); return }
+  const top = old.scrollTop
+  const holder = document.createElement('div')
+  holder.innerHTML = directPanel(s)
+  old.remove()
+  side.querySelector(':scope > .server-foot')?.remove()
+  side.append(...holder.childNodes)
+  const scroller = $('#server-scroll')
+  document.querySelectorAll('textarea[data-autogrow]').forEach((el) => {
+    if (el.dataset.sedit !== undefined) {
+      const index = Number(el.dataset.sedit)
+      el.value = s.direct.values[index] ?? editable(s)[index]?.before ?? ''
+    }
+    grow(el)
+  })
+  applyTextFilter(s)
+  updateDirectCount(s)
+  bindDirectFolds(s)
+  foldLooks()
+  if (scroller) scroller.scrollTop = top
+}
+
+/* ── 한 단계 되돌리기 ────────────────────────────────────────────
+ * 블록 순서 · 블록 삭제 · 항목 삭제 · 항목 내용 맞바꾸기를 하나씩 거꾸로 돌린다.
+ * ★ 고친 문구를 한 글자씩 되돌리는 게 아니다 — 문구 칸의 입력은 브라우저의 되돌리기(Ctrl+Z)가 맡는다.
+ * ★ 기록은 저장하면(= s.direct 를 새로 만들면) 비워진다. 저장한 버전은 버전 이력에서 되돌린다.
+ */
+const HISTORY_MAX = 50
+
+function pushHistory(s, entry) {
+  s.direct.history.push(entry)
+  if (s.direct.history.length > HISTORY_MAX) s.direct.history.shift()
+}
+
+/** 가장 최근 한 단계를 되돌린다. 되돌릴 게 없으면 false */
+function undoLast(s, rerender) {
+  const entry = s.direct.history.pop()
+  if (!entry) return false
+  rememberDirectScroll(s)
+  if (entry.type === 'order') {
+    s.direct.order = entry.order
+  } else if (entry.type === 'block') {
+    s.direct.removeBlocks = entry.removeBlocks
+    s.direct.order = entry.order
+  } else if (entry.type === 'item') {
+    if (entry.removed.length) s.direct.removeItems[entry.key] = entry.removed
+    else delete s.direct.removeItems[entry.key]
+  } else if (entry.type === 'swap') {
+    entry.texts.forEach(({ index, value, format }) => {
+      if (value === undefined) delete s.direct.values[index]
+      else s.direct.values[index] = value
+      if (format === undefined) delete s.direct.formats[index]
+      else s.direct.formats[index] = format
+    })
+    restoreSwapPreview(s, entry.texts.map((t) => t.index))
+  }
+  previewDeletes(s); paintOrder(s); previewOrder(s)
+  $('.event-frame')?.nvToolsRefresh?.()
+  // 순서 · 맞바꾸기는 미리보기와 문구 칸을 제자리에서 맞춘다 — 전체를 다시 그리면 iframe 이 새로 떠서 깜빡인다.
+  // 삭제를 되돌리면 문구 칸의 목록(지운 영역의 문구)이 달라지므로 그때만 왼쪽 패널을 다시 그린다 (iframe 은 그대로).
+  if (entry.type === 'swap') syncTextFields(s, entry.texts.map((t) => t.index))
+  updateDirectCount(s)
+  if (entry.type === 'block' || entry.type === 'item') repaintDirectPanel(s, rerender)
+  return true
+}
+
+/* ── 항목 내용 맞바꾸기 ───────────────────────────────────────────
+ * ★ 항목을 옮기는 게 아니다. 서버에는 항목 순서를 바꾸는 요청이 없어서, 두 항목의 문구(와 문구 서식)를
+ *   서로 바꿔 넣는다. 이미지 · 항목마다 다른 모양은 그대로이고, 저장하면 문구 수정으로 기록된다.
+ * ★ 문구 조각 수가 같은 항목끼리만 된다. 단계 번호(01 · 02)는 제자리에 둔다 — 같이 바꾸면 번호가 거꾸로 선다.
+ * ★ 자주 묻는 질문은 뺀다. 항목이 질문 줄 하나뿐이고 답은 따로라서, 질문만 바꾸면 짝이 어긋난다.
+ */
+const SWAPPABLE = ['benefits', 'stats', 'prize', 'steps', 'schedule', 'compare']
+const COUNTER = /^\s*0?\d{1,2}\s*$/
+
+const textValue = (s, i) => s.direct.values[i] ?? editable(s)[i]?.before ?? ''
+
+/** 항목 안의 문구 조각 → 서버 문구 번호 (문서 순서) */
+function itemTextIndexes(s, key, index) {
+  const el = itemElements(s, key)[index]
+  const live = liveTexts(s)
+  if (!el || !live) return []
+  const out = []
+  live.forEach((t, i) => { if (t?.node && el.contains(t.node)) out.push(i) })
+  return out
+}
+
+/** 서버가 준 저장 서식 → { color?, size?, bold? } */
+function savedFormat(t) {
+  const f = t?.format || {}, out = {}
+  if (f.color) out.color = f.color
+  if (f['font-size']) out.size = parseInt(f['font-size'], 10)
+  if (f['font-weight']) out.bold = Number(f['font-weight']) >= 600
+  return out
+}
+/** 고치는 중인 서식 → { color?, size?, bold? } (reset 은 뺀다) */
+function patchPart(p) {
+  const out = {}
+  if (p?.color) out.color = p.color
+  if (p?.size != null && p.size !== '') out.size = Number(p.size)
+  if (p?.bold != null && p.bold !== '') out.bold = !!p.bold
+  return out
+}
+/** 지금 이 문구에 입혀진 서식 = 저장돼 있던 것 + 고치는 중인 것 */
+function effectiveFormat(s, i) {
+  const patch = s.direct.formats?.[i]
+  return patch?.reset ? patchPart(patch) : { ...savedFormat(editable(s)[i]), ...patchPart(patch) }
+}
+const sameFormat = (a, b) => ['color', 'size', 'bold'].every((k) => a[k] === b[k])
+
+/** 문구 i 의 서식이 want 가 되게 고치는 중인 서식을 맞춘다 */
+function setFormat(s, i, want) {
+  if (sameFormat(effectiveFormat(s, i), want)) return
+  // 저장돼 있던 서식과 같아지면 고칠 게 없다
+  if (sameFormat(savedFormat(editable(s)[i]), want)) delete s.direct.formats[i]
+  else s.direct.formats[i] = { reset: true, ...want }
+}
+
+/**
+ * 두 항목을 맞바꿀 수 있는가. 된다면 [[번호 A, 번호 B], …] (제자리에 둘 번호는 뺀다), 안 되면 이유 문구.
+ * 단추를 그릴 때도 부르므로 상태를 바꾸지 않는다.
+ */
+function swapPlan(s, key, a, b) {
+  if (!SWAPPABLE.includes(key)) return { why: labelOf(key) + ' 항목은 짝이 있어서 맞바꿀 수 없어요' }
+  const A = itemTextIndexes(s, key, a), B = itemTextIndexes(s, key, b)
+  if (!A.length || A.length !== B.length) {
+    return { why: '문구 조각 수가 달라서 맞바꿀 수 없어요 (' + A.length + '개 ↔ ' + B.length + '개)' }
+  }
+  const pairs = []
+  for (let n = 0; n < A.length; n++) {
+    const ca = COUNTER.test(textValue(s, A[n])), cb = COUNTER.test(textValue(s, B[n]))
+    if (ca !== cb) return { why: '항목 구조가 달라서 맞바꿀 수 없어요' }
+    if (!ca) pairs.push([A[n], B[n]])
+  }
+  return pairs.length ? { pairs } : { why: '바꿀 문구가 없어요' }
+}
+
+/** 두 항목의 문구와 서식을 서로 바꿔 넣는다. 한 단계 되돌리기에 쌓는다 */
+const swapItems = (s, key, a, b) => swapChain(s, key, [[a, b]])
+
+/**
+ * 이웃한 항목끼리의 맞바꾸기를 이어서 한다 — [[a, b], [b, c], …]. 끌어서 옮기기가 이 길을 쓴다.
+ * ★ 하나라도 안 되면 아무것도 바꾸지 않는다. 한 단계 되돌리기 한 번으로 통째로 돌아온다.
+ * ★ 맞바꿔도 항목 자리와 문구 조각 수는 그대로라서, 처음에 본 계획이 끝까지 맞다.
+ */
+function swapChain(s, key, steps) {
+  const plans = steps.map(([a, b]) => swapPlan(s, key, a, b))
+  const bad = plans.find((p) => !p.pairs)
+  if (bad || !plans.length) { toast(bad ? bad.why : '옮길 곳이 없어요'); return false }
+  rememberDirectScroll(s)
+  const touched = [...new Set(plans.flatMap((p) => p.pairs.flat()))]
+  pushHistory(s, { type: 'swap', texts: touched.map((index) => ({
+    index,
+    value: s.direct.values[index],
+    format: s.direct.formats[index] && { ...s.direct.formats[index] },
+  })) })
+  plans.forEach((plan) => plan.pairs.forEach(([x, y]) => {
+    const vx = textValue(s, x), vy = textValue(s, y)
+    const fx = effectiveFormat(s, x), fy = effectiveFormat(s, y)
+    s.direct.values[x] = vy
+    s.direct.values[y] = vx
+    setFormat(s, x, fy)
+    setFormat(s, y, fx)
+  }))
+  // ★ 전체를 다시 그리지 않는다 — 그러면 미리보기 iframe 이 새로 떠서 매번 화면이 깜빡인다.
+  //   미리보기는 위에서 제자리로 고쳤고, 왼쪽 문구 칸만 지금 값에 맞춘다
+  restoreSwapPreview(s, touched)
+  syncTextFields(s, touched)
+  paintOrder(s); updateDirectCount(s)
+  return true
+}
+
+/**
+ * 항목을 끌어 다른 항목 자리에 놓았다 — from 의 내용이 to 자리로 가고, 사이의 내용은 한 칸씩 밀린다.
+ * 지운 항목(안 보임)은 건너뛴다. 번호는 itemElements 의 자리다.
+ */
+function moveItemContent(s, key, from, to) {
+  if (!SWAPPABLE.includes(key)) return false
+  const shown = itemElements(s, key).map((el, i) => (el.getClientRects().length ? i : -1)).filter((i) => i >= 0)
+  const steps = chainSteps(shown, from, to)
+  return steps.length ? swapChain(s, key, steps) : false
+}
+
+/** 보이는 항목 번호들(shown) 안에서 from 을 to 자리로 보내는 이웃끼리의 맞바꾸기 순서. 못 옮기면 [] */
+function chainSteps(shown, from, to) {
+  const p = shown.indexOf(from), q = shown.indexOf(to)
+  if (p < 0 || q < 0 || p === q) return []
+  const steps = []
+  if (p < q) for (let k = p; k < q; k++) steps.push([shown[k], shown[k + 1]])
+  else for (let k = p; k > q; k--) steps.push([shown[k], shown[k - 1]])
+  return steps
+}
+
+/**
+ * 왼쪽 문구 칸(글자 · 문구 서식)을 지금 값에 맞춘다. 맞바꾸기 · 되돌리기가 부른다.
+ * 전체를 다시 그리는 길(rerender)은 iframe 을 새로 띄워 깜빡이므로 쓰지 않는다.
+ */
+function syncTextFields(s, indices) {
+  indices.forEach((i) => {
+    const area = document.querySelector('textarea[data-sedit="' + i + '"]')
+    if (!area) return
+    area.value = textValue(s, i)
+    const changed = normalize(area.value) !== normalize(editable(s)[i]?.before ?? '')
+    area.classList.toggle('changed', changed)
+    document.querySelector('[data-sedit-no="' + i + '"]')?.classList.toggle('changed', changed)
+    grow(area)
+    const f = effectiveFormat(s, i)
+    const control = (name) => document.querySelector('[data-text-format="' + name + '"][data-text-index="' + i + '"]')
+    const color = control('color'), size = control('size'), bold = control('bold')
+    if (color) color.value = f.color || '#222222'
+    if (size) size.value = f.size ?? ''
+    if (bold) bold.value = f.bold === true ? 'true' : f.bold === false ? 'false' : ''
+  })
+}
+
+/** 미리보기의 해당 문구를 지금 값 · 서식으로 다시 맞춘다 (맞바꾸기 · 되돌리기가 부른다) */
+function restoreSwapPreview(s, indices) {
+  const live = liveTexts(s)
+  if (!live) return
+  indices.forEach((i) => {
+    const node = live[i]?.node
+    if (!node) return
+    setPreviewText(node, i, textValue(s, i))
+    const holder = node.parentElement
+    if (textBaseStyles.has(holder)) holder.setAttribute('style', textBaseStyles.get(holder))
+  })
+  previewItemFormats(s)
 }
 
 /** 삭제 버튼을 눌러 다시 그려도 직접수정 패널과 페이지의 현재 위치를 유지한다. */
@@ -561,6 +803,9 @@ function changedOrder(s) {
 
 /** 순서를 바꾸고 화면 세 곳을 맞춘다. 전체를 다시 그리지 않는다 — 입력 포커스가 날아간다 */
 function setOrder(s, next) {
+  const now = currentOrder(s)
+  if (next.length === now.length && next.every((k, i) => k === now[i])) return
+  pushHistory(s, { type: 'order', order: s.direct.order && [...s.direct.order] })
   s.direct.order = next
   paintOrder(s)
   previewOrder(s)
@@ -575,6 +820,14 @@ function moveBlock(s, key, target) {
   const at = list.indexOf(target)
   list.splice(at < 0 ? list.length : at, 0, key)
   setOrder(s, list)
+}
+
+/** 맨 위 · 맨 아래로. 목록이 길 때 ▲▼ 를 여러 번 누르지 않게 한다 */
+function moveToEdge(s, key, edge) {
+  const list = currentOrder(s)
+  if (!list.includes(key)) return
+  const rest = list.filter((k) => k !== key)
+  setOrder(s, edge === 'top' ? [key, ...rest] : [...rest, key])
 }
 
 /** 한 칸 위/아래 — 끌기를 못 쓰는 환경(모바일 · 키보드)의 길 */
@@ -616,8 +869,25 @@ function previewOrder(s) {
 function orderHTML(s, busy) {
   const available = currentOrder(s)
   if (available.length < 2 && !available.some((k) => !ADMIN_KEEP.includes(k) || ITEM_SELECTORS[k])) return ''
-  return '<ol class="sorder" id="server-order">' + orderItems(s, busy) + '</ol>'
-    + '<p class="helper">끌어서 옮기거나 ▲▼ 를 누르세요. 유의사항 · 참여 버튼은 늘 맨 끝이에요.</p>'
+  return '<div class="sorder-head">' + undoButton(s, busy) + '</div>'
+    + '<ol class="sorder" id="server-order">' + orderItems(s, busy) + '</ol>'
+    + '<p class="helper">끌어서 옮기거나 ▲▼ 를 누르세요. 미리보기에서 영역 위의 ⠿ 를 끌어도 돼요. '
+    + '🔒 영역은 이벤트에 꼭 필요해서 늘 맨 끝에 있어요.</p>'
+    + '<p class="helper sorder-swap-help">항목 옆 ▲▼ 는 위·아래 항목과 <b>내용을 맞바꿔요</b>. 항목 자체가 움직이는 게 아니라서 이미지와 모양은 그대로예요. '
+    + '문구 조각 수가 같은 항목끼리만 바꿀 수 있어요.</p>'
+}
+
+/** 한 단계 되돌리기 — 기록이 없으면 흐리게 둔다. 목록을 다시 그릴 때마다 paintOrder 가 맞춘다 */
+function undoButton(s, busy) {
+  const none = !s.direct.history.length
+  return button('server-undo', '↶ 한 단계 되돌리기', (busy || none ? 'disabled ' : '') + 'id="server-undo" title="순서 · 삭제 · 맞바꾸기를 가장 최근 것부터 하나씩 되돌려요"', 'sorder-undo')
+}
+
+/** 못 옮기는 영역 — 목록 끝에 잠금으로 보여 준다. 끌기 · ▲▼ 가 없다 */
+function lockedRows(s) {
+  return blocksInHtml(s.preview?.html).filter((k) => PINNED_BLOCKS.includes(k) && !s.direct.removeBlocks.includes(k))
+    .map((k) => '<li class="sorder-lock" aria-label="' + esc(labelOf(k)) + ' 맨 끝에 고정"><span aria-hidden="true">🔒</span>'
+      + '<span class="sorder-name">' + esc(labelOf(k)) + '</span><em>맨 끝에 고정</em></li>').join('')
 }
 
 /**
@@ -632,13 +902,17 @@ function orderItems(s, busy) {
     + '<span class="sorder-grip" aria-hidden="true">⠿</span>'
     + '<span class="sorder-name">' + esc(labelOf(k)) + '</span>'
     + '<span class="sorder-moves">'
+    + button('server-order-top', '⤒', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
+        + ' 맨 위로" title="맨 위로" ' + (busy || i === 0 ? 'disabled' : ''), 'btn sm sorder-edge')
+    + button('server-order-bottom', '⤓', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
+        + ' 맨 아래로" title="맨 아래로" ' + (busy || i === list.length - 1 ? 'disabled' : ''), 'btn sm sorder-edge')
     + button('server-order-up', '▲', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
         + ' 위로" ' + (busy || i === 0 ? 'disabled' : ''), 'btn sm')
     + button('server-order-down', '▼', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
         + ' 아래로" ' + (busy || i === list.length - 1 ? 'disabled' : ''), 'btn sm')
     + (ADMIN_KEEP.includes(k) ? '' : button('server-block-delete', '×', 'data-block="' + esc(k) + '" aria-label="' + esc(labelOf(k))
         + ' 블록 삭제" title="' + esc(labelOf(k)) + ' 블록 삭제" ' + (busy ? 'disabled' : ''), 'btn sm sorder-del'))
-    + '</span>' + itemRows(s, k, busy) + '</li>').join('')
+    + '</span>' + itemRows(s, k, busy) + '</li>').join('') + lockedRows(s)
 }
 
 /** 블록 안의 항목 — 한 줄에 하나, 길면 말줄임(전체 문구는 title). 최소 개수에 닿으면 지울 수 없다 */
@@ -649,9 +923,19 @@ function itemRows(s, k, busy) {
   const removed = s.direct.removeItems[k] || []
   const atMinimum = items.length - removed.length <= (ITEM_MINIMUMS[k] || 0)
   const why = atMinimum ? labelOf(k) + ' 항목은 최소 ' + (ITEM_MINIMUMS[k] || 0) + '개가 필요해요' : labelOf(k) + ' 항목 삭제'
-  return '<span class="sorder-items">' + items.map((el, index) => ({ text: el.textContent.trim().replace(/\s+/g, ' '), index }))
+  const visible = items.map((el, index) => ({ text: el.textContent.trim().replace(/\s+/g, ' '), index }))
     .filter(({ index }) => !removed.includes(index))
-    .map(({ text, index }) => '<span class="sorder-subitem"><span class="sorder-subtext" title="' + esc(text) + '">' + esc(text) + '</span>'
+  // 맞바꾸기 단추 — 위 · 아래 이웃(지워지지 않은 항목)과. 못 하는 이유는 title 로 말한다
+  const swap = (index, withIndex, label) => {
+    const plan = withIndex == null ? { why: label === '위' ? '맨 위 항목이에요' : '맨 아래 항목이에요' } : swapPlan(s, k, index, withIndex)
+    const off = busy || !plan.pairs
+    return button('server-item-swap', label === '위' ? '▲' : '▼', 'data-block="' + esc(k) + '" data-index="' + index + '" data-with="' + (withIndex ?? '')
+      + '" aria-label="' + esc(labelOf(k)) + ' 항목을 ' + label + ' 항목과 내용 맞바꾸기" title="' + esc(plan.pairs ? label + ' 항목과 내용 맞바꾸기' : plan.why) + '" '
+      + (off ? 'disabled' : ''), 'btn sm sorder-swap')
+  }
+  return '<span class="sorder-items">' + visible
+    .map(({ text, index }, p) => '<span class="sorder-subitem"><span class="sorder-subtext" title="' + esc(text) + '">' + esc(text) + '</span>'
+      + '<span class="sorder-swaps">' + swap(index, visible[p - 1]?.index, '위') + swap(index, visible[p + 1]?.index, '아래') + '</span>'
       + button('server-item-delete', '×', 'data-block="' + esc(k) + '" data-index="' + index + '" aria-label="' + esc(labelOf(k))
         + ' 항목 삭제" title="' + esc(why) + '" ' + (busy || atMinimum ? 'disabled' : ''), 'btn sm sorder-del') + '</span>').join('')
     + '</span>'
@@ -659,8 +943,11 @@ function itemRows(s, k, busy) {
 
 /** 목록만 다시 그린다 — 전체를 그리면 고치던 문구 칸의 포커스가 날아간다 */
 function paintOrder(s) {
+  const busy = running(s) || s.busy
   const ol = $('#server-order')
-  if (ol) ol.innerHTML = orderItems(s, running(s) || s.busy)
+  if (ol) ol.innerHTML = orderItems(s, busy)
+  const undo = $('#server-undo')
+  if (undo) undo.disabled = busy || !s.direct.history.length
 }
 
 /* ── 페이지 배치 · 영역 모양 ────────────────────────────────────
@@ -931,9 +1218,16 @@ function toolsOf(s, key) {
   const L = looksOf(s)
   const b = L && !L.template ? L.blocks[key] : null
   const order = currentOrder(s), at = order.indexOf(key)
+  const movable = at >= 0 && order.length > 1
   return {
     label: labelOf(key),
-    move: at >= 0 && order.length > 1 ? { up: at > 0, down: at < order.length - 1 } : null,
+    move: movable ? { up: at > 0, down: at < order.length - 1 } : null,
+    // 끌어서 옮길 수 있는 영역과, 놓을 수 있는 자리(= 지금 옮길 수 있는 영역 순서). 고정 영역은 둘 다 없다
+    drag: movable,
+    blocks: movable ? order : null,
+    // 항목을 끌어 내용을 옮길 수 있는 영역 — 보이는 항목이 둘 이상일 때 (지운 항목은 센 뒤 손잡이를 안 그린다)
+    items: SWAPPABLE.includes(key) && itemElements(s, key).filter((el) => el.getClientRects().length).length > 1
+      ? itemElements(s, key) : null,
     variants: b?.variants.length ? b.variants : null,
     variant: variantNow(s, key),
   }
@@ -946,7 +1240,13 @@ function handleServerTool(ev) {
   if (!s || s.tab !== 'direct' || running(s) || s.busy || !block) return
   if (tool === 'up') nudgeBlock(s, block, -1)
   else if (tool === 'down') nudgeBlock(s, block, 1)
-  else if (tool === 'variant') pickVariant(s, block, value ?? '')
+  // 끌어 놓기 — value 는 그 앞에 놓을 영역, 빈 값이면 맨 끝
+  else if (tool === 'move' && !PINNED_BLOCKS.includes(block)) moveBlock(s, block, value || null)
+  // 항목 끌어 놓기 — value 는 '옮길 항목 번호:놓은 항목 번호'
+  else if (tool === 'item-move') {
+    const [from, to] = String(value || '').split(':').map(Number)
+    if (Number.isInteger(from) && Number.isInteger(to)) moveItemContent(s, block, from, to)
+  } else if (tool === 'variant') pickVariant(s, block, value ?? '')
 }
 
 async function applyDirect(rerender) {
@@ -965,6 +1265,11 @@ async function applyDirect(rerender) {
     return
   }
   if (!edits.length && !buttonStyle && !textStyle && !order && !looks && !removeBlocks.length && !Object.keys(removeItems).length) { toast('바꾼 내용이 없어요.'); return }
+  // ★ 지운 항목의 지금 문구는 다시 그리기 전에 읽는다 — 그린 뒤에는 미리보기가 새로 떠서 찾을 수 없다(빈 문구가 간다)
+  const removeItemsBody = Object.keys(removeItems).length
+    ? Object.fromEntries(Object.entries(removeItems).map(([key, indices]) => [key,
+      indices.map((index) => ({ index, before: itemElements(s, key)[index]?.textContent.trim().replace(/\s+/g, ' ') || '' }))]))
+    : null
   s.busy = true
   rerender()
   try {
@@ -975,8 +1280,7 @@ async function applyDirect(rerender) {
       ...(textStyle ? { textStyle } : {}),
       ...(order ? { blockOrder: order } : {}),
       ...(removeBlocks.length ? { removeBlocks } : {}),
-      ...(Object.keys(removeItems).length ? { removeItems: Object.fromEntries(Object.entries(removeItems).map(([key, indices]) => [key,
-        indices.map((index) => ({ index, before: itemElements(s, key)[index]?.textContent.trim().replace(/\s+/g, ' ') || '' }))])) } : {}),
+      ...(removeItemsBody ? { removeItems: removeItemsBody } : {}),
       ...(looks?.layout ? { layout: looks.layout } : {}),
       ...(looks && Object.keys(looks.variants).length ? { variants: looks.variants } : {}),
     })
@@ -1502,10 +1806,20 @@ function directPanel(s) {
   const dis = busy ? 'disabled' : ''
   // ★ 한 줄 = 설정 하나. 색은 [직접 지정 스위치 · 색 칸], 크기 · 모양은 한 번에 보이는 단추 줄(라디오)이다.
   //   값은 예전과 같은 data-sstyle · data-sstyle-on 으로 읽는다 — 라디오도 change 의 t.value 가 고른 값이다
-  const color = (k, label, def) => '<div class="sstyle-row"><span class="sstyle-label">' + label + '</span><span class="sstyle-ctl">'
-    + '<label class="sstyle-toggle" title="켜면 고른 색을, 끄면 테마 색을 따라요"><input type="checkbox" role="switch" data-sstyle-on="' + k + '" '
-    + (on[k] ? 'checked' : '') + ' ' + dis + ' aria-label="' + label + ' 직접 지정"><span class="sstyle-state"></span></label>'
-    + '<input type="color" data-sstyle="' + k + '" value="' + esc(st[k] || def) + '" ' + dis + ' aria-label="' + label + '"></span></div>'
+  //   색 칸 아래에 같은 색의 코드 입력줄(# 16진수 · R · G · B)을 둔다 — 색 고르기로는 정확한 색을 맞추기 어렵다.
+  //   코드 칸은 색 칸과 같은 값을 보여 주고, 쓰면 색 칸을 직접 고른 것과 똑같이 처리한다 (applyColorCode)
+  const color = (k, label, def) => {
+    const hex = parseHex(st[k] || def) || def, rgb = hexToRgb(hex) || { r: 0, g: 0, b: 0 }
+    const code = (part, text, extra) => '<input type="text" data-scolor="' + k + '" data-part="' + part + '" value="' + esc(text) + '" ' + dis + extra + '>'
+    const num = (part, name, v) => '<label class="sstyle-rgb"><span aria-hidden="true">' + name + '</span><input type="number" min="0" max="255" step="1" inputmode="numeric" data-scolor="'
+      + k + '" data-part="' + part + '" value="' + v + '" ' + dis + ' aria-label="' + label + ' ' + name + ' (0~255)"></label>'
+    return '<div class="sstyle-row has-codes"><span class="sstyle-label">' + label + '</span><span class="sstyle-ctl">'
+      + '<label class="sstyle-toggle" title="켜면 고른 색을, 끄면 테마 색을 따라요"><input type="checkbox" role="switch" data-sstyle-on="' + k + '" '
+      + (on[k] ? 'checked' : '') + ' ' + dis + ' aria-label="' + label + ' 직접 지정"><span class="sstyle-state"></span></label>'
+      + '<input type="color" data-sstyle="' + k + '" value="' + esc(hex) + '" ' + dis + ' aria-label="' + label + '"></span>'
+      + '<span class="sstyle-codes">' + code('hex', hex, ' class="sstyle-hex" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#rrggbb" aria-label="' + label + ' 16진수 색 코드"')
+      + num('r', 'R', rgb.r) + num('g', 'G', rgb.g) + num('b', 'B', rgb.b) + '</span></div>'
+  }
   const select = (k, label, opts) => '<div class="sstyle-row stack"><span class="sstyle-label">' + label + '</span>'
     + '<div class="sstyle-seg" role="radiogroup" aria-label="' + label + '">'
     + [['', '그대로'], ...opts].map(([v, t]) => '<label><input type="radio" name="sstyle-' + k + '" data-sstyle="' + k + '" value="' + v + '" '
@@ -1581,6 +1895,52 @@ function sidePanel(s) {
     + (tab === 'chat' ? chatPanel(s) : directPanel(s)) + '</div></aside>'
 }
 
+const compareBarHTML = (s) => '<div class="compare-bar" role="status">' + icon('layers') + '<span>AI 수정 전'
+  + (s.compare.versionNo ? ' v' + s.compare.versionNo : '') + ' 모습이에요. 수정은 변경 후 모습에서 할 수 있어요.</span></div>'
+
+/**
+ * 이전 모습 비교를 켜고 끈다 — 화면 전체를 다시 그리지 않는다.
+ *
+ * ★ 다시 그리면 미리보기 iframe 요소를 새로 만든다. 새 문서가 뜰 때까지 빈 화면이 보여서 깜빡인다.
+ *   같은 iframe 의 srcdoc 만 바꾸면 새 문서가 준비될 때까지 옛 화면이 그대로 남아 있다.
+ * ★ 문서를 만드는 길은 하나다 — serverFrame 이 찍어 둔 자리표시자에서 꺼낸다. 샌드박스 · 모드도 거기서 가져온다.
+ * ★ 이전 모습은 읽기 전용이라 샌드박스 권한이 다르다. sandbox 는 다음 이동(srcdoc 교체)부터 적용된다.
+ */
+function toggleCompare(s) {
+  const frame = $('.event-frame')
+  if (!s.compare || !frame) return
+  s.showBefore = !s.showBefore
+  const before = comparing(s)
+  const mode = before ? 'readonly' : (s.tab === 'direct' ? 'server-edit' : 'server-select')
+  const holder = document.createElement('div')
+  holder.innerHTML = serverFrame(before ? s.compare.before : s.preview.html, before ? 'AI 수정 전 미리보기' : '이벤트 미리보기', mode)
+  const staged = holder.firstElementChild
+  const doc = takeStagedDocument(staged.dataset.doc)
+  if (doc === undefined) { s.showBefore = !s.showBefore; return }
+
+  // 새 문서의 높이가 다를 수 있다 — 보던 자리로 스크롤을 맞춘다 (같은 iframe 이라 높이가 바뀔 때 다시 맞춘다)
+  restoreCanvasScroll(s, $('.canvas'))
+  frame.dataset.mode = mode
+  frame.setAttribute('sandbox', staged.getAttribute('sandbox') || '')
+  frame.setAttribute('title', staged.getAttribute('title') || '')
+  // 영역 선택 · 바뀐 곳 외곽선은 새 문서에 다시 입힌다
+  frame.addEventListener('load', () => { if (!comparing(s)) paintSelection(s); paintChanges(s) }, { once: true })
+  frame.srcdoc = doc
+
+  // 안내 줄 · 버튼 글자 · 힌트 — 자리에서 맞춘다
+  const bar = document.querySelector('.compare-bar')
+  if (before && !bar) $('.canvas')?.insertAdjacentHTML('beforebegin', compareBarHTML(s))
+  if (!before) bar?.remove()
+  const button = $('.change-compare')
+  if (button) {
+    button.setAttribute('aria-pressed', String(before))
+    const label = button.querySelector('span')
+    if (label) label.textContent = before ? '변경 후 모습 보기' : '이전 모습과 비교'
+  }
+  const hint = $('.preview-edit-hint')
+  if (hint) hint.hidden = before
+}
+
 function previewPanel(s) {
   const p = s.preview
   const published = (s.versions || []).find((v) => v.published)
@@ -1588,9 +1948,7 @@ function previewPanel(s) {
   const body = p
     // ★ fit — 페이지 전체를 한 화면에 줄여 보여 준다. 줄이는 계산은 preview/frame.js 의 fitCanvasFrame
     // ★ 이전 모습은 읽기 전용이다 — 영역을 고르거나 문구를 고칠 수 없게 한다
-    ? (before
-      ? '<div class="compare-bar" role="status">' + icon('layers') + '<span>AI 수정 전' + (s.compare.versionNo ? ' v' + s.compare.versionNo : '') + ' 모습이에요. 수정은 변경 후 모습에서 할 수 있어요.</span></div>'
-      : '')
+    ? (before ? compareBarHTML(s) : '')
       + '<div class="canvas"><div class="canvas-frame ' + (ui.mobile ? 'mobile' : '') + (ui.fit ? ' fit' : '') + '">'
       + (before
         ? serverFrame(s.compare.before, 'AI 수정 전 미리보기', 'readonly')
@@ -1609,8 +1967,9 @@ function previewPanel(s) {
       ? '<span class="preview-published">게시 중 v' + published.versionNo + '</span>'
       : '')
     + '</div>'
-    + (p && s.tab === 'chat' && !before
-      ? '<span class="preview-edit-hint">' + icon('sparkle') + '수정할 영역을 선택하세요</span>'
+    // 이전 모습을 볼 때는 숨기기만 한다 — 자리는 남겨 둬야 비교를 끌 때 다시 그리지 않고 보여 줄 수 있다
+    + (p && s.tab === 'chat'
+      ? '<span class="preview-edit-hint"' + (before ? ' hidden' : '') + '>' + icon('sparkle') + '수정할 영역을 선택하세요</span>'
       : '')
     + '<div class="device-controls">'
     + (p ? button('preview-fit', icon('layers') + '<span>전체 보기</span>', 'aria-pressed="' + !!ui.fit
@@ -2094,7 +2453,7 @@ async function runRagExamples() {
       return true
     }
     case 'server-compare':
-      if (s?.compare) { s.showBefore = !s.showBefore; rerender() }
+      if (s?.compare) toggleCompare(s)
       return true
     case 'server-unselect':
       if (s && !running(s)) { s.selected = s.selected.filter((k) => k !== b.dataset.block); paintSelection(s) }
@@ -2116,6 +2475,12 @@ async function runRagExamples() {
       return true
     case 'server-order-up': if (s) nudgeBlock(s, b.dataset.block, -1); return true
     case 'server-order-down': if (s) nudgeBlock(s, b.dataset.block, 1); return true
+    case 'server-order-top': if (s && !running(s) && !s.busy) moveToEdge(s, b.dataset.block, 'top'); return true
+    case 'server-order-bottom': if (s && !running(s) && !s.busy) moveToEdge(s, b.dataset.block, 'bottom'); return true
+    case 'server-undo': if (s && !running(s) && !s.busy) undoLast(s, rerender); return true
+    case 'server-item-swap':
+      if (s && !running(s) && !s.busy && b.dataset.with !== '') swapItems(s, b.dataset.block, Number(b.dataset.index), Number(b.dataset.with))
+      return true
     case 'server-block-delete': if (s && !running(s) && !s.busy) removeBlockDraft(s, b.dataset.block, rerender); return true
     case 'server-item-delete': if (s && !running(s) && !s.busy) removeItemDraft(s, b.dataset.block, Number(b.dataset.index), rerender); return true
     case 'server-asset-delete': if (s) removeAsset(s, b.dataset.id, rerender); return true
@@ -2147,6 +2512,54 @@ function onChatInput(value) {
   ui.serverEditor.chatInput = value
   const c = $('#server-chat-count')
   if (c) c.textContent = value.length + ' / ' + REQUEST_MAX + '자'
+}
+
+/* ── 색 코드 칸 ────────────────────────────────────────────────
+ * 색 칸(<input type=color>) 하나가 진짜 값이고, # 16진수 · R · G · B 는 그 색을 코드로 보고 쓰는 창이다.
+ * ★ 코드 칸에 쓴 값은 색 칸에 넣고 "색 칸을 직접 고른 것" 과 똑같이 처리한다 —
+ *   스위치 켜기 · 미리보기 · 바뀐 개수 · 저장 요청이 한 길이라 따로 맞출 게 없다.
+ * ★ 쓰는 도중에는 반영하지 않는다. 여섯 자리 · 0~255 정수가 갖춰질 때만 색이 된다
+ *   (칸은 빨갛게 표시). 3자리(#abc)는 칸을 나올 때 늘린다.
+ * ★ 쓰고 있는 칸은 건드리지 않는다 — 다른 칸이 따라 바뀌어도 내가 치는 글자가 바뀌면 못 쓴다.
+ */
+function colorCodeInputs(k) {
+  const get = (part) => document.querySelector('[data-scolor="' + k + '"][data-part="' + part + '"]')
+  return { hex: get('hex'), r: get('r'), g: get('g'), b: get('b') }
+}
+
+/** 색 칸의 색을 코드 칸 네 개에 보여 준다. 쓰고 있는 칸(all 이 아니면)은 건드리지 않는다 */
+function syncColorCodes(k, all = false) {
+  const picker = document.querySelector('input[type="color"][data-sstyle="' + k + '"]')
+  const hex = parseHex(picker?.value), rgb = hexToRgb(hex)
+  if (!rgb) return
+  const box = colorCodeInputs(k)
+  const set = (el, value) => {
+    if (!el || (!all && el === document.activeElement)) return
+    el.value = value
+    el.classList.remove('invalid')
+  }
+  set(box.hex, hex); set(box.r, rgb.r); set(box.g, rgb.g); set(box.b, rgb.b)
+}
+
+/** 코드 칸에 쓴 값을 색으로 반영한다. final 은 칸을 나올 때(change) — 3자리를 늘리고 칸을 가지런히 한다 */
+function applyColorCode(s, t, final) {
+  const k = t.dataset.scolor
+  const picker = document.querySelector('input[type="color"][data-sstyle="' + k + '"]')
+  if (!picker || running(s) || s.busy) return true
+  const box = colorCodeInputs(k)
+  const hex = t.dataset.part === 'hex'
+    ? parseHex(t.value, { short: final })
+    : rgbToHex(box.r?.value, box.g?.value, box.b?.value)
+  t.classList.toggle('invalid', !hex)
+  if (!hex) {
+    // 칸을 나왔는데 틀린 값이면 색 칸의 지금 색으로 되돌린다 — 빨간 칸을 그대로 두면 저장되는 색과 칸이 달라진다
+    if (final) syncColorCodes(k, true)
+    return true
+  }
+  picker.value = hex
+  handleServerInput({ target: picker })
+  if (final) syncColorCodes(k, true)
+  return true
 }
 
 /** main.js 의 input 위임에서 부른다. 처리했으면 true — 전체를 다시 그리지 않는다 (포커스 유지) */
@@ -2187,6 +2600,8 @@ function handleServerInput(ev) {
     updateDirectCount(s)
     return true
   }
+  // 색 코드 칸(# 16진수 · R · G · B) — 쓰는 중에는 여섯 자리 · 0~255 가 갖춰질 때만 반영한다
+  if (t.dataset.scolor !== undefined) return applyColorCode(s, t, false)
   if (t.dataset.sstyle || t.dataset.sstyleOn) {
     if (t.dataset.sstyleOn) {
       const k = t.dataset.sstyleOn
@@ -2199,6 +2614,8 @@ function handleServerInput(ev) {
       const box = document.querySelector('[data-sstyle-on="' + t.dataset.sstyle + '"]')
       if (box && !box.checked && t.type === 'color') { box.checked = true; s.direct.styleOn[t.dataset.sstyle] = true }
     }
+    // 색 칸을 고르면 코드 칸(# · R · G · B)도 같은 색으로 맞춘다
+    if (t.type === 'color') syncColorCodes(t.dataset.sstyle)
     previewButtonStyle(s)
     previewTextStyle(s)
     updateDirectCount(s)
@@ -2216,6 +2633,8 @@ function handleServerChange(ev, rerender) {
   const s = ui.serverEditor
   const t = ev.target
   if (!s) return false
+  // 코드 칸을 다 쓰고 나왔을 때 — 3자리(#abc)를 늘리고, 칸의 글자를 정해진 모양(#aabbcc)으로 고친다
+  if (t.dataset?.scolor !== undefined) return applyColorCode(s, t, true)
   if (t.dataset?.textFormat !== undefined || t.dataset?.sstyle !== undefined || t.dataset?.sstyleOn !== undefined) {
     return handleServerInput(ev)
   }

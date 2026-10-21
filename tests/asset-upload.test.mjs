@@ -57,6 +57,8 @@ async function setup({ upload, remove } = {}) {
     loadChatMessages: async () => [], searchRagPreview: async () => ({}),
     loadPromptDrafts: async () => [],
     eventRangePicker: () => '',
+    hexToRgb: () => null, parseHex: (v) => v, rgbToHex: () => null,
+    takeStagedDocument: () => undefined,
     diffBlocks: () => [], orderChanged: () => false,
   }
   const source = await readFile(new URL('../src/admin/views/server-editor.js', import.meta.url), 'utf8')

@@ -184,6 +184,21 @@
 .sorder .sorder-del{width:24px;height:22px;padding:0;min-height:0;font-size:14px;line-height:1;color:#c2410c;flex:none}
 .sorder .sorder-del:hover:not(:disabled){background:#fff1ec;border-color:#f3c4b1}
 .sorder .sorder-del:disabled{color:var(--muted);opacity:.45;cursor:not-allowed}
+/* 맨 위 · 맨 아래 — ▲▼ 와 같은 크기의 작은 단추 */
+.sorder .sorder-edge{min-width:24px;padding:2px 5px;color:#5c5666}
+/* 항목 옆 ▲▼ (내용 맞바꾸기) — 지우기 단추보다 앞에 둔다. 못 하는 항목은 흐리게 */
+.sorder-swaps{display:inline-flex;gap:2px;flex:none}
+.sorder .sorder-swap{width:22px;height:22px;padding:0;min-height:0;font-size:9px;line-height:1;color:#0377ad}
+.sorder .sorder-swap:disabled{opacity:.3;cursor:not-allowed}
+/* 한 단계 되돌리기 — 목록 위 */
+.sorder-head{display:flex;justify-content:flex-end;margin:0 0 6px}
+.sorder-undo{border:0;background:none;color:#0377ad;font-size:12px;font-weight:700;text-decoration:underline;padding:2px 4px;cursor:pointer}
+.sorder-undo:disabled{color:var(--muted);text-decoration:none;opacity:.5;cursor:default}
+/* 못 옮기는 영역 — 목록 맨 끝에 잠금으로. 끌기 · 단추가 없다 */
+.sorder-lock{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px dashed #d7d4de;border-radius:10px;background:#faf9fc;color:#8a8794;font-size:13px}
+.sorder-lock .sorder-name{font-weight:700;color:#5c5666}
+.sorder-lock em{margin-left:auto;font-style:normal;font-size:11px;font-weight:700;color:#8a6b1a;background:#fff4cf;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.sorder-swap-help{margin-top:4px}
 
 /* 페이지 배치 고르기 — 아이콘 버튼 줄 (편집 화면 · 생성 화면). 흐린 것은 지금 못 고르는 배치다 */
 .lay-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px}

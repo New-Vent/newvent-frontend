@@ -44,6 +44,7 @@ function bindTools(frame,doc){
   bar.style.top=Math.max(4,r.top+w.scrollY-14)+'px';bar.style.right=Math.max(4,width-r.right+8)+'px';};
  const draw=()=>{
   doc.querySelectorAll('.nv-tool-hover').forEach(n=>n.classList.remove('nv-tool-hover'));
+  doc.querySelectorAll('.nv-item-grip').forEach(n=>n.remove());
   if(over&&!over.isConnected)over=null;
   const info=over&&frame.nvTools?.(over.dataset.block);
   bar.hidden=!info;if(!info)return;
@@ -57,12 +58,22 @@ function bindTools(frame,doc){
   const pick=v=>{const on=v===now,name=icons?shortName(v.cssClass,v.desc):v.desc;
    return '<button type="button" class="nv-pick'+(on?' on':'')+(v.blocked?' off':'')+'" data-tool="variant" data-value="'+safe(v.cssClass)+'" title="'+safe(v.blocked||v.desc)+'" aria-pressed="'+on+'">'
     +(icons?variantIcon(v.cssClass):'')+'<span>'+safe(name)+'</span></button>';};
+  // ⠿ 는 끌어서 옮기는 손잡이 — 영역 전체를 끌어 다른 영역 앞에 놓는다 (바로 아래 startDrag). ▲▼ 는 같은 일을 눌러서 한다
   bar.innerHTML='<b>'+safe(info.label)+'</b>'
+   +(info.drag?'<button type="button" class="nv-grip" data-tool="grip" title="끌어서 옮기기" aria-label="'+safe(info.label)+' 끌어서 옮기기">⠿</button>':'')
    +(info.move?'<i></i>'+btn('up','▲','위로',!info.move.up)+btn('down','▼','아래로',!info.move.down):'')
    +(info.variants?'<i></i><button type="button" class="nv-look'+(menu?' on':'')+'" data-tool="menu" title="'+safe(now.desc)+'" aria-expanded="'+menu+'">'
      +(icons?variantIcon(now.cssClass):'')+'<span>'+safe(icons?shortName(now.cssClass,now.desc):now.desc)+'</span><em>▾</em></button>'
      +(menu?'<div class="nv-menu'+(icons?'':' list')+'" role="group" aria-label="'+safe(info.label)+' 모양"><p>모양 고르기 <small>'+all.length+'개</small></p><div>'+all.map(pick).join('')+'</div></div>':''):'');
   place();
+  // 항목마다 ⠿ 손잡이 — 항목을 끌어 다른 항목 자리에 놓는다 (아래 startItemDrag). 지운 항목(안 보임)은 건너뛴다
+  // ★ 손잡이도 body 바로 아래에 둔다 — [data-block] 밖이라 직접 수정 문구 목록에 안 잡힌다
+  if(info.items){const w=doc.defaultView;
+   info.items.forEach((el,i)=>{if(!el?.getClientRects().length)return;const r=el.getBoundingClientRect();if(r.width<40||r.height<30)return;
+    const g=doc.createElement('button');g.type='button';g.className='nv-item-grip';g.dataset.index=i;g.textContent='⠿';
+    g.title='끌어서 내용 옮기기';g.setAttribute('aria-label',safe(info.label)+' '+(i+1)+'번째 항목 끌어서 내용 옮기기');
+    // 항목의 오른쪽 윗변에 걸쳐 둔다 — 왼쪽 위에는 이름표(전원 100%) · 단계 번호가 있어서 가린다
+    g.style.top=Math.max(2,r.top+w.scrollY-12)+'px';g.style.left=(r.right+w.scrollX-36)+'px';doc.body.appendChild(g);});}
   // 페이지 아래쪽 영역이면 창을 위로 연다 — iframe 은 페이지 높이만큼이라 아래로 열면 잘린다
   const m=bar.querySelector('.nv-menu');
   // ★ 문서 높이(scrollHeight)와 비교하면 안 된다 — 열린 창이 그 높이를 늘린다. 페이지 상자 끝과 비교한다
@@ -70,14 +81,105 @@ function bindTools(frame,doc){
   if(m&&m.getBoundingClientRect().bottom>page.bottom&&bar.getBoundingClientRect().top-page.top>m.offsetHeight+6)m.classList.add('up');
  };
  const close=()=>{if(!menu)return;menu=false;draw();};
- doc.addEventListener('mouseover',ev=>{if(menu||ev.target.closest('.nv-tools'))return;const b=ev.target.closest('[data-block]');if(b===over)return;over=b;draw();});
- doc.addEventListener('mouseleave',()=>{if(menu)return;over=null;draw();});
- doc.addEventListener('keydown',ev=>{if(ev.key==='Escape')close();});
+ // ── 끌어서 옮기기 ──
+ // ★ 놓을 자리는 "끄는 영역을 뺀 나머지 영역의 가운데 선" 으로 정한다 — 가운데보다 위면 그 영역 앞, 모두 아래면 맨 끝.
+ //   맨 끝은 목록의 끝일 뿐 고정 영역(유의사항 · 참여 버튼) 뒤로 가지 않는다 (순서는 편집 화면이 정한다).
+ // ★ 놓는 자리 계산은 iframe 안 좌표다. 줄여 보기(transform)여도 이 안에서는 그대로 맞는다.
+ //   다만 가장자리 자동 스크롤은 호스트(.canvas) 좌표라 줄어든 비율을 곱해 계산한다.
+ // ★ 끄는 동안은 도구줄이 다른 영역으로 옮겨 가지 않게 mouseover 를 멈춘다.
+ let drag=null;
+ const endDrag=(commit)=>{
+  if(!drag)return;const d=drag;drag=null;
+  doc.defaultView.cancelAnimationFrame(d.raf);d.line.remove();d.chip.remove();d.src.classList.remove('nv-drag-src');doc.body.classList.remove('nv-dragging');
+  try{bar.releasePointerCapture(d.id);}catch(e){}
+  if(commit&&d.target!==undefined)frame.dispatchEvent(new CustomEvent('nv-tool',{bubbles:true,detail:{block:d.key,tool:'move',value:d.target}}));
+  draw();
+ };
+ const startDrag=ev=>{
+  const g=ev.target.closest('.nv-grip');if(!g||!over||menu||ev.button>0)return;
+  const key=over.dataset.block,info=frame.nvTools?.(key);if(!info?.drag)return;
+  ev.preventDefault();
+  const w=doc.defaultView,canvas=frame.closest('.canvas');
+  const line=doc.createElement('div');line.className='nv-drop-line';line.hidden=true;doc.body.appendChild(line);
+  const chip=doc.createElement('div');chip.className='nv-drag-chip';chip.textContent='⠿ '+info.label;doc.body.appendChild(chip);
+  over.classList.add('nv-drag-src');doc.body.classList.add('nv-dragging');
+  try{bar.setPointerCapture(ev.pointerId);}catch(e){}
+  drag={key,id:ev.pointerId,src:over,line,chip,order:info.blocks||[],target:undefined,y:ev.clientY,raf:0};
+  const tick=()=>{if(!drag)return;
+   if(canvas){const r=frame.getBoundingClientRect(),k=frame.offsetHeight?r.height/frame.offsetHeight:1,cr=canvas.getBoundingClientRect(),hostY=r.top+drag.y*k;
+    if(hostY<cr.top+56)canvas.scrollTop-=14;else if(hostY>cr.bottom-56)canvas.scrollTop+=14;}
+   drag.raf=w.requestAnimationFrame(tick);};
+  drag.raf=w.requestAnimationFrame(tick);
+ };
+ const moveDrag=ev=>{
+  if(!drag)return;const w=doc.defaultView;drag.y=ev.clientY;
+  const y=ev.clientY+w.scrollY;
+  drag.chip.style.top=Math.max(0,y-16)+'px';drag.chip.style.left=Math.max(0,ev.clientX+14)+'px';
+  const rest=drag.order.filter(k=>k!==drag.key).map(k=>({k,el:doc.querySelector('section[data-block="'+k+'"]')})).filter(x=>x.el);
+  if(!rest.length)return;
+  let hit=rest.find(x=>{const r=x.el.getBoundingClientRect();return r.top+r.height/2+w.scrollY>y;});
+  const last=rest[rest.length-1].el.getBoundingClientRect();
+  drag.target=hit?hit.k:'';
+  drag.line.hidden=false;drag.line.style.top=((hit?hit.el.getBoundingClientRect().top:last.bottom)+w.scrollY-3)+'px';
+ };
+ // ── 항목 끌어서 내용 옮기기 ──
+ // ★ 항목 자체를 옮기는 게 아니다 — 서버에 항목 순서를 바꾸는 요청이 없어서, 편집 화면이 두 항목 사이의 문구를 한 칸씩 밀어 넣는다.
+ //   여기서는 "어느 항목을 어느 항목 자리로" 만 알린다 (nv-tool · item-move · value 'from:to', 번호는 info.items 의 자리).
+ // ★ 놓을 자리는 포인터가 들어 있는 항목, 없으면 가장 가까운 항목이다 — 항목이 가로로도 놓이는 영역(카드 격자)이 있다.
+ let idrag=null;
+ const endItemDrag=commit=>{
+  if(!idrag)return;const d=idrag;idrag=null;
+  doc.defaultView.cancelAnimationFrame(d.raf);d.chip.remove();d.src.classList.remove('nv-item-src');d.hit?.classList.remove('nv-item-drop');doc.body.classList.remove('nv-dragging');
+  try{d.grip.releasePointerCapture(d.id);}catch(e){}
+  if(commit&&d.to!==null&&d.to!==d.from)frame.dispatchEvent(new CustomEvent('nv-tool',{bubbles:true,detail:{block:d.key,tool:'item-move',value:d.from+':'+d.to}}));
+  draw();
+ };
+ const startItemDrag=ev=>{
+  const g=ev.target.closest?.('.nv-item-grip');if(!g||!over||ev.button>0)return;
+  const key=over.dataset.block,info=frame.nvTools?.(key);if(!info?.items)return;
+  const from=Number(g.dataset.index),src=info.items[from];if(!src)return;
+  ev.preventDefault();
+  const w=doc.defaultView,canvas=frame.closest('.canvas');
+  const chip=doc.createElement('div');chip.className='nv-drag-chip';chip.textContent='⠿ '+info.label+' 내용 옮기기';doc.body.appendChild(chip);
+  src.classList.add('nv-item-src');doc.body.classList.add('nv-dragging');
+  try{g.setPointerCapture(ev.pointerId);}catch(e){}
+  idrag={key,id:ev.pointerId,grip:g,src,items:info.items,from,to:null,hit:null,chip,y:ev.clientY,raf:0};
+  const tick=()=>{if(!idrag)return;
+   if(canvas){const r=frame.getBoundingClientRect(),k=frame.offsetHeight?r.height/frame.offsetHeight:1,cr=canvas.getBoundingClientRect(),hostY=r.top+idrag.y*k;
+    if(hostY<cr.top+56)canvas.scrollTop-=14;else if(hostY>cr.bottom-56)canvas.scrollTop+=14;}
+   idrag.raf=w.requestAnimationFrame(tick);};
+  idrag.raf=w.requestAnimationFrame(tick);
+ };
+ const moveItemDrag=ev=>{
+  if(!idrag)return;const d=idrag,w=doc.defaultView;d.y=ev.clientY;
+  d.chip.style.top=Math.max(0,ev.clientY+w.scrollY-16)+'px';d.chip.style.left=Math.max(0,ev.clientX+14)+'px';
+  let best=null,bd=Infinity;
+  d.items.forEach((el,i)=>{if(!el?.getClientRects().length)return;const r=el.getBoundingClientRect();
+   const inside=ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom;
+   const dx=ev.clientX-(r.left+r.width/2),dy=ev.clientY-(r.top+r.height/2),dist=inside?-1:dx*dx+dy*dy;
+   if(dist<bd){bd=dist;best=i;}});
+  const hit=best!==null&&best!==d.from?d.items[best]:null;
+  if(hit!==d.hit){d.hit?.classList.remove('nv-item-drop');hit?.classList.add('nv-item-drop');d.hit=hit;}
+  d.to=best;
+ };
+ doc.addEventListener('pointerdown',startItemDrag);
+ doc.addEventListener('pointermove',moveItemDrag);
+ doc.addEventListener('pointerup',()=>endItemDrag(true));
+ doc.addEventListener('pointercancel',()=>endItemDrag(false));
+ bar.addEventListener('pointerdown',startDrag);
+ bar.addEventListener('pointermove',moveDrag);
+ bar.addEventListener('pointerup',()=>endDrag(true));
+ bar.addEventListener('pointercancel',()=>endDrag(false));
+ doc.addEventListener('mouseover',ev=>{if(drag||idrag||menu||ev.target.closest('.nv-tools,.nv-item-grip'))return;const b=ev.target.closest('[data-block]');if(b===over)return;over=b;draw();});
+ doc.addEventListener('mouseleave',()=>{if(menu||drag||idrag)return;over=null;draw();});
+ doc.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(idrag)endItemDrag(false);else if(drag)endDrag(false);else close();}});
  // 편집 화면이 순서 · 배치 · 모양을 바꾼 뒤 부른다 — 옮겨진 영역을 따라가고 눌린 표시를 다시 그린다
  frame.nvToolsRefresh=()=>draw();
  return {
   click(ev){const b=ev.target.closest('.nv-tools button');if(!b){if(!ev.target.closest('.nv-tools'))close();return;}
    ev.preventDefault();ev.stopPropagation();if(b.getAttribute('aria-disabled')==='true')return;
+   // 손잡이는 끌기 전용이다 — 그냥 누르면 아무 일도 없다
+   if(b.dataset.tool==='grip')return;
    if(b.dataset.tool==='menu'){menu=!menu;draw();return;}
    if(b.dataset.tool==='variant')menu=false;
    emit(b.dataset.tool,b.dataset.value);},
@@ -145,7 +247,7 @@ function bindFrame(frame){
  if(mode==='server-edit'){
   doc.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
   const tools=bindTools(frame,doc);
-  doc.addEventListener('click',ev=>{if(ev.target.closest('.nv-tools')){tools.click(ev);return;}if(tools.open()){ev.preventDefault();ev.stopPropagation();tools.close();return;}ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
+  doc.addEventListener('click',ev=>{if(ev.target.closest('.nv-item-grip')){ev.preventDefault();ev.stopPropagation();return;}if(ev.target.closest('.nv-tools')){tools.click(ev);return;}if(tools.open()){ev.preventDefault();ev.stopPropagation();tools.close();return;}ev.preventDefault();ev.stopPropagation();frame.dispatchEvent(new CustomEvent('nv-pick',{bubbles:true,detail:{target:ev.target,x:ev.clientX,y:ev.clientY}}));},true);return;
  }
  // 서버 편집 화면의 AI 대화 — 누른 영역(data-block)을 편집 화면에 알린다. 유의사항은 서버 소유라 고를 수 없다
  if(mode==='server-select'){
