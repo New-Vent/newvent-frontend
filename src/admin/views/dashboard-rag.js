@@ -111,7 +111,7 @@ function weekDelta(rows) {
 }
 
 export function dashboardRagView() {
-  const rows = ui.ragTrend
+  let rows = ui.ragTrend
   const head = `
     <div class="page-heading admin-page-heading">
       <div class="admin-page-title">
@@ -126,25 +126,57 @@ export function dashboardRagView() {
     </div>
   `
   if (!rows) return '<div class="container rag-dash">' + head + '<div class="card"><p>불러오는 중…</p></div></div>'
-  if (!rows.length) {
-    return '<div class="container rag-dash">' + head
-      + '<div class="card"><p>아직 집계된 호출이 없어요.</p></div></div>'
-  }
+  // 한국 시간 기준 이번 주 월요일을 구한다.
+  const monday = new Date(Date.now() + 9 * 60 * 60 * 1000)
+  monday.setUTCHours(0, 0, 0, 0)
+  monday.setUTCDate(
+    monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7),
+  )
 
-  const legend = '<p class="trend-legend">'
-    + '<span><i class="sw sw-total"></i><b>전체 호출</b> — 그 주에 생성을 부른 횟수</span>'
-    + '<span><i class="sw sw-rag"></i><b>그중 RAG 참고</b> — 안쪽 분홍 막대, 참고 사례를 실어 넣은 호출</span>'
-    + '</p>'
+  const rowsByWeek = new Map(
+    rows.map((r) => [String(r.weekStart).slice(0, 10), r]),
+  )
+
+  // 오래된 주부터 이번 주까지 8주를 만들고, 없는 주는 0으로 채운다.
+  rows = Array.from({ length: 8 }, (_, index) => {
+    const week = new Date(monday)
+    week.setUTCDate(week.getUTCDate() - (7 - index) * 7)
+    const weekStart = week.toISOString().slice(0, 10)
+
+    return rowsByWeek.get(weekStart) ?? {
+      weekStart,
+      totalCalls: 0,
+      ragUsedCalls: 0,
+      chunkCount: 0,
+    }
+  })
+
+  const legend = '<div class="rag-chart-legend">'
+    + '<div class="rag-chart-legend-item">'
+    + '<div><i class="rag-chart-dot is-total"></i><strong>전체 호출</strong></div>'
+    + '<p>그 주에 생성을 부른 횟수</p>'
+    + '</div>'
+    + '<div class="rag-chart-legend-item">'
+    + '<div><i class="rag-chart-dot is-rag"></i><strong>그중 RAG 참고</strong></div>'
+    + '<p>분홍 막대, 참고 사례를 실어 넣은 호출</p>'
+    + '</div>'
+    + '</div>'
+
   const maxCalls = Math.max(1, maxOf(rows, (r) => r.totalCalls))
   const cols = rows.map((r) => {
     const total = r.totalCalls || 0
     const rag = Math.min(total, r.ragUsedCalls || 0)
     const usage = rate(rag, total)
-    // 툴팁 본문은 세로로 쌓아 보여주고, aria-label 은 스크린리더용 한 줄 요약으로 둔다
-    const aria = esc(weekRange(r.weekStart) + ' — 전체 ' + total + '회 · 그중 RAG 참고 ' + rag + '회 · 사용률 ' + usage + ' · 청크 ' + (r.chunkCount || 0) + '개')
-    return '<div class="trend-col">'
-      + '<small class="trend-week">' + esc(weekLabel(r.weekStart)) + '</small>'
-      + '<div class="trend-bar" tabindex="0" aria-label="' + aria + '">'
+    const aria = esc(
+      weekRange(r.weekStart) + ' — 전체 ' + total
+      + '회 · 그중 RAG 참고 ' + rag
+      + '회 · 사용률 ' + usage
+      + ' · 청크 ' + (r.chunkCount || 0) + '개',
+    )
+
+    return '<div class="rag-week-column">'
+      + '<span class="rag-week-total">' + total + '회</span>'
+      + '<div class="rag-week-track" tabindex="0" aria-label="' + aria + '">'
       + '<span class="trend-tip">'
       + '<em>' + esc(weekRange(r.weekStart)) + '</em>'
       + '<span>전체 ' + total + '회</span>'
@@ -152,32 +184,59 @@ export function dashboardRagView() {
       + '<span>사용률 ' + usage + '</span>'
       + '<span>청크 ' + (r.chunkCount || 0) + '개</span>'
       + (allReindexInWeek(ui.ragReindexLogs, String(r.weekStart ?? ''))
-          ? '<span class="tip-flag">그 주에 전체 재색인 실행</span>' : '')
+          ? '<span class="tip-flag">그 주에 전체 재색인 실행</span>'
+          : '')
       + '</span>'
-      + '<span class="trend-fill" style="height:' + Math.round((total / maxCalls) * 100) + '%">'
-      + '<span class="trend-rag" style="height:' + (total ? Math.round((rag / total) * 100) : 0) + '%"></span>'
-      + '</span></div>'
+      + '<span class="rag-week-fill" style="height:'
+      + Math.round((total / maxCalls) * 100) + '%">'
+      + '<span class="rag-week-rag" style="height:'
+      + (total ? Math.round((rag / total) * 100) : 0) + '%"></span>'
+      + '</span>'
+      + '</div>'
+      + '<span class="rag-week-date">' + esc(weekLabel(r.weekStart)) + '</span>'
       + '</div>'
   }).join('')
 
   const d = weekDelta(rows)
-  const delta = d
-    ? '<p class="trend-delta">이번 주 RAG 참고 ' + d.last + '회 · 지난주 대비 '
-      + (d.diff === 0 ? '변동 없음' : (d.diff > 0 ? '+' + d.diff + '회' : d.diff + '회')) + '</p>'
-    : ''
+  const latest = rows.slice().sort(
+    (a, b) => String(a.weekStart).localeCompare(String(b.weekStart)),
+  ).at(-1)
+  const currentRag = d?.last ?? latest?.ragUsedCalls ?? 0
+  const deltaText = !d
+    ? '지난주 비교 데이터 없음'
+    : d.diff === 0
+      ? '지난주 대비 변동 없음'
+      : '지난주 대비 ' + (d.diff > 0 ? '+' : '') + d.diff + '회'
+
+  const summary = '<div class="card rag-week-summary">'
+    + '<p class="rag-week-label">이번 주 RAG 참고</p>'
+    + '<div class="rag-week-value">' + currentRag + '<span>회</span></div>'
+    + '<p class="rag-week-change">' + deltaText + '</p>'
+    + '</div>'
 
   return '<div class="container rag-dash">' + head
+    + '<div class="rag-overview-grid">'
+    + summary
     + reindexActionCard()
-    + delta
-    + '<div class="card"><div class="trend">' + cols + '</div>'
+    + '</div>'
+    + '<div class="card rag-chart-card">'
+    + '<div class="rag-chart-heading">'
+    + '<h3>주간 RAG 활용 추이</h3>'
+    + '<span>최근 8주</span>'
+    + '</div>'
+    + '<div class="rag-chart-body">'
+    + '<div class="rag-week-chart">' + cols + '</div>'
+    + '<div class="rag-chart-aside">'
     + legend
     + '</div>'
-    // 설명 문단은 카드 밖으로 뺐다 — 카드 안에서 범례·설명 두 블록이 뭉쳐 보이던 걸 풀기 위해서다.
-    // CSS(.card+.trend-helper)가 회색 배경 대신 화면 배경 위의 조용한 문단으로 꾸며준다.
-    + '<p class="helper trend-helper">막대 높이는 그 주 전체 호출 수, 안쪽 분홍은 그중 RAG 참고 사례를 실어 넣은 호출이에요. '
-    + '막대에 마우스를 올리면 주간 범위와 전체·RAG 참고 회수, 사용률, 그 주에 사용된 청크 수가 세로로 요약돼요. '
-    + '그 주에 전체 재색인을 돌렸으면 청크 수가 일제히 바뀌니 말줄에 "그 주에 전체 재색인 실행" 표시가 붙어요. '
-    + '막대 밖 날짜는 주의 시작일이고, 이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p>'
+    + '</div>'
+    + '<details class="rag-chart-help">'
+    + '<summary>차트 안내</summary>'
+    + '<p>파란 막대 높이는 그 주 전체 호출 수, 분홍 막대 높이는 그중 RAG 참고 사례를 실어 넣은 호출 수예요.<br>'
+    + '막대에 마우스를 올리면 주간 범위와 전체·RAG 참고 횟수, 사용률, 청크 수를 확인할 수 있어요. 해당 주에 전체 재색인을 실행했다면 툴팁에 함께 표시돼요.<br>'
+    + '아래 날짜는 주의 시작일이고, 호출이 없는 주는 0회로 표시해요. 이번 주는 아직 끝나지 않아서 숫자가 작을 수 있어요.</p>'
+    + '</details>'
+    + '</div>'
     + reindexCard(ui.ragReindexLogs)
     + '</div>'
 }
@@ -191,14 +250,15 @@ function reindexActionCard() {
     : (st?.lastResult
       ? '<p class="rag-desc">완료 — 성공 ' + (st.lastResult.succeeded ?? 0) + '/' + (st.lastResult.totalEvents ?? 0)
         + ', 청크 ' + (st.lastResult.totalChunks ?? 0) + '개</p>'
-      : '<p class="rag-desc">삭제된 이벤트·시드를 빼고 전체 이벤트의 청크를 다시 만들어요.<br>'
-        + '돌린 뒤에는 아래 이력에 ALL 기록 한 줄이 쌓여요.</p>')
-  return '<div class="card rag-card rag-reindex">'
-    + '<div class="rag-reindex-text">'
+      : '<p class="rag-desc">삭제된 이벤트·시드를 빼고 전체 이벤트의 청크를 다시 만들어요.</p>'
+        + '<p class="rag-desc">돌린 뒤에는 아래 이력에 ALL 기록 한 줄이 쌓여요.</p>')
+
+  return '<div class="card rag-card rag-reindex rag-overview-reindex">'
+    + '<div class="rag-overview-reindex-heading">'
     + '<h3>RAG 전체 재색인</h3>'
-    + desc
-    + '</div>'
     + button('rag-reindex-all', running ? '진행 중…' : '전체 재색인', running ? 'disabled' : '', 'btn sm')
+    + '</div>'
+    + '<div class="rag-reindex-text">' + desc + '</div>'
     + '</div>'
 }
 
