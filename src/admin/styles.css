@@ -3662,3 +3662,49 @@ body.admin-login-screen .admin-login-page {
     opacity: 0;
   }
 }
+
+/* 버전 이력: 상태 표시 간격 */
+.server-version-row .version-text h3 .badge {
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* 북마크 강조 */
+.server-version-row .version-text h3 .version-bookmark-badge {
+  background: #fff3c4;
+  color: #855b08;
+  border: none;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+.version-bookmark-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.version-bookmark-note {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #334155;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.version-bookmark-action:hover .version-bookmark-note,
+.version-bookmark-action:focus-within .version-bookmark-note {
+  opacity: 1;
+  visibility: visible;
+}

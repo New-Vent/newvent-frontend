@@ -7,14 +7,15 @@
  *   직접 수정     POST /api/admin/events/{id}/versions/direct-edit  (바로 새 버전)
  *                 문구 · 버튼 디자인 · 블록 순서 · 페이지 배치 · 영역 모양 — 전부 모델을 안 부른다
  *   미리보기      GET  /api/admin/events/{id}/preview       (최신 버전 + editableTexts)
- *   버전 저장     PUT  /api/admin/events/{id}/versions/{versionId}/checkpoint
- *   저장한 버전   GET  /api/admin/events/{id}/versions      (버전 이력 화면은 server-versions.js)
+ *   북마크 추가   PUT  /api/admin/events/{id}/versions/{versionId}/checkpoint
+ *   전체 버전     GET  /api/admin/events/{id}/versions      (버전 이력 화면은 server-versions.js)
  *   게시 · 재게시 POST /api/admin/events/{id}/publish { versionId }
  *
- * ★ 버전 두 가지
- *   생성 · 수정이 성공할 때마다 서버에 버전 행이 하나씩 생긴다 (자동). 이력에는 안 나온다.
- *   "버전 저장" 을 누른 버전만 이력(체크포인트)에 남는다 — 무한히 쌓이는 건 자동 버전뿐이다.
- *
+ * ★ 버전과 북마크
+ *   AI 생성·수정 완료 또는 직접 수정의 변경 저장 시 서버에 새 버전이 생긴다.
+ *   전체 버전을 이력에 표시하고, 중요한 버전에는 북마크(checkpoint)를 추가한다.
+ *   게시하면 자동으로 북마크가 추가되며, 게시 중에는 해제할 수 없다.
+ * 
  * ★ 수정 기준은 항상 최신 버전이다 (AI 수정 · 직접 수정 모두)
  *   이전 버전에서 이어 가려면 이력 화면의 "이 버전에서 이어서 작업" 이 그 버전을 최신으로 가져온다.
  *
@@ -1340,7 +1341,7 @@ async function applyDirect(rerender) {
       ...(looks && Object.keys(looks.variants).length ? { variants: looks.variants } : {}),
     })
     await refreshPage(s)
-    toast('v' + r.versionNo + ' 로 반영했어요. 이력에 남기려면 버전 저장을 눌러주세요.')
+    toast('v' + r.versionNo + ' 로 저장했어요.')
   } catch (e) {
     toast(e?.message || '직접 수정을 반영하지 못했어요.')
   } finally {
@@ -1478,10 +1479,11 @@ function updateDirectCount(s) {
   if (apply) apply.disabled = !n || running(s) || s.busy
 }
 
-/* ───────────────────────── 버전 저장 ───────────────────────── */
+/* ───────────────────────── 북마크 추가 ───────────────────────── */
 
-const savedIds = (s) => new Set((s.versions || []).map((v) => v.versionId))
-const isSaved = (s) => !!s.preview && savedIds(s).has(s.preview.versionId)
+const isSaved = (s) => !!s.preview && (s.versions || []).some(
+  (v) => String(v.versionId) === String(s.preview.versionId) && v.checkpoint,
+)
 
 async function saveCurrent(rerender) {
   const s = ui.serverEditor
@@ -1491,9 +1493,9 @@ async function saveCurrent(rerender) {
   try {
     await saveCheckpoint(s.id, s.preview.versionId)
     s.versions = (await loadVersions(s.id)).versions
-    toast('v' + s.preview.versionNo + ' 을 버전 이력에 저장했어요.')
+    toast('v' + s.preview.versionNo + ' 에 북마크를 추가했어요.')
   } catch (e) {
-    toast(e?.message || '버전을 저장하지 못했어요.')
+    toast(e?.message || '북마크를 추가하지 못했어요.')
   } finally {
     s.busy = false
     rerender()
@@ -1510,21 +1512,21 @@ const isEnded = (s) => s.event?.status === 'ENDED'
 const isPublished = (s) => s.event?.status === 'PUBLISHED'
 const publishedVersion = (s) => (s.versions || []).find((v) => v.published)
 
-/** 고를 수 있는 버전 — 최신(이력에 저장 전일 수 있다)을 맨 위에, 그 아래 저장한 버전 */
+/** 게시할 수 있는 전체 버전 — 최신 버전을 맨 위에 표시한다 */
 function publishChoices(s) {
   const saved = s.versions || []
   const list = []
   if (s.preview) {
     const row = saved.find((v) => v.versionId === s.preview.versionId)
-    list.push({ versionId: s.preview.versionId, versionNo: s.preview.versionNo, latest: true, saved: !!row, published: !!row?.published })
+    list.push({ versionId: s.preview.versionId, versionNo: s.preview.versionNo, latest: true, saved: !!row?.checkpoint, published: !!row?.published })
   }
   saved.forEach((v) => {
-    if (v.versionId !== s.preview?.versionId) list.push({ versionId: v.versionId, versionNo: v.versionNo, latest: false, saved: true, published: v.published })
+    if (v.versionId !== s.preview?.versionId) list.push({ versionId: v.versionId, versionNo: v.versionNo, latest: false, saved: !!v.checkpoint, published: v.published })
   })
   return list
 }
 
-const choiceLabel = (c) => 'v' + c.versionNo + (c.latest ? ' · 최신' : '') + (c.published ? ' · 게시 중' : '') + (c.saved ? '' : ' · 이력에 저장 전')
+const choiceLabel = (c) => 'v' + c.versionNo + (c.latest ? ' · 최신' : '') + (c.published ? ' · 게시 중' : '') + (c.saved ? ' · 북마크' : '')
 
 function publishSummary(s, c) {
   const e = s.event
@@ -1533,7 +1535,7 @@ function publishSummary(s, c) {
     + dotted(e.startAt) + ' ~ ' + dotted(e.endAt) + ' · ' + esc(gradeLabel(e.grade)) + '<br>'
     + (cur ? '현재 게시 v' + cur.versionNo + ' → ' : '미게시 → ') + '선택 v' + c.versionNo + '</div>'
     + (c.published ? '<p class="review-note">이미 게시 중인 버전이에요. 다른 버전을 골라주세요.</p>' : '')
-    + (c.saved ? '' : '<p class="review-note">이 버전은 이력에 저장 전이에요. 게시하면 버전 이력에도 저장돼요.</p>')
+    + (c.saved ? '' : '<p class="review-note">게시하면 이 버전에 북마크가 자동으로 추가돼요.</p>')
 }
 
 const confirmLabel = (s, c) => 'v' + c.versionNo + ' ' + (isPublished(s) ? '재게시' : '게시') + ' 확정'
@@ -2006,7 +2008,7 @@ function previewPanel(s) {
     + (p
       ? '<span class="preview-current">현재 v' + p.versionNo + '</span>'
         + '<span class="preview-save-state' + (isSaved(s) ? '' : ' is-unsaved') + '">'
-        + (isSaved(s) ? '✓ 저장됨' : '이력에 저장 전') + '</span>'
+        + (isSaved(s) ? '★ 북마크됨' : '북마크 없음') + '</span>'
       : '')
     + (published
       ? '<span class="preview-published">게시 중 v' + published.versionNo + '</span>'
@@ -2298,7 +2300,7 @@ function serverEditorView() {
         : '')
     + button('server-info', '기본 정보 수정', busy || isEnded(s) ? 'disabled' : '', 'btn sm')
     + button('versions', '버전 이력', 'data-id="' + e.id + '"', 'btn sm')
-    + button('server-save', saved ? '저장됨' : '버전 저장', (!s.preview || saved || busy) ? 'disabled' : '', 'btn sm')
+    + button('server-save', saved ? '북마크됨' : '북마크 추가', (!s.preview || saved || busy) ? 'disabled' : '', 'btn sm')
     + button('server-publish', isPublished(s) ? '재게시' : '게시하기',
         !s.preview ? 'disabled title="먼저 페이지를 만들어주세요"'
           : isEnded(s) ? 'disabled title="종료된 이벤트는 게시할 수 없어요"'
