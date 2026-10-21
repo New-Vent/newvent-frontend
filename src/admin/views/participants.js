@@ -312,6 +312,13 @@ function configFields(gameCode, c, lock, s, openLock = '') {
     + modes.map(([v, t]) => '<option value="' + v + '"' + (mode === v ? ' selected' : '') + '>' + t + '</option>').join('')
     + '</select></label>'
     + (mode === 'IMMEDIATE' ? field('winProbability', '당첨 확률', c.winProbability, lock + ' type="number" min="0" max="100"', '0~100') : '')
+    + (mode === 'IMMEDIATE' ? field(
+      'maxWinnerCount',
+      '최대 당첨 인원',
+      c.maxWinnerCount,
+      lock + ' type="number" min="1" max="2147483647" step="1" placeholder="제한 없음"',
+      '선택 사항 · 비워두면 인원 제한 없이 추첨해요. 설정한 인원에 도달하면 이후 참여자는 미당첨 처리돼요.',
+    ) : '')
     + (mode === 'DELAYED' ? field('winnerCount', '당첨 인원', c.winnerCount, lock + ' type="number" min="1"', '1명 이상') : '')
     + (mode === 'DELAYED' ? eventDatetimeField('announcementAt', '발표 시각', localValue(c.announcementAt), { helper: '한국 시간 기준 · 참여가 시작된 뒤에도 바꿀 수 있어요' } ) : '')
     + (mode ? field('prizeName', '경품명', c.prizeName, '', '참여가 시작된 뒤에도 바꿀 수 있어요') : '')
@@ -632,7 +639,14 @@ function readConfig(form, gameCode) {
   const mode = v('resultMode')
   if (!mode) return {}
   const c = { resultMode: mode, prizeName: v('prizeName') }
-  if (mode === 'IMMEDIATE') c.winProbability = Number(v('winProbability'))
+  if (mode === 'IMMEDIATE') {
+    c.winProbability = Number(v('winProbability'))
+
+    const maxWinnerCount = v('maxWinnerCount')
+    if (maxWinnerCount !== '') {
+      c.maxWinnerCount = Number(maxWinnerCount)
+    }
+  }
   if (mode === 'DELAYED') {
     c.winnerCount = Number(v('winnerCount'))
     const at = v('announcementAt')
@@ -690,8 +704,17 @@ function checkConfig(gameCode, c, s) {
       if (!kept) return '참여가 시작돼 칸 수와 당첨 확률은 바꿀 수 없어요 — 경품명만 고쳐주세요.'
     }
   }
-  if (c.resultMode === 'IMMEDIATE' && !(c.winProbability >= 0 && c.winProbability <= 100)) {
-    return '당첨 확률을 0~100 으로 입력해주세요.'
+  if (c.resultMode === 'IMMEDIATE') {
+    if (!(c.winProbability >= 0 && c.winProbability <= 100)) {
+      return '당첨 확률을 0~100 으로 입력해주세요.'
+    }
+
+    if (Object.hasOwn(c, 'maxWinnerCount')
+      && !(Number.isInteger(c.maxWinnerCount)
+        && c.maxWinnerCount >= 1
+        && c.maxWinnerCount <= 2147483647)) {
+      return '최대 당첨 인원은 1명 이상의 정수로 입력해주세요.'
+    }
   }
   if (c.resultMode === 'DELAYED') {
     if (!(c.winnerCount >= 1)) return '당첨 인원을 1명 이상으로 입력해주세요.'
