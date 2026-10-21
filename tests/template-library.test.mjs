@@ -4,7 +4,7 @@ import test from 'node:test'
 import { SourceTextModule, SyntheticModule } from 'node:vm'
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject}}
 async function setup(load, overrides={}){
- const ui={};const bindings={ui,USE_SERVER:true,loadTemplateLibrary:load,esc:String,icon:()=>'',GRADES:[],serverFrame:()=>'',button:()=>'',ask:()=>{},closeModal:()=>{},modal:()=>{},toast:()=>{},deactivateTemplate:()=>{},loadTemplatePreview:()=>{},registerTemplate:()=>{},updateTemplate:()=>{},useTemplate:()=>{}};
+ const ui={};const bindings={ui,startCreation:()=>{},USE_SERVER:true,loadTemplateLibrary:load,esc:String,icon:()=>'',GRADES:[],serverFrame:()=>'',button:()=>'',ask:()=>{},closeModal:()=>{},modal:()=>{},toast:()=>{},deactivateTemplate:()=>{},loadTemplatePreview:()=>{},registerTemplate:()=>{},updateTemplate:()=>{},useTemplate:()=>{}};
  Object.assign(bindings,overrides); const m=new SourceTextModule(await readFile(new URL('../src/admin/views/templates.js',import.meta.url),'utf8'));
  await m.link(()=>new SyntheticModule(Object.keys(bindings),function(){for(const [k,v]of Object.entries(bindings))this.setExport(k,v)}));await m.evaluate();return {ui,m:m.namespace};
 }

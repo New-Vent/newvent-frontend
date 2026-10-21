@@ -1,13 +1,19 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import test from 'node:test'
+import test, { afterEach, mock } from 'node:test'
 import { SourceTextModule, SyntheticModule } from 'node:vm'
 
 /**
  * dashboard-rag.js — RAG 품질 대시보드.
  * 주간 추이 + 전체 현황을 한 번에 읽어 요약 카드·사용률·주간 증감을 그린다.
+ *
+ * ★ 화면은 "지금" 기준 8주를 그린다(없는 주는 0회). 시계를 고정하지 않으면 fixture 의 주가
+ *   8주 창 밖으로 밀려나는 날부터 이 테스트가 이유 없이 깨진다 — 그래서 Date 만 2026-10-07(수)로 세운다.
  */
+afterEach(() => mock.timers.reset())
+
 async function setup() {
+  mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-07T03:00:00Z') })
   const ui = {}
   const buttons = []
   const calls = { startedReindex: 0 }
@@ -55,19 +61,21 @@ test('주별 사용률과 지난주 대비 증감이 나온다', async () => {
   // 주간 범위 — 시작 +6일 (월요일~일요일)
   assert.match(html, /<em>09\/28-10\/04<\/em>/)
   assert.match(html, /<em>10\/05-10\/11<\/em>/)
-  // 이번 주 14회 − 지난주 7회 = +7회
-  assert.match(html, /이번 주 RAG 참고 14회 · 지난주 대비 \+7회/)
+  // 이번 주 14회 − 지난주 7회 = +7회 — 요약 카드
+  assert.match(html, /<p class="rag-week-label">이번 주 RAG 참고<\/p><div class="rag-week-value">14<span>회<\/span><\/div><p class="rag-week-change">지난주 대비 \+7회<\/p>/)
+  // 호출이 없는 주도 0회로 채워서 8주를 모두 그린다
+  assert.equal((html.match(/class="rag-week-column"/g) || []).length, 8)
   // 툴팁 — 세로 카드, HTML 에 이미 그려져 있고 hover CSS 로만 보인다 (title 속성은 쓰지 않는다)
   assert.match(html, /<span class="trend-tip"><em>10\/05-10\/11<\/em><span>전체 22회<\/span><span>그중 RAG 참고 14회<\/span><span>사용률 64%<\/span><span>청크 31개<\/span><span class="tip-flag">그 주에 전체 재색인 실행<\/span><\/span>/)
   assert.doesNotMatch(html, /trend-bar" title="/)
   // 막대 밖엔 주 시작 날짜만 — 수치 행은 폐지됐다
   assert.doesNotMatch(html, /trend-value/)
   assert.doesNotMatch(html, /trend-rate/)
-  // 범례 — 색 견본과 설명이 한 세트로 붙는다. 위치는 막대 아래 (차트 안, 도움말 위)
-  assert.match(html, /<b>전체 호출<\/b> — 그 주에 생성을 부른 횟수/)
-  assert.match(html, /<b>그중 RAG 참고<\/b> — 안쪽 분홍 막대, 참고 사례를 실어 넣은 호출/)
-  assert.ok(html.indexOf('trend-legend') > html.indexOf('class="trend"'), '범례가 막대 아래에 와야 한다')
-  assert.ok(html.indexOf('trend-legend') < html.indexOf('trend-helper'), '범례가 도움말 문단 앞에 와야 한다')
+  // 범례 — 색 견본과 설명이 한 세트로 붙는다. 위치는 막대 뒤 (차트 안, 차트 안내 앞)
+  assert.match(html, /<strong>전체 호출<\/strong><\/div><p>그 주에 생성을 부른 횟수<\/p>/)
+  assert.match(html, /<strong>그중 RAG 참고<\/strong><\/div><p>분홍 막대, 참고 사례를 실어 넣은 호출<\/p>/)
+  assert.ok(html.indexOf('rag-chart-legend') > html.indexOf('rag-week-chart'), '범례가 막대 뒤에 와야 한다')
+  assert.ok(html.indexOf('rag-chart-legend') < html.indexOf('rag-chart-help'), '범례가 차트 안내 앞에 와야 한다')
 })
 
 test('재색인 이력 카드와 툴팁의 전체 재색인 표시가 나온다', async () => {
@@ -108,7 +116,7 @@ test('전체 재색인 카드가 차트보다 위에 온다', async () => {
   await new Promise((r) => h.ns.ensureDashboard(r))
   const html = h.ns.dashboardRagView()
   const action = html.indexOf('RAG 전체 재색인')
-  const trend = html.indexOf('막대 밖 날짜는')
+  const trend = html.indexOf('주간 RAG 활용 추이')
   const history = html.indexOf('재색인 이력')
   // 대시보드 박스 — 열 폭을 닫아 양 끝 막대 툴팁이 가장자리에 붙지 않게 한다
   assert.match(html, /container rag-dash/)
@@ -146,9 +154,11 @@ test('버튼 클릭은 전체 재색인을 시작한다', async () => {
   assert.equal(h.calls.startedReindex, 1)
 })
 
-test('데이터가 없으면 빈 메시지를 보여준다', async () => {
+test('데이터가 없어도 8주를 0회로 채워 그리고, 지난주 대비는 변동 없음이다', async () => {
   const h = await setup()
   h.ui.ragTrend = []
   const html = h.ns.dashboardRagView()
-  assert.match(html, /아직 집계된 호출이 없어요/)
+  assert.equal((html.match(/class="rag-week-column"/g) || []).length, 8)
+  assert.equal((html.match(/<span class="rag-week-total">0회<\/span>/g) || []).length, 8)
+  assert.match(html, /<div class="rag-week-value">0<span>회<\/span><\/div><p class="rag-week-change">지난주 대비 변동 없음<\/p>/)
 })
