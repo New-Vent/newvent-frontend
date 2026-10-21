@@ -454,9 +454,408 @@
 /* AI 사용량 종합 카드 — 종합(도넛)과 주차별(막대)을 한 카드에 담고 구분선으로 절을 나눈다.
    기본 .card 는 여백이 0이라 제목이 가장자리와 겹쳐 보였다 — 이 카드에서만 여백을 준다.
    rag-card 의 제목 크기(14px)와 맞춰 두 화면의 카드 제목이 같게 보이게 */
-.usage-card{padding:22px 30px 26px}
-.usage-card h3{font-size:14px;margin:0 0 14px}
-.usage-card .usage-divider{height:1px;border:0;background:var(--line);margin:20px 0}
+/* AI 사용량 — 넓은 비용 헤더 */
+.usage-dashboard {
+  display: grid;
+  gap: 18px;
+}
+
+.usage-dashboard,
+.usage-dashboard * {
+  box-sizing: border-box;
+}
+
+.usage-dashboard .usage-panel {
+  min-width: 0;
+  margin: 0;
+  padding: 26px 28px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.usage-dashboard h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.usage-dashboard .usage-label,
+.usage-dashboard .usage-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.usage-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 0;
+}
+
+.usage-cost-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 0 16px;
+  color: var(--ink);
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.usage-cost-value > span {
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.usage-cost-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.usage-cost-breakdown strong {
+  margin-left: 5px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.usage-overview-details {
+  min-width: 0;
+  padding-left: 32px;
+  border-left: 1px solid var(--line);
+}
+
+@media (max-width: 760px) {
+  .usage-overview-details {
+    padding-left: 0;
+    padding-top: 20px;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+.usage-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.usage-stat > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.usage-stat > strong {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.usage-overview-details .usage-note {
+  margin-top: 9px;
+}
+
+.usage-quota-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.usage-quota-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 0 18px;
+  color: var(--ink);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.usage-quota-value > span {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.usage-quota-track {
+  height: 6px;
+  overflow: hidden;
+  background: var(--chart-track);
+  border-radius: 6px;
+}
+
+.usage-quota-track > span {
+  display: block;
+  height: 100%;
+  background: var(--chart-main);
+  border-radius: inherit;
+}
+
+.usage-quota .usage-note {
+  margin-top: 9px;
+}
+
+.usage-analysis {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 32px;
+}
+
+.usage-weekly {
+  min-width: 0;
+}
+
+.usage-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.usage-section-heading > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.usage-week-chart {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.usage-week-col {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.usage-week-bar {
+  position: relative;
+  height: 132px;
+  border-bottom: 1px solid var(--line);
+}
+
+.usage-week-fill {
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  width: 60%;
+  background: var(--chart-soft);
+  border-radius: 5px 5px 0 0;
+}
+
+.usage-week-col.is-latest .usage-week-fill {
+  background: var(--chart-main);
+}
+
+.usage-week-label {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.usage-week-tip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 5;
+  display: none;
+  width: max-content;
+  max-width: 230px;
+  padding: 11px 13px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: left;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.usage-week-tip > strong,
+.usage-week-tip > span {
+  display: block;
+}
+
+.usage-week-col:first-child .usage-week-tip {
+  left: 0;
+  transform: none;
+}
+
+.usage-week-col:last-child .usage-week-tip {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.usage-week-bar:hover .usage-week-tip,
+.usage-week-bar:focus .usage-week-tip {
+  display: block;
+}
+
+.usage-quality {
+  min-width: 0;
+  padding-left: 28px;
+  border-left: 1px solid var(--line);
+}
+
+.usage-quality h3 {
+  margin-bottom: 8px;
+}
+
+.usage-quality .usage-note {
+  margin-top: 16px;
+}
+
+@media (max-width: 760px) {
+  .usage-overview,
+  .usage-analysis {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .usage-quality {
+    padding-top: 22px;
+    padding-left: 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .usage-dashboard .usage-panel {
+    padding: 22px 18px;
+  }
+
+  .usage-quota-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .usage-cost-value {
+    font-size: 48px;
+  }
+
+  .usage-week-chart {
+    gap: 5px;
+  }
+
+  .usage-stat {
+    flex-wrap: wrap;
+    gap: 5px 12px;
+  }
+}
+
+/* 사용량 화면 폭과 카드 여백 조정 */
+.container.rag-dash:has(.usage-dashboard) {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
+.usage-dashboard .usage-panel {
+  padding: 22px 26px;
+}
+
+.usage-quota-value {
+  margin: 8px 0 14px;
+}
+
+/* 데이터가 한 주만 있어도 막대 폭 제한 */
+.usage-week-fill {
+  width: min(60%, 38px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 480px) {
+  .usage-dashboard .usage-panel {
+    padding: 20px 18px;
+  }
+}
+
+/* 입력·출력 토큰도 본문 정보로 표시 */
+.usage-token-details .usage-stat {
+  padding: 10px 0;
+}
+
+.usage-token-details .usage-stat > span {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.usage-token-details .usage-stat > strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 추정 근거는 임베딩 비용 가까이에 표시 */
+.usage-dashboard .usage-embedding-note {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+/* 8개 주차를 균등하게 배치 */
+.usage-week-chart {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.usage-week-fill {
+  width: min(60%, 38px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 480px) {
+  .usage-week-chart {
+    gap: 3px;
+  }
+
+  .usage-week-label {
+    font-size: 11px;
+    letter-spacing: -0.5px;
+  }
+}
+
+/* 상단 요약 카드 높이 축소 */
+.usage-dashboard .usage-overview {
+  padding-block: 20px;
+}
+
+.usage-overview-details .usage-stat {
+  padding-block: 8px;
+}
+
+.usage-token-details .usage-stat {
+  padding-block: 7px;
+}
+
+.usage-overview-details .usage-note {
+  margin-top: 6px;
+}
 
 /* 재색인 이력 카드 — 품질 추이 카드 바로 아래. 행 스타일은 호출 로그 행과 같은 골격 */
 .reindex-card{padding:20px 22px;margin-top:16px}

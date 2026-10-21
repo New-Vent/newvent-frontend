@@ -208,96 +208,192 @@ export function ensureUsage(onDone) {
 /* 색은 admin.css 의 .rag-dash 팔레트 변수(--chart-main/soft)로 받는다 —
    이벤트 관리 '이벤트 상태' 도넛과 같은 색을 세 차트가 공유한다 */
 
-/** 도넛 — CSS conic-gradient 원 + 가운데 구멍(카드 배경색). 조각은 생성(측정)/임베딩(추정) 2분 */
-function donut(summary) {
-  const gen = summary.generationUsd
-  const emb = summary.embedUsd
-  const total = gen + emb
-  const share = total > 0 ? (gen / total) * 100 : 100
-  const center = total > 0
-    ? '약 ' + num(total * USD_KRW) + '원'
-    : '기록 없음'
-  return '<div style="flex:0 0 auto;width:176px;height:176px;border-radius:50%;position:relative;'
-    + 'background:conic-gradient(var(--chart-main) 0 ' + share.toFixed(1) + '%, var(--chart-soft) ' + share.toFixed(1) + '%)"'
-    + ' role="img" aria-label="최근 8주 비용 구성 — 생성 약 ' + num(gen * USD_KRW) + '원, 임베딩 약 ' + num(emb * USD_KRW) + '원">'
-    + '<div style="position:absolute;inset:27px;background:#fff;border-radius:50%;display:flex;'
-    + 'flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.3">'
-    + '<b style="font-size:12px;font-weight:600;color:var(--muted)">최근 8주 누적</b>'
-    + '<span style="font-size:18px;font-weight:700">' + esc(center) + '</span>'
-    + '</div></div>'
+/** 라벨과 값을 좌우로 배치한다 */
+function usageStat(label, value) {
+  return `
+    <div class="usage-stat">
+      <span>${esc(label)}</span>
+      <strong>${esc(value)}</strong>
+    </div>
+  `
 }
 
-/** 종합 섹션 본문 — 도넛을 중앙에 두고 종합 정보는 그 아래 가운데 정렬로 쌓는다.
- *  행마다 "라벨(작게·회색) + 값(크게·진하게)" 한 쌍 — 숫자가 한눈에 튀는 폰트 구조.
- *  근거 문단(최근 8주 비용 내역)은 아래 오른쪽 정렬 — 요약의 마침표 같은 자리 */
+/** 상단 비용 요약 */
 function summaryBody(summary) {
-  const avg = summary.avgMs == null ? '-' : (Math.round(summary.avgMs / 100) / 10) + '초'
-  const row = (label, value) => '<span style="display:flex;align-items:baseline;justify-content:center;gap:10px">'
-    + '<span style="font-size:13px;color:var(--muted)">' + label + '</span>'
-    + '<b style="font-size:15px">' + value + '</b>'
-    + '</span>'
-  const donLegend = '<span style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">'
-    + '<i style="width:12px;height:12px;border-radius:3px;background:var(--chart-main);display:inline-block"></i>생성 (측정)'
-    + '</span>'
-    + '<span style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">'
-    + '<i style="width:12px;height:12px;border-radius:3px;background:var(--chart-soft);display:inline-block"></i>임베딩 (추정)'
-    + '</span>'
-  const stats = [
-    row('오늘 호출', esc(summary.todayCalls) + '/' + num(DAILY_LIMIT) + '회'),
-    row('이번 주 호출', esc(summary.weekCalls) + '/' + num(WEEK_QUOTA) + '회'),
-    row('누적 토큰', num(summary.inTokens + summary.outTokens) + ' — 입력 ' + num(summary.inTokens) + ' · 출력 ' + num(summary.outTokens)),
-    row('품질', '성공률 ' + esc(summary.okRate) + '% · 평균 응답 ' + esc(avg)),
-    row('비용 (최근 8주)', '생성 ' + num(summary.generationUsd * USD_KRW) + '원 (측정) · 임베딩 '
-      + num(summary.embedUsd * USD_KRW) + '원 (추정 — 청크 ' + esc(summary.embedChunks) + '개 기준)'),
-    row('월 예상 (생성 기준)', '약 ' + num(summary.monthlyUsd * USD_KRW) + '원 — 최근 4주 평균'),
-  ].join('')
-  return '<h3>종합 사용량</h3>'
-    + '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">'
-    + donut(summary)
-    + '<div style="display:flex;gap:18px;justify-content:center">' + donLegend + '</div>'
-    + '<div style="display:flex;flex-direction:column;gap:5px">' + stats + '</div>'
-    + '</div>'
+  const totalCost = num(
+    (summary.generationUsd + summary.embedUsd) * USD_KRW,
+  )
+
+  return `
+    <section class="card usage-panel usage-overview">
+      <div class="usage-cost">
+        <p class="usage-label">최근 8주 누적 예상 비용</p>
+
+        <div class="usage-cost-value">
+          ${totalCost}<span>원</span>
+        </div>
+
+        <div class="usage-cost-breakdown">
+          <span>
+            생성 · 측정
+            <strong>${num(summary.generationUsd * USD_KRW)}원</strong>
+          </span>
+          <span>
+            임베딩 · 추정
+            <strong>${num(summary.embedUsd * USD_KRW)}원</strong>
+          </span>
+        </div>
+
+        <p class="usage-note usage-embedding-note">
+          임베딩 비용 추정 — 청크 ${num(summary.embedChunks)}개 기준
+        </p>
+      </div>
+
+      <div class="usage-overview-details">
+        ${usageStat(
+          '월 예상 비용 · 생성 기준',
+          '약 ' + num(summary.monthlyUsd * USD_KRW) + '원',
+        )}
+        ${usageStat(
+          '누적 토큰',
+          num(summary.inTokens + summary.outTokens),
+        )}
+
+        <div class="usage-token-details">
+          ${usageStat('입력 토큰', num(summary.inTokens))}
+          ${usageStat('출력 토큰', num(summary.outTokens))}
+        </div>
+
+        <p class="usage-note">
+          월 예상 비용은 최근 4주 평균 기준
+        </p>
+      </div>
+    </section>
+  `
 }
 
-/** 주차별 섹션 본문 — 기존 .trend 막대 패턴 그대로, 축은 그 주 토큰 합계(max 동적).
- *  카드 래핑은 usageCard 가 하므로 여기선 절 본문(제목+차트+범례)만 내놓는다 */
+/** 호출 한도 카드 */
+function usageQuotaCard(label, count, quota) {
+  const percent = quota > 0 ? count / quota * 100 : 0
+  const width = Math.min(100, Math.max(0, percent))
+
+  return `
+    <section class="card usage-panel usage-quota">
+      <h3>${esc(label)}</h3>
+      <div class="usage-quota-value">
+        ${num(count)}<span>/ ${num(quota)}회</span>
+      </div>
+      <div
+        class="usage-quota-track"
+        role="meter"
+        aria-label="${esc(label)} 한도 사용률"
+        aria-valuemin="0"
+        aria-valuemax="${quota}"
+        aria-valuenow="${Math.min(quota, Math.max(0, count))}"
+        aria-valuetext="${num(count)} / ${num(quota)}회"
+      >
+        <span style="width:${width.toFixed(1)}%"></span>
+      </div>
+      <p class="usage-note">한도 대비 ${percent.toFixed(1)}% 사용</p>
+    </section>
+  `
+}
+
+/** 주차별 토큰 사용량 */
 function weeklyBody(summary) {
   if (!summary.weekly.length) {
-    return '<p class="rag-desc">아직 기록이 없어요.</p>'
+    return '<p class="usage-note">아직 기록이 없어요.</p>'
   }
-  const maxTokens = Math.max(1, ...summary.weekly.map((w) => w.tokens))
-  const cols = summary.weekly.map((w) => {
-    const aria = esc(weekRange(w.weekStart) + ' — 호출 ' + w.calls + '회 · 토큰 ' + num(w.tokens)
-      + ' · 예상 비용 약 ' + num(w.costUsd * USD_KRW) + '원')
-    return '<div class="trend-col">'
-      + '<small class="trend-week">' + esc(w.weekStart.slice(5).replace('-', '/')) + '</small>'
-      + '<div class="trend-bar" tabindex="0" aria-label="' + aria + '">'
-      + '<span class="trend-tip">'
-      + '<em>' + esc(weekRange(w.weekStart)) + '</em>'
-      + '<span>호출 ' + esc(w.calls) + '회</span>'
-      + '<span>토큰 ' + num(w.tokens) + '</span>'
-      + '<span>예상 비용 약 ' + num(w.costUsd * USD_KRW) + '원</span>'
-      + '</span>'
-      + '<span class="trend-fill" style="height:' + Math.round((w.tokens / maxTokens) * 100) + '%"></span>'
-      + '</div></div>'
+
+  const byWeek = new Map(
+    summary.weekly.map((week) => [week.weekStart, week]),
+  )
+  const thisMonday = mondayOf(kstDate(new Date().toISOString()))
+
+  const weeks = Array.from({ length: WEEKS }, (_, index) => {
+    const date = new Date(thisMonday + 'T00:00:00Z')
+    date.setUTCDate(date.getUTCDate() - (WEEKS - 1 - index) * 7)
+    const weekStart = date.toISOString().slice(0, 10)
+
+    return byWeek.get(weekStart) ?? {
+      weekStart,
+      calls: 0,
+      tokens: 0,
+      costUsd: 0,
+    }
+  })
+
+  const maxTokens = Math.max(1, ...weeks.map((week) => week.tokens))
+  const lastIndex = weeks.length - 1
+
+  const cols = weeks.map((w, index) => {
+    const description = weekRange(w.weekStart)
+      + ' — 호출 ' + num(w.calls) + '회'
+      + ' · 토큰 ' + num(w.tokens)
+      + ' · 생성 예상 비용 약 ' + num(w.costUsd * USD_KRW) + '원'
+
+    return `
+      <div class="usage-week-col${index === lastIndex ? ' is-latest' : ''}">
+        <div
+          class="usage-week-bar"
+          tabindex="0"
+          aria-label="${esc(description)}"
+        >
+          <span class="usage-week-tip">
+            <strong>${esc(weekRange(w.weekStart))}</strong>
+            <span>호출 ${num(w.calls)}회</span>
+            <span>토큰 ${num(w.tokens)}</span>
+            <span>생성 예상 비용 약 ${num(w.costUsd * USD_KRW)}원</span>
+          </span>
+          <span
+            class="usage-week-fill"
+            style="height:${(w.tokens / maxTokens * 100).toFixed(1)}%"
+          ></span>
+        </div>
+        <span class="usage-week-label">
+          ${esc(w.weekStart.slice(5).replace('-', '/'))}
+        </span>
+      </div>
+    `
   }).join('')
-  const legend = '<p class="trend-legend">'
-    + '<span><i class="sw sw-total"></i><b>토큰 볼륨</b> — 그 주 입력+출력 토큰 합계</span>'
-    + '</p>'
-  return '<h3>주차별 사용량</h3>'
-    + '<div class="trend">' + cols + '</div>'
-    + legend
+
+  return `
+    <div class="usage-section-heading">
+      <h3>주차별 사용량</h3>
+      <span>입력 + 출력 토큰</span>
+    </div>
+    <div class="usage-week-chart">${cols}</div>
+  `
 }
 
-/** AI 사용량 카드 — 종합(도넛)과 주차별(막대)을 한 장에 담아 구분선으로 절을 나눈다.
- *  두 장으로 나눠 그리면 시선이 갈라지고, 기본 .card 는 여백이 0이라 제목이
- *  가장자리와 겹쳐 보였다(2026-10-19 실측) — .usage-card 여백으로 그를 푼다 */
+/** 비용 → 호출 현황 → 주차별 사용량과 응답 품질 */
 function usageCard(summary) {
-  return '<div class="card usage-card">'
-    + summaryBody(summary)
-    + '<hr class="usage-divider">'
-    + weeklyBody(summary)
-    + '</div>'
+  const avg = summary.avgMs == null
+    ? '-'
+    : (Math.round(summary.avgMs / 100) / 10) + '초'
+
+  return `
+    <div class="usage-dashboard">
+      ${summaryBody(summary)}
+
+      <div class="usage-quota-grid">
+        ${usageQuotaCard('오늘 호출', summary.todayCalls, DAILY_LIMIT)}
+        ${usageQuotaCard('이번 주 호출', summary.weekCalls, WEEK_QUOTA)}
+      </div>
+
+      <section class="card usage-panel usage-analysis">
+        <div class="usage-weekly">
+          ${weeklyBody(summary)}
+        </div>
+
+        <div class="usage-quality">
+          <h3>응답 품질</h3>
+          ${usageStat('성공률', summary.okRate + '%')}
+          ${usageStat('평균 응답', avg)}
+        </div>
+      </section>
+    </div>
+  `
 }
 
 export function usageView() {
