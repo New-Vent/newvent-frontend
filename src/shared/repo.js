@@ -66,12 +66,12 @@ function requireApi() {
  *   404 가 아니라 401 이 온다 (SecurityConfig 의 /api/** 규칙에 먼저 걸린다).
  *
  * 응답은 Spring Page 모양이고 썸네일·본문 HTML 이 없다.
- *   { content: [{ id, title, startDate, endDate, status, category, closingSoon }], … }
+ *   { content: [{ id, title, startDate, endDate, status, grade, category, closingSoon }], … }
  *
  * 그래서 목록 화면은 제목 · 기간만 쓴다. 썸네일은 백엔드에 요청해둔 상태다.
  *
  * @returns {Promise<Array<{id:number,title:string,startDate:string,endDate:string,
- *                          status:string,closingSoon:boolean,thumbnailHtml?:string}>>}
+ *                          status:string,grade?:string,closingSoon:boolean,thumbnailHtml?:string}>>}
  */
 export async function loadEvents() {
   if (!USE_SERVER) return state.db.events.filter((e) => !e.deletedAt)
