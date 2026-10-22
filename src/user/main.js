@@ -1,4 +1,5 @@
 import './styles.css'
+import '@shared/sentry.js'
 
 import { $, esc } from '@shared/dom.js'
 import { AUTH_ENABLED, createApi } from '@shared/api.js'
