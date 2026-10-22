@@ -1,5 +1,6 @@
 import './notifications.css'
 import './account-menu.css'
+import '@shared/sentry.js'
 import { createAdminNotifications } from './notifications.js'
 import { CONTENT_FIELDS, LABELS } from '@shared/constants.js'
 import { showSelectedTarget, requestFor, requestPending, updateEditor } from '@shared/editor-state.js'
