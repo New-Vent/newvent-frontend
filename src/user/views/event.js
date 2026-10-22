@@ -171,8 +171,8 @@ function serverParticipation() {
       + '<strong>지금 참여할 수 있어요</strong>'
       + '<p class="helper">'
       + (d.gameCode === 'BASIC' || !d.gameCode
-        ? '왼쪽 페이지의 <strong>참여하기</strong> 버튼을 눌러주세요.'
-        : '왼쪽 페이지에서 고르고 <strong>참여하기</strong>를 눌러주세요.')
+        ? '이벤트 페이지의 <strong>참여하기</strong> 버튼을 눌러주세요.'
+        : '이벤트 페이지에서 필요한 항목을 입력하거나 선택한 뒤 <strong>참여하기</strong>를 눌러주세요.')
       + '</p></div>'
   }
 
