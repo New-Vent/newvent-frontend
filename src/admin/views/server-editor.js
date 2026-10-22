@@ -283,7 +283,13 @@ async function poll(s, rerender) {
       s.changedKeys = changes.filter((c) => c.key && c.kind !== 'removed').map((c) => c.key)
     }
     chatOf(s.id).push(reply)
-  } else if (s.job.phase === 'DONE' && s.preview) toast('v' + s.preview.versionNo + ' 로 만들었어요.')
+  } else if (s.job.phase === 'DONE' && s.preview) {
+    toast('v' + s.preview.versionNo + ' 로 만들었어요.')
+    // ★ 생성도 성공하면서 안내를 남긴다 — "요청에 없던 기간 · 혜택 표현이 들어 있다"
+    //   (GenerationService 의 notePeriodWarnings). 토스트는 몇 초 뒤 사라지므로
+    //   게시 전에 확인해야 하는 말은 화면에 남긴다
+    if (s.job.message) s.notice = s.job.message
+  }
   rerender()
 }
 
@@ -298,9 +304,21 @@ function changesOf(beforeHtml, afterHtml) {
 /** 이전 모습 비교 중인가 — 가장 최근 수정의 결과 버전을 보고 있을 때만 */
 const comparing = (s) => !!(s.showBefore && s.tab === 'chat' && s.compare && s.preview?.versionId === s.compare.versionId)
 
+/**
+ * 수정 결과 말풍선 문구.
+ *
+ * ★★ **성공해도 message 를 버리지 않는다.** 서버는 일부만 반영된 경우 성공(DONE)으로
+ *   끝내면서 무엇이 안 됐는지를 message 에 담는다 (EditService 의 job.notice —
+ *   "○○ 영역은 바꾸지 못했습니다. 나머지는 반영했습니다.").
+ *   전에는 DONE 이면 고정 문구만 써서, 두 가지를 시켰는데 하나만 된 경우에도
+ *   "반영했어요" 만 보였다. 화면을 새로 고쳐 서버 대화 이력을 다시 읽어야 알 수 있었다.
+ */
 function editReply(s) {
   const j = s.job
-  if (j.phase === 'DONE') return (s.preview ? 'v' + s.preview.versionNo + ' 로 반영했어요. ' : '반영했어요. ') + '미리보기에서 확인해주세요.'
+  if (j.phase === 'DONE') {
+    const done = (s.preview ? 'v' + s.preview.versionNo + ' 로 반영했어요. ' : '반영했어요. ') + '미리보기에서 확인해주세요.'
+    return j.message ? done + ' ' + j.message : done
+  }
   if (j.phase === 'CANCELLED') return '요청을 중단했어요. 페이지는 그대로예요.'
   return j.message || (j.phase === 'ASK_BACK' ? '어느 부분을 어떻게 바꿀지 알려주세요.' : '요청을 반영하지 못했어요.')
 }
