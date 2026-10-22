@@ -2275,6 +2275,8 @@ async function saveEventInfo(form, rerender) {
     const updated = await updateEventInfo(s.id, body)
     s.event = updated
     resetAdminServer()
+    // 참여 설정 화면이 들고 있는 종료일도 낡았다 — 안 비우면 발표 시각을 옛 종료일로 검사한다
+    if (ui.participants?.eventId === String(s.id)) ui.participants = null
     closeModal()
     toast('이벤트 기본 정보를 수정했어요.')
 
