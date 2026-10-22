@@ -1668,3 +1668,150 @@
     padding-inline: 12px;
   }
 }
+
+/* 모바일: 관리자 이벤트 목록 · 휴지통 */
+@media (max-width: 760px) {
+  .admin-events-page #admin-results {
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table) colgroup,
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table) thead {
+    display: none;
+  }
+
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table) tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table) tbody > tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table) tbody > tr > td {
+    display: block;
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* 이벤트 제목 */
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table) .admin-event-title {
+    margin: 0 0 6px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .admin-events-page .admin-event-title > span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table) td > small {
+    display: block;
+    line-height: 1.6;
+  }
+
+  /* 날짜 앞에 항목명 표시 */
+  .admin-events-page .admin-event-list-table .event-period-cell::before,
+  .admin-events-page .admin-trash-table td:nth-child(2)::before,
+  .admin-events-page .admin-trash-table td:nth-child(3)::before {
+    display: block;
+    margin-bottom: 4px;
+    color: #8491a6;
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .admin-events-page .admin-event-list-table .event-period-cell::before,
+  .admin-events-page .admin-trash-table td:nth-child(3)::before {
+    content: '이벤트 기간';
+  }
+
+  .admin-events-page .admin-trash-table td:nth-child(2)::before {
+    content: '마지막 변경';
+  }
+
+  /* 관리 버튼: 편집 / 게시 / 더보기 */
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table)
+  .event-management-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    padding-top: 12px;
+    border-top: 1px solid #edf0f5;
+  }
+
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table)
+  .event-action-button {
+    flex: 1 1 108px;
+    width: auto;
+    min-width: 0;
+    min-height: 44px;
+    height: auto;
+  }
+
+  .admin-events-page .event-more {
+    flex: 0 0 44px;
+    margin-left: auto;
+  }
+
+  .admin-events-page .event-more > summary {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* 메뉴가 아래쪽 카드에 가려지지 않도록 */
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table)
+  tbody > tr:has(.event-more[open]) {
+    position: relative;
+    z-index: 10;
+  }
+
+  .admin-events-page .event-more-popup {
+    right: 0;
+    max-width: calc(100vw - 68px);
+    box-sizing: border-box;
+  }
+
+  /* 마감 임박 표시선 */
+  .admin-events-page .admin-event-list-table
+  tr.is-closing-soon {
+    border-left: 3px solid #dca859;
+  }
+
+  .admin-events-page .admin-event-list-table
+  tr.is-closing-soon > td:first-child::before {
+    content: none;
+  }
+
+  /* 검색 결과 없음 */
+  .admin-events-page :is(.admin-event-list-table, .admin-trash-table)
+  td[colspan] {
+    padding: 16px 0;
+    text-align: center;
+    color: var(--muted);
+  }
+}
