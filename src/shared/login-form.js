@@ -5,6 +5,7 @@
  */
 
 import { $, esc } from './dom.js'
+import { passwordField } from './password-field.js'
 
 /**
  * 폼 마크업. 뷰(loginView)가 카드 안에 넣는다.
@@ -14,7 +15,9 @@ function loginForm(loginId = '') {
   return '<form id="login-form" class="fields login-form" novalidate>' +
     '<label class="field">아이디<input name="loginId" autocomplete="username" maxlength="50" required' +
     (loginId ? ' value="' + esc(loginId) + '"' : ' autofocus') + '></label>' +
-    '<label class="field">비밀번호<input name="password" type="password" autocomplete="current-password" maxlength="100" required></label>' +
+    '<label class="field">비밀번호' +
+    passwordField('name="password" autocomplete="current-password" maxlength="100" required') +
+    '</label>' +
     '<p id="login-error" class="login-error" role="alert"></p>' +
     '<button type="submit" class="btn primary wide">로그인</button>' +
     '</form>'

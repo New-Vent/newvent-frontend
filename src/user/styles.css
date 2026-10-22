@@ -1650,3 +1650,14 @@ body:has(.user-login-page, .user-signup-page) #app {
     padding: 30px 22px;
   }
 }
+
+/* 회원가입: 비밀번호 보기 아이콘 공간 확보 */
+.user-signup-fields .auth-password-field > input {
+  padding-right: 48px;
+}
+
+.user-signup-fields .auth-password-field > .auth-password-toggle {
+  right: 4px;
+  min-width: 36px;
+  padding: 4px;
+}

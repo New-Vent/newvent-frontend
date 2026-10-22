@@ -18,6 +18,7 @@ import { esc } from '@shared/dom.js'
 import { AUTH_ENABLED } from '@shared/api.js'
 import { button } from '@shared/ui/controls.js'
 import { ui } from '@shared/state.js'
+import { passwordField } from '@shared/password-field.js'
 
 /**
  * 백엔드 `SignUpRequest` 와 1:1 로 맞춘 검사 규칙.
@@ -79,15 +80,26 @@ export function signupView() {
 
           <label class="field">비밀번호
             <span class="helper">8~100자</span>
-            <input data-signup="password" name="password" type="password"
-                   required minlength="8" maxlength="100"
-                   autocomplete="new-password" placeholder="••••••••">
+            ${passwordField(`
+              data-signup="password"
+              name="password"
+              required
+              minlength="8"
+              maxlength="100"
+              autocomplete="new-password"
+              placeholder="비밀번호를 입력해주세요"
+            `)}
           </label>
 
           <label class="field">비밀번호 확인
-            <input data-signup="password2" name="password2" type="password"
-                   required maxlength="100"
-                   autocomplete="new-password" placeholder="••••••••">
+            ${passwordField(`
+              data-signup="password2"
+              name="password2"
+              required
+              maxlength="100"
+              autocomplete="new-password"
+              placeholder="비밀번호 재입력"
+            `)}
           </label>
 
           <label class="field">이름

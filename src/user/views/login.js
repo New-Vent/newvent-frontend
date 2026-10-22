@@ -7,7 +7,7 @@ import { AUTH_ENABLED } from '@shared/api.js'
 import { loginForm } from '@shared/login-form.js'
 import { ui } from '@shared/state.js'
 
-function loginView(title = '다시 만나서 반가워요!') {
+function loginView(title = '나를 위한 혜택을 만나보세요') {
   let content
 
   if (AUTH_ENABLED) {
@@ -18,7 +18,7 @@ function loginView(title = '다시 만나서 반가워요!') {
     content = `
       <h1 id="user-login-title">${esc(title)}</h1>
       <p class="user-login-description">
-        로그인하고 다양한 이벤트에 참여해보세요.
+        다양한 이벤트에 참여하고, 받은 혜택을 한곳에서 확인하세요.
       </p>
       ${loginForm(hint)}
       <p class="user-login-signup">
