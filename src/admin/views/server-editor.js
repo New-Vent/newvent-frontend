@@ -436,6 +436,33 @@ async function cancel() {
 
 const editable = (s) => s.preview?.editableTexts || []
 
+export function discardUnsavedDirectChanges() {
+  const s = ui.serverEditor
+  if (!s?.direct) return
+
+  s.direct = freshDirect()
+}
+
+export function hasUnsavedDirectChanges() {
+  const s = ui.serverEditor
+  if (!s?.preview || !s.direct) return false
+
+  const {
+    edits, buttonStyle, textStyle, order, looks,
+    removeBlocks, removeItems,
+  } = directChanges(s)
+
+  return Boolean(
+    edits.length
+    || buttonStyle
+    || textStyle
+    || order
+    || looks?.count
+    || removeBlocks.length
+    || Object.values(removeItems).some((items) => items.length),
+  )
+}
+
 /** 바뀐 문구 · 버튼 스타일만 모아 요청 본문으로 */
 function directChanges(s) {
   const list = editable(s)

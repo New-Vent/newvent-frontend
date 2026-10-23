@@ -279,15 +279,30 @@ function createInitialCreation() {
   return {
     step: 1,
     title: '',
-    start: period.start,
-    end: period.end,
-    startTime: '00:00',
-    endTime: '00:00',
-    grade: 'NORMAL',       // 일반 이상 — 모든 회원
+    start: '',
+    end: '',
+    startTime: '',
+    endTime: '',
+    grade: '',      
     mode: 'template',
     templateId: null,
     prompt: '',
   }
+}
+
+export function hasUnsavedCreationChanges() {
+  const c = ui.creation
+  if (!c) return false
+
+  const initial = createInitialCreation()
+  const fields = [
+    'title', 'start', 'end', 'startTime', 'endTime',
+    'grade', 'mode', 'templateId', 'prompt', 'layout',
+  ]
+
+  return fields.some((key) => (
+    String(c[key] ?? '') !== String(initial[key] ?? '')
+  ))
 }
 
 function startCreation(libraryTemplate = null) {

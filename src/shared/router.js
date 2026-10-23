@@ -1,73 +1,123 @@
-/**
- * 최소 라우터 — History API 기반.
- *
- * 프로토타입은 ui.route 문자열만 바꿨기 때문에 주소가 안 바뀌고
- * 새로고침하면 처음으로 돌아갔다. 실제 URL 을 쓰면 새로고침·뒤로가기·
- * 링크 공유가 전부 자연스러워진다.
- *
- * nginx 가 SPA fallback(try_files … /index.html)을 하고 있어서
- * 어느 주소로 직접 들어와도 앱이 뜬다.
- */
-
-/** '/' (사용자) 또는 '/admin/' (관리자). vite 의 base 값이 그대로 들어온다. */
+/** '/' (사용자) 또는 '/admin/' (관리자). */
 export const BASE = import.meta.env.BASE_URL
 
-/** '/admin/events/3/edit' → '/events/3/edit' */
 function stripBase(pathname) {
-  const p = pathname.startsWith(BASE) ? pathname.slice(BASE.length) : pathname
+  const p = pathname.startsWith(BASE)
+    ? pathname.slice(BASE.length)
+    : pathname
+
   return '/' + p.replace(/^\/+/, '')
 }
 
-/** '/events/:id/edit' → 정규식 + 파라미터 이름 */
 function compile(pattern) {
   const keys = []
   const source = pattern
     .replace(/\/+$/, '')
-    .replace(/:([\w]+)/g, (_, k) => {
-      keys.push(k)
+    .replace(/:([\w]+)/g, (_, key) => {
+      keys.push(key)
       return '([^/]+)'
     })
-  return { re: new RegExp('^' + (source || '/') + '/?$'), keys }
+
+  return {
+    re: new RegExp('^' + (source || '/') + '/?$'),
+    keys,
+  }
 }
 
-/**
- * @param {Array<{path: string, name: string}>} routes
- * @param {(match: {name: string, params: object}) => void} onChange
- */
-export function createRouter(routes, onChange) {
-  const compiled = routes.map((r) => ({ ...r, ...compile(r.path) }))
+export function createRouter(
+  routes,
+  onChange,
+  { beforeLeave = () => true } = {},
+) {
+  const compiled = routes.map((route) => ({
+    ...route,
+    ...compile(route.path),
+  }))
+
+  const INDEX_KEY = '__newventHistoryIndex'
+  let index = Number.isInteger(history.state?.[INDEX_KEY])
+    ? history.state[INDEX_KEY]
+    : 0
+  let restoring = false
+
+  history.replaceState(
+    { ...history.state, [INDEX_KEY]: index },
+    '',
+    location.href,
+  )
 
   function resolve() {
     const path = stripBase(location.pathname)
-    for (const r of compiled) {
-      const m = path.match(r.re)
-      if (!m) continue
+
+    for (const route of compiled) {
+      const match = path.match(route.re)
+      if (!match) continue
+
       const params = {}
-      r.keys.forEach((k, i) => (params[k] = decodeURIComponent(m[i + 1])))
-      return { name: r.name, params }
+      route.keys.forEach((key, i) => {
+        params[key] = decodeURIComponent(match[i + 1])
+      })
+
+      return { name: route.name, params }
     }
+
     return { name: 'notFound', params: {} }
   }
 
   function navigate(path, { replace = false } = {}) {
+    if (restoring) return false
+
     const url = BASE.replace(/\/$/, '') + path
 
-    // 이미 그 주소면 **기록만 남기지 않는다.** 다시 그리기는 한다.
-    //
-    // ★ 예전에는 여기서 그냥 돌아갔다. 그래서 상태를 바꾸고 지금 화면으로
-    //   navigate 하면 화면이 안 바뀌었다 — 홈에서 로그아웃을 누르면
-    //   ui.logged 는 false 가 되고 토스트까지 떴는데 헤더에는 이름과
-    //   로그아웃 버튼이 그대로 남았다 (navigate('home') 이 /, 즉 제자리라서).
     if (url === location.pathname) {
       onChange(resolve())
+      return true
+    }
+
+    if (!beforeLeave()) return false
+
+    if (!replace) index += 1
+
+    history[replace ? 'replaceState' : 'pushState'](
+      { ...history.state, [INDEX_KEY]: index },
+      '',
+      url,
+    )
+
+    onChange(resolve())
+    return true
+  }
+
+  window.addEventListener('popstate', (event) => {
+    if (restoring) {
+      restoring = false
       return
     }
 
-    history[replace ? 'replaceState' : 'pushState']({}, '', url)
+    const nextIndex = event.state?.[INDEX_KEY]
+
+    // 앱이 만든 기록 사이의 뒤로가기·앞으로가기.
+    if (Number.isInteger(nextIndex)) {
+      if (!beforeLeave()) {
+        const delta = index - nextIndex
+
+        if (delta) {
+          restoring = true
+          history.go(delta)
+        }
+
+        return
+      }
+
+      index = nextIndex
+    }
+
     onChange(resolve())
+  })
+
+  return {
+    navigate,
+    resolve,
+    start: () => onChange(resolve()),
   }
-
-  window.addEventListener('popstate', () => onChange(resolve()))
-
-  return { navigate, resolve, start: () => onChange(resolve()) }
 }

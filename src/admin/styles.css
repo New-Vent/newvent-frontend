@@ -4199,3 +4199,23 @@ body.admin-login-screen .admin-login-page {
   line-height: 1.8;
   word-break: keep-all;
 }
+
+/* 생성 화면: 날짜 문구 줄바꿈 방지 */
+.create-container #create-basics .event-range-trigger {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.create-container #create-basics [data-range-from-label],
+.create-container #create-basics [data-range-to-label] {
+  white-space: nowrap;
+}
+
+/* 좁은 화면: 시작·종료 일시를 각각 한 행으로 배치 */
+@media (max-width: 1100px) {
+  .create-container #create-basics .event-range-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
