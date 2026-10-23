@@ -4219,3 +4219,32 @@ body.admin-login-screen .admin-login-page {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 이벤트 제목으로 편집 화면 열기 */
+.admin-event-title > .admin-event-title-button {
+  display: inline-block;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.admin-event-title > .admin-event-title-button:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+.admin-event-title > .admin-event-title-button:focus-visible {
+  outline: 2px solid #4088ed;
+  outline-offset: 4px;
+}

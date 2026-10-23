@@ -372,7 +372,14 @@ const serverTitleCell = (e) => {
   return `
     <td>
       <h3 class="admin-event-title">
-        <span>${esc(e.name)}</span>
+        ${currentTab() === 'trash' || notMine(e)
+          ? `<span>${esc(e.name)}</span>`
+          : button(
+              'edit',
+              esc(e.name),
+              `data-id="${esc(String(e.id))}"`,
+              'admin-event-title-button',
+            )}
 
         ${days !== null
           ? `<span
