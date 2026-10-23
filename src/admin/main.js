@@ -1,6 +1,7 @@
 import './notifications.css'
 import './account-menu.css'
 import '@shared/sentry.js'
+import { hasUnsavedDirectChanges, discardUnsavedDirectChanges } from './views/server-editor.js'
 import { createAdminNotifications } from './notifications.js'
 import { CONTENT_FIELDS, LABELS } from '@shared/constants.js'
 import { showSelectedTarget, requestFor, requestPending, updateEditor } from '@shared/editor-state.js'
@@ -34,7 +35,7 @@ import { participantsView, ensureParticipants, resetParticipants, handleParticip
 import { serverVersionsView, handleVersionsClick } from './views/server-versions.js'
 import { editorView, refreshChat, stopRequest, handlePrompt, setEditorMode, changeChatSide } from './views/editor.js'
 import { versionsView, previewVersion, saveVersion, showPublish, chooseVersion, publicationCheck, publicationChecks, publishSummary } from './views/versions.js'
-import { creationView, startCreation, validateCreation, finishCreation, refreshCreationSummary, handleCreateRagClick, ensureCreationTemplates, selectCreationTemplate } from './views/create.js'
+import { creationView, startCreation, validateCreation, finishCreation, refreshCreationSummary, handleCreateRagClick, ensureCreationTemplates, selectCreationTemplate, hasUnsavedCreationChanges  } from './views/create.js'
 import { loginView } from './views/login.js'
 import { usersView, ensureAdminUsers, resetAdminUsers, handleUsersClick, handleUsersChange, handleUsersSubmit } from './views/user-management.js'
 import { dashboardRagView, ensureDashboard, handleRagDashboardClick } from './views/dashboard-rag.js'
@@ -347,8 +348,71 @@ function render(scroll = false) {
 }
 
 initAdminEventFilters(() => render())
+function adminLeaveState() {
+  if (ui.route === 'create' && ui.creation) {
+    if (ui.creation.submitting) {
+      return {
+        blocked: true,
+        message: '이벤트를 만들고 있어요. 처리가 끝날 때까지 기다려주세요.',
+      }
+    }
+
+    if (!hasUnsavedCreationChanges()) return null
+
+    return {
+      message: '입력한 내용은 아직 저장되지 않았어요.\n이 화면을 나갈까요?',
+    }
+  }
+
+  if (USE_SERVER && ui.route === 'editor') {
+    const s = ui.serverEditor
+    if (!s) return null
+
+    if (s.busy) {
+      return {
+        blocked: true,
+        message: '변경사항을 처리하고 있어요. 완료될 때까지 기다려주세요.',
+      }
+    }
+
+    if (hasUnsavedDirectChanges()) {
+      return {
+        message: '저장하지 않은 변경사항이 있어요.\n서버에 저장하려면 취소 후 ‘변경 저장’을 눌러주세요.\n이 화면을 나갈까요?',
+      }
+    }
+
+    if (s.job && !s.job.done) {
+      return {
+        message: '화면을 나가도 AI 작업은 계속됩니다.\n정상적으로 완료되면 자동 저장되며, 이벤트 목록에서 다시 확인할 수 있어요.\n이 화면을 나갈까요?',
+      }
+    }
+  }
+
+  return null
+}
+
+function confirmAdminLeave() {
+  const state = adminLeaveState()
+  if (!state) return true
+
+  if (state.blocked) {
+    window.alert(state.message)
+    return false
+  }
+
+  return window.confirm(state.message)
+}
 
 const router = createRouter(ROUTES, (match) => {
+  const leavingEditor = ui.route === 'editor' && (
+    match.name !== 'editor'
+    || String(match.params.id) !== String(ui.activeId)
+  )
+
+  if (leavingEditor && USE_SERVER) {
+    discardUnsavedDirectChanges()
+  }
+
   ui.route = match.name
   if (match.params.id) ui.activeId = match.params.id
   // 참여자 화면은 들어올 때마다 다시 읽는다. 참여는 사용자가 수시로 만드는 값이라
@@ -356,17 +420,30 @@ const router = createRouter(ROUTES, (match) => {
   // (여기는 이동할 때 한 번만 돈다 — render 안에서 비우면 끝없이 다시 읽는다)
   if (match.name === 'participants' && ui.participants) ui.participants.status = 'idle'
   render(true)
+}, {
+  beforeLeave: confirmAdminLeave,
 })
 
 /** 이식한 뷰들이 부르는 navigate(route, id) 를 라우터로 넘긴다. */
 function navigate(route, id) {
-  if (route === 'versions' && ui.route !== 'versions') {
-    ui.versionsBackRoute = ui.route === 'editor' ? 'editor' : 'admin'
+  const previousRoute = ui.route
+  const previousBackRoute = ui.versionsBackRoute
+  const path = PATH[route]
+    ? PATH[route](id ?? ui.activeId)
+    : '/'
+
+  if (route === 'versions' && previousRoute !== 'versions') {
+    ui.versionsBackRoute = previousRoute === 'editor'
+      ? 'editor'
+      : 'admin'
   }
 
-  if (id) ui.activeId = id
+  if (!router.navigate(path)) {
+    ui.versionsBackRoute = previousBackRoute
+    return
+  }
+
   closeModal()
-  router.navigate(PATH[route] ? PATH[route](id ?? ui.activeId) : '/')
 }
 
 // 이식한 뷰들이 @shared/navigate.js 를 통해 이걸 부른다.
@@ -616,7 +693,7 @@ document.addEventListener('click', (ev) => {
   if(a==='versions'){navigate('versions',b.dataset.id);return;}
   if(a==='participants'){navigate('participants',b.dataset.id);return;}
   if(a==='new'){startCreation();return;}
-  if(a==='cancel-create'){ui.creation=null;navigate('admin');return;}
+  if(a==='cancel-create'){navigate('admin');if(ui.route !== 'create') ui.creation = null;return;}
   if(a==='create-back'){ui.creation.step=1;render(true);return;}
   if(a==='create-layout'){ui.creation.layout=b.dataset.layout||'';markPick(document.querySelector('#create-layouts'),ui.creation.layout);return;}
   if(a==='create-mode'){ui.creation.mode=b.dataset.mode;render();document.querySelector('[data-act="create-mode"][data-mode="'+ui.creation.mode+'"]')?.focus({preventScroll:true});return;}
@@ -783,7 +860,11 @@ $('#overlay').addEventListener('click', (ev) => {
 })
 
 window.addEventListener('beforeunload', (ev) => {
-  if (!Object.values(ui.requests || {}).some((r) => r.status === 'processing')) return
+  const pendingMock = Object.values(ui.requests || {})
+    .some((request) => request.status === 'processing')
+
+  if (!adminLeaveState() && !pendingMock) return
+
   ev.preventDefault()
   ev.returnValue = ''
 })
