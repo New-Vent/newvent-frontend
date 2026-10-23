@@ -9936,12 +9936,12 @@ body:has(.palette-retro) {
 
 .palette-lemonade,
 body:has(.palette-lemonade) {
-  --ev-primary: #4d7c0f; --ev-primary-hover: #41690d; --ev-primary-light: #f1f5ec;
-  --ev-primary-glow: rgba(77, 124, 15, 0.25);
+  --ev-primary: #8d730c; --ev-primary-hover: #78620a; --ev-primary-light: #f6f4ec;
+  --ev-primary-glow: rgba(141, 115, 12, 0.25);
   --ev-gradient-hero: linear-gradient(135deg, #3f3a05 0%, #a16207 55%, #facc15 100%);
-  --ev-gradient-cta: linear-gradient(135deg, #6d943a 0%, #4d7c0f 100%);
+  --ev-gradient-cta: linear-gradient(135deg, #a28c38 0%, #8d730c 100%);
   --ev-accent-tag: #facc15;
-  --ev-bg: #fafbf8; --ev-surface: #ffffff; --ev-surface-subtle: #f4f7f1; --ev-border: #dbe5cf;
+  --ev-bg: #fffdf8; --ev-surface: #ffffff; --ev-surface-subtle: #f8f7f0; --ev-border: #e8e3ce;
 }
 
 .palette-aqua,
