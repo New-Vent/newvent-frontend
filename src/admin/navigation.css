@@ -194,3 +194,17 @@
     height: 44px;
   }
 }
+
+/* 모바일: 계정 팝오버가 화면 밖으로 나가지 않도록 배치 */
+@media (max-width: 760px) {
+  #header .admin-account-menu {
+    position: static;
+  }
+
+  #header .admin-account-dropdown {
+    right: 0;
+    left: auto;
+    width: 270px;
+    max-width: 100%;
+  }
+}

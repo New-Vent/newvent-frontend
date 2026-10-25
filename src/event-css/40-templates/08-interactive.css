@@ -435,13 +435,46 @@
 }
 
 @media (max-width: 640px) {
-  .theme-holiday .hl-gift-boxes {
-    grid-template-columns: 1fr;
+  .theme-holiday .hl-gift-boxes,
+  .theme-holiday .hl-pouches-wrap {
+    grid-template-columns: minmax(0, 1fr);
   }
+
   .theme-launch .lc-milestones-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+
   .theme-launch .lc-form-row {
     flex-direction: column;
+  }
+
+  /* 입력창 기본 최소 너비로 인한 넘침 방지 */
+  .theme-launch .lc-input {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 공유 문구와 버튼이 좁으면 다음 줄로 이동 */
+  .theme-launch .lc-share-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .theme-launch .lc-share-row > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* 긴 버튼 문구가 화면 밖으로 나가지 않도록 처리 */
+  .theme-sports .sp-vote-btn,
+  .theme-sale .fs-deal-btn,
+  .theme-launch .lc-form-btn,
+  .theme-launch .lc-share-btn {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
