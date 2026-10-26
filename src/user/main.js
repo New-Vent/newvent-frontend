@@ -24,6 +24,7 @@ import { loginView } from './views/login.js'
 import { signupView } from './views/signup.js'
 import { accountView } from './views/account.js'
 import { showLoginPrompt, showResult } from './actions.js'
+import { dropLoginReturnOn, rememberLoginReturn, takeLoginReturn } from './login-return.js'
 
 /**
  * 사용자 앱 셸.
@@ -338,6 +339,7 @@ function render(scroll = false) {
 
 const router = createRouter(ROUTES, (match) => {
   ui.route = match.name
+  dropLoginReturnOn(ui, match.name)
   if (match.name === 'home') ui.homeParticipations = null
   if (match.params.id) ui.activeId = match.params.id
   render(true)
@@ -448,7 +450,11 @@ document.addEventListener('click', (ev) => {
     return
   }
   if (a === 'close') return closeModal()
-  if (a === 'route') return navigate(b.dataset.route)
+  if (a === 'route') {
+    // 이벤트 상세 · 내 혜택에서 로그인으로 가면 로그인 뒤 이 화면으로 돌아온다
+    if (b.dataset.route === 'login') rememberLoginReturn(ui)
+    return navigate(b.dataset.route)
+  }
   if (a === 'event') return navigate('event', b.dataset.id)
   if (a === 'login-prompt') return showLoginPrompt()
   if (a === 'result') return ui.logged ? showResult(b.dataset.id, b.dataset.eventId) : showLoginPrompt()
@@ -718,9 +724,12 @@ document.addEventListener('submit', (ev) => {
     ui.logged = true
     await loadMe()
     toast('로그인했어요.')
-    // 로그인 화면에서 왔으면 홈으로, 내 혜택 등 다른 화면 안에서 로그인했으면 그 자리에서 다시 그린다
-    if (ui.route === 'login') navigate('home')
-    else render()
+    // 로그인 화면에서 왔으면 보던 화면으로(없으면 홈으로), 내 혜택 등 다른 화면 안에서 로그인했으면 그 자리에서 다시 그린다
+    if (ui.route === 'login') {
+      const back = takeLoginReturn(ui)
+      if (back) navigate(back.route, back.id)
+      else navigate('home')
+    } else render()
   })
 })
 
